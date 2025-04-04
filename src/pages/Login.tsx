@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoginForm from "@/components/auth/LoginForm";
+import LoginWithRoles from "@/components/auth/LoginWithRoles";
 
 const Login = () => {
   return (
@@ -19,6 +20,7 @@ const Login = () => {
           </CardHeader>
           <CardContent>
             <LoginForm />
+            <LoginWithRoles />
           </CardContent>
         </Card>
         <div className="mt-6 text-center text-sm text-white">
