@@ -6,7 +6,7 @@ import {
   LayoutDashboard,
   Home,
   ClipboardList,
-  Tool,
+  Wrench,
   Package,
   MessageSquare,
   BarChart,
@@ -31,7 +31,7 @@ const Sidebar = () => {
         <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
         <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />
         <SidebarLink to="/tasks" icon={<ClipboardList size={20} />} label="Tasks" />
-        <SidebarLink to="/maintenance" icon={<Tool size={20} />} label="Maintenance" />
+        <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
         <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         <SidebarLink to="/reports" icon={<BarChart size={20} />} label="Reports" />
