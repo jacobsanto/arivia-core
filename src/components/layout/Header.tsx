@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Bell, MessageSquare, User } from "lucide-react";
+import { Bell, MessageSquare, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,8 +10,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigate } from "react-router-dom";
+import { useUser } from "@/contexts/UserContext";
+import { ROLE_DETAILS } from "@/types/auth";
+import { Badge } from "@/components/ui/badge";
 
 const Header = () => {
+  const { user, logout } = useUser();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
@@ -95,16 +107,24 @@ const Header = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
-                <span>Admin</span>
+                <span>{user?.name || "Guest"}</span>
+                {user && (
+                  <Badge variant="outline" className="ml-2">
+                    {ROLE_DETAILS[user.role].title}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Logout</span>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
