@@ -1,27 +1,15 @@
-
 import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// Import task components
+import TaskCard from "@/components/tasks/TaskCard";
+import TaskDetail from "@/components/tasks/TaskDetail";
+import TaskCreationForm from "@/components/tasks/TaskCreationForm";
+import TaskFilters from "@/components/tasks/TaskFilters";
 
 // Sample task data
 const tasks = [
@@ -102,6 +90,9 @@ const Tasks = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedTask, setSelectedTask] = useState<typeof tasks[0] | null>(null);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [propertyFilter, setPropertyFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
   const filteredTasks = tasks.filter((task) => {
     // Filter by search query
@@ -115,7 +106,15 @@ const Tasks = () => {
       (activeTab === "inProgress" && task.status === "In Progress") ||
       (activeTab === "completed" && task.status === "Completed");
 
-    return matchesSearch && matchesTab;
+    // Filter by property
+    const matchesProperty = 
+      propertyFilter === "all" || task.property === propertyFilter;
+
+    // Filter by type
+    const matchesType = 
+      typeFilter === "all" || task.type === typeFilter;
+
+    return matchesSearch && matchesTab && matchesProperty && matchesType;
   });
 
   const handleOpenTask = (task: typeof tasks[0]) => {
@@ -149,241 +148,83 @@ const Tasks = () => {
     }
   };
 
+  const handleCreateTask = (data: any) => {
+    // In a real app, we would save this to the database
+    toast.success(`Task "${data.title}" created successfully!`);
+    setIsCreateTaskOpen(false);
+  };
+
+  const handlePhotoUpload = (file: File) => {
+    // In a real app, we would upload this file to storage
+    console.log("Photo uploaded:", file.name);
+    toast.success(`Photo verification uploaded for task!`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Housekeeping Tasks</h1>
           <p className="text-muted-foreground">
             Manage housekeeping, maintenance, and inventory tasks.
           </p>
         </div>
-        <Button onClick={() => toast.info("Task creation form would open here.")}>
+        <Button onClick={() => setIsCreateTaskOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Create Task
         </Button>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tasks..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-
-        <Tabs
-          defaultValue="all"
-          className="w-full sm:w-auto"
-          onValueChange={(value) => setActiveTab(value)}
-        >
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="inProgress">In Progress</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <TaskFilters 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onPropertyFilter={setPropertyFilter}
+        onTypeFilter={setTypeFilter}
+      />
 
       <div className="grid grid-cols-1 gap-4">
-        {filteredTasks.map((task) => (
-          <TaskCard key={task.id} task={task} onClick={() => handleOpenTask(task)} />
-        ))}
-      </div>
-
-      {selectedTask && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[80vh] overflow-auto">
+        {filteredTasks.length > 0 ? (
+          filteredTasks.map((task) => (
+            <TaskCard key={task.id} task={task} onClick={() => handleOpenTask(task)} />
+          ))
+        ) : (
+          <Card className="p-8 text-center">
             <CardHeader>
-              <CardTitle>{selectedTask.title}</CardTitle>
+              <CardTitle>No tasks found</CardTitle>
               <CardDescription>
-                {selectedTask.property} • {selectedTask.type}
+                Try adjusting your filters or create a new task.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Task Details</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">Status:</span>{" "}
-                    <Badge variant={selectedTask.status === "Completed" ? "outline" : "default"}>
-                      {selectedTask.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Priority:</span>{" "}
-                    <Badge
-                      variant="outline"
-                      className={
-                        selectedTask.priority === "High"
-                          ? "text-red-500 border-red-200"
-                          : selectedTask.priority === "Medium"
-                          ? "text-amber-500 border-amber-200"
-                          : "text-blue-500 border-blue-200"
-                      }
-                    >
-                      {selectedTask.priority}
-                    </Badge>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Due:</span>{" "}
-                    {new Date(selectedTask.dueDate).toLocaleString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Assignee:</span>{" "}
-                    {selectedTask.assignee}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Description</h3>
-                <p className="text-sm text-muted-foreground">
-                  {selectedTask.description}
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium">Checklist</h3>
-                <div className="space-y-2">
-                  {selectedTask.checklist.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`item-${item.id}`}
-                        checked={item.completed}
-                        onCheckedChange={() => handleToggleChecklistItem(item.id)}
-                      />
-                      <label
-                        htmlFor={`item-${item.id}`}
-                        className={`text-sm ${
-                          item.completed ? "line-through text-muted-foreground" : ""
-                        }`}
-                      >
-                        {item.title}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Photo Verification</h3>
-                <div className="grid grid-cols-3 gap-2">
-                  {/* Placeholder for photo verification */}
-                  <div className="bg-secondary rounded flex items-center justify-center h-24">
-                    <Plus className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div className="bg-secondary rounded flex items-center justify-center h-24">
-                    <Plus className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                  <div className="bg-secondary rounded flex items-center justify-center h-24">
-                    <Plus className="h-6 w-6 text-muted-foreground" />
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={handleCloseTask}>
-                Close
-              </Button>
-              <Button
-                onClick={handleCompleteTask}
-                disabled={!selectedTask.checklist.every((item) => item.completed)}
-              >
-                Mark as Complete
-              </Button>
-            </CardFooter>
           </Card>
-        </div>
+        )}
+      </div>
+
+      {/* Task Detail Modal */}
+      {selectedTask && (
+        <TaskDetail
+          task={selectedTask}
+          onClose={handleCloseTask}
+          onComplete={handleCompleteTask}
+          onToggleChecklistItem={handleToggleChecklistItem}
+          onPhotoUpload={handlePhotoUpload}
+        />
       )}
+
+      {/* Create Task Dialog */}
+      <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Create New Task</DialogTitle>
+          </DialogHeader>
+          <TaskCreationForm 
+            onSubmit={handleCreateTask} 
+            onCancel={() => setIsCreateTaskOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
-  );
-};
-
-interface TaskCardProps {
-  task: {
-    id: number;
-    title: string;
-    property: string;
-    type: string;
-    status: string;
-    priority: string;
-    dueDate: string;
-    assignee: string;
-  };
-  onClick: () => void;
-}
-
-const TaskCard = ({ task, onClick }: TaskCardProps) => {
-  const statusColors = {
-    Pending: "bg-blue-100 text-blue-800",
-    "In Progress": "bg-amber-100 text-amber-800",
-    Completed: "bg-green-100 text-green-800",
-  };
-
-  const priorityColors = {
-    High: "bg-red-100 text-red-800",
-    Medium: "bg-amber-100 text-amber-800",
-    Low: "bg-blue-100 text-blue-800",
-  };
-
-  const typeColors = {
-    Housekeeping: "border-blue-200 text-blue-800",
-    Maintenance: "border-amber-200 text-amber-800",
-    Inventory: "border-purple-200 text-purple-800",
-  };
-
-  return (
-    <Card
-      className="hover:bg-secondary/50 cursor-pointer transition-colors"
-      onClick={onClick}
-    >
-      <CardContent className="p-5">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2">
-              <h3 className="font-medium">{task.title}</h3>
-              <Badge
-                variant="outline"
-                className={typeColors[task.type as keyof typeof typeColors]}
-              >
-                {task.type}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">{task.property}</p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-muted-foreground">
-              Due: {new Date(task.dueDate).toLocaleString("en-US", { 
-                month: "short", 
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit" 
-              })}
-            </span>
-            <Badge
-              className={priorityColors[task.priority as keyof typeof priorityColors]}
-            >
-              {task.priority}
-            </Badge>
-            <Badge
-              className={statusColors[task.status as keyof typeof statusColors]}
-            >
-              {task.status}
-            </Badge>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 };
 
