@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import Tasks from "./pages/Tasks";
+import Maintenance from "./pages/Maintenance";
 import TeamChat from "./pages/TeamChat";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
@@ -48,7 +49,7 @@ const App = () => (
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
-                  <Route path="maintenance" element={<Navigate to="/tasks" replace />} />
+                  <Route path="maintenance" element={<Maintenance />} />
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
