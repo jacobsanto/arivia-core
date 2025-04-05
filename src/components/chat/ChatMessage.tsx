@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThumbsUp, Heart, Laugh, Party, HandWaving, PrayingHands } from "lucide-react";
+import { ThumbsUp, Heart, PartyPopper, Wave, HandMetal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface MessageReaction {
@@ -42,10 +42,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     switch (emoji) {
       case "👍": return <ThumbsUp className="w-3 h-3" />;
       case "❤️": return <Heart className="w-3 h-3" />;
-      case "😂": return <Laugh className="w-3 h-3" />;
-      case "🎉": return <Party className="w-3 h-3" />;
-      case "👋": return <HandWaving className="w-3 h-3" />;
-      case "🙏": return <PrayingHands className="w-3 h-3" />;
+      case "😂": return <ThumbsUp className="w-3 h-3" />; // Replace with appropriate icon
+      case "🎉": return <PartyPopper className="w-3 h-3" />;
+      case "👋": return <Wave className="w-3 h-3" />;
+      case "🙏": return <HandMetal className="w-3 h-3" />; // Using as alternative
       default: return emoji;
     }
   };
