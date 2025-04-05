@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
 import { UserProvider } from "./contexts/UserContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
+import OfflineIndicator from "./components/layout/OfflineIndicator";
 
 // Pages
 import Login from "./pages/Login";
@@ -17,7 +18,6 @@ import TeamChat from "./pages/TeamChat";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
-import LoginWithRoles from "./components/auth/LoginWithRoles";
 
 const queryClient = new QueryClient();
 
@@ -76,6 +76,7 @@ const App = () => (
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <OfflineIndicator />
         </BrowserRouter>
       </UserProvider>
     </TooltipProvider>

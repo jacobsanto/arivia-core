@@ -12,10 +12,23 @@ import {
   BarChart,
   Settings,
   LogOut,
+  User,
+  Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useUser } from "@/contexts/UserContext";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const Sidebar = () => {
+  const { user, logout } = useUser();
+  const { canAccess } = usePermissions();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  if (!user) return null;
+
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
@@ -27,19 +40,56 @@ const Sidebar = () => {
         />
       </div>
       
+      <div className="flex items-center justify-center mb-6">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 rounded-full bg-sidebar-accent flex items-center justify-center mb-2">
+            <User size={20} className="text-sidebar-accent-foreground" />
+          </div>
+          <p className="text-sm font-medium">{user.name}</p>
+          <span className="text-xs text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1">
+            {user.role.replace('_', ' ')}
+          </span>
+        </div>
+      </div>
+      
       <nav className="mt-6 flex-1 space-y-1">
         <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
-        <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />
-        <SidebarLink to="/tasks" icon={<ClipboardList size={20} />} label="Tasks" />
-        <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
-        <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />
+        
+        {canAccess("viewProperties") && (
+          <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />
+        )}
+        
+        {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
+          <SidebarLink to="/tasks" icon={<ClipboardList size={20} />} label="Tasks" />
+        )}
+        
+        {(user.role === "maintenance_staff" || canAccess("manageProperties")) && (
+          <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
+        )}
+        
+        {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
+          <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />
+        )}
+        
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
-        <SidebarLink to="/reports" icon={<BarChart size={20} />} label="Reports" />
+        
+        {canAccess("viewReports") && (
+          <SidebarLink to="/reports" icon={<BarChart size={20} />} label="Reports" />
+        )}
+        
+        <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
       </nav>
       
       <div className="pt-4 border-t border-sidebar-border mt-6">
-        <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
-        <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+        {(user.role === "administrator" || user.role === "superadmin") && (
+          <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
+        )}
+        
+        <Button 
+          variant="ghost" 
+          onClick={handleLogout}
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
           <LogOut className="mr-3 h-5 w-5" />
           <span>Logout</span>
         </Button>
@@ -52,9 +102,20 @@ interface SidebarLinkProps {
   to: string;
   icon: React.ReactNode;
   label: string;
+  disabled?: boolean;
 }
 
-const SidebarLink = ({ to, icon, label }: SidebarLinkProps) => {
+const SidebarLink = ({ to, icon, label, disabled = false }: SidebarLinkProps) => {
+  if (disabled) {
+    return (
+      <div className="flex items-center px-4 py-2 rounded-md font-medium text-sidebar-muted opacity-50 cursor-not-allowed">
+        <span className="mr-3">{icon}</span>
+        <span>{label}</span>
+        <Lock size={14} className="ml-auto" />
+      </div>
+    );
+  }
+  
   return (
     <NavLink
       to={to}

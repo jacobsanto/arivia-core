@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole } from "@/types/auth";
+import { User, UserRole, FEATURE_PERMISSIONS } from "@/types/auth";
+import { toast } from "sonner";
 
 interface UserContextType {
   user: User | null;
@@ -8,6 +9,8 @@ interface UserContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   hasPermission: (roles: UserRole[]) => boolean;
+  hasFeatureAccess: (featureKey: string) => boolean;
+  getOfflineLoginStatus: () => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -75,14 +78,34 @@ const MOCK_USERS = [
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
+  const [lastAuthTime, setLastAuthTime] = useState<number>(0);
 
   useEffect(() => {
     // Check for existing user session in local storage
     const storedUser = localStorage.getItem("user");
+    const storedAuthTime = localStorage.getItem("lastAuthTime");
+    
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      if (storedAuthTime) {
+        setLastAuthTime(parseInt(storedAuthTime, 10));
+      }
     }
+    
+    // Set up online/offline detection
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    
     setIsLoading(false);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -91,10 +114,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Find user in mock data
-      const foundUser = MOCK_USERS.find(
+      // Find user in mock data or custom registered users
+      let foundUser = MOCK_USERS.find(
         u => u.email === email && u.password === password
       );
+      
+      if (!foundUser) {
+        // Check localStorage for custom registered users
+        const customUsers = localStorage.getItem("users");
+        if (customUsers) {
+          const parsedUsers = JSON.parse(customUsers);
+          const customUser = parsedUsers.find((u: any) => u.email === email);
+          
+          if (customUser) {
+            // In a real app, we would check password hash here
+            foundUser = {
+              ...customUser,
+              password
+            };
+          }
+        }
+      }
       
       if (!foundUser) {
         throw new Error("Invalid email or password");
@@ -103,9 +143,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Remove password from user object before storing
       const { password: _, ...userToStore } = foundUser;
       
+      // Store auth timestamp (for offline login expiration)
+      const currentTime = Date.now();
+      localStorage.setItem("lastAuthTime", currentTime.toString());
+      setLastAuthTime(currentTime);
+      
       // Store user in state and local storage
       setUser(userToStore);
       localStorage.setItem("user", JSON.stringify(userToStore));
+      
       return;
     } catch (error) {
       console.error("Login error:", error);
@@ -118,6 +164,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    localStorage.removeItem("lastAuthTime");
+    // Don't clear other data like custom users or offline data
   };
 
   const hasPermission = (roles: UserRole[]) => {
@@ -130,8 +178,53 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return roles.includes(user.role);
   };
 
+  const hasFeatureAccess = (featureKey: string) => {
+    if (!user) return false;
+    
+    // Superadmin has access to everything
+    if (user.role === "superadmin") return true;
+    
+    // Check if feature exists in permissions
+    const permission = FEATURE_PERMISSIONS[featureKey];
+    if (!permission) return false;
+    
+    // Check if user's role is in the allowed roles
+    return permission.allowedRoles.includes(user.role);
+  };
+
+  // Check if offline login is still valid (within 7 days)
+  const getOfflineLoginStatus = () => {
+    if (!user || !lastAuthTime) return false;
+    
+    // If online, always allow access
+    if (!isOffline) return true;
+    
+    // If offline, check if authentication is expired (7 days)
+    const now = Date.now();
+    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+    
+    // If more than 7 days since last auth, session is expired
+    if (now - lastAuthTime > sevenDaysMs) {
+      // Show a toast warning
+      toast.warning("Offline session expired", {
+        description: "Please go online to re-authenticate."
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
   return (
-    <UserContext.Provider value={{ user, isLoading, login, logout, hasPermission }}>
+    <UserContext.Provider value={{ 
+      user, 
+      isLoading, 
+      login, 
+      logout, 
+      hasPermission, 
+      hasFeatureAccess,
+      getOfflineLoginStatus 
+    }}>
       {children}
     </UserContext.Provider>
   );
