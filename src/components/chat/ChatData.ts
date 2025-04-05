@@ -16,4 +16,5 @@ export const directMessages = [
   { id: 4, name: "Sophia Rodriguez", avatar: "/placeholder.svg", status: "away" as const, unreadCount: 5 },
 ];
 
+// Using emojis that correspond to Lucide icons
 export const emojis = ["👍", "❤️", "😂", "🎉", "👋", "🙏"];

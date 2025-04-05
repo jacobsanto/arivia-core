@@ -1,6 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ThumbsUp, Heart, Laugh, Party, HandWaving, PrayingHands } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface MessageReaction {
   [emoji: string]: string[];
@@ -35,6 +37,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   showEmojiPicker,
   setShowEmojiPicker,
 }) => {
+  // Map emoji characters to Lucide icons
+  const getReactionIcon = (emoji: string) => {
+    switch (emoji) {
+      case "👍": return <ThumbsUp className="w-3 h-3" />;
+      case "❤️": return <Heart className="w-3 h-3" />;
+      case "😂": return <Laugh className="w-3 h-3" />;
+      case "🎉": return <Party className="w-3 h-3" />;
+      case "👋": return <HandWaving className="w-3 h-3" />;
+      case "🙏": return <PrayingHands className="w-3 h-3" />;
+      default: return emoji;
+    }
+  };
+
   return (
     <div
       key={message.id}
@@ -61,39 +76,50 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               onMouseLeave={() => {
                 // Small delay to allow clicking emoji picker
                 if (!showEmojiPicker) {
-                  setReactionMessageId(null);
+                  setTimeout(() => {
+                    setReactionMessageId(null);
+                  }, 300);
                 }
               }}
             >
               <p className="text-sm">{message.content}</p>
             </div>
             
-            {/* Emoji reactions display */}
+            {/* Emoji reactions display with minimal design */}
             {message.reactions && Object.keys(message.reactions).length > 0 && (
               <div className="flex mt-1 flex-wrap gap-1">
                 {Object.entries(message.reactions).map(([emoji, users]) => 
                   users.length > 0 ? (
-                    <div 
+                    <Badge 
                       key={emoji} 
-                      className="flex items-center bg-secondary/50 rounded-full px-1.5 py-0.5 text-xs"
+                      variant="secondary"
+                      className="flex items-center gap-1 h-6 px-2 hover:bg-secondary/80 transition-colors cursor-pointer"
                       title={users.join(', ')}
+                      onClick={() => onAddReaction(message.id, emoji)}
                     >
-                      <span className="mr-1">{emoji}</span>
-                      <span>{users.length}</span>
-                    </div>
+                      {getReactionIcon(emoji)}
+                      <span className="text-xs">{users.length}</span>
+                    </Badge>
                   ) : null
                 )}
               </div>
             )}
             
-            {/* Emoji picker */}
+            {/* Emoji picker with improved positioning and visibility */}
             {reactionMessageId === message.id && (
-              <div className="absolute bottom-full mb-2 bg-background shadow-lg rounded-lg border p-1 flex">
+              <div className="absolute bottom-full mb-2 bg-background shadow-lg rounded-lg border p-1.5 flex z-10 animate-fade-in">
                 {emojis.map(emoji => (
                   <button 
                     key={emoji} 
-                    className="hover:bg-secondary rounded p-1 text-lg"
-                    onClick={() => onAddReaction(message.id, emoji)}
+                    className="hover:bg-secondary rounded-md p-1.5 transition-colors"
+                    onClick={() => {
+                      onAddReaction(message.id, emoji);
+                      // Don't hide the reaction menu immediately
+                      // This allows users to see the effect of their action
+                      setTimeout(() => {
+                        setReactionMessageId(null);
+                      }, 500);
+                    }}
                   >
                     {emoji}
                   </button>
