@@ -25,19 +25,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Tag, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { VendorStatus, Vendor } from "../orders/OrderUtils";
 
-type VendorStatus = "active" | "inactive";
-
-type Vendor = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  categories: string[]; // Changed from single category to categories array
-  address: string;
-  notes: string;
-  status: VendorStatus;
-};
+// Sample list of all available categories in the system
+const initialCategories: string[] = [
+  "Office Supplies",
+  "Paper Products",
+  "Cleaning Supplies",
+  "Guest Amenities",
+  "Toiletries",
+  "Kitchen Supplies",
+  "Electronics",
+  "Furniture",
+  "Linens",
+  "Safety Equipment"
+];
 
 // Sample vendor data - in a real app this would come from a database
 const initialVendors: Vendor[] = [
@@ -46,7 +61,7 @@ const initialVendors: Vendor[] = [
     name: "Office Supplies Co.",
     email: "orders@officesupplies.com",
     phone: "555-123-4567",
-    categories: ["Office Supplies", "Paper Products"], // Updated to array
+    categories: ["Office Supplies", "Paper Products"],
     address: "123 Business Ave, Suite 101",
     notes: "Preferred supplier for paper products",
     status: "active",
@@ -56,7 +71,7 @@ const initialVendors: Vendor[] = [
     name: "Cleaning Solutions Inc.",
     email: "sales@cleaningsolutions.com",
     phone: "555-987-6543",
-    categories: ["Cleaning Supplies"], // Updated to array
+    categories: ["Cleaning Supplies"],
     address: "456 Industrial Blvd",
     notes: "Eco-friendly products available",
     status: "active",
@@ -66,7 +81,7 @@ const initialVendors: Vendor[] = [
     name: "Hospitality Essentials",
     email: "orders@hospitalityessentials.com",
     phone: "555-567-8901",
-    categories: ["Guest Amenities", "Toiletries"], // Updated to array
+    categories: ["Guest Amenities", "Toiletries"],
     address: "789 Hospitality Way",
     notes: "Bulk discounts available",
     status: "inactive",
@@ -75,18 +90,21 @@ const initialVendors: Vendor[] = [
 
 const VendorsList = () => {
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isNewCategoryDialogOpen, setIsNewCategoryDialogOpen] = useState(false);
+  const [newCategory, setNewCategory] = useState("");
   const [currentVendor, setCurrentVendor] = useState<Vendor | null>(null);
   const [formData, setFormData] = useState<Omit<Vendor, "id">>({
     name: "",
     email: "",
     phone: "",
-    categories: [], // Updated to array
+    categories: [],
     address: "",
     notes: "",
     status: "active",
   });
-  const [categoryInput, setCategoryInput] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -94,29 +112,55 @@ const VendorsList = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       if (name === "status") {
-        // Ensure the status is explicitly typed as VendorStatus
         return { ...prev, [name]: value as VendorStatus };
       }
       return { ...prev, [name]: value };
     });
   };
 
-  const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCategoryInput(e.target.value);
+  const handleCategorySelect = (value: string) => {
+    setSelectedCategory(value);
   };
 
   const handleAddCategory = () => {
-    if (categoryInput.trim()) {
-      if (!formData.categories.includes(categoryInput.trim())) {
-        setFormData((prev) => ({
-          ...prev,
-          categories: [...prev.categories, categoryInput.trim()]
-        }));
-        setCategoryInput("");
+    if (selectedCategory && !formData.categories.includes(selectedCategory)) {
+      setFormData((prev) => ({
+        ...prev,
+        categories: [...prev.categories, selectedCategory]
+      }));
+      setSelectedCategory("");
+    } else if (selectedCategory) {
+      toast({
+        title: "Category already exists",
+        description: "This category has already been added."
+      });
+    }
+  };
+
+  const handleCreateNewCategory = () => {
+    if (newCategory.trim()) {
+      if (!categories.includes(newCategory.trim())) {
+        setCategories(prev => [...prev, newCategory.trim()]);
+        
+        // Automatically add the new category to the vendor
+        if (!formData.categories.includes(newCategory.trim())) {
+          setFormData(prev => ({
+            ...prev,
+            categories: [...prev.categories, newCategory.trim()]
+          }));
+        }
+        
+        setNewCategory("");
+        setIsNewCategoryDialogOpen(false);
+        
+        toast({
+          title: "Category Added",
+          description: `"${newCategory.trim()}" has been added to categories.`
+        });
       } else {
         toast({
           title: "Category already exists",
-          description: "This category has already been added."
+          description: "This category already exists in the system."
         });
       }
     }
@@ -129,25 +173,18 @@ const VendorsList = () => {
     }));
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault(); // Prevent form submission
-      handleAddCategory();
-    }
-  };
-
   const handleAddVendor = () => {
     setCurrentVendor(null);
     setFormData({
       name: "",
       email: "",
       phone: "",
-      categories: [], // Updated to array
+      categories: [],
       address: "",
       notes: "",
       status: "active",
     });
-    setCategoryInput("");
+    setSelectedCategory("");
     setIsDialogOpen(true);
   };
 
@@ -157,12 +194,12 @@ const VendorsList = () => {
       name: vendor.name,
       email: vendor.email,
       phone: vendor.phone,
-      categories: vendor.categories, // Updated to array
+      categories: vendor.categories,
       address: vendor.address,
       notes: vendor.notes,
       status: vendor.status,
     });
-    setCategoryInput("");
+    setSelectedCategory("");
     setIsDialogOpen(true);
   };
 
@@ -326,22 +363,39 @@ const VendorsList = () => {
                 <div>
                   <Label htmlFor="category">Categories</Label>
                   <div className="flex items-center mb-2">
-                    <Input
-                      id="category"
-                      value={categoryInput}
-                      onChange={handleCategoryInputChange}
-                      onKeyPress={handleKeyPress}
-                      className="flex-1"
-                      placeholder="Add a category"
-                    />
-                    <Button 
-                      type="button" 
-                      onClick={handleAddCategory} 
-                      className="ml-2"
-                    >
-                      <Tag className="h-4 w-4 mr-1" />
-                      Add
-                    </Button>
+                    <div className="flex-1">
+                      <Select onValueChange={handleCategorySelect} value={selectedCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category, index) => (
+                            <SelectItem key={index} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex gap-2 ml-2">
+                      <Button 
+                        type="button" 
+                        onClick={handleAddCategory} 
+                        disabled={!selectedCategory}
+                        variant="outline"
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add
+                      </Button>
+                      <Button 
+                        type="button" 
+                        onClick={() => setIsNewCategoryDialogOpen(true)}
+                        variant="outline"
+                      >
+                        <Tag className="h-4 w-4 mr-1" />
+                        New
+                      </Button>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {formData.categories.map((category, index) => (
@@ -384,16 +438,18 @@ const VendorsList = () => {
                 </div>
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <select
-                    id="status"
-                    name="status"
+                  <Select 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, status: value as VendorStatus }))} 
                     value={formData.status}
-                    onChange={handleInputChange}
-                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -406,6 +462,39 @@ const VendorsList = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog for adding new category */}
+      <Dialog open={isNewCategoryDialogOpen} onOpenChange={setIsNewCategoryDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add New Category</DialogTitle>
+            <DialogDescription>
+              Create a new category for vendors
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label htmlFor="newCategory">Category Name</Label>
+                <Input
+                  id="newCategory"
+                  value={newCategory}
+                  onChange={(e) => setNewCategory(e.target.value)}
+                  placeholder="Enter new category name"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsNewCategoryDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateNewCategory}>
+              Add Category
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

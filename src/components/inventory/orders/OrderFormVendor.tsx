@@ -18,10 +18,11 @@ import {
 } from "@/components/ui/select";
 
 // Sample vendor data - in a real app this would come from a database or API
+// With added categories field
 const vendors = [
-  { id: "1", name: "Office Supplies Co." },
-  { id: "2", name: "Cleaning Solutions Inc." },
-  { id: "3", name: "Hospitality Essentials" },
+  { id: "1", name: "Office Supplies Co.", categories: ["Office Supplies", "Paper Products"] },
+  { id: "2", name: "Cleaning Solutions Inc.", categories: ["Cleaning Supplies"] },
+  { id: "3", name: "Hospitality Essentials", categories: ["Guest Amenities", "Toiletries"] },
 ];
 
 const OrderFormVendor = () => {
