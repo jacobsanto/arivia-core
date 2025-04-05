@@ -377,7 +377,7 @@ const OrderList: React.FC = () => {
                </Badge>;
       case "pending_24h":
         return <Badge variant="destructive" className="flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3" /> Pending >24h
+                <AlertTriangle className="h-3 w-3" /> Pending &gt;24h
                </Badge>;
       case "manager_approved":
         return <Badge variant="secondary" className="flex items-center gap-1">
@@ -465,7 +465,7 @@ const OrderList: React.FC = () => {
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="pending_24h">Pending >24h</SelectItem>
+                    <SelectItem value="pending_24h">Pending &gt;24h</SelectItem>
                     <SelectItem value="manager_approved">Manager Approved</SelectItem>
                     <SelectItem value="approved">Approved</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
