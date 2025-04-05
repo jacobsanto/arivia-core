@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -122,22 +121,18 @@ export const useMaintenanceTasks = () => {
   });
 
   const filteredTasks = tasks.filter((task) => {
-    // Filter by search query
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.property.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Filter by tab
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "pending" && task.status === "Pending") ||
       (activeTab === "inProgress" && task.status === "In Progress") ||
       (activeTab === "completed" && task.status === "Completed");
 
-    // Filter by property
     const matchesProperty = 
       propertyFilter === "all" || task.property === propertyFilter;
 
-    // Filter by priority
     const matchesPriority = 
       priorityFilter === "all" || task.priority === priorityFilter;
 
@@ -176,19 +171,20 @@ export const useMaintenanceTasks = () => {
   };
 
   const handleCreateTask = (data: any) => {
-    // In a real app, we would save this to the database
+    const requiredTools = data.requiredTools 
+      ? data.requiredTools.split(',').map((item: string) => item.trim()).filter((item: string) => item)
+      : [];
+      
     toast.success(`Maintenance task "${data.title}" created successfully!`);
     setIsCreateTaskOpen(false);
   };
 
   const handlePhotoUpload = (file: File, type: 'before' | 'after') => {
-    // In a real app, we would upload this file to storage
     console.log(`${type} photo uploaded:`, file.name);
     toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} photo uploaded for task!`);
   };
 
   const handleSubmitReport = (report: MaintenanceReport) => {
-    // In a real app, we would save this to the database
     setCurrentReport(report);
     toast.success("Maintenance report submitted successfully!");
     setIsReportOpen(false);

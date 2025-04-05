@@ -11,7 +11,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Plus, Image, Tool, MapPin } from "lucide-react";
+import { Plus, Image, Wrench, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { MaintenanceTask } from "@/hooks/useMaintenanceTasks";
 
@@ -107,7 +107,7 @@ const MaintenanceDetail = ({
 
           <div className="space-y-2">
             <h3 className="text-sm font-medium flex items-center gap-2">
-              <Tool className="h-4 w-4" />
+              <Wrench className="h-4 w-4" />
               Required Tools/Parts
             </h3>
             <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1 pl-2">

@@ -47,7 +47,15 @@ const MaintenanceReport = ({
   });
 
   const handleSubmit = (values: z.infer<typeof reportSchema>) => {
-    onSubmit(values);
+    // Ensure all required fields are present in the report
+    const completedReport: MaintenanceReportType = {
+      timeSpent: values.timeSpent,
+      materialsUsed: values.materialsUsed,
+      cost: values.cost,
+      notes: values.notes,
+    };
+    
+    onSubmit(completedReport);
   };
 
   return (

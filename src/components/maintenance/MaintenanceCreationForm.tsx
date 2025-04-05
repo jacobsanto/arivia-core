@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -54,11 +53,7 @@ const MaintenanceCreationForm = ({ onSubmit, onCancel }: MaintenanceCreationForm
   });
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
-    const formattedData = {
-      ...values,
-      requiredTools: values.requiredTools ? values.requiredTools.split(',').map(item => item.trim()) : [],
-    };
-    onSubmit(formattedData);
+    onSubmit(values);
   };
 
   return (
