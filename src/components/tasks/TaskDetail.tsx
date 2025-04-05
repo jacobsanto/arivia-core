@@ -13,26 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-
-interface ChecklistItem {
-  id: number;
-  title: string;
-  completed: boolean;
-}
+import { Task } from "@/hooks/useTasks";
 
 interface TaskDetailProps {
-  task: {
-    id: number;
-    title: string;
-    property: string;
-    type: string;
-    status: string;
-    priority: string;
-    dueDate: string;
-    assignee: string;
-    description: string;
-    checklist: ChecklistItem[];
-  } | null;
+  task: Task | null;
   onClose: () => void;
   onComplete: () => void;
   onToggleChecklistItem: (itemId: number) => void;

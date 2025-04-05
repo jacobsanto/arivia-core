@@ -2,18 +2,10 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Task } from "@/hooks/useTasks";
 
 interface TaskCardProps {
-  task: {
-    id: number;
-    title: string;
-    property: string;
-    type: string;
-    status: string;
-    priority: string;
-    dueDate: string;
-    assignee: string;
-  };
+  task: Task;
   onClick: () => void;
 }
 
