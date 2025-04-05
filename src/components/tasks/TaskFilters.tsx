@@ -1,23 +1,17 @@
 
 import React from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Search, Filter } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { usePermissions } from "@/hooks/usePermissions";
 
 interface TaskFiltersProps {
   searchQuery: string;
-  onSearchChange: (query: string) => void;
+  onSearchChange: (value: string) => void;
   activeTab: string;
-  onTabChange: (tab: string) => void;
-  onPropertyFilter?: (property: string) => void;
-  onTypeFilter?: (type: string) => void;
+  onTabChange: (value: string) => void;
+  onPropertyFilter: (value: string) => void;
+  onTypeFilter: (value: string) => void;
 }
 
 const TaskFilters = ({
@@ -25,64 +19,47 @@ const TaskFilters = ({
   onSearchChange,
   activeTab,
   onTabChange,
-  onPropertyFilter,
-  onTypeFilter,
+  onPropertyFilter
 }: TaskFiltersProps) => {
+  const isMobile = useIsMobile();
+  const { canAccess } = usePermissions();
+  const isManager = canAccess('manage_housekeeping');
+  
   return (
     <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tasks..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-
-        <div className="flex gap-2">
-          {onPropertyFilter && (
-            <Select onValueChange={onPropertyFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Properties" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
-                <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
-                <SelectItem value="Villa Azure">Villa Azure</SelectItem>
-                <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
-                <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-          
-          {onTypeFilter && (
-            <Select onValueChange={onTypeFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Housekeeping">Housekeeping</SelectItem>
-                <SelectItem value="Maintenance">Maintenance</SelectItem>
-                <SelectItem value="Inventory">Inventory</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <Input
+          placeholder="Search tasks..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="max-w-sm"
+        />
+        <div className="flex-1" />
+        <select 
+          onChange={(e) => onPropertyFilter(e.target.value)}
+          className="px-3 py-2 border rounded-md"
+        >
+          <option value="all">All Properties</option>
+          <option value="Villa Caldera">Villa Caldera</option>
+          <option value="Villa Sunset">Villa Sunset</option>
+          <option value="Villa Oceana">Villa Oceana</option>
+          <option value="Villa Paradiso">Villa Paradiso</option>
+          <option value="Villa Azure">Villa Azure</option>
+        </select>
       </div>
 
       <Tabs
-        defaultValue={activeTab}
-        className="w-full"
+        defaultValue="all"
+        value={activeTab}
         onValueChange={onTabChange}
+        className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className={`grid w-full ${isManager ? 'grid-cols-5' : 'grid-cols-4'}`}>
           <TabsTrigger value="all">All</TabsTrigger>
           <TabsTrigger value="pending">Pending</TabsTrigger>
           <TabsTrigger value="inProgress">In Progress</TabsTrigger>
           <TabsTrigger value="completed">Completed</TabsTrigger>
+          {isManager && <TabsTrigger value="needsApproval">Needs Approval</TabsTrigger>}
         </TabsList>
       </Tabs>
     </div>

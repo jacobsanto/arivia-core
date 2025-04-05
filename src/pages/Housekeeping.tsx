@@ -1,5 +1,6 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 // Import housekeeping components
 import TaskHeader from "@/components/tasks/TaskHeader";
@@ -8,6 +9,8 @@ import TaskDetail from "@/components/tasks/TaskDetail";
 import TaskCreationForm from "@/components/tasks/TaskCreationForm";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import { useTasks } from "@/hooks/useTasks";
+import { useIsMobile } from "@/hooks/use-mobile";
+import TaskReporting from "@/components/tasks/TaskReporting";
 
 const Housekeeping = () => {
   const {
@@ -23,17 +26,23 @@ const Housekeeping = () => {
     setPropertyFilter,
     typeFilter,
     setTypeFilter,
+    isReportingOpen,
+    setIsReportingOpen,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
+    handleApproveTask,
+    handleRejectTask,
     handleToggleChecklistItem,
     handleCreateTask,
     handlePhotoUpload,
   } = useTasks();
 
+  const isMobile = useIsMobile();
+
   return (
     <div className="space-y-6">
-      <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
+      <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} onViewReports={() => setIsReportingOpen(true)} />
 
       <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
         <p className="text-amber-800 text-sm">
@@ -56,20 +65,38 @@ const Housekeeping = () => {
         onOpenTask={handleOpenTask}
       />
 
-      {/* Task Detail Modal */}
-      {selectedTask && (
-        <TaskDetail
-          task={selectedTask}
-          onClose={handleCloseTask}
-          onComplete={handleCompleteTask}
-          onToggleChecklistItem={handleToggleChecklistItem}
-          onPhotoUpload={handlePhotoUpload}
-        />
+      {/* Task Detail Modal - Sheet on mobile, Dialog on desktop */}
+      {selectedTask && isMobile ? (
+        <Sheet open={!!selectedTask} onOpenChange={() => selectedTask && handleCloseTask()}>
+          <SheetContent className="overflow-y-auto" side="bottom" className="h-[85vh] sm:max-w-none pt-6">
+            <TaskDetail
+              task={selectedTask}
+              onClose={handleCloseTask}
+              onComplete={handleCompleteTask}
+              onApprove={handleApproveTask}
+              onReject={handleRejectTask}
+              onToggleChecklistItem={handleToggleChecklistItem}
+              onPhotoUpload={handlePhotoUpload}
+            />
+          </SheetContent>
+        </Sheet>
+      ) : (
+        selectedTask && (
+          <TaskDetail
+            task={selectedTask}
+            onClose={handleCloseTask}
+            onComplete={handleCompleteTask}
+            onApprove={handleApproveTask}
+            onReject={handleRejectTask}
+            onToggleChecklistItem={handleToggleChecklistItem}
+            onPhotoUpload={handlePhotoUpload}
+          />
+        )
       )}
 
       {/* Create Task Dialog */}
       <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className={isMobile ? "sm:max-w-none" : "sm:max-w-[600px]"}>
           <DialogHeader>
             <DialogTitle>Create New Housekeeping Task</DialogTitle>
           </DialogHeader>
@@ -77,6 +104,16 @@ const Housekeeping = () => {
             onSubmit={handleCreateTask} 
             onCancel={() => setIsCreateTaskOpen(false)} 
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Reporting Dialog */}
+      <Dialog open={isReportingOpen} onOpenChange={setIsReportingOpen}>
+        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Housekeeping Performance Reports</DialogTitle>
+          </DialogHeader>
+          <TaskReporting />
         </DialogContent>
       </Dialog>
     </div>
