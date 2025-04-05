@@ -8,11 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUser } from "@/contexts/UserContext";
+import { useOrders } from "@/contexts/OrderContext";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";
 import OrderItemList from "./OrderItemList";
 import OrderFormVendor from "./OrderFormVendor";
 import { OrderStatus } from "./OrderUtils";
+import { Checkbox } from "@/components/ui/checkbox";
+import { getItemsByVendor } from "@/data/inventoryData";
 
 const formSchema = z.object({
   vendorId: z.string().min(1, { message: "Please select a vendor." }),
@@ -35,6 +38,7 @@ const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { canAccess } = usePermissions();
   const { user } = useUser();
+  const { addOrder } = useOrders();
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   
   // Check if user can create orders
@@ -80,43 +84,60 @@ const OrderForm = () => {
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      console.log(values);
-      
-      // Determine the initial status based on user role
-      let status: OrderStatus = "pending";
-      let nextAction = "";
-      
-      if (user?.role === "superadmin" || user?.role === "administrator") {
-        status = "approved";
-        nextAction = "The order will be sent to vendors.";
-      } else if (user?.role === "property_manager") {
-        status = "manager_approved";
-        nextAction = "The order has been approved and sent to admin for final approval.";
-      } else {
-        status = "pending";
-        nextAction = "The order has been submitted to your manager for approval.";
-      }
-      
-      toast({
-        title: "Order Submitted",
-        description: `${nextAction}`,
-      });
-      
-      methods.reset({
-        vendorId: "",
-        date: new Date().toISOString().split("T")[0],
-        requestor: user?.name || "",
-        priority: "medium",
-        department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
-        items: [{ itemId: "", quantity: 1 }],
-        notes: "",
-      });
-      
-      setSelectedVendorId(null);
-      setIsSubmitting(false);
-    }, 1000);
+    // Get item names for display
+    const itemsWithNames = values.items.map(item => {
+      const vendorItems = getItemsByVendor(values.vendorId);
+      const foundItem = vendorItems.find(vendorItem => vendorItem.id === item.itemId);
+      return {
+        ...item,
+        name: foundItem?.name || "Unknown Item"
+      };
+    });
+    
+    // Create order object
+    const orderData = {
+      ...values,
+      items: itemsWithNames,
+      requesterRole: user?.role || "",
+    };
+    
+    // Add the order to the context
+    const orderId = addOrder(orderData);
+    
+    // Determine the initial status based on user role
+    let status: OrderStatus = "pending";
+    let nextAction = "";
+    
+    if (user?.role === "superadmin" || user?.role === "administrator") {
+      status = "approved";
+      nextAction = "The order will be sent to vendors.";
+    } else if (user?.role === "property_manager") {
+      status = "manager_approved";
+      nextAction = "The order has been approved and sent to admin for final approval.";
+    } else {
+      status = "pending";
+      nextAction = "The order has been submitted to your manager for approval.";
+    }
+    
+    // Show success message
+    toast({
+      title: "Order Submitted",
+      description: `Order ${orderId} created. ${nextAction}`,
+    });
+    
+    // Reset form
+    methods.reset({
+      vendorId: "",
+      date: new Date().toISOString().split("T")[0],
+      requestor: user?.name || "",
+      priority: "medium",
+      department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
+      items: [{ itemId: "", quantity: 1 }],
+      notes: "",
+    });
+    
+    setSelectedVendorId(null);
+    setIsSubmitting(false);
   }
 
   if (!canCreateOrders) {
