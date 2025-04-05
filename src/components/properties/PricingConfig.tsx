@@ -247,10 +247,12 @@ const PricingConfig = ({ property, onBack }: PricingConfigProps) => {
                       rates.map(rate => 
                         rate.id === editingRateId 
                           ? { 
-                              ...data, 
                               id: rate.id,
+                              name: data.name,
                               startDate: format(data.startDate, 'yyyy-MM-dd'),
-                              endDate: format(data.endDate, 'yyyy-MM-dd')
+                              endDate: format(data.endDate, 'yyyy-MM-dd'),
+                              priceModifier: data.priceModifier,
+                              minStay: data.minStay
                             } 
                           : rate
                       )
@@ -259,10 +261,12 @@ const PricingConfig = ({ property, onBack }: PricingConfigProps) => {
                   } else {
                     // Add new rate
                     const newRate: SeasonalRate = {
-                      ...data,
                       id: Date.now(),
+                      name: data.name,
                       startDate: format(data.startDate, 'yyyy-MM-dd'),
-                      endDate: format(data.endDate, 'yyyy-MM-dd')
+                      endDate: format(data.endDate, 'yyyy-MM-dd'),
+                      priceModifier: data.priceModifier,
+                      minStay: data.minStay
                     };
                     setSeasonalRates(rates => [...rates, newRate]);
                     toast.success(`${data.name} season added`);
