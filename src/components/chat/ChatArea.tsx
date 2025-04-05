@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Paperclip, Send, Smile, Image, ChevronRight, Circle } from "lucide-react";
-import ChatMessage, { Message } from "./ChatMessage";
+import ChatMessage from "./ChatMessage";
+import { Message } from "@/hooks/useChatMessages"; // Updated import path for Message type
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatAreaProps {
