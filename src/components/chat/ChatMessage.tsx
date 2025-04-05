@@ -1,27 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThumbsUp, Heart, Waves, PartyPopper, HandMetal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-interface MessageReaction {
-  [emoji: string]: string[];
-}
-
-export interface Message {
-  id: number;
-  sender: string;
-  avatar: string;
-  content: string;
-  timestamp: string;
-  isCurrentUser: boolean;
-  reactions?: MessageReaction;
-}
+import { Message } from "@/hooks/useChatMessages";
+import MessageContent from "./message/MessageContent";
 
 interface ChatMessageProps {
   message: Message;
@@ -47,19 +28,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   const [isHoveringPicker, setIsHoveringPicker] = useState(false);
   const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
   const [leaveTimer, setLeaveTimer] = useState<NodeJS.Timeout | null>(null);
-  
-  // Map emoji characters to minimal Lucide icons with consistent styling
-  const getReactionIcon = (emoji: string) => {
-    switch (emoji) {
-      case "👍": return <ThumbsUp className="w-3 h-3 stroke-[1.5]" />;
-      case "❤️": return <Heart className="w-3 h-3 stroke-[1.5]" />;
-      case "😂": return <ThumbsUp className="w-3 h-3 stroke-[1.5] rotate-180" />; // Using thumbs up rotated as a stand-in
-      case "🎉": return <PartyPopper className="w-3 h-3 stroke-[1.5]" />;
-      case "👋": return <Waves className="w-3 h-3 stroke-[1.5]" />;
-      case "🙏": return <HandMetal className="w-3 h-3 stroke-[1.5]" />; // Using as alternative
-      default: return emoji;
-    }
-  };
   
   // Clean up timers when component unmounts
   useEffect(() => {
@@ -149,7 +117,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 
   return (
     <div
-      key={message.id}
       className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
     >
       <div
@@ -162,66 +129,19 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <AvatarFallback>{message.sender[0]}</AvatarFallback>
         </Avatar>
         <div>
-          <div className="relative">
-            <div
-              className={`px-4 py-3 rounded-md ${
-                message.isCurrentUser
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-secondary"
-              }`}
-              onMouseEnter={handleMessageMouseEnter}
-              onMouseLeave={handleMessageMouseLeave}
-            >
-              <p className="text-sm">{message.content}</p>
-            </div>
-            
-            {/* Emoji reactions display with minimal design */}
-            {message.reactions && Object.keys(message.reactions).length > 0 && (
-              <div className="flex mt-1 flex-wrap gap-1">
-                {Object.entries(message.reactions).map(([emoji, users]) => 
-                  users.length > 0 ? (
-                    <TooltipProvider key={emoji}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge 
-                            variant="outline"
-                            className="flex items-center gap-1 h-6 px-2 hover:bg-secondary/80 transition-colors cursor-pointer bg-background"
-                            onClick={(e) => handleEmojiClick(emoji, e)}
-                          >
-                            {getReactionIcon(emoji)}
-                            <span className="text-xs">{users.length}</span>
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="text-xs">{users.join(', ')}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  ) : null
-                )}
-              </div>
-            )}
-            
-            {/* Only show emoji picker for messages that aren't from the current user */}
-            {!message.isCurrentUser && reactionMessageId === message.id && showEmojiPicker && (
-              <div 
-                className="absolute bottom-full mb-2 bg-background/95 shadow-lg rounded-lg border border-border p-1.5 flex z-10"
-                onMouseEnter={handlePickerMouseEnter}
-                onMouseLeave={handlePickerMouseLeave}
-              >
-                {emojis.map(emoji => (
-                  <button 
-                    key={emoji} 
-                    className="hover:bg-secondary rounded-md p-1.5 transition-colors"
-                    onClick={(e) => handleEmojiClick(emoji, e)}
-                    title={emoji}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <MessageContent
+            message={message}
+            emojis={emojis}
+            isHoveringMessage={isHoveringMessage}
+            setIsHoveringMessage={setIsHoveringMessage}
+            handleMessageMouseEnter={handleMessageMouseEnter}
+            handleMessageMouseLeave={handleMessageMouseLeave}
+            handleEmojiClick={handleEmojiClick}
+            reactionMessageId={reactionMessageId}
+            showEmojiPicker={showEmojiPicker}
+            handlePickerMouseEnter={handlePickerMouseEnter}
+            handlePickerMouseLeave={handlePickerMouseLeave}
+          />
           <div
             className={`flex text-xs text-muted-foreground mt-1 ${
               message.isCurrentUser ? "justify-end" : "justify-start"
