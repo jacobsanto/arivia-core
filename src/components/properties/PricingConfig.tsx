@@ -42,8 +42,18 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
+// Define SeasonalRate type to avoid type issues
+interface SeasonalRate {
+  id: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  priceModifier: number;
+  minStay: number;
+}
+
 // Sample seasonal rates
-const sampleSeasonalRates = [
+const sampleSeasonalRates: SeasonalRate[] = [
   {
     id: 1,
     name: "Peak Season",
@@ -76,7 +86,7 @@ interface PricingConfigProps {
 }
 
 const PricingConfig = ({ property, onBack }: PricingConfigProps) => {
-  const [seasonalRates, setSeasonalRates] = useState(sampleSeasonalRates);
+  const [seasonalRates, setSeasonalRates] = useState<SeasonalRate[]>(sampleSeasonalRates);
   const [isAddingRate, setIsAddingRate] = useState(false);
   const [editingRateId, setEditingRateId] = useState<number | null>(null);
   const [basePrice, setBasePrice] = useState(property.price);
@@ -235,16 +245,26 @@ const PricingConfig = ({ property, onBack }: PricingConfigProps) => {
                     // Update existing rate
                     setSeasonalRates(rates => 
                       rates.map(rate => 
-                        rate.id === editingRateId ? { ...data, id: rate.id } : rate
+                        rate.id === editingRateId 
+                          ? { 
+                              ...data, 
+                              id: rate.id,
+                              startDate: format(data.startDate, 'yyyy-MM-dd'),
+                              endDate: format(data.endDate, 'yyyy-MM-dd')
+                            } 
+                          : rate
                       )
                     );
                     toast.success(`${data.name} season updated`);
                   } else {
                     // Add new rate
-                    setSeasonalRates(rates => [
-                      ...rates, 
-                      { ...data, id: Date.now() }
-                    ]);
+                    const newRate: SeasonalRate = {
+                      ...data,
+                      id: Date.now(),
+                      startDate: format(data.startDate, 'yyyy-MM-dd'),
+                      endDate: format(data.endDate, 'yyyy-MM-dd')
+                    };
+                    setSeasonalRates(rates => [...rates, newRate]);
                     toast.success(`${data.name} season added`);
                   }
                   setIsAddingRate(false);
@@ -284,7 +304,7 @@ const seasonalRateSchema = z.object({
 type SeasonalRateValues = z.infer<typeof seasonalRateSchema>;
 
 interface SeasonalRateFormProps {
-  initialData?: any;
+  initialData?: SeasonalRate;
   onSubmit: (data: SeasonalRateValues) => void;
   onCancel: () => void;
 }

@@ -18,7 +18,7 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { ArrowLeft, Plus, Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import { format, isSameDay, isWithinInterval } from "date-fns";
 import { toast } from "sonner";
 import BookingForm from "./BookingForm";
 
@@ -87,15 +87,9 @@ const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
     });
   };
   
-  // Custom day renderer for the calendar
-  const renderDay = (day: Date) => {
-    const hasBooking = getDayHasBooking(day);
-    
-    return (
-      <div className={`w-full h-full ${hasBooking ? 'bg-blue-100' : ''}`}>
-        {format(day, "d")}
-      </div>
-    );
+  // Create a custom day class name function
+  const dayClassName = (date: Date) => {
+    return getDayHasBooking(date) ? "bg-blue-100" : "";
   };
 
   return (
@@ -126,7 +120,12 @@ const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
               selected={selectedDate}
               onSelect={setSelectedDate}
               disabled={{ before: new Date() }}
-              renderDay={renderDay}
+              modifiers={{
+                booked: (date) => getDayHasBooking(date)
+              }}
+              modifiersClassNames={{
+                booked: "bg-blue-100"
+              }}
             />
             <div className="mt-4 flex gap-2 items-center text-sm">
               <div className="w-4 h-4 bg-blue-100 rounded-sm"></div>

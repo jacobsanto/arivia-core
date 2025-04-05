@@ -46,6 +46,9 @@ const bookingFormSchema = z.object({
   }),
   status: z.string(),
   specialRequests: z.string().optional(),
+  // Add propertyId to the schema
+  propertyId: z.number(),
+  propertyName: z.string()
 });
 
 type BookingFormValues = z.infer<typeof bookingFormSchema>;
@@ -74,16 +77,14 @@ const BookingForm = ({
       checkOut: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Default to 1 week stay
       status: "Confirmed",
       specialRequests: "",
+      propertyId: propertyId,
+      propertyName: propertyName,
       ...initialData,
     },
   });
 
   const handleSubmit = (data: BookingFormValues) => {
-    onSubmit({
-      ...data,
-      propertyId,
-      propertyName
-    });
+    onSubmit(data);
   };
 
   return (
