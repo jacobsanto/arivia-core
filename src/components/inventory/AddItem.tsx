@@ -22,23 +22,25 @@ const formSchema = z.object({
   name: z.string().min(2, { message: "Item name must be at least 2 characters." }),
   category: z.string().min(1, { message: "Please select a category." }),
   unit: z.string().min(1, { message: "Please select a unit." }),
-  minLevel: z.string().transform(val => parseInt(val)),
-  initialStock: z.string().transform(val => parseInt(val)),
+  minLevel: z.coerce.number().min(0, { message: "Minimum level must be 0 or higher." }),
+  initialStock: z.coerce.number().min(0, { message: "Initial stock must be 0 or higher." }),
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 const AddItem = () => {
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       category: "",
       unit: "",
-      minLevel: "10",
-      initialStock: "0",
+      minLevel: 10,
+      initialStock: 0,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: FormValues) {
     console.log(values);
     toast({
       title: "Item Added Successfully",
