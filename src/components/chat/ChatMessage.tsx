@@ -50,6 +50,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
 
+  // Add a mouseEnter handler for the emoji picker to prevent it from closing
+  const handleEmojiPickerMouseEnter = () => {
+    setShowEmojiPicker(true);
+  };
+
   return (
     <div
       key={message.id}
@@ -72,14 +77,17 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary"
               }`}
-              onMouseEnter={() => setReactionMessageId(message.id)}
+              onMouseEnter={() => {
+                setReactionMessageId(message.id);
+                setShowEmojiPicker(true);
+              }}
               onMouseLeave={() => {
-                // Small delay to allow clicking emoji picker
-                if (!showEmojiPicker) {
-                  setTimeout(() => {
-                    setReactionMessageId(null);
-                  }, 300);
-                }
+                // Only close if we're not hovering over the emoji picker
+                setTimeout(() => {
+                  if (reactionMessageId === message.id) {
+                    setShowEmojiPicker(false);
+                  }
+                }, 300);
               }}
             >
               <p className="text-sm">{message.content}</p>
@@ -106,19 +114,28 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             )}
             
             {/* Emoji picker with improved positioning and visibility */}
-            {reactionMessageId === message.id && (
-              <div className="absolute bottom-full mb-2 bg-background shadow-lg rounded-lg border p-1.5 flex z-10 animate-fade-in">
+            {reactionMessageId === message.id && showEmojiPicker && (
+              <div 
+                className="absolute bottom-full mb-2 bg-background shadow-lg rounded-lg border p-1.5 flex z-10 animate-fade-in"
+                onMouseEnter={handleEmojiPickerMouseEnter}
+                onMouseLeave={() => {
+                  setTimeout(() => {
+                    setShowEmojiPicker(false);
+                  }, 500);
+                }}
+              >
                 {emojis.map(emoji => (
                   <button 
                     key={emoji} 
                     className="hover:bg-secondary rounded-md p-1.5 transition-colors"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent the event from bubbling up
                       onAddReaction(message.id, emoji);
                       // Don't hide the reaction menu immediately
-                      // This allows users to see the effect of their action
                       setTimeout(() => {
+                        setShowEmojiPicker(false);
                         setReactionMessageId(null);
-                      }, 500);
+                      }, 300);
                     }}
                   >
                     {emoji}
