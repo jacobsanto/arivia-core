@@ -16,24 +16,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  Cell
+  ResponsiveContainer
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-const completionData = [
-  { name: 'Villa Caldera', completed: 45, rejected: 2, approved: 41 },
-  { name: 'Villa Sunset', completed: 36, rejected: 4, approved: 32 },
-  { name: 'Villa Oceana', completed: 52, rejected: 1, approved: 51 },
-  { name: 'Villa Paradiso', completed: 28, rejected: 5, approved: 23 },
-  { name: 'Villa Azure', completed: 39, rejected: 3, approved: 36 }
-];
-
-const barColors = {
-  completed: '#94a3b8',
-  rejected: '#f87171',
-  approved: '#4ade80'
-};
+import { completionData, barColors } from "./reportingData";
 
 export const PropertyReporting = () => {
   const isMobile = useIsMobile();

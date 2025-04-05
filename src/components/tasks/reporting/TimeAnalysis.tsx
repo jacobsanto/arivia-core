@@ -10,16 +10,7 @@ import {
   Tooltip,
   ResponsiveContainer
 } from "recharts";
-
-const performanceByDayData = [
-  { name: 'Mon', tasks: 15, avgTime: 72 },
-  { name: 'Tue', tasks: 12, avgTime: 68 },
-  { name: 'Wed', tasks: 18, avgTime: 71 },
-  { name: 'Thu', tasks: 16, avgTime: 69 },
-  { name: 'Fri', tasks: 22, avgTime: 73 },
-  { name: 'Sat', tasks: 28, avgTime: 78 },
-  { name: 'Sun', tasks: 24, avgTime: 75 }
-];
+import { performanceByDayData } from "./reportingData";
 
 export const TimeAnalysis = () => {
   return (

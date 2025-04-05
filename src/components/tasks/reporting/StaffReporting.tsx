@@ -19,14 +19,7 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
-
-const staffData = [
-  { name: 'Maria K.', completed: 42, avgTime: 68, rating: 4.8 },
-  { name: 'Stefan M.', completed: 35, avgTime: 72, rating: 4.7 },
-  { name: 'Ana R.', completed: 48, avgTime: 65, rating: 4.9 },
-  { name: 'Thomas L.', completed: 31, avgTime: 75, rating: 4.6 },
-  { name: 'Julia P.', completed: 39, avgTime: 70, rating: 4.7 }
-];
+import { staffData } from "./reportingData";
 
 export const StaffReporting = () => {
   return (
