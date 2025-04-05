@@ -32,6 +32,7 @@ const Maintenance = () => {
     setIsReportOpen,
     handleSubmitReport,
     currentReport,
+    handleToggleInstruction,
   } = useMaintenanceTasks();
 
   return (
@@ -59,6 +60,7 @@ const Maintenance = () => {
           onClose={handleCloseTask}
           onComplete={() => setIsReportOpen(true)}
           onPhotoUpload={handlePhotoUpload}
+          onToggleInstruction={handleToggleInstruction}
         />
       )}
 
