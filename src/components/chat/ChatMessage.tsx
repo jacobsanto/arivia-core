@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThumbsUp, Heart, Waves, PartyPopper, HandMetal } from "lucide-react";
@@ -72,6 +71,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   
   // Handle showing reaction picker with delay to prevent flickering
   const handleMessageMouseEnter = () => {
+    // Don't show reaction picker for own messages
+    if (message.isCurrentUser) {
+      return;
+    }
+    
     setIsHoveringMessage(true);
     
     // Clear any existing leave timer
@@ -198,8 +202,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               </div>
             )}
             
-            {/* Improved emoji picker with better mouse interaction */}
-            {reactionMessageId === message.id && showEmojiPicker && (
+            {/* Only show emoji picker for messages that aren't from the current user */}
+            {!message.isCurrentUser && reactionMessageId === message.id && showEmojiPicker && (
               <div 
                 className="absolute bottom-full mb-2 bg-background/95 shadow-lg rounded-lg border border-border p-1.5 flex z-10"
                 onMouseEnter={handlePickerMouseEnter}

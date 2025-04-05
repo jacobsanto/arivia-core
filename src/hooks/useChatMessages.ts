@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -27,23 +26,19 @@ export const useChatMessages = (activeChat: string) => {
   const [reactionMessageId, setReactionMessageId] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  // Load messages from localStorage on component mount
   useEffect(() => {
     const storedMessages = localStorage.getItem(`chat_${activeChat}`);
     if (storedMessages) {
       setMessages(JSON.parse(storedMessages));
     } else {
-      // If no stored messages, use sample messages
       setMessages(sampleMessages);
     }
   }, [activeChat]);
 
-  // Save messages to localStorage when messages change
   useEffect(() => {
     localStorage.setItem(`chat_${activeChat}`, JSON.stringify(messages));
   }, [messages, activeChat]);
 
-  // Handle typing indicator
   const handleTyping = () => {
     if (typingTimeout) {
       clearTimeout(typingTimeout);
@@ -84,7 +79,6 @@ export const useChatMessages = (activeChat: string) => {
         clearTimeout(typingTimeout);
       }
       
-      // Show notification for sent message
       toast({
         title: "Message sent",
         description: `Your message was sent to ${activeChat}`,
@@ -92,20 +86,20 @@ export const useChatMessages = (activeChat: string) => {
     }
   };
   
-  // Updated addReaction function to allow reacting to own messages
   const addReaction = (messageId: number, emoji: string) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => {
         if (msg.id === messageId) {
-          // Initialize reactions object if it doesn't exist
+          if (msg.isCurrentUser) {
+            return msg;
+          }
+          
           const reactions = msg.reactions || {};
           const userList = reactions[emoji] || [];
           
-          // Toggle user's reaction
           const username = user?.name || "Admin";
           const hasReacted = userList.includes(username);
           
-          // Create new reactions object with updated emoji reactions
           const updatedReactions = {
             ...reactions,
             [emoji]: hasReacted 
@@ -113,7 +107,6 @@ export const useChatMessages = (activeChat: string) => {
               : [...userList, username]
           };
 
-          // Only keep emojis with at least one user
           const finalReactions = Object.fromEntries(
             Object.entries(updatedReactions).filter(([_, users]) => users.length > 0)
           );
@@ -127,12 +120,10 @@ export const useChatMessages = (activeChat: string) => {
       })
     );
     
-    // Close emoji picker after adding reaction
     setShowEmojiPicker(false);
     setReactionMessageId(null);
   };
 
-  // Sample messages as fallback
   const sampleMessages = [
     {
       id: 1,
