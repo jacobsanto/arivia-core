@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/card";
 import { BedDouble, Plus, CheckCircle, XCircle } from "lucide-react";
 import { toast } from "sonner";
-import { Task } from "@/hooks/useTasks";
+import { Task } from "@/types/taskTypes";
 import { useUser } from "@/contexts/UserContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 

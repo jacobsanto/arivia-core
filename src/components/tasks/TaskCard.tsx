@@ -2,7 +2,7 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Task } from "@/hooks/useTasks";
+import { Task } from "@/types/taskTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 

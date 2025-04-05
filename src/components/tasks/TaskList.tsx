@@ -1,8 +1,7 @@
-
 import React from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import TaskCard from "@/components/tasks/TaskCard";
-import { Task } from "@/hooks/useTasks";
+import { Task } from "@/types/taskTypes";
 
 interface TaskListProps {
   tasks: Task[];
