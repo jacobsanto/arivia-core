@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock } from "lucide-react";
+import { Shield, Lock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // Mock user list for demonstration
 const MOCK_USER_LIST: User[] = [
@@ -24,6 +25,13 @@ const MOCK_USER_LIST: User[] = [
   { id: "4", email: "housekeeping@ariviavillas.com", name: "Housekeeping Staff", role: "housekeeping_staff" },
   { id: "5", email: "maintenance@ariviavillas.com", name: "Maintenance Staff", role: "maintenance_staff" },
   { id: "6", email: "inventory@ariviavillas.com", name: "Inventory Manager", role: "inventory_manager" },
+  { 
+    id: "7", 
+    email: "superadmin@ariviavillas.com", 
+    name: "Super Admin", 
+    role: "superadmin",
+    secondaryRoles: ["administrator"] 
+  },
 ];
 
 const RoleManagement: React.FC = () => {
@@ -31,6 +39,7 @@ const RoleManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>(MOCK_USER_LIST);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
+  const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
   
   // Only superadmins can access this component
   if (user?.role !== "superadmin") {
@@ -62,12 +71,28 @@ const RoleManagement: React.FC = () => {
     const userToEdit = users.find(u => u.id === userId);
     if (userToEdit) {
       setSelectedRole(userToEdit.role);
+      setSelectedSecondaryRoles(userToEdit.secondaryRoles || []);
     }
   };
   
   const handleSaveRole = (userId: string) => {
+    // Validate selection for Super Admin
+    if (selectedRole === "superadmin" && selectedSecondaryRoles.length === 0) {
+      toast.error("Super Admin requires at least one secondary role", {
+        description: "Please select at least one additional role"
+      });
+      return;
+    }
+    
+    // Regular users cannot have secondary roles
+    const updatedSecondaryRoles = selectedRole === "superadmin" ? selectedSecondaryRoles : undefined;
+    
     setUsers(users.map(u => 
-      u.id === userId ? { ...u, role: selectedRole } : u
+      u.id === userId ? { 
+        ...u, 
+        role: selectedRole,
+        secondaryRoles: updatedSecondaryRoles
+      } : u
     ));
     setEditingUserId(null);
     
@@ -78,6 +103,15 @@ const RoleManagement: React.FC = () => {
   
   const handleCancelEdit = () => {
     setEditingUserId(null);
+    setSelectedSecondaryRoles([]);
+  };
+
+  const toggleSecondaryRole = (role: UserRole) => {
+    setSelectedSecondaryRoles(prev => 
+      prev.includes(role) 
+        ? prev.filter(r => r !== role) 
+        : [...prev, role]
+    );
   };
   
   return (
@@ -108,17 +142,59 @@ const RoleManagement: React.FC = () => {
                 <TableCell>{user.email}</TableCell>
                 <TableCell>
                   {editingUserId === user.id ? (
-                    <select 
-                      className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                      value={selectedRole}
-                      onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                    >
-                      {Object.entries(ROLE_DETAILS).map(([role, details]) => (
-                        <option key={role} value={role}>{details.title}</option>
-                      ))}
-                    </select>
+                    <div className="space-y-4">
+                      <select 
+                        className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                        value={selectedRole}
+                        onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                      >
+                        {Object.entries(ROLE_DETAILS).map(([role, details]) => (
+                          <option key={role} value={role}>{details.title}</option>
+                        ))}
+                      </select>
+                      
+                      {selectedRole === "superadmin" && (
+                        <div className="p-3 border rounded-md space-y-3">
+                          <div className="flex items-center gap-1">
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            <span className="text-xs text-muted-foreground">
+                              Super Admin requires at least one secondary role
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {Object.entries(ROLE_DETAILS)
+                              .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
+                              .map(([role, details]) => (
+                                <div key={role} className="flex items-center space-x-2">
+                                  <Checkbox 
+                                    id={`role-${role}`} 
+                                    checked={selectedSecondaryRoles.includes(role as UserRole)}
+                                    onCheckedChange={() => toggleSecondaryRole(role as UserRole)}
+                                  />
+                                  <label htmlFor={`role-${role}`} className="text-sm">
+                                    {details.title}
+                                  </label>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
+                    <div>
+                      <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
+                      
+                      {user.secondaryRoles && user.secondaryRoles.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {user.secondaryRoles.map((role) => (
+                            <Badge key={role} variant="secondary" className="text-xs">
+                              +{ROLE_DETAILS[role].title}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </TableCell>
                 <TableCell className="text-right">

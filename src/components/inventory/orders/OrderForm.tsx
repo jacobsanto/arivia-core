@@ -7,15 +7,19 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useUser } from "@/contexts/UserContext";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";
 import OrderItemList from "./OrderItemList";
 import OrderFormVendor from "./OrderFormVendor";
+import { OrderStatus } from "./OrderUtils";
 
 const formSchema = z.object({
   vendorId: z.string().min(1, { message: "Please select a vendor." }),
   date: z.string().min(1, { message: "Please enter a date." }),
   requestor: z.string().min(1, { message: "Please enter your name." }),
+  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  department: z.enum(["housekeeping", "maintenance", "general"]).default("general"),
   items: z.array(
     z.object({
       itemId: z.string().min(1, { message: "Please select an item." }),
@@ -30,15 +34,22 @@ type FormValues = z.infer<typeof formSchema>;
 const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { canAccess } = usePermissions();
-  const canApproveOrders = canAccess("approve_orders");
+  const { user } = useUser();
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
+  
+  // Check if user can create orders
+  const canInitiateOrders = ["housekeeping_staff", "maintenance_staff"].includes(user?.role || "");
+  const canCreateOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(user?.role || "");
+  const canApproveOrders = ["superadmin", "administrator", "property_manager"].includes(user?.role || "");
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendorId: "",
       date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-      requestor: "",
+      requestor: user?.name || "",
+      priority: "medium",
+      department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
       items: [{ itemId: "", quantity: 1 }],
       notes: "",
     },
@@ -58,23 +69,47 @@ const OrderForm = () => {
   }, [methods]);
 
   function onSubmit(values: FormValues) {
+    if (!canCreateOrders) {
+      toast({
+        title: "Permission Denied",
+        description: "You don't have permission to create orders.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
     // Simulate API call
     setTimeout(() => {
       console.log(values);
       
+      // Determine the initial status based on user role
+      let status: OrderStatus = "pending";
+      let nextAction = "";
+      
+      if (user?.role === "superadmin" || user?.role === "administrator") {
+        status = "approved";
+        nextAction = "The order will be sent to vendors.";
+      } else if (user?.role === "property_manager") {
+        status = "manager_approved";
+        nextAction = "The order has been approved and sent to admin for final approval.";
+      } else {
+        status = "pending";
+        nextAction = "The order has been submitted to your manager for approval.";
+      }
+      
       toast({
         title: "Order Submitted",
-        description: canApproveOrders 
-          ? "Order has been submitted and will be sent to the vendor." 
-          : "Order has been submitted for approval.",
+        description: `${nextAction}`,
       });
       
       methods.reset({
         vendorId: "",
         date: new Date().toISOString().split("T")[0],
-        requestor: "",
+        requestor: user?.name || "",
+        priority: "medium",
+        department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
         items: [{ itemId: "", quantity: 1 }],
         notes: "",
       });
@@ -82,6 +117,21 @@ const OrderForm = () => {
       setSelectedVendorId(null);
       setIsSubmitting(false);
     }, 1000);
+  }
+
+  if (!canCreateOrders) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Order Creation</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">You don't have permission to create orders.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -105,7 +155,7 @@ const OrderForm = () => {
               <StockFormNotes />
               
               <StockFormSubmitButton 
-                label={canApproveOrders ? "Create and Send Order" : "Submit for Approval"} 
+                label="Submit Order Request" 
                 isLoading={isSubmitting} 
               />
             </form>

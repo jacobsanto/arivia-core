@@ -1,8 +1,10 @@
+
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  secondaryRoles?: UserRole[];
   avatar?: string;
 }
 
@@ -48,11 +50,16 @@ export const FEATURE_PERMISSIONS = {
   create_orders: {
     title: "Create Orders",
     description: "Create purchase orders",
-    allowedRoles: ["superadmin", "administrator", "property_manager", "inventory_manager"]
+    allowedRoles: ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff", "inventory_manager"]
   },
   approve_orders: {
     title: "Approve Orders",
     description: "Review and approve purchase orders",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  },
+  finalize_orders: {
+    title: "Finalize Orders",
+    description: "Final approval and sending of purchase orders",
     allowedRoles: ["superadmin", "administrator"]
   },
 };
@@ -60,7 +67,7 @@ export const FEATURE_PERMISSIONS = {
 export const ROLE_DETAILS = {
   superadmin: {
     title: "Super Admin",
-    description: "Full access to all system features"
+    description: "Full access to all system features, requires a secondary role"
   },
   administrator: {
     title: "Administrator",
@@ -91,9 +98,28 @@ export const ROLE_DETAILS = {
 export const OFFLINE_CAPABILITIES = {
   superadmin: ["full_access", "manage_inventory", "view_reports", "manage_vendors", "approve_orders"],
   administrator: ["manage_properties", "manage_bookings", "manage_inventory", "view_reports", "manage_vendors", "approve_orders"],
-  property_manager: ["manage_bookings", "view_reports", "create_orders"],
+  property_manager: ["manage_bookings", "view_reports", "create_orders", "approve_orders"],
   concierge: ["manage_bookings"],
-  housekeeping_staff: ["view_tasks"],
-  maintenance_staff: ["view_tasks"],
+  housekeeping_staff: ["view_tasks", "create_orders"],
+  maintenance_staff: ["view_tasks", "create_orders"],
   inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"]
+};
+
+// Helper function to check if user has permission combining primary and secondary roles
+export const hasPermissionWithAllRoles = (
+  userRole: UserRole, 
+  secondaryRoles: UserRole[] | undefined, 
+  permissionRoles: UserRole[]
+): boolean => {
+  // Check primary role first
+  if (permissionRoles.includes(userRole)) {
+    return true;
+  }
+  
+  // Then check secondary roles if they exist
+  if (secondaryRoles && secondaryRoles.length > 0) {
+    return secondaryRoles.some(role => permissionRoles.includes(role));
+  }
+  
+  return false;
 };
