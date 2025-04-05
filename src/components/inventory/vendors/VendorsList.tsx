@@ -23,7 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 type VendorStatus = "active" | "inactive";
@@ -33,7 +33,7 @@ type Vendor = {
   name: string;
   email: string;
   phone: string;
-  category: string;
+  categories: string[]; // Changed from single category to categories array
   address: string;
   notes: string;
   status: VendorStatus;
@@ -46,7 +46,7 @@ const initialVendors: Vendor[] = [
     name: "Office Supplies Co.",
     email: "orders@officesupplies.com",
     phone: "555-123-4567",
-    category: "Office Supplies",
+    categories: ["Office Supplies", "Paper Products"], // Updated to array
     address: "123 Business Ave, Suite 101",
     notes: "Preferred supplier for paper products",
     status: "active",
@@ -56,7 +56,7 @@ const initialVendors: Vendor[] = [
     name: "Cleaning Solutions Inc.",
     email: "sales@cleaningsolutions.com",
     phone: "555-987-6543",
-    category: "Cleaning Supplies",
+    categories: ["Cleaning Supplies"], // Updated to array
     address: "456 Industrial Blvd",
     notes: "Eco-friendly products available",
     status: "active",
@@ -66,7 +66,7 @@ const initialVendors: Vendor[] = [
     name: "Hospitality Essentials",
     email: "orders@hospitalityessentials.com",
     phone: "555-567-8901",
-    category: "Guest Amenities",
+    categories: ["Guest Amenities", "Toiletries"], // Updated to array
     address: "789 Hospitality Way",
     notes: "Bulk discounts available",
     status: "inactive",
@@ -81,11 +81,12 @@ const VendorsList = () => {
     name: "",
     email: "",
     phone: "",
-    category: "",
+    categories: [], // Updated to array
     address: "",
     notes: "",
     status: "active",
   });
+  const [categoryInput, setCategoryInput] = useState("");
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -100,17 +101,53 @@ const VendorsList = () => {
     });
   };
 
+  const handleCategoryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCategoryInput(e.target.value);
+  };
+
+  const handleAddCategory = () => {
+    if (categoryInput.trim()) {
+      if (!formData.categories.includes(categoryInput.trim())) {
+        setFormData((prev) => ({
+          ...prev,
+          categories: [...prev.categories, categoryInput.trim()]
+        }));
+        setCategoryInput("");
+      } else {
+        toast({
+          title: "Category already exists",
+          description: "This category has already been added."
+        });
+      }
+    }
+  };
+
+  const handleRemoveCategory = (categoryToRemove: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.filter(category => category !== categoryToRemove)
+    }));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission
+      handleAddCategory();
+    }
+  };
+
   const handleAddVendor = () => {
     setCurrentVendor(null);
     setFormData({
       name: "",
       email: "",
       phone: "",
-      category: "",
+      categories: [], // Updated to array
       address: "",
       notes: "",
       status: "active",
     });
+    setCategoryInput("");
     setIsDialogOpen(true);
   };
 
@@ -120,11 +157,12 @@ const VendorsList = () => {
       name: vendor.name,
       email: vendor.email,
       phone: vendor.phone,
-      category: vendor.category,
+      categories: vendor.categories, // Updated to array
       address: vendor.address,
       notes: vendor.notes,
       status: vendor.status,
     });
+    setCategoryInput("");
     setIsDialogOpen(true);
   };
 
@@ -146,6 +184,15 @@ const VendorsList = () => {
       toast({
         title: "Error",
         description: "Name and email are required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (formData.categories.length === 0) {
+      toast({
+        title: "Error",
+        description: "At least one category is required.",
         variant: "destructive",
       });
       return;
@@ -192,7 +239,7 @@ const VendorsList = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead>Categories</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Status</TableHead>
@@ -203,7 +250,15 @@ const VendorsList = () => {
             {vendors.map((vendor) => (
               <TableRow key={vendor.id}>
                 <TableCell className="font-medium">{vendor.name}</TableCell>
-                <TableCell>{vendor.category}</TableCell>
+                <TableCell>
+                  <div className="flex flex-wrap gap-1">
+                    {vendor.categories.map((category, index) => (
+                      <Badge key={index} variant="outline" className="mr-1 mb-1">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                </TableCell>
                 <TableCell>{vendor.email}</TableCell>
                 <TableCell>{vendor.phone}</TableCell>
                 <TableCell>
@@ -269,13 +324,45 @@ const VendorsList = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Input
-                    id="category"
-                    name="category"
-                    value={formData.category}
-                    onChange={handleInputChange}
-                  />
+                  <Label htmlFor="category">Categories</Label>
+                  <div className="flex items-center mb-2">
+                    <Input
+                      id="category"
+                      value={categoryInput}
+                      onChange={handleCategoryInputChange}
+                      onKeyPress={handleKeyPress}
+                      className="flex-1"
+                      placeholder="Add a category"
+                    />
+                    <Button 
+                      type="button" 
+                      onClick={handleAddCategory} 
+                      className="ml-2"
+                    >
+                      <Tag className="h-4 w-4 mr-1" />
+                      Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {formData.categories.map((category, index) => (
+                      <Badge key={index} variant="secondary" className="flex items-center gap-1 px-3 py-1">
+                        {category}
+                        <button 
+                          type="button" 
+                          onClick={() => handleRemoveCategory(category)}
+                          className="ml-1 hover:bg-secondary-foreground/10 rounded-full p-0.5"
+                        >
+                          <X className="h-3 w-3" />
+                          <span className="sr-only">Remove {category}</span>
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                  {formData.categories.length === 0 && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      At least one category is required
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="address">Address</Label>

@@ -83,3 +83,18 @@ export type Order = {
   rejectionReason?: string;
   sentAt?: string;
 };
+
+// Export vendor status type for reuse
+export type VendorStatus = "active" | "inactive";
+
+// Export vendor type for reuse
+export type Vendor = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  categories: string[]; // Multiple categories
+  address: string;
+  notes: string;
+  status: VendorStatus;
+};
