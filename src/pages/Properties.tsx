@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import {
   Card,
@@ -19,8 +18,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal, Search, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MoreHorizontal, Search, Plus, Calendar as CalendarIcon, Home, User, MessageSquare, DollarSign, Filter, Map } from "lucide-react";
 import { toast } from "sonner";
+import PropertyForm from "@/components/properties/PropertyForm";
+import BookingCalendar from "@/components/properties/BookingCalendar";
+import PricingConfig from "@/components/properties/PricingConfig";
+import GuestManagement from "@/components/properties/GuestManagement";
 
 // Sample property data
 const properties = [
@@ -34,6 +40,8 @@ const properties = [
     bathrooms: 3,
     price: 450,
     imageUrl: "/placeholder.svg",
+    currentGuests: { name: "John & Sarah Miller", checkIn: "2025-04-01", checkOut: "2025-04-08" },
+    nextBooking: { name: "Roberto Garcia", checkIn: "2025-04-09", checkOut: "2025-04-15" }
   },
   {
     id: 2,
@@ -45,6 +53,7 @@ const properties = [
     bathrooms: 2,
     price: 380,
     imageUrl: "/placeholder.svg",
+    nextBooking: { name: "Emma Thompson", checkIn: "2025-04-10", checkOut: "2025-04-17" }
   },
   {
     id: 3,
@@ -95,6 +104,9 @@ const properties = [
 const Properties = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [activeView, setActiveView] = useState("properties");
+  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
 
   const filteredProperties = properties.filter((property) => {
     // Filter by search query
@@ -111,6 +123,57 @@ const Properties = () => {
     return matchesSearch && matchesTab;
   });
 
+  const handleAddProperty = () => {
+    setIsAddPropertyOpen(true);
+  };
+
+  const handlePropertyCreated = (newProperty) => {
+    toast.success(`${newProperty.name} has been added to your properties`);
+    setIsAddPropertyOpen(false);
+    // In a real app, we would add the property to the state/database
+  };
+
+  const handleViewDetails = (property) => {
+    setSelectedProperty(property);
+    setActiveView("details");
+  };
+
+  const handleBookingManagement = (property) => {
+    setSelectedProperty(property);
+    setActiveView("bookings");
+  };
+  
+  const handlePricingConfig = (property) => {
+    setSelectedProperty(property);
+    setActiveView("pricing");
+  };
+  
+  const handleGuestManagement = (property) => {
+    setSelectedProperty(property);
+    setActiveView("guests");
+  };
+
+  const handleBackToProperties = () => {
+    setActiveView("properties");
+    setSelectedProperty(null);
+  };
+
+  if (activeView === "details" && selectedProperty) {
+    return <PropertyDetails property={selectedProperty} onBack={handleBackToProperties} />;
+  }
+  
+  if (activeView === "bookings" && selectedProperty) {
+    return <BookingCalendar property={selectedProperty} onBack={handleBackToProperties} />;
+  }
+  
+  if (activeView === "pricing" && selectedProperty) {
+    return <PricingConfig property={selectedProperty} onBack={handleBackToProperties} />;
+  }
+  
+  if (activeView === "guests" && selectedProperty) {
+    return <GuestManagement property={selectedProperty} onBack={handleBackToProperties} />;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -120,7 +183,7 @@ const Properties = () => {
             Manage your portfolio of luxury villas.
           </p>
         </div>
-        <Button onClick={() => toast.info("Property creation form would open here.")}>
+        <Button onClick={handleAddProperty}>
           <Plus className="mr-2 h-4 w-4" />
           Add Property
         </Button>
@@ -153,8 +216,143 @@ const Properties = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => (
-          <PropertyCard key={property.id} property={property} />
+          <PropertyCard 
+            key={property.id} 
+            property={property} 
+            onViewDetails={handleViewDetails}
+            onBookingManagement={handleBookingManagement}
+            onPricingConfig={handlePricingConfig}
+            onGuestManagement={handleGuestManagement}
+          />
         ))}
+      </div>
+
+      {/* Add Property Dialog */}
+      <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Property</DialogTitle>
+          </DialogHeader>
+          <PropertyForm onSubmit={handlePropertyCreated} />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+const PropertyDetails = ({ property, onBack }) => {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-4">
+        <Button variant="outline" onClick={onBack}>Back</Button>
+        <h1 className="text-2xl font-bold">{property.name}</h1>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Property Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Location:</span>
+                <span className="font-medium">{property.location}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Type:</span>
+                <span className="font-medium">{property.type}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Status:</span>
+                <Badge variant={property.status === "Occupied" ? "default" : property.status === "Vacant" ? "secondary" : "outline"}>
+                  {property.status}
+                </Badge>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Bedrooms:</span>
+                <span className="font-medium">{property.bedrooms}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Bathrooms:</span>
+                <span className="font-medium">{property.bathrooms}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Base Price:</span>
+                <span className="font-medium">€{property.price}/night</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle>Current Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {property.currentGuests ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium">Current Guests</h3>
+                  <p>{property.currentGuests.name}</p>
+                  <div className="text-sm text-muted-foreground">
+                    {property.currentGuests.checkIn} to {property.currentGuests.checkOut}
+                  </div>
+                </div>
+                <div>
+                  <Button variant="outline" size="sm" className="mr-2">
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Message Guests
+                  </Button>
+                </div>
+              </div>
+            ) : property.nextBooking ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-medium">Next Booking</h3>
+                  <p>{property.nextBooking.name}</p>
+                  <div className="text-sm text-muted-foreground">
+                    {property.nextBooking.checkIn} to {property.nextBooking.checkOut}
+                  </div>
+                </div>
+                <div>
+                  <Button variant="outline" size="sm">Prepare Welcome Package</Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <p>No current or upcoming bookings.</p>
+                <Button className="mt-4" size="sm" variant="outline">Create Booking</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        <Card className="md:col-span-2">
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Button variant="outline" onClick={() => onBack()}>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                Manage Bookings
+              </Button>
+              <Button variant="outline" onClick={() => onBack()}>
+                <DollarSign className="mr-2 h-4 w-4" />
+                Configure Pricing
+              </Button>
+              <Button variant="outline" onClick={() => onBack()}>
+                <User className="mr-2 h-4 w-4" />
+                Guest Management
+              </Button>
+              <Button variant="outline" onClick={() => onBack()}>
+                <Home className="mr-2 h-4 w-4" />
+                Edit Property
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
@@ -171,22 +369,26 @@ interface PropertyCardProps {
     bathrooms: number;
     price: number;
     imageUrl: string;
+    currentGuests?: { name: string; checkIn: string; checkOut: string };
+    nextBooking?: { name: string; checkIn: string; checkOut: string };
   };
+  onViewDetails: (property: any) => void;
+  onBookingManagement: (property: any) => void;
+  onPricingConfig: (property: any) => void;
+  onGuestManagement: (property: any) => void;
 }
 
-const PropertyCard = ({ property }: PropertyCardProps) => {
+const PropertyCard = ({ 
+  property, 
+  onViewDetails,
+  onBookingManagement,
+  onPricingConfig,
+  onGuestManagement
+}: PropertyCardProps) => {
   const statusColors = {
     Occupied: "bg-green-100 text-green-800",
     Vacant: "bg-blue-100 text-blue-800",
     Maintenance: "bg-amber-100 text-amber-800",
-  };
-
-  const handleViewDetails = () => {
-    toast.info(`Viewing details for ${property.name}`);
-  };
-
-  const handleAssignTasks = () => {
-    toast.info(`Assigning tasks for ${property.name}`);
   };
 
   return (
@@ -211,8 +413,10 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={handleViewDetails}>View Details</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleAssignTasks}>Assign Tasks</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onViewDetails(property)}>View Details</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onBookingManagement(property)}>Manage Bookings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onPricingConfig(property)}>Configure Pricing</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onGuestManagement(property)}>Guest Management</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Edit Property</DropdownMenuItem>
             </DropdownMenuContent>
@@ -227,9 +431,25 @@ const PropertyCard = ({ property }: PropertyCardProps) => {
           </div>
           <div className="font-medium">€{property.price}/night</div>
         </div>
+        
+        {property.currentGuests && (
+          <div className="mt-2 pt-2 border-t text-xs">
+            <p className="font-medium">Currently occupied by:</p>
+            <p className="text-muted-foreground">{property.currentGuests.name}</p>
+            <p className="text-muted-foreground">Until {property.currentGuests.checkOut}</p>
+          </div>
+        )}
+        
+        {!property.currentGuests && property.nextBooking && (
+          <div className="mt-2 pt-2 border-t text-xs">
+            <p className="font-medium">Next booking:</p>
+            <p className="text-muted-foreground">{property.nextBooking.name}</p>
+            <p className="text-muted-foreground">From {property.nextBooking.checkIn}</p>
+          </div>
+        )}
       </CardContent>
-      <CardFooter className="pt-2 text-xs text-muted-foreground">
-        <div className="flex justify-between w-full">
+      <CardFooter className="pt-2 flex justify-between">
+        <div className="flex justify-between w-full text-xs text-muted-foreground">
           <span>{property.bedrooms} Bedrooms</span>
           <span>{property.bathrooms} Bathrooms</span>
         </div>
