@@ -39,6 +39,7 @@ const Inventory = () => {
                 <TabsTrigger value="usage">Usage Reports</TabsTrigger>
                 <TabsTrigger value="vendors">Vendors</TabsTrigger>
                 <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="create-order">Create Order</TabsTrigger>
               </TabsList>
             </div>
             
@@ -73,10 +74,11 @@ const Inventory = () => {
                 </TabsContent>
                 
                 <TabsContent value="orders" className="mt-0">
-                  <div className="grid gap-6">
-                    <OrderList />
-                    <OrderForm />
-                  </div>
+                  <OrderList />
+                </TabsContent>
+                
+                <TabsContent value="create-order" className="mt-0">
+                  <OrderForm />
                 </TabsContent>
               </CardContent>
             </Card>
