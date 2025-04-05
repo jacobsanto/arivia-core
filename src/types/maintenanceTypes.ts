@@ -26,5 +26,14 @@ export interface MaintenanceTask {
   instructions: MaintenanceInstruction[];
   beforePhotos: string[];
   afterPhotos: string[];
+  beforeVideos: string[];
+  afterVideos: string[];
+  specialInstructions?: string;
+  createdAt: string;
   report?: MaintenanceReport;
+}
+
+export interface DateRangeFilter {
+  startDate: Date | null;
+  endDate: Date | null;
 }

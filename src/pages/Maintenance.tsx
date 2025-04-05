@@ -8,8 +8,10 @@ import MaintenanceReport from "@/components/maintenance/MaintenanceReport";
 import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceCreationForm";
 import MaintenanceFilters from "@/components/maintenance/MaintenanceFilters";
 import MaintenanceStats from "@/components/maintenance/MaintenanceStats";
+import MaintenanceHistory from "@/components/maintenance/MaintenanceHistory";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DateRangeFilter } from "@/types/maintenanceTypes";
 
 const Maintenance = () => {
   const {
@@ -26,10 +28,13 @@ const Maintenance = () => {
     setPropertyFilter,
     priorityFilter,
     setPriorityFilter,
+    dateRangeFilter,
+    setDateRange,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
     handlePhotoUpload,
+    handleVideoUpload,
     isReportOpen,
     setIsReportOpen,
     handleSubmitReport,
@@ -38,16 +43,25 @@ const Maintenance = () => {
     handleCreateTask,
   } = useMaintenanceTasks();
 
-  const [viewMode, setViewMode] = useState<"list" | "stats">("list");
+  const [viewMode, setViewMode] = useState<"list" | "stats" | "history">("list");
+
+  const handleClearFilters = () => {
+    setSearchQuery("");
+    setActiveTab("all");
+    setPropertyFilter("all");
+    setPriorityFilter("all");
+    setDateRange({ startDate: null, endDate: null });
+  };
 
   return (
     <div className="space-y-6">
       <MaintenanceHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
 
-      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "stats")} className="w-full">
+      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "stats" | "history")} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="list">Task List</TabsTrigger>
           <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="space-y-6">
@@ -69,6 +83,16 @@ const Maintenance = () => {
         <TabsContent value="stats">
           <MaintenanceStats tasks={tasks} />
         </TabsContent>
+
+        <TabsContent value="history">
+          <MaintenanceHistory 
+            tasks={filteredTasks}
+            dateRangeFilter={dateRangeFilter}
+            onDateRangeChange={setDateRange}
+            onClearFilters={handleClearFilters}
+            onOpenTask={handleOpenTask}
+          />
+        </TabsContent>
       </Tabs>
 
       {/* Maintenance Detail Modal */}
@@ -78,6 +102,7 @@ const Maintenance = () => {
           onClose={handleCloseTask}
           onComplete={() => setIsReportOpen(true)}
           onPhotoUpload={handlePhotoUpload}
+          onVideoUpload={handleVideoUpload}
           onToggleInstruction={handleToggleInstruction}
         />
       )}

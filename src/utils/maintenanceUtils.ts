@@ -33,11 +33,24 @@ export const uploadPhoto = (file: File, type: 'before' | 'after') => {
   toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} photo uploaded for task!`);
 };
 
+export const uploadVideo = (file: File, type: 'before' | 'after') => {
+  console.log(`${type} video uploaded:`, file.name);
+  toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} video uploaded for task!`);
+};
+
 export const createMaintenanceTask = (data: any) => {
   const requiredTools = data.requiredTools 
     ? data.requiredTools.split(',').map((item: string) => item.trim()).filter((item: string) => item)
     : [];
 
+  const now = new Date();
+
   toast.success(`Maintenance task "${data.title}" created successfully!`);
-  return { ...data, requiredTools };
+  return { 
+    ...data, 
+    requiredTools,
+    beforeVideos: [],
+    afterVideos: [],
+    createdAt: now.toISOString(),
+  };
 };

@@ -10,6 +10,7 @@ export const maintenanceFormSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters"),
   location: z.string().min(1, "Location is required"),
   requiredTools: z.string().optional(),
+  specialInstructions: z.string().optional(),
 });
 
 export type MaintenanceFormValues = z.infer<typeof maintenanceFormSchema>;

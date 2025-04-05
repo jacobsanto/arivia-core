@@ -1,12 +1,13 @@
 
 import { useState } from "react";
 import { initialTasks } from "../data/maintenanceTasks";
-import { MaintenanceReport, MaintenanceTask } from "../types/maintenanceTypes";
+import { DateRangeFilter, MaintenanceReport, MaintenanceTask } from "../types/maintenanceTypes";
 import { 
   completeTask, 
   toggleInstruction, 
   submitReport, 
-  uploadPhoto, 
+  uploadPhoto,
+  uploadVideo,
   createMaintenanceTask 
 } from "../utils/maintenanceUtils";
 import { filterMaintenanceTasks } from "../utils/maintenanceFilters";
@@ -21,6 +22,11 @@ export const useMaintenanceTasks = () => {
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState<DateRangeFilter>({
+    startDate: null,
+    endDate: null,
+  });
+  const [isHistoryView, setIsHistoryView] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [currentReport, setCurrentReport] = useState<MaintenanceReport>({
     timeSpent: "",
@@ -34,7 +40,8 @@ export const useMaintenanceTasks = () => {
     searchQuery,
     activeTab,
     propertyFilter,
-    priorityFilter
+    priorityFilter,
+    dateRangeFilter
   );
 
   const handleOpenTask = (task: MaintenanceTask) => {
@@ -66,12 +73,20 @@ export const useMaintenanceTasks = () => {
   const handlePhotoUpload = (file: File, type: 'before' | 'after') => {
     uploadPhoto(file, type);
   };
+  
+  const handleVideoUpload = (file: File, type: 'before' | 'after') => {
+    uploadVideo(file, type);
+  };
 
   const handleSubmitReport = (report: MaintenanceReport) => {
     setCurrentReport(report);
     submitReport(report);
     setIsReportOpen(false);
     handleCompleteTask();
+  };
+  
+  const setDateRange = (range: DateRangeFilter) => {
+    setDateRangeFilter(range);
   };
 
   return {
@@ -89,12 +104,17 @@ export const useMaintenanceTasks = () => {
     setPropertyFilter,
     priorityFilter,
     setPriorityFilter,
+    dateRangeFilter,
+    setDateRange,
+    isHistoryView,
+    setIsHistoryView,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
     handleToggleInstruction,
     handleCreateTask,
     handlePhotoUpload,
+    handleVideoUpload,
     isReportOpen,
     setIsReportOpen,
     handleSubmitReport,

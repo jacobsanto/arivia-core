@@ -9,22 +9,22 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Image } from "lucide-react";
 import { MaintenanceTask } from "@/hooks/useMaintenanceTasks";
 
-// Import the new components
+// Import the components
 import MaintenanceTaskHeader from "./details/MaintenanceTaskHeader";
 import MaintenanceDescription from "./details/MaintenanceDescription";
 import MaintenanceLocation from "./details/MaintenanceLocation";
 import MaintenanceTools from "./details/MaintenanceTools";
 import MaintenanceInstructions from "./instructions/MaintenanceInstructions";
-import MaintenancePhotoUpload from "./photos/MaintenancePhotoUpload";
+import MaintenanceMediaUpload from "./media/MaintenanceMediaUpload";
 
 interface MaintenanceDetailProps {
   task: MaintenanceTask | null;
   onClose: () => void;
   onComplete: () => void;
   onPhotoUpload?: (file: File, type: 'before' | 'after') => void;
+  onVideoUpload?: (file: File, type: 'before' | 'after') => void;
   onToggleInstruction?: (id: number) => void;
 }
 
@@ -33,6 +33,7 @@ const MaintenanceDetail = ({
   onClose,
   onComplete,
   onPhotoUpload,
+  onVideoUpload,
   onToggleInstruction,
 }: MaintenanceDetailProps) => {
   if (!task) return null;
@@ -57,6 +58,14 @@ const MaintenanceDetail = ({
           />
 
           <MaintenanceDescription description={task.description} />
+          
+          {task.specialInstructions && (
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Special Instructions</h3>
+              <p className="text-sm text-muted-foreground">{task.specialInstructions}</p>
+            </div>
+          )}
+          
           <MaintenanceLocation location={task.location} />
           <MaintenanceTools requiredTools={task.requiredTools} />
 
@@ -67,26 +76,26 @@ const MaintenanceDetail = ({
           />
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              Before Photos
-            </h3>
-            <MaintenancePhotoUpload 
+            <h3 className="text-sm font-medium">Before Documentation</h3>
+            <MaintenanceMediaUpload 
               type="before" 
-              onPhotoUpload={onPhotoUpload} 
+              onPhotoUpload={onPhotoUpload}
+              onVideoUpload={onVideoUpload}
               disabled={task.status === "Completed"} 
+              photos={task.beforePhotos}
+              videos={task.beforeVideos}
             />
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-sm font-medium flex items-center gap-2">
-              <Image className="h-4 w-4" />
-              After Photos
-            </h3>
-            <MaintenancePhotoUpload 
+            <h3 className="text-sm font-medium">After Documentation</h3>
+            <MaintenanceMediaUpload 
               type="after" 
-              onPhotoUpload={onPhotoUpload} 
+              onPhotoUpload={onPhotoUpload}
+              onVideoUpload={onVideoUpload}
               disabled={task.status === "Completed"} 
+              photos={task.afterPhotos}
+              videos={task.afterVideos}
             />
           </div>
         </CardContent>
