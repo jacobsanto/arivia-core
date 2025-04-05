@@ -238,7 +238,7 @@ const MaintenanceStats = ({ tasks }: MaintenanceStatsProps) => {
                 }}
               >
                 <BarChart data={propertyData}>
-                  <Bar dataKey="value" nameKey="name" fill="#8884d8">
+                  <Bar dataKey="value" fill="#8884d8">
                     {propertyData.map((entry, index) => (
                       <Cell 
                         key={`cell-${index}`} 

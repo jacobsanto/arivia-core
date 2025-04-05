@@ -35,6 +35,7 @@ const Maintenance = () => {
     handleSubmitReport,
     currentReport,
     handleToggleInstruction,
+    handleCreateTask,
   } = useMaintenanceTasks();
 
   const [viewMode, setViewMode] = useState<"list" | "stats">("list");
