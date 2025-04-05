@@ -8,6 +8,9 @@ import AddItem from "@/components/inventory/AddItem";
 import StockReceipt from "@/components/inventory/StockReceipt";
 import StockTransfer from "@/components/inventory/StockTransfer";
 import InventoryUsage from "@/components/inventory/InventoryUsage";
+import VendorsList from "@/components/inventory/vendors/VendorsList";
+import OrderForm from "@/components/inventory/orders/OrderForm";
+import OrderList from "@/components/inventory/orders/OrderList";
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -30,6 +33,8 @@ const Inventory = () => {
             <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
             <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
             <TabsTrigger value="usage">Usage Reports</TabsTrigger>
+            <TabsTrigger value="vendors">Vendors</TabsTrigger>
+            <TabsTrigger value="orders">Orders</TabsTrigger>
           </TabsList>
         </div>
         
@@ -57,6 +62,17 @@ const Inventory = () => {
             
             <TabsContent value="usage" className="mt-0">
               <InventoryUsage />
+            </TabsContent>
+            
+            <TabsContent value="vendors" className="mt-0">
+              <VendorsList />
+            </TabsContent>
+            
+            <TabsContent value="orders" className="mt-0">
+              <div className="grid gap-6">
+                <OrderList />
+                <OrderForm />
+              </div>
             </TabsContent>
           </CardContent>
         </Card>
