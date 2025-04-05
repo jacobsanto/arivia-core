@@ -148,7 +148,8 @@ class OfflineManager {
   // Save a form offline
   public saveForm(form: Omit<OfflineForm, 'id' | 'isSynced' | 'updatedAt'>): string {
     const data = this.getOfflineData();
-    const formId = form.id || `form_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Generate a new ID if one isn't provided (since we're using Omit to exclude id)
+    const formId = `form_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     
     const newForm: OfflineForm = {
       ...form,
@@ -157,7 +158,7 @@ class OfflineManager {
       updatedAt: new Date().toISOString()
     };
     
-    // Update existing form or add new one
+    // Update existing form or add new one - using our generated formId
     const formIndex = data.forms.findIndex(f => f.id === formId);
     
     if (formIndex >= 0) {

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Shield, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
-import { ROLE_DETAILS, FEATURE_PERMISSIONS } from "@/types/auth";
+import { ROLE_DETAILS, FEATURE_PERMISSIONS, UserRole } from "@/types/auth";
 import { Card, CardContent } from "@/components/ui/card";
 
 const Unauthorized = () => {
@@ -16,7 +16,7 @@ const Unauthorized = () => {
   const attemptedPath = location.state?.from?.pathname || "";
   
   // Map paths to required roles (simplified version)
-  const pathToRoles: Record<string, string[]> = {
+  const pathToRoles: Record<string, UserRole[]> = {
     '/properties': ["superadmin", "administrator", "property_manager"],
     '/tasks': ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"],
     '/maintenance': ["superadmin", "administrator", "property_manager", "maintenance_staff"],
@@ -30,8 +30,17 @@ const Unauthorized = () => {
   
   // Get role differences
   const missingFeatures = user ? Object.entries(FEATURE_PERMISSIONS)
-    .filter(([_, permission]) => permission.allowedRoles.includes(requiredRoles[0] || "administrator") && 
-                              !permission.allowedRoles.includes(user.role))
+    .filter(([_, permission]) => {
+      // Only process if we have required roles
+      if (requiredRoles.length === 0) return false;
+      
+      // Cast the first required role to UserRole to ensure type safety
+      const requiredRole = requiredRoles[0] as UserRole;
+      
+      // Now do the comparison with proper types
+      return permission.allowedRoles.includes(requiredRole) && 
+             !permission.allowedRoles.includes(user.role);
+    })
     .map(([key, permission]) => permission.title)
     : [];
   
