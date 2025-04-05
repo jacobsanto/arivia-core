@@ -5,7 +5,7 @@ import MaintenanceHeader from "@/components/maintenance/MaintenanceHeader";
 import MaintenanceList from "@/components/maintenance/MaintenanceList";
 import MaintenanceDetail from "@/components/maintenance/MaintenanceDetail";
 import MaintenanceReport from "@/components/maintenance/MaintenanceReport";
-import MaintenanceCreationForm from "@/components/maintenance/MaintenanceCreationForm";
+import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceCreationForm";
 import MaintenanceFilters from "@/components/maintenance/MaintenanceFilters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
