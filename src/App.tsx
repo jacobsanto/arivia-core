@@ -13,7 +13,7 @@ import OfflineIndicator from "./components/layout/OfflineIndicator";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
-import Tasks from "./pages/Tasks";
+import Housekeeping from "./pages/Housekeeping";
 import Maintenance from "./pages/Maintenance";
 import TeamChat from "./pages/TeamChat";
 import UserProfile from "./pages/UserProfile";
@@ -45,7 +45,7 @@ const App = () => (
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]} />}>
-                  <Route path="tasks" element={<Tasks />} />
+                  <Route path="housekeeping" element={<Housekeeping />} />
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
@@ -53,7 +53,7 @@ const App = () => (
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
-                  <Route path="inventory" element={<Navigate to="/tasks" replace />} />
+                  <Route path="inventory" element={<Navigate to="/housekeeping" replace />} />
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>

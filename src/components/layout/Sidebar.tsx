@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
   Home,
-  ClipboardList,
+  BedDouble,
   Wrench,
   Package,
   MessageSquare,
@@ -60,7 +60,7 @@ const Sidebar = () => {
         )}
         
         {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
-          <SidebarLink to="/tasks" icon={<ClipboardList size={20} />} label="Tasks" />
+          <SidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />
         )}
         
         {(user.role === "maintenance_staff" || canAccess("manageProperties")) && (
