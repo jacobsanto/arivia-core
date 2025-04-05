@@ -31,7 +31,6 @@ import { cn } from "@/lib/utils";
 const taskFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   property: z.string().min(1, "Property is required"),
-  type: z.string().min(1, "Task type is required"),
   priority: z.string().min(1, "Priority is required"),
   dueDate: z.date({
     required_error: "Due date is required",
@@ -66,7 +65,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
     defaultValues: {
       title: "",
       property: "",
-      type: "Housekeeping",
       priority: "Medium",
       dueDate: new Date(),
       assignee: "",
@@ -88,7 +86,7 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
             <FormItem>
               <FormLabel>Task Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter task title" {...field} />
+                <Input placeholder="Enter housekeeping task title" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -117,32 +115,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
                         {option.label}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="type"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Task Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select task type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="Housekeeping">Housekeeping</SelectItem>
-                    <SelectItem value="Maintenance">Maintenance</SelectItem>
-                    <SelectItem value="Inventory">Inventory</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -253,7 +225,7 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
               <FormLabel>Description & Special Instructions</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Enter any specific instructions or details"
+                  placeholder="Enter any specific housekeeping instructions or details"
                   className="min-h-[100px]"
                   {...field}
                 />
@@ -267,7 +239,7 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">Create Task</Button>
+          <Button type="submit">Create Housekeeping Task</Button>
         </div>
       </form>
     </Form>

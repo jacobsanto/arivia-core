@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -24,37 +23,20 @@ const initialTasks = [
     ],
   },
   {
-    id: 2,
-    title: "Villa Azure AC Repair",
-    property: "Villa Azure",
-    type: "Maintenance",
-    status: "In Progress",
-    priority: "Medium",
-    dueDate: "2025-04-04T16:30:00",
-    assignee: "Alex Chen",
-    description: "Fix AC unit in master bedroom",
-    checklist: [
-      { id: 1, title: "Inspect AC unit", completed: true },
-      { id: 2, title: "Replace filter", completed: true },
-      { id: 3, title: "Clean condenser coils", completed: false },
-      { id: 4, title: "Test cooling function", completed: false },
-    ],
-  },
-  {
     id: 3,
-    title: "Villa Sunset Inventory Restock",
+    title: "Villa Sunset Laundry Service",
     property: "Villa Sunset",
-    type: "Inventory",
+    type: "Housekeeping",
     status: "Pending",
     priority: "Medium",
     dueDate: "2025-04-05T10:00:00",
     assignee: "Stefan Müller",
-    description: "Restock bathroom supplies and kitchen essentials",
+    description: "Change all bedding and towels",
     checklist: [
-      { id: 1, title: "Restock bathroom toiletries", completed: false },
-      { id: 2, title: "Restock kitchen paper goods", completed: false },
-      { id: 3, title: "Check and replace light bulbs", completed: false },
-      { id: 4, title: "Refill cleaning supplies", completed: false },
+      { id: 1, title: "Change master bedroom linen", completed: false },
+      { id: 2, title: "Change guest bedroom linen", completed: false },
+      { id: 3, title: "Replace all bathroom towels", completed: false },
+      { id: 4, title: "Replace kitchen towels", completed: false },
     ],
   },
   {
@@ -106,24 +88,19 @@ export const useTasks = () => {
   const [typeFilter, setTypeFilter] = useState("all");
 
   const filteredTasks = tasks.filter((task) => {
-    // Filter by search query
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.property.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Filter by tab
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "pending" && task.status === "Pending") ||
       (activeTab === "inProgress" && task.status === "In Progress") ||
       (activeTab === "completed" && task.status === "Completed");
 
-    // Filter by property
     const matchesProperty = 
       propertyFilter === "all" || task.property === propertyFilter;
 
-    // Filter by type
-    const matchesType = 
-      typeFilter === "all" || task.type === typeFilter;
+    const matchesType = task.type === "Housekeeping";
 
     return matchesSearch && matchesTab && matchesProperty && matchesType;
   });
@@ -160,13 +137,12 @@ export const useTasks = () => {
   };
 
   const handleCreateTask = (data: any) => {
-    // In a real app, we would save this to the database
-    toast.success(`Task "${data.title}" created successfully!`);
+    data.type = "Housekeeping";
+    toast.success(`Housekeeping task "${data.title}" created successfully!`);
     setIsCreateTaskOpen(false);
   };
 
   const handlePhotoUpload = (file: File) => {
-    // In a real app, we would upload this file to storage
     console.log("Photo uploaded:", file.name);
     toast.success(`Photo verification uploaded for task!`);
   };

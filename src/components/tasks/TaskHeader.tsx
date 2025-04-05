@@ -13,7 +13,7 @@ const TaskHeader = ({ onCreateTask }: TaskHeaderProps) => {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Housekeeping Tasks</h1>
         <p className="text-muted-foreground">
-          Manage housekeeping, maintenance, and inventory tasks.
+          Manage room cleaning, laundry, and guest turnover tasks.
         </p>
       </div>
       <Button onClick={onCreateTask}>

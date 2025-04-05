@@ -36,6 +36,13 @@ const Tasks = () => {
     <div className="space-y-6">
       <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
 
+      <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
+        <p className="text-amber-800 text-sm">
+          <strong>Note:</strong> This module is for housekeeping tasks only. For maintenance and repair tasks, please use the 
+          <a href="/maintenance" className="text-blue-600 font-medium underline mx-1">Maintenance module</a>.
+        </p>
+      </div>
+
       <TaskFilters 
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -65,7 +72,7 @@ const Tasks = () => {
       <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>Create New Task</DialogTitle>
+            <DialogTitle>Create New Housekeeping Task</DialogTitle>
           </DialogHeader>
           <TaskCreationForm 
             onSubmit={handleCreateTask} 

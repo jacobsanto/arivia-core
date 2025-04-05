@@ -22,12 +22,6 @@ const TaskCard = ({ task, onClick }: TaskCardProps) => {
     Low: "bg-blue-100 text-blue-800",
   };
 
-  const typeColors = {
-    Housekeeping: "border-blue-200 text-blue-800",
-    Maintenance: "border-amber-200 text-amber-800",
-    Inventory: "border-purple-200 text-purple-800",
-  };
-
   return (
     <Card
       className="hover:bg-secondary/50 cursor-pointer transition-colors"
@@ -40,9 +34,9 @@ const TaskCard = ({ task, onClick }: TaskCardProps) => {
               <h3 className="font-medium">{task.title}</h3>
               <Badge
                 variant="outline"
-                className={typeColors[task.type as keyof typeof typeColors]}
+                className="border-blue-200 text-blue-800"
               >
-                {task.type}
+                Housekeeping
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">{task.property}</p>

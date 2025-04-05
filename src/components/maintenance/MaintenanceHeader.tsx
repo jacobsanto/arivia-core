@@ -18,7 +18,7 @@ const MaintenanceHeader = ({ onCreateTask }: MaintenanceHeaderProps) => {
       </div>
       <Button onClick={onCreateTask}>
         <Plus className="mr-2 h-4 w-4" />
-        Create Task
+        Create Maintenance Task
       </Button>
     </div>
   );
