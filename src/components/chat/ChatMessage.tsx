@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Message } from "@/hooks/useChatMessages";
+import { Message } from "@/hooks/useChatTypes";
 import MessageContent from "./message/MessageContent";
 
 interface ChatMessageProps {

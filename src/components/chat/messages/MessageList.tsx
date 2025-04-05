@@ -1,9 +1,8 @@
-
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
-import { Message } from "@/hooks/useChatMessages";
+import { Message } from "@/hooks/useChatTypes";
 
 interface MessageListProps {
   messages: Message[];
