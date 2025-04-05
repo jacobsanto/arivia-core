@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThumbsUp, Heart, PartyPopper, Wave, HandMetal } from "lucide-react";
+import { ThumbsUp, Heart, Waves, PartyPopper, HandMetal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface MessageReaction {
@@ -44,7 +44,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       case "❤️": return <Heart className="w-3 h-3" />;
       case "😂": return <ThumbsUp className="w-3 h-3" />; // Replace with appropriate icon
       case "🎉": return <PartyPopper className="w-3 h-3" />;
-      case "👋": return <Wave className="w-3 h-3" />;
+      case "👋": return <Waves className="w-3 h-3" />; // Fixed: Wave -> Waves
       case "🙏": return <HandMetal className="w-3 h-3" />; // Using as alternative
       default: return emoji;
     }
