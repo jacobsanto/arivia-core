@@ -24,8 +24,34 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Check, X, MoreVertical, FileText, Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
-// Sample order data - in a real app this would come from a database
-const initialOrders = [
+type OrderStatus = "pending" | "approved" | "rejected" | "sent";
+
+type OrderItem = {
+  itemId: string;
+  name: string;
+  quantity: number;
+};
+
+type Order = {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  date: string;
+  requestor: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  notes: string;
+  createdAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  sentAt?: string;
+};
+
+// Sample order data - in a real app this would come from a database or API
+const initialOrders: Order[] = [
   {
     id: "PO-2025-001",
     vendorId: "1",
@@ -73,32 +99,6 @@ const initialOrders = [
     rejectionReason: "Quantities exceed monthly budget",
   },
 ];
-
-type OrderStatus = "pending" | "approved" | "rejected" | "sent";
-
-type OrderItem = {
-  itemId: string;
-  name: string;
-  quantity: number;
-};
-
-type Order = {
-  id: string;
-  vendorId: string;
-  vendorName: string;
-  date: string;
-  requestor: string;
-  status: OrderStatus;
-  items: OrderItem[];
-  notes: string;
-  createdAt: string;
-  approvedBy?: string;
-  approvedAt?: string;
-  rejectedBy?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
-  sentAt?: string;
-};
 
 const OrderList = () => {
   const [orders, setOrders] = useState<Order[]>(initialOrders);

@@ -54,3 +54,32 @@ export const validateOrder = (order: any) => {
     errors
   };
 };
+
+// Export order status type for reuse
+export type OrderStatus = "pending" | "approved" | "rejected" | "sent";
+
+// Export order item type for reuse
+export type OrderItem = {
+  itemId: string;
+  name: string;
+  quantity: number;
+};
+
+// Export order type for reuse
+export type Order = {
+  id: string;
+  vendorId: string;
+  vendorName: string;
+  date: string;
+  requestor: string;
+  status: OrderStatus;
+  items: OrderItem[];
+  notes: string;
+  createdAt: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  rejectedBy?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
+  sentAt?: string;
+};

@@ -26,8 +26,21 @@ import { toast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+type VendorStatus = "active" | "inactive";
+
+type Vendor = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  category: string;
+  address: string;
+  notes: string;
+  status: VendorStatus;
+};
+
 // Sample vendor data - in a real app this would come from a database
-const initialVendors = [
+const initialVendors: Vendor[] = [
   {
     id: "1",
     name: "Office Supplies Co.",
@@ -60,17 +73,6 @@ const initialVendors = [
   },
 ];
 
-type Vendor = {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  category: string;
-  address: string;
-  notes: string;
-  status: "active" | "inactive";
-};
-
 const VendorsList = () => {
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -89,7 +91,13 @@ const VendorsList = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      if (name === "status") {
+        // Ensure the status is explicitly typed as VendorStatus
+        return { ...prev, [name]: value as VendorStatus };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const handleAddVendor = () => {
