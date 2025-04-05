@@ -35,10 +35,7 @@ const Login = () => {
               </TabsList>
               
               <TabsContent value="signin" className="mt-0">
-                <LoginForm />
-                <div className="mt-6">
-                  <LoginWithRoles />
-                </div>
+                <LoginWithRoles />
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0">
