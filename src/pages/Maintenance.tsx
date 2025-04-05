@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { useMaintenanceTasks } from "@/hooks/useMaintenanceTasks";
 import MaintenanceHeader from "@/components/maintenance/MaintenanceHeader";
 import MaintenanceList from "@/components/maintenance/MaintenanceList";
@@ -7,10 +7,13 @@ import MaintenanceDetail from "@/components/maintenance/MaintenanceDetail";
 import MaintenanceReport from "@/components/maintenance/MaintenanceReport";
 import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceCreationForm";
 import MaintenanceFilters from "@/components/maintenance/MaintenanceFilters";
+import MaintenanceStats from "@/components/maintenance/MaintenanceStats";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 const Maintenance = () => {
   const {
+    tasks,
     filteredTasks,
     searchQuery,
     setSearchQuery,
@@ -26,7 +29,6 @@ const Maintenance = () => {
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
-    handleCreateTask,
     handlePhotoUpload,
     isReportOpen,
     setIsReportOpen,
@@ -35,23 +37,38 @@ const Maintenance = () => {
     handleToggleInstruction,
   } = useMaintenanceTasks();
 
+  const [viewMode, setViewMode] = useState<"list" | "stats">("list");
+
   return (
     <div className="space-y-6">
       <MaintenanceHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
 
-      <MaintenanceFilters 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onPropertyFilter={setPropertyFilter}
-        onPriorityFilter={setPriorityFilter}
-      />
+      <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "stats")} className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="list">Task List</TabsTrigger>
+          <TabsTrigger value="stats">Statistics</TabsTrigger>
+        </TabsList>
 
-      <MaintenanceList
-        tasks={filteredTasks}
-        onOpenTask={handleOpenTask}
-      />
+        <TabsContent value="list" className="space-y-6">
+          <MaintenanceFilters 
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            onPropertyFilter={setPropertyFilter}
+            onPriorityFilter={setPriorityFilter}
+          />
+
+          <MaintenanceList
+            tasks={filteredTasks}
+            onOpenTask={handleOpenTask}
+          />
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <MaintenanceStats tasks={tasks} />
+        </TabsContent>
+      </Tabs>
 
       {/* Maintenance Detail Modal */}
       {selectedTask && (
