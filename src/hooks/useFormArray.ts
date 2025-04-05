@@ -13,7 +13,7 @@ export const useFormArray = () => {
       name,
     });
 
-    // Map fields to include id for React keys (already done by useFieldArray)
+    // Return fields and methods
     return {
       fields,
       append,
