@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThumbsUp, Heart, Waves, PartyPopper, HandMetal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +37,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   showEmojiPicker,
   setShowEmojiPicker,
 }) => {
+  // Track mouse events with local state for better reliability
+  const [isHoveringMessage, setIsHoveringMessage] = useState(false);
+  const [isHoveringPicker, setIsHoveringPicker] = useState(false);
+  
   // Map emoji characters to minimal Lucide icons with consistent styling
   const getReactionIcon = (emoji: string) => {
     switch (emoji) {
@@ -50,19 +54,53 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
   
-  // Track if we're hovering over the emoji picker
-  const handlePickerMouseEnter = () => {
+  // Handle showing reaction picker
+  const handleMessageMouseEnter = () => {
+    setIsHoveringMessage(true);
+    setReactionMessageId(message.id);
     setShowEmojiPicker(true);
   };
   
-  // Track mouse leaving the message
+  // Handle mouse leaving message bubble
   const handleMessageMouseLeave = () => {
-    // Only close if mouse is not over the picker
+    setIsHoveringMessage(false);
+    
+    // Only hide picker if not hovering over the picker itself
     setTimeout(() => {
-      if (reactionMessageId === message.id) {
+      if (!isHoveringPicker && reactionMessageId === message.id) {
         setShowEmojiPicker(false);
       }
-    }, 200);
+    }, 100);
+  };
+  
+  // Handle mouse entering reaction picker
+  const handlePickerMouseEnter = () => {
+    setIsHoveringPicker(true);
+  };
+  
+  // Handle mouse leaving reaction picker
+  const handlePickerMouseLeave = () => {
+    setIsHoveringPicker(false);
+    
+    // Only hide if not hovering over the message
+    setTimeout(() => {
+      if (!isHoveringMessage) {
+        setShowEmojiPicker(false);
+      }
+    }, 100);
+  };
+  
+  // Handle emoji selection
+  const handleEmojiClick = (emoji: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    // Add the reaction
+    onAddReaction(message.id, emoji);
+    
+    // Close the picker after selecting an emoji
+    setShowEmojiPicker(false);
+    setReactionMessageId(null);
   };
 
   return (
@@ -87,10 +125,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                   ? "bg-primary text-primary-foreground"
                   : "bg-secondary"
               }`}
-              onMouseEnter={() => {
-                setReactionMessageId(message.id);
-                setShowEmojiPicker(true);
-              }}
+              onMouseEnter={handleMessageMouseEnter}
               onMouseLeave={handleMessageMouseLeave}
             >
               <p className="text-sm">{message.content}</p>
@@ -106,7 +141,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
                       variant="outline"
                       className="flex items-center gap-1 h-6 px-2 hover:bg-secondary/80 transition-colors cursor-pointer bg-background"
                       title={users.join(', ')}
-                      onClick={() => onAddReaction(message.id, emoji)}
+                      onClick={(e) => handleEmojiClick(emoji, e)}
                     >
                       {getReactionIcon(emoji)}
                       <span className="text-xs">{users.length}</span>
@@ -121,20 +156,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               <div 
                 className="absolute bottom-full mb-2 bg-background/95 shadow-lg rounded-lg border border-border p-1.5 flex z-10"
                 onMouseEnter={handlePickerMouseEnter}
-                onMouseLeave={() => {
-                  setTimeout(() => setShowEmojiPicker(false), 200);
-                }}
+                onMouseLeave={handlePickerMouseLeave}
               >
                 {emojis.map(emoji => (
                   <button 
                     key={emoji} 
                     className="hover:bg-secondary rounded-md p-1.5 transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAddReaction(message.id, emoji);
-                      setShowEmojiPicker(false);
-                      setReactionMessageId(null);
-                    }}
+                    onClick={(e) => handleEmojiClick(emoji, e)}
                     title={emoji}
                   >
                     {emoji}

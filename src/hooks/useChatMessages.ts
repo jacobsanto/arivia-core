@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -73,6 +72,7 @@ export const useChatMessages = (activeChat: string) => {
         content: message.trim(),
         timestamp: new Date().toISOString(),
         isCurrentUser: true,
+        reactions: {} // Initialize empty reactions object
       };
       
       setMessages([...messages, newMessage]);
@@ -95,6 +95,7 @@ export const useChatMessages = (activeChat: string) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => {
         if (msg.id === messageId) {
+          // Initialize reactions object if it doesn't exist
           const reactions = msg.reactions || {};
           const userList = reactions[emoji] || [];
           
@@ -102,22 +103,27 @@ export const useChatMessages = (activeChat: string) => {
           const username = user?.name || "Admin";
           const hasReacted = userList.includes(username);
           
+          // Create new reactions object with updated emoji reactions
+          const updatedReactions = {
+            ...reactions,
+            [emoji]: hasReacted 
+              ? userList.filter(name => name !== username) 
+              : [...userList, username]
+          };
+
+          // Only keep emojis with at least one user
+          const finalReactions = Object.fromEntries(
+            Object.entries(updatedReactions).filter(([_, users]) => users.length > 0)
+          );
+          
           return {
             ...msg,
-            reactions: {
-              ...reactions,
-              [emoji]: hasReacted 
-                ? userList.filter(name => name !== username) 
-                : [...userList, username]
-            }
+            reactions: finalReactions
           };
         }
         return msg;
       })
     );
-    
-    setReactionMessageId(null);
-    setShowEmojiPicker(false);
   };
 
   // Sample messages as fallback
@@ -129,6 +135,7 @@ export const useChatMessages = (activeChat: string) => {
       content: "I just finished cleaning Villa Caldera. All tasks completed and photos uploaded.",
       timestamp: "2025-04-04T09:32:00",
       isCurrentUser: false,
+      reactions: {}
     },
     {
       id: 2,
@@ -137,6 +144,7 @@ export const useChatMessages = (activeChat: string) => {
       content: "Great job! Did you also check if all amenities were restocked?",
       timestamp: "2025-04-04T09:35:00",
       isCurrentUser: true,
+      reactions: {}
     },
     {
       id: 3,
@@ -145,6 +153,7 @@ export const useChatMessages = (activeChat: string) => {
       content: "Yes, I restocked everything according to the inventory list. There were some items running low though. We should order more bathroom supplies soon.",
       timestamp: "2025-04-04T09:38:00",
       isCurrentUser: false,
+      reactions: {}
     },
     {
       id: 4,
@@ -153,6 +162,7 @@ export const useChatMessages = (activeChat: string) => {
       content: "I'll create a purchase order right away. Thanks for flagging this!",
       timestamp: "2025-04-04T09:40:00",
       isCurrentUser: true,
+      reactions: {}
     },
     {
       id: 5,
@@ -161,6 +171,7 @@ export const useChatMessages = (activeChat: string) => {
       content: "No problem! Also, I noticed a small issue with the shower in the master bathroom. The water pressure seems a bit low. Should I create a maintenance task?",
       timestamp: "2025-04-04T09:43:00",
       isCurrentUser: false,
+      reactions: {}
     },
   ];
 
