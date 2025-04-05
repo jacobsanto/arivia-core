@@ -49,8 +49,11 @@ export const createMaintenanceTask = (data: any) => {
   return { 
     ...data, 
     requiredTools,
+    beforePhotos: [],
+    afterPhotos: [],
     beforeVideos: [],
     afterVideos: [],
     createdAt: now.toISOString(),
+    instructions: [],
   };
 };

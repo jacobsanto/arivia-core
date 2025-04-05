@@ -21,6 +21,9 @@ export const initialTasks = [
     ],
     beforePhotos: [],
     afterPhotos: [],
+    beforeVideos: [],
+    afterVideos: [],
+    createdAt: "2025-04-01T10:00:00",
   },
   {
     id: 2,
@@ -42,6 +45,9 @@ export const initialTasks = [
     ],
     beforePhotos: [],
     afterPhotos: [],
+    beforeVideos: [],
+    afterVideos: [],
+    createdAt: "2025-04-02T09:30:00",
   },
   {
     id: 3,
@@ -63,6 +69,9 @@ export const initialTasks = [
     ],
     beforePhotos: [],
     afterPhotos: [],
+    beforeVideos: [],
+    afterVideos: [],
+    createdAt: "2025-03-29T11:15:00",
     report: {
       timeSpent: "45 minutes",
       materialsUsed: "New rainfall shower head, plumber's tape",
