@@ -1,8 +1,14 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThumbsUp, Heart, Waves, PartyPopper, HandMetal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MessageReaction {
   [emoji: string]: string[];
@@ -40,6 +46,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   // Track mouse events with local state for better reliability
   const [isHoveringMessage, setIsHoveringMessage] = useState(false);
   const [isHoveringPicker, setIsHoveringPicker] = useState(false);
+  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
+  const [leaveTimer, setLeaveTimer] = useState<NodeJS.Timeout | null>(null);
   
   // Map emoji characters to minimal Lucide icons with consistent styling
   const getReactionIcon = (emoji: string) => {
@@ -54,40 +62,76 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   };
   
-  // Handle showing reaction picker
+  // Clean up timers when component unmounts
+  useEffect(() => {
+    return () => {
+      if (hoverTimer) clearTimeout(hoverTimer);
+      if (leaveTimer) clearTimeout(leaveTimer);
+    };
+  }, [hoverTimer, leaveTimer]);
+  
+  // Handle showing reaction picker with delay to prevent flickering
   const handleMessageMouseEnter = () => {
     setIsHoveringMessage(true);
-    setReactionMessageId(message.id);
-    setShowEmojiPicker(true);
+    
+    // Clear any existing leave timer
+    if (leaveTimer) {
+      clearTimeout(leaveTimer);
+      setLeaveTimer(null);
+    }
+    
+    // Set a short delay before showing picker to prevent flickering
+    const timer = setTimeout(() => {
+      setReactionMessageId(message.id);
+      setShowEmojiPicker(true);
+    }, 300);
+    
+    setHoverTimer(timer);
   };
   
   // Handle mouse leaving message bubble
   const handleMessageMouseLeave = () => {
     setIsHoveringMessage(false);
     
-    // Only hide picker if not hovering over the picker itself
-    setTimeout(() => {
-      if (!isHoveringPicker && reactionMessageId === message.id) {
+    // Clear any existing hover timer
+    if (hoverTimer) {
+      clearTimeout(hoverTimer);
+      setHoverTimer(null);
+    }
+    
+    // Only hide picker if not hovering over the picker itself after a short delay
+    const timer = setTimeout(() => {
+      if (!isHoveringPicker) {
         setShowEmojiPicker(false);
       }
-    }, 100);
+    }, 300);
+    
+    setLeaveTimer(timer);
   };
   
   // Handle mouse entering reaction picker
   const handlePickerMouseEnter = () => {
     setIsHoveringPicker(true);
+    
+    // Clear any existing leave timer
+    if (leaveTimer) {
+      clearTimeout(leaveTimer);
+      setLeaveTimer(null);
+    }
   };
   
   // Handle mouse leaving reaction picker
   const handlePickerMouseLeave = () => {
     setIsHoveringPicker(false);
     
-    // Only hide if not hovering over the message
-    setTimeout(() => {
+    // Only hide if not hovering over the message after a short delay
+    const timer = setTimeout(() => {
       if (!isHoveringMessage) {
         setShowEmojiPicker(false);
       }
-    }, 100);
+    }, 300);
+    
+    setLeaveTimer(timer);
   };
   
   // Handle emoji selection
@@ -97,10 +141,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     
     // Add the reaction
     onAddReaction(message.id, emoji);
-    
-    // Close the picker after selecting an emoji
-    setShowEmojiPicker(false);
-    setReactionMessageId(null);
   };
 
   return (
@@ -136,16 +176,23 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
               <div className="flex mt-1 flex-wrap gap-1">
                 {Object.entries(message.reactions).map(([emoji, users]) => 
                   users.length > 0 ? (
-                    <Badge 
-                      key={emoji} 
-                      variant="outline"
-                      className="flex items-center gap-1 h-6 px-2 hover:bg-secondary/80 transition-colors cursor-pointer bg-background"
-                      title={users.join(', ')}
-                      onClick={(e) => handleEmojiClick(emoji, e)}
-                    >
-                      {getReactionIcon(emoji)}
-                      <span className="text-xs">{users.length}</span>
-                    </Badge>
+                    <TooltipProvider key={emoji}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge 
+                            variant="outline"
+                            className="flex items-center gap-1 h-6 px-2 hover:bg-secondary/80 transition-colors cursor-pointer bg-background"
+                            onClick={(e) => handleEmojiClick(emoji, e)}
+                          >
+                            {getReactionIcon(emoji)}
+                            <span className="text-xs">{users.length}</span>
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-xs">{users.join(', ')}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   ) : null
                 )}
               </div>

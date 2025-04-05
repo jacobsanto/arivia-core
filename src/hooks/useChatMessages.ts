@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
@@ -91,6 +92,7 @@ export const useChatMessages = (activeChat: string) => {
     }
   };
   
+  // Updated addReaction function to allow reacting to own messages
   const addReaction = (messageId: number, emoji: string) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => {
@@ -124,6 +126,10 @@ export const useChatMessages = (activeChat: string) => {
         return msg;
       })
     );
+    
+    // Close emoji picker after adding reaction
+    setShowEmojiPicker(false);
+    setReactionMessageId(null);
   };
 
   // Sample messages as fallback
