@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import ItemFormDetails from "./forms/ItemFormDetails";
 import StockFormNotes from "./forms/StockFormNotes";
 import StockFormSubmitButton from "./forms/StockFormSubmitButton";
+import { useInventory } from "@/contexts/InventoryContext";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Item name must be at least 2 characters." }),
@@ -22,6 +23,9 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const AddItem = () => {
+  // Use the shared inventory context
+  const { categories, units } = useInventory();
+
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -50,7 +54,7 @@ const AddItem = () => {
           <FormProvider {...methods}>
             <Form {...methods}>
               <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto">
-                <ItemFormDetails />
+                <ItemFormDetails categories={categories} units={units} />
                 <StockFormNotes />
                 <StockFormSubmitButton label="Add Item" />
               </form>

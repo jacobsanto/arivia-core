@@ -1,6 +1,5 @@
 
 import React from "react";
-import { useFormContext } from "react-hook-form";
 import {
   FormField,
   FormItem,
@@ -9,37 +8,35 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { 
+import { useFormContext } from "react-hook-form";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
+  SelectValue,
 } from "@/components/ui/select";
+import { useInventory } from "@/contexts/InventoryContext";
 
-// Sample vendor data - in a real app this would come from a database or API
-// With added categories field
+// Sample vendor data - in a real app this would come from a database
 const vendors = [
-  { id: "1", name: "Office Supplies Co.", categories: ["Office Supplies", "Paper Products"] },
-  { id: "2", name: "Cleaning Solutions Inc.", categories: ["Cleaning Supplies"] },
-  { id: "3", name: "Hospitality Essentials", categories: ["Guest Amenities", "Toiletries"] },
+  { id: "1", name: "Office Supplies Co." },
+  { id: "2", name: "Cleaning Solutions Inc." },
+  { id: "3", name: "Hospitality Essentials" },
 ];
 
-const OrderFormVendor = () => {
+const OrderFormVendor: React.FC = () => {
   const { control } = useFormContext();
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <FormField
         control={control}
         name="vendorId"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Vendor</FormLabel>
-            <Select
-              onValueChange={field.onChange}
-              defaultValue={field.value}
-            >
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a vendor" />
@@ -63,7 +60,7 @@ const OrderFormVendor = () => {
         name="date"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Order Date</FormLabel>
+            <FormLabel>Date</FormLabel>
             <FormControl>
               <Input type="date" {...field} />
             </FormControl>
@@ -76,7 +73,7 @@ const OrderFormVendor = () => {
         control={control}
         name="requestor"
         render={({ field }) => (
-          <FormItem className="col-span-1 md:col-span-2">
+          <FormItem className="md:col-span-2">
             <FormLabel>Requested By</FormLabel>
             <FormControl>
               <Input placeholder="Your name" {...field} />

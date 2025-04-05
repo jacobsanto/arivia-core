@@ -1,7 +1,7 @@
-
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { VendorStatus, Vendor } from "../orders/OrderUtils";
+import { useInventory } from "@/contexts/InventoryContext";
 
 // Sample vendor data - in a real app this would come from a database
 const initialVendors: Vendor[] = [
@@ -37,26 +37,11 @@ const initialVendors: Vendor[] = [
   },
 ];
 
-// Sample list of all available categories in the system
-const initialCategories: string[] = [
-  "Office Supplies",
-  "Paper Products",
-  "Cleaning Supplies",
-  "Guest Amenities",
-  "Toiletries",
-  "Kitchen Supplies",
-  "Electronics",
-  "Furniture",
-  "Linens",
-  "Safety Equipment"
-];
-
 export const useVendorManagement = () => {
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);
-  const [categories, setCategories] = useState<string[]>(initialCategories);
+  const { categories, addCategory } = useInventory();
   const [isVendorDialogOpen, setIsVendorDialogOpen] = useState(false);
   const [isNewCategoryDialogOpen, setIsNewCategoryDialogOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
   const [currentVendor, setCurrentVendor] = useState<Vendor | null>(null);
   const [formData, setFormData] = useState<Omit<Vendor, "id">>({
     name: "",
@@ -102,9 +87,10 @@ export const useVendorManagement = () => {
 
   const handleCreateNewCategory = (categoryName: string) => {
     if (!categories.includes(categoryName)) {
-      setCategories(prev => [...prev, categoryName]);
+      // Add to global categories
+      addCategory(categoryName);
       
-      // Automatically add the new category to the vendor
+      // Add to current vendor if not already there
       if (!formData.categories.includes(categoryName)) {
         setFormData(prev => ({
           ...prev,
