@@ -1,16 +1,15 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";
-import StockItemList from "../forms/StockItemList";
+import OrderItemList from "./OrderItemList";
 import OrderFormVendor from "./OrderFormVendor";
 
 const formSchema = z.object({
@@ -32,6 +31,7 @@ const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { canAccess } = usePermissions();
   const canApproveOrders = canAccess("approve_orders");
+  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -43,6 +43,19 @@ const OrderForm = () => {
       notes: "",
     },
   });
+
+  // Watch for vendor changes
+  useEffect(() => {
+    const subscription = methods.watch((value, { name }) => {
+      if (name === 'vendorId' && value.vendorId) {
+        setSelectedVendorId(value.vendorId);
+        
+        // Reset the items when vendor changes
+        methods.setValue("items", [{ itemId: "", quantity: 1 }]);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods]);
 
   function onSubmit(values: FormValues) {
     setIsSubmitting(true);
@@ -66,6 +79,7 @@ const OrderForm = () => {
         notes: "",
       });
       
+      setSelectedVendorId(null);
       setIsSubmitting(false);
     }, 1000);
   }
@@ -82,7 +96,10 @@ const OrderForm = () => {
               <OrderFormVendor />
               
               <div className="space-y-4">
-                <StockItemList title="Order Items" />
+                <OrderItemList 
+                  title="Order Items" 
+                  selectedVendorId={selectedVendorId} 
+                />
               </div>
               
               <StockFormNotes />

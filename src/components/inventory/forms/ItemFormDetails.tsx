@@ -20,9 +20,10 @@ import {
 interface ItemFormDetailsProps {
   categories: string[];
   units: string[];
+  setCategoryValue?: (category: string) => void;
 }
 
-const ItemFormDetails: React.FC<ItemFormDetailsProps> = ({ categories, units }) => {
+const ItemFormDetails: React.FC<ItemFormDetailsProps> = ({ categories, units, setCategoryValue }) => {
   const { control } = useFormContext();
 
   return (
@@ -47,7 +48,13 @@ const ItemFormDetails: React.FC<ItemFormDetailsProps> = ({ categories, units }) 
         render={({ field }) => (
           <FormItem>
             <FormLabel>Category</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select 
+              onValueChange={(value) => {
+                field.onChange(value);
+                if (setCategoryValue) setCategoryValue(value);
+              }} 
+              defaultValue={field.value}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />

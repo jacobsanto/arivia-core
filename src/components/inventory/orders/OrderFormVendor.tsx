@@ -16,13 +16,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useInventory } from "@/contexts/InventoryContext";
+import { Badge } from "@/components/ui/badge";
 
-// Sample vendor data - in a real app this would come from a database
+// Sample vendor data - in a real app this would come from a database or context
 const vendors = [
-  { id: "1", name: "Office Supplies Co." },
-  { id: "2", name: "Cleaning Solutions Inc." },
-  { id: "3", name: "Hospitality Essentials" },
+  { 
+    id: "1", 
+    name: "Office Supplies Co.",
+    categories: ["Office Supplies", "Paper Products", "Kitchen Supplies", "Linens & Towels"]
+  },
+  { 
+    id: "2", 
+    name: "Cleaning Solutions Inc.",
+    categories: ["Cleaning Supplies"] 
+  },
+  { 
+    id: "3", 
+    name: "Hospitality Essentials",
+    categories: ["Guest Amenities", "Toiletries", "Bathroom Supplies", "Linens & Towels"]
+  },
 ];
 
 const OrderFormVendor: React.FC = () => {
@@ -45,7 +57,16 @@ const OrderFormVendor: React.FC = () => {
               <SelectContent>
                 {vendors.map((vendor) => (
                   <SelectItem key={vendor.id} value={vendor.id}>
-                    {vendor.name}
+                    <div>
+                      {vendor.name}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {vendor.categories.map((category, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
