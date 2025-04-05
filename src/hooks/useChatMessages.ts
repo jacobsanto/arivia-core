@@ -5,8 +5,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useMessageStorage } from "./useMessageStorage";
 import { useTypingIndicator } from "./useTypingIndicator";
 import { useMessageReactions } from "./useMessageReactions";
+import { Message, MessageReaction } from "./useChatTypes";
 
-export { Message, MessageReaction } from "./useChatTypes";
+// Use "export type" for re-exporting types
+export type { Message, MessageReaction };
 
 export const useChatMessages = (activeChat: string) => {
   const { toast } = useToast();
