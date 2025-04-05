@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -52,7 +51,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Sample order data - in a real app this would come from a database or API
 const initialOrders: Order[] = [
   {
     id: "PO-2025-001",
@@ -161,26 +159,21 @@ const OrderList: React.FC = () => {
   const { canAccess } = usePermissions();
   const { user } = useUser();
   
-  // Role-based permissions
   const userRole = user?.role || "concierge";
   const canViewOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(userRole);
   const canApproveAsManager = ["superadmin", "property_manager"].includes(userRole);
   const canApproveAsAdmin = ["superadmin", "administrator"].includes(userRole);
   const isSuperAdmin = userRole === "superadmin";
 
-  // Filter orders based on user's role and filters
   const filteredOrders = orders.filter((order) => {
-    // Filter by status if not "all"
     if (filterStatus !== "all" && order.status !== filterStatus) {
       return false;
     }
 
-    // Filter by department if not "all"
     if (filterDepartment !== "all" && order.department !== filterDepartment) {
       return false;
     }
 
-    // Search by order ID or vendor name
     if (searchQuery && !(
       order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -189,7 +182,6 @@ const OrderList: React.FC = () => {
       return false;
     }
 
-    // Role-based filtering
     if (userRole === "housekeeping_staff" && order.requesterRole !== "housekeeping_staff") {
       return false;
     }
@@ -201,11 +193,8 @@ const OrderList: React.FC = () => {
     return true;
   });
 
-  // Check for orders pending for more than 24 hours
   useEffect(() => {
     if (isSuperAdmin) {
-      // This would normally check timestamps in a real app
-      // For demo purposes, we're using the pre-defined pending_24h status
       const pendingOverdueOrders = orders.filter(order => order.status === "pending_24h");
       
       if (pendingOverdueOrders.length > 0) {
@@ -268,7 +257,6 @@ const OrderList: React.FC = () => {
       )
     );
 
-    // Send notification based on new status
     sendOrderNotification(updatedOrder.status as OrderStatus, orderId, orderToUpdate);
 
     toast({
@@ -319,7 +307,6 @@ const OrderList: React.FC = () => {
       )
     );
 
-    // Send notification
     sendOrderNotification("rejected" as OrderStatus, orderId, { rejectedBy: user?.name, reason: rejectionReason });
 
     toast({
@@ -358,7 +345,6 @@ const OrderList: React.FC = () => {
       )
     );
 
-    // Send notification
     sendOrderNotification("sent" as OrderStatus, orderId, orderToUpdate);
 
     toast({
@@ -384,7 +370,7 @@ const OrderList: React.FC = () => {
                 <Check className="h-3 w-3" /> Manager Approved
                </Badge>;
       case "approved":
-        return <Badge variant="success" className="bg-green-100 text-green-800 hover:bg-green-200">
+        return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-200">
                 Approved
                </Badge>;
       case "rejected":
@@ -582,7 +568,6 @@ const OrderList: React.FC = () => {
 
                             {(isSuperAdmin || canApproveAsAdmin) && order.status !== "sent" && (
                               <DropdownMenuItem onClick={() => {
-                                // This would normally open an edit form
                                 toast({
                                   title: "Edit Order",
                                   description: "Order editing functionality is coming soon.",
@@ -609,7 +594,6 @@ const OrderList: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Order Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -694,8 +678,7 @@ const OrderList: React.FC = () => {
               </div>
             )}
 
-            {/* Rejection form */}
-            {selectedOrder && (selectedOrder.status === "pending" || selectedOrder.status === "pending_24h" || selectedOrder.status === "manager_approved") && (canApproveAsManager || canApproveAsAdmin || isSuperAdmin) && (
+            {selectedOrder && (selectedOrder.status === "pending" || selectedOrder.status === "manager_approved" || selectedOrder.status === "pending_24h") && (canApproveAsManager || canApproveAsAdmin || isSuperAdmin) && (
               <div className="pt-4 border-t">
                 <h3 className="text-sm font-medium mb-2">Rejection Reason (if rejecting)</h3>
                 <Input
@@ -706,7 +689,6 @@ const OrderList: React.FC = () => {
               </div>
             )}
 
-            {/* Action buttons */}
             {selectedOrder && (selectedOrder.status === "pending" || selectedOrder.status === "manager_approved" || selectedOrder.status === "pending_24h") && (canApproveAsManager || canApproveAsAdmin || isSuperAdmin) && (
               <div className="flex justify-end space-x-2 pt-4">
                 <Button 
