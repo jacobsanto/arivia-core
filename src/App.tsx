@@ -15,6 +15,7 @@ import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
 import Housekeeping from "./pages/Housekeeping";
 import Maintenance from "./pages/Maintenance";
+import Inventory from "./pages/Inventory";
 import TeamChat from "./pages/TeamChat";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
@@ -53,7 +54,7 @@ const App = () => (
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
-                  <Route path="inventory" element={<Navigate to="/housekeeping" replace />} />
+                  <Route path="inventory" element={<Inventory />} />
                 </Route>
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>
