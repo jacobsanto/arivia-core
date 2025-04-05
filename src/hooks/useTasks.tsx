@@ -142,7 +142,7 @@ export interface Task {
 }
 
 export const useTasks = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>(initialTasks as Task[]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -185,7 +185,7 @@ export const useTasks = () => {
           return {
             ...task, 
             status: "Completed",
-            approvalStatus: "Pending"
+            approvalStatus: "Pending" as const
           };
         }
         return task;
@@ -208,7 +208,7 @@ export const useTasks = () => {
         if (task.id === selectedTask.id) {
           return {
             ...task, 
-            approvalStatus: "Approved"
+            approvalStatus: "Approved" as const
           };
         }
         return task;
@@ -234,7 +234,7 @@ export const useTasks = () => {
           if (task.id === selectedTask.id) {
             return {
               ...task, 
-              approvalStatus: "Rejected",
+              approvalStatus: "Rejected" as const,
               rejectionReason: rejectionReason
             };
           }

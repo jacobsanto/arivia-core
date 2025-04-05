@@ -68,7 +68,7 @@ const Housekeeping = () => {
       {/* Task Detail Modal - Sheet on mobile, Dialog on desktop */}
       {selectedTask && isMobile ? (
         <Sheet open={!!selectedTask} onOpenChange={() => selectedTask && handleCloseTask()}>
-          <SheetContent className="overflow-y-auto" side="bottom" className="h-[85vh] sm:max-w-none pt-6">
+          <SheetContent className="overflow-y-auto h-[85vh] pt-6" side="bottom">
             <TaskDetail
               task={selectedTask}
               onClose={handleCloseTask}
