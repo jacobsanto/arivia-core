@@ -18,6 +18,7 @@ import Maintenance from "./pages/Maintenance";
 import Inventory from "./pages/Inventory";
 import TeamChat from "./pages/TeamChat";
 import Analytics from "./pages/Analytics";
+import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
@@ -64,6 +65,10 @@ const App = () => (
                 
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
                   <Route path="analytics" element={<Analytics />} />
+                </Route>
+                
+                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
+                  <Route path="reports" element={<Reports />} />
                 </Route>
                 
                 {/* User profile accessible to everyone */}

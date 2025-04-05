@@ -10,6 +10,7 @@ import {
   Package,
   MessageSquare,
   BarChart,
+  FileText,
   Settings,
   LogOut,
   User,
@@ -74,7 +75,11 @@ const Sidebar = () => {
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         
         {canAccess("viewReports") && (
-          <SidebarLink to="/reports" icon={<BarChart size={20} />} label="Reports" />
+          <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />
+        )}
+        
+        {canAccess("viewReports") && (
+          <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
         )}
         
         <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
