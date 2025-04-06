@@ -84,7 +84,8 @@ export const ReportPreview: React.FC<ReportPreviewProps> = ({
                   <tr key={rowIndex} className="border-b hover:bg-muted/50">
                     {Object.values(row).map((value, colIndex) => (
                       <td key={colIndex} className="p-3">
-                        {value}
+                        {/* Fix: Convert the value to string safely */}
+                        {value !== null && value !== undefined ? String(value) : ''}
                       </td>
                     ))}
                   </tr>
