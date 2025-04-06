@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PropertyReporting } from './reporting/PropertyReporting';
 import { StaffReporting } from './reporting/StaffReporting';

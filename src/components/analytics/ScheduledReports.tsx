@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Clock, DialogTrigger } from "@/components/ui/dialog";
 import { toastService } from "@/services/toast/toast.service";
 import { useReports } from "@/hooks/useReports";
 import { ReportFormDialog } from "./reports/ReportFormDialog";
@@ -136,7 +135,6 @@ export const ScheduledReports = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium">Scheduled Reports</h2>
         <Button onClick={handleOpenNewReportDialog}>
-          <Clock className="mr-2 h-4 w-4" />
           New Scheduled Report
         </Button>
       </div>
