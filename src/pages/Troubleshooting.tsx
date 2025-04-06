@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HelpCircle, Wifi, SmartphoneCharging, Sync, Image } from "lucide-react";
+import { HelpCircle, Wifi, SmartphoneCharging, RefreshCw, Image } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -53,7 +53,7 @@ const Troubleshooting = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="p-0" onClick={forceSyncData}>
-                <Sync className="h-5 w-5 mr-2" /> Force Sync
+                <RefreshCw className="h-5 w-5 mr-2" /> Force Sync
               </Button>
               <Badge variant="outline" className="ml-auto">Recommended</Badge>
             </CardTitle>
