@@ -6,6 +6,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { BarChart, FileText, Clock, Calendar as CalendarIcon, Plus } from "lucide-react";
 import TaskReporting from "@/components/tasks/TaskReporting";
+import { FinancialReports } from "@/components/reports/analytics/FinancialReports";
+import { OccupancyAnalysis } from "@/components/reports/analytics/OccupancyAnalysis";
 
 const Analytics = () => {
   const [dateRange, setDateRange] = useState<Date | undefined>(new Date());
@@ -82,42 +84,7 @@ const Analytics = () => {
         </TabsContent>
         
         <TabsContent value="financial" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Financial Reports</CardTitle>
-              <CardDescription>Track revenue, expenses, and profitability</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-64 space-y-2">
-                  <label className="text-sm font-medium">Date Range</label>
-                  <Calendar
-                    mode="single"
-                    selected={dateRange}
-                    onSelect={setDateRange}
-                    className="border rounded-md"
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <label className="text-sm font-medium">Available Reports</label>
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Revenue by Property
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Expense Analysis
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <FileText className="mr-2 h-4 w-4" />
-                      Profit & Loss Statement
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <FinancialReports />
         </TabsContent>
         
         <TabsContent value="operational" className="space-y-4">
@@ -125,44 +92,7 @@ const Analytics = () => {
         </TabsContent>
         
         <TabsContent value="occupancy" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Occupancy Analysis</CardTitle>
-              <CardDescription>Analyze booking patterns and trends</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="w-full sm:w-64 space-y-2">
-                  <label className="text-sm font-medium">Select Property</label>
-                  <select className="w-full border rounded-md p-2">
-                    <option value="all">All Properties</option>
-                    <option value="Villa Caldera">Villa Caldera</option>
-                    <option value="Villa Sunset">Villa Sunset</option>
-                    <option value="Villa Oceana">Villa Oceana</option>
-                    <option value="Villa Paradiso">Villa Paradiso</option>
-                    <option value="Villa Azure">Villa Azure</option>
-                  </select>
-                </div>
-                <div className="flex-1 space-y-2">
-                  <label className="text-sm font-medium">Available Reports</label>
-                  <div className="space-y-2">
-                    <Button variant="outline" className="w-full justify-start">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      Monthly Occupancy Rates
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Clock className="mr-2 h-4 w-4" />
-                      Average Length of Stay
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <BarChart className="mr-2 h-4 w-4" />
-                      Seasonal Booking Trends
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <OccupancyAnalysis />
         </TabsContent>
       </Tabs>
     </div>
