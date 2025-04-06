@@ -22,6 +22,7 @@ import Reports from "./pages/Reports";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
+import Troubleshooting from "./pages/Troubleshooting";
 
 const queryClient = new QueryClient();
 
@@ -70,6 +71,9 @@ const App = () => (
                 <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
                   <Route path="reports" element={<Reports />} />
                 </Route>
+
+                {/* Troubleshooting page accessible to everyone */}
+                <Route path="troubleshooting" element={<Troubleshooting />} />
                 
                 {/* User profile accessible to everyone */}
                 <Route path="profile" element={<UserProfile />} />
