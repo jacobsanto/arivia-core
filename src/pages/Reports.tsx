@@ -1,14 +1,24 @@
 
-import React from 'react';
-import { FileText, BarChart } from "lucide-react";
+import React, { useEffect } from 'react';
+import { FileText, BarChart, Clock, Layers, Filter } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import TaskReporting from "@/components/tasks/TaskReporting";
 import ScheduledReports from "@/components/analytics/ScheduledReports";
 import CustomReportBuilder from "@/components/analytics/CustomReportBuilder";
 import { toastService } from "@/services/toast/toast.service";
+import { useReports } from '@/hooks/useReports';
+import { Badge } from '@/components/ui/badge';
 
 const Reports = () => {
+  // Initialize the reports hook for task reports
+  const { reports, isLoading, loadReports } = useReports('task');
+
+  useEffect(() => {
+    // Load reports when the component mounts
+    loadReports();
+  }, []);
+
   // Function to handle how users can get help with reports
   const handleHelpRequest = () => {
     toastService.info("Help Center", {
@@ -29,14 +39,36 @@ const Reports = () => {
             View insights, generate reports, and analyze business data.
           </p>
         </div>
-        <Button variant="outline" onClick={handleHelpRequest}>
-          Help & Documentation
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleHelpRequest}>
+            Help & Documentation
+          </Button>
+        </div>
+      </div>
+      
+      <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+          <Filter className="h-4 w-4" /> Filters:
+        </div>
+        <Badge variant="outline" className="bg-muted/50">
+          <Clock className="mr-1 h-3 w-3" /> Last 30 Days
+        </Badge>
+        <Badge variant="outline" className="bg-muted/50">
+          <Layers className="mr-1 h-3 w-3" /> All Properties
+        </Badge>
+        <Button variant="ghost" size="sm" className="text-xs h-7">
+          + Add Filter
         </Button>
       </div>
       
       <Tabs defaultValue="task-reports" className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 mb-4">
-          <TabsTrigger value="task-reports">Task Reports</TabsTrigger>
+          <TabsTrigger value="task-reports">
+            Task Reports
+            <span className="ml-2 text-xs bg-muted rounded-full px-2 py-0.5">
+              {isLoading ? '...' : reports.length}
+            </span>
+          </TabsTrigger>
           <TabsTrigger value="scheduled-reports">Scheduled Reports</TabsTrigger>
           <TabsTrigger value="custom-reports">Custom Report Builder</TabsTrigger>
         </TabsList>
