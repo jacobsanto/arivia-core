@@ -22,12 +22,11 @@ export class OrderService extends BaseService<Order> {
       // Generate a unique order ID
       const orderId = `PO-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
       
-      // Create the order
+      // Create the order with proper type checking for all properties
       const newOrder = await this.create({
         ...orderData,
         id: orderId,
         status: 'pending',
-        createdBy: currentUser?.name || 'Unknown User',
         createdAt: new Date().toISOString(),
         requesterRole: currentUser?.role || 'concierge',
       });
@@ -76,9 +75,7 @@ export class OrderService extends BaseService<Order> {
         case 'sent':
           updateData.sentAt = now;
           break;
-        case 'received':
-          updateData.receivedAt = now;
-          break;
+        // Removed 'received' case as it's not in OrderStatus type
       }
       
       // Update the order
@@ -90,7 +87,6 @@ export class OrderService extends BaseService<Order> {
         approved: 'Order Approved',
         rejected: 'Order Rejected',
         sent: 'Order Sent to Vendor',
-        received: 'Order Received',
         pending: 'Order Status Updated',
         pending_24h: 'Order Status Updated',
       };

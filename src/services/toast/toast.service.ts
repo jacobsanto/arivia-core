@@ -1,13 +1,14 @@
 
 import { toast as sonnerToast } from "sonner";
 import { toast as shadcnToast } from "@/hooks/use-toast";
+import { ToastActionElement } from "@/components/ui/toast";
 
 type ToastVariant = "default" | "destructive" | "success" | "warning" | "info";
 type ToastPosition = "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
 
 interface ToastOptions {
   description?: string;
-  action?: React.ReactNode;
+  action?: ToastActionElement;
   duration?: number;
   position?: ToastPosition;
   variant?: ToastVariant;
@@ -105,11 +106,17 @@ class ToastService {
   private showShadcnToast(title: string, options?: ToastOptions) {
     const { description, action, variant } = options || {};
     
+    // Map our variants to shadcn's limited variants
+    let shadcnVariant: "default" | "destructive" = "default";
+    if (variant === "destructive") {
+      shadcnVariant = "destructive";
+    }
+    
     return shadcnToast({
       title,
       description,
-      action,
-      variant: variant === 'success' ? 'default' : variant,
+      action, // Make sure action is properly typed as ToastActionElement
+      variant: shadcnVariant,
     });
   }
 }
