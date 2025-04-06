@@ -2,11 +2,22 @@
 import React from 'react';
 import { FileText, BarChart } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import TaskReporting from "@/components/tasks/TaskReporting";
 import ScheduledReports from "@/components/analytics/ScheduledReports";
 import CustomReportBuilder from "@/components/analytics/CustomReportBuilder";
+import { toastService } from "@/services/toast/toast.service";
 
 const Reports = () => {
+  // Function to handle how users can get help with reports
+  const handleHelpRequest = () => {
+    toastService.info("Help Center", {
+      description: "Our reporting documentation has been opened in a new tab."
+    });
+    // In a real app, this would open actual documentation
+    window.open("https://example.com/help/reports", "_blank");
+  };
+
   return (
     <div className="container max-w-7xl mx-auto p-4 space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -18,6 +29,9 @@ const Reports = () => {
             View insights, generate reports, and analyze business data.
           </p>
         </div>
+        <Button variant="outline" onClick={handleHelpRequest}>
+          Help & Documentation
+        </Button>
       </div>
       
       <Tabs defaultValue="task-reports" className="space-y-4">

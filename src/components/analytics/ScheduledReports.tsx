@@ -1,8 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, Clock } from "lucide-react";
+import { Edit2, Trash2, Clock, Send } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toastService } from "@/services/toast/toast.service";
 
 interface ScheduledReport {
   id: string;
@@ -41,14 +43,129 @@ const scheduledReports: ScheduledReport[] = [
 ];
 
 export const ScheduledReports = () => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [reportName, setReportName] = useState("");
+  const [reportFrequency, setReportFrequency] = useState("Weekly");
+  const [reportRecipients, setReportRecipients] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editReportId, setEditReportId] = useState<string | null>(null);
+
+  const handleDeleteReport = (id: string) => {
+    // In a real app this would make an API call
+    toastService.info("Report deleted successfully");
+  };
+
+  const handleSendNow = (report: ScheduledReport) => {
+    // In a real app this would trigger the report generation and email
+    toastService.success(`Sending ${report.name} to ${report.recipients}`);
+    
+    // Show a follow-up message after a delay
+    setTimeout(() => {
+      toastService.success("Report sent successfully", {
+        description: `${report.name} has been sent to recipients.`
+      });
+    }, 2000);
+  };
+
+  const handleEditReport = (report: ScheduledReport) => {
+    setIsEditMode(true);
+    setEditReportId(report.id);
+    setReportName(report.name);
+    setReportFrequency(report.frequency);
+    setReportRecipients(report.recipients);
+    setIsDialogOpen(true);
+  };
+
+  const handleSaveReport = () => {
+    // Validation
+    if (!reportName.trim()) {
+      toastService.error("Report name is required");
+      return;
+    }
+    
+    if (!reportRecipients.trim()) {
+      toastService.error("Recipients are required");
+      return;
+    }
+    
+    // In a real app this would make an API call
+    if (isEditMode && editReportId) {
+      toastService.success("Report updated successfully");
+    } else {
+      toastService.success("New scheduled report created");
+    }
+    
+    // Close dialog and reset form
+    setIsDialogOpen(false);
+    setReportName("");
+    setReportFrequency("Weekly");
+    setReportRecipients("");
+    setIsEditMode(false);
+    setEditReportId(null);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-medium">Scheduled Reports</h2>
-        <Button>
-          <Clock className="mr-2 h-4 w-4" />
-          New Scheduled Report
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => {
+              setIsEditMode(false);
+              setReportName("");
+              setReportFrequency("Weekly");
+              setReportRecipients("");
+            }}>
+              <Clock className="mr-2 h-4 w-4" />
+              New Scheduled Report
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>{isEditMode ? "Edit Scheduled Report" : "Create Scheduled Report"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Report Name</label>
+                <input
+                  className="w-full border rounded-md p-2"
+                  value={reportName}
+                  onChange={(e) => setReportName(e.target.value)}
+                  placeholder="Monthly Revenue Summary"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Frequency</label>
+                <select
+                  className="w-full border rounded-md p-2"
+                  value={reportFrequency}
+                  onChange={(e) => setReportFrequency(e.target.value)}
+                >
+                  <option value="Daily">Daily</option>
+                  <option value="Weekly">Weekly</option>
+                  <option value="Monthly">Monthly</option>
+                  <option value="Quarterly">Quarterly</option>
+                </select>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Recipients (comma separated)</label>
+                <input
+                  className="w-full border rounded-md p-2"
+                  value={reportRecipients}
+                  onChange={(e) => setReportRecipients(e.target.value)}
+                  placeholder="email1@example.com, email2@example.com"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                <Button onClick={handleSaveReport}>Save</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       
       <div className="border rounded-md">
@@ -71,11 +188,14 @@ export const ScheduledReports = () => {
                 <TableCell>{report.recipients}</TableCell>
                 <TableCell>{report.lastSent}</TableCell>
                 <TableCell>{report.nextScheduled}</TableCell>
-                <TableCell className="text-right">
-                  <Button variant="ghost" size="icon">
+                <TableCell className="text-right flex justify-end gap-1">
+                  <Button variant="ghost" size="icon" title="Send Now" onClick={() => handleSendNow(report)}>
+                    <Send className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" title="Edit" onClick={() => handleEditReport(report)}>
                     <Edit2 className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="icon">
+                  <Button variant="ghost" size="icon" title="Delete" onClick={() => handleDeleteReport(report.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </TableCell>
