@@ -1,5 +1,5 @@
 
-import { toast } from "sonner";
+import { toastService } from "@/services/toast/toast.service";
 
 // Types for offline data
 interface OfflineData {
@@ -86,12 +86,12 @@ class OfflineManager {
     this.networkStatus = isOnline;
     
     if (isOnline) {
-      toast.info("You're back online!", {
+      toastService.info("You're back online!", {
         description: "Syncing your data now..."
       });
       this.syncOfflineData();
     } else {
-      toast.warning("You're offline", {
+      toastService.warning("You're offline", {
         description: "Don't worry, changes will be saved and synced when you're back online."
       });
     }
@@ -251,13 +251,13 @@ class OfflineManager {
       this.saveOfflineData(data);
       
       if (unsyncedTasks.length > 0 || unsyncedPhotos.length > 0 || unsyncedForms.length > 0) {
-        toast.success('Sync completed', {
+        toastService.success('Sync completed', {
           description: `Synced ${unsyncedTasks.length} tasks, ${unsyncedPhotos.length} photos, and ${unsyncedForms.length} forms.`
         });
       }
     } catch (error) {
       console.error('Error syncing offline data:', error);
-      toast.error('Sync failed', {
+      toastService.error('Sync failed', {
         description: 'There was an error syncing your offline data. We\'ll try again later.'
       });
     } finally {
@@ -268,7 +268,7 @@ class OfflineManager {
   // Clear all offline data
   public clearOfflineData(): void {
     this.resetOfflineData();
-    toast.info('Offline data cleared', {
+    toastService.info('Offline data cleared', {
       description: 'All cached data has been removed.'
     });
   }

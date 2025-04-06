@@ -7,26 +7,26 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { offlineManager } from "@/utils/offlineManager";
-import { toast } from "sonner";
+import { toastService } from "@/services/toast/toast.service";
 
 const Troubleshooting = () => {
   const forceSyncData = () => {
     if (navigator.onLine) {
-      toast.info("Starting manual sync...");
+      toastService.info("Starting manual sync...");
       offlineManager.syncOfflineData().then(() => {
-        toast.success("Manual sync completed");
+        toastService.success("Manual sync completed");
       });
     } else {
-      toast.error("Cannot sync while offline", {
+      toastService.error("Cannot sync while offline", {
         description: "Please connect to the internet and try again."
       });
     }
   };
 
   const clearCache = () => {
-    toast.info("Clearing cached data...");
+    toastService.info("Clearing cached data...");
     offlineManager.clearOfflineData();
-    toast.success("Cache cleared successfully");
+    toastService.success("Cache cleared successfully");
   };
 
   return (

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole, FEATURE_PERMISSIONS } from "@/types/auth";
-import { toast } from "sonner";
+import { toastService } from "@/services/toast/toast.service";
 
 interface UserContextType {
   user: User | null;
@@ -152,9 +152,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(userToStore);
       localStorage.setItem("user", JSON.stringify(userToStore));
       
+      // Show success toast
+      toastService.success(`Welcome, ${userToStore.name}`, {
+        description: "You have successfully logged in."
+      });
+      
       return;
     } catch (error) {
-      console.error("Login error:", error);
+      toastService.error("Login Failed", {
+        description: (error as Error).message
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -166,6 +173,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("user");
     localStorage.removeItem("lastAuthTime");
     // Don't clear other data like custom users or offline data
+    
+    toastService.info("Logged Out", {
+      description: "You have been successfully logged out."
+    });
   };
 
   const hasPermission = (roles: UserRole[]) => {
@@ -206,7 +217,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // If more than 7 days since last auth, session is expired
     if (now - lastAuthTime > sevenDaysMs) {
       // Show a toast warning
-      toast.warning("Offline session expired", {
+      toastService.warning("Offline session expired", {
         description: "Please go online to re-authenticate."
       });
       return false;

@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useUser } from "@/contexts/UserContext";
 import { useOrders } from "@/contexts/OrderContext";
@@ -15,6 +14,8 @@ import {
 import OrdersFilterBar from "./list/OrdersFilterBar";
 import OrderTable from "./list/OrderTable";
 import OrderDetailsDialog from "./details/OrderDetailsDialog";
+import { toastService } from "@/services/toast/toast.service";
+import { orderService } from "@/services/orders/order.service";
 
 const OrderList: React.FC = () => {
   const { orders, updateOrder } = useOrders();
@@ -65,15 +66,21 @@ const OrderList: React.FC = () => {
 
   useEffect(() => {
     if (isSuperAdmin) {
-      const pendingOverdueOrders = orders.filter(order => order.status === "pending_24h");
+      const checkOverdueOrders = async () => {
+        try {
+          const pendingOverdueOrders = await orderService.getPendingOverdueOrders();
+          
+          if (pendingOverdueOrders.length > 0) {
+            toastService.warning("Attention Required", {
+              description: `${pendingOverdueOrders.length} order(s) pending for more than 24 hours`
+            });
+          }
+        } catch (error) {
+          console.error("Error checking overdue orders:", error);
+        }
+      };
       
-      if (pendingOverdueOrders.length > 0) {
-        toast({
-          title: "Attention Required",
-          description: `${pendingOverdueOrders.length} order(s) pending for more than 24 hours`,
-          variant: "destructive",
-        });
-      }
+      checkOverdueOrders();
     }
   }, [orders, isSuperAdmin]);
 
@@ -88,59 +95,41 @@ const OrderList: React.FC = () => {
     setIsDetailsOpen(true);
   };
 
-  const handleApproveOrder = (orderId: string) => {
+  const handleApproveOrder = async (orderId: string) => {
     const orderToUpdate = orders.find(order => order.id === orderId);
     if (!orderToUpdate) return;
 
     const canApprove = canTakeActionOnOrder(orderToUpdate.status, userRole as any);
     
     if (!canApprove) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to approve this order.",
-        variant: "destructive",
+      toastService.error("Access Denied", {
+        description: "You don't have permission to approve this order."
       });
       return;
     }
 
     const nextStatus = getNextOrderStatus(orderToUpdate.status, userRole as any);
     
-    const now = new Date().toISOString();
-    let updatedOrder: Partial<Order> = { status: nextStatus };
-
-    if (orderToUpdate.status === "pending" && canApproveAsManager) {
-      updatedOrder = {
-        ...updatedOrder,
-        status: "manager_approved",
-        managerApprovedBy: user?.name,
-        managerApprovedAt: now,
-      };
-    } else if ((orderToUpdate.status === "manager_approved" || orderToUpdate.status === "pending") && canApproveAsAdmin) {
-      updatedOrder = {
-        ...updatedOrder,
-        status: "approved",
-        adminApprovedBy: user?.name,
-        adminApprovedAt: now,
-      };
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, nextStatus as OrderStatus, user);
+      
+      // Update the UI state
+      updateOrder(orderId, { status: nextStatus });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification(nextStatus as OrderStatus, orderId, orderToUpdate);
+      
+      setIsDetailsOpen(false);
+    } catch (error) {
+      console.error("Error approving order:", error);
     }
-
-    updateOrder(orderId, updatedOrder);
-    sendOrderNotification(updatedOrder.status as OrderStatus, orderId, orderToUpdate);
-
-    toast({
-      title: "Order Approved",
-      description: `Purchase order ${orderId} has been approved.`,
-    });
-    
-    setIsDetailsOpen(false);
   };
 
-  const handleRejectOrder = (orderId: string) => {
+  const handleRejectOrder = async (orderId: string) => {
     if (!rejectionReason) {
-      toast({
-        title: "Reason Required",
-        description: "Please provide a rejection reason.",
-        variant: "destructive",
+      toastService.error("Reason Required", {
+        description: "Please provide a rejection reason."
       });
       return;
     }
@@ -151,62 +140,62 @@ const OrderList: React.FC = () => {
     const canReject = canTakeActionOnOrder(orderToUpdate.status, userRole as any);
     
     if (!canReject) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to reject this order.",
-        variant: "destructive",
+      toastService.error("Access Denied", {
+        description: "You don't have permission to reject this order."
       });
       return;
     }
     
-    const now = new Date().toISOString();
-
-    updateOrder(orderId, {
-      status: "rejected",
-      rejectedBy: user?.name,
-      rejectedAt: now,
-      rejectionReason: rejectionReason,
-    });
-
-    sendOrderNotification("rejected" as OrderStatus, orderId, { rejectedBy: user?.name, reason: rejectionReason });
-
-    toast({
-      title: "Order Rejected",
-      description: `Purchase order ${orderId} has been rejected.`,
-    });
-
-    setIsDetailsOpen(false);
-    setRejectionReason("");
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, 'rejected', user, rejectionReason);
+      
+      // Update the UI state
+      updateOrder(orderId, { 
+        status: 'rejected',
+        rejectedBy: user?.name,
+        rejectedAt: new Date().toISOString(),
+        rejectionReason: rejectionReason,
+      });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification('rejected', orderId, { rejectedBy: user?.name, reason: rejectionReason });
+      
+      setIsDetailsOpen(false);
+      setRejectionReason("");
+    } catch (error) {
+      console.error("Error rejecting order:", error);
+    }
   };
 
-  const handleSendOrder = (orderId: string) => {
+  const handleSendOrder = async (orderId: string) => {
     const orderToUpdate = orders.find(order => order.id === orderId);
     if (!orderToUpdate || orderToUpdate.status !== "approved") return;
 
     if (!canApproveAsAdmin && !isSuperAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to send orders to vendors.",
-        variant: "destructive",
+      toastService.error("Access Denied", {
+        description: "You don't have permission to send orders to vendors."
       });
       return;
     }
 
-    const now = new Date().toISOString();
-
-    updateOrder(orderId, {
-      status: "sent",
-      sentAt: now,
-    });
-
-    sendOrderNotification("sent" as OrderStatus, orderId, orderToUpdate);
-
-    toast({
-      title: "Order Sent",
-      description: `Purchase order ${orderId} has been sent to the vendor.`,
-    });
-    
-    setIsDetailsOpen(false);
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, 'sent', user);
+      
+      // Update the UI state
+      updateOrder(orderId, { 
+        status: 'sent',
+        sentAt: new Date().toISOString(),
+      });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification('sent', orderId, orderToUpdate);
+      
+      setIsDetailsOpen(false);
+    } catch (error) {
+      console.error("Error sending order:", error);
+    }
   };
 
   if (!canViewOrders) {
