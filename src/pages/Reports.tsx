@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { FileText, BarChart, Clock, Layers, Filter, Calendar as CalendarIcon, Plus } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -38,7 +37,13 @@ const Reports = () => {
   const handleCreateReport = () => {
     // Switch to reports tab and trigger new report dialog
     setActiveView('reporting');
-    document.querySelector('[data-value="scheduled-reports"]')?.click();
+    
+    // Fix: Cast the Element to HTMLElement to use the click method
+    const element = document.querySelector('[data-value="scheduled-reports"]');
+    if (element) {
+      (element as HTMLElement).click();
+    }
+    
     // The scheduled reports component will handle showing the dialog
     toastService.info("Create Report", {
       description: "Select your report type and configure settings."
