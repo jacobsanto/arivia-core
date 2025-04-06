@@ -6,6 +6,13 @@ import { CalendarIcon, Clock, BarChart, Loader2 } from "lucide-react";
 import { toastService } from "@/services/toast/toast.service";
 import { ReportPreview } from "@/components/reports/ReportPreview";
 import { OccupancyChart } from "./OccupancyChart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   monthlyOccupancyData, 
   averageStayData, 
@@ -62,6 +69,16 @@ export const OccupancyAnalysis: React.FC = () => {
     setReportData([]);
   };
 
+  // Handle property selection change
+  const handlePropertyChange = (value: string) => {
+    setSelectedProperty(value);
+    
+    // If there's an active report, regenerate it with the new property filter
+    if (showPreview && reportTitle) {
+      handleReportClick(reportTitle);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Card>
@@ -73,18 +90,22 @@ export const OccupancyAnalysis: React.FC = () => {
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="w-full sm:w-64 space-y-2">
               <label className="text-sm font-medium">Select Property</label>
-              <select 
-                className="w-full border rounded-md p-2"
-                value={selectedProperty}
-                onChange={(e) => setSelectedProperty(e.target.value)}
+              <Select 
+                value={selectedProperty} 
+                onValueChange={handlePropertyChange}
               >
-                <option value="all">All Properties</option>
-                <option value="Villa Caldera">Villa Caldera</option>
-                <option value="Villa Sunset">Villa Sunset</option>
-                <option value="Villa Oceana">Villa Oceana</option>
-                <option value="Villa Paradiso">Villa Paradiso</option>
-                <option value="Villa Azure">Villa Azure</option>
-              </select>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Properties</SelectItem>
+                  <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
+                  <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
+                  <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
+                  <SelectItem value="Villa Paradiso">Villa Paradiso</SelectItem>
+                  <SelectItem value="Villa Azure">Villa Azure</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="flex-1 space-y-2">
               <label className="text-sm font-medium">Available Reports</label>
