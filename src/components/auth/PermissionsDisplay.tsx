@@ -57,7 +57,12 @@ const PermissionsDisplay = () => {
                 <h4 className="text-sm font-semibold mb-2">{group}</h4>
                 <div className="space-y-1">
                   {features.map(feature => {
+                    // Check if the feature exists in FEATURE_PERMISSIONS
                     const permission = FEATURE_PERMISSIONS[feature];
+                    
+                    // If the permission doesn't exist, skip rendering this item
+                    if (!permission) return null;
+                    
                     const hasAccess = canAccess(feature);
                     
                     return (

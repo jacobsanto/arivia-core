@@ -1,4 +1,3 @@
-
 export interface User {
   id: string;
   email: string;
@@ -10,7 +9,11 @@ export interface User {
 
 export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager";
 
-export const FEATURE_PERMISSIONS = {
+export const FEATURE_PERMISSIONS: Record<string, {
+  title: string;
+  description: string;
+  allowedRoles: UserRole[];
+}> = {
   manage_properties: {
     title: "Property Management",
     description: "Create and manage property listings",
@@ -41,7 +44,6 @@ export const FEATURE_PERMISSIONS = {
     description: "Access reporting dashboards",
     allowedRoles: ["superadmin", "administrator", "property_manager"]
   },
-  
   manage_vendors: {
     title: "Vendor Management",
     description: "Create and manage vendor information",
@@ -62,6 +64,66 @@ export const FEATURE_PERMISSIONS = {
     description: "Final approval and sending of purchase orders",
     allowedRoles: ["superadmin", "administrator"]
   },
+  viewProperties: {
+    title: "View Properties",
+    description: "View property listings and details",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "concierge"]
+  },
+  manageProperties: {
+    title: "Manage Properties",
+    description: "Create, edit, and delete property listings",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  },
+  viewAllTasks: {
+    title: "View All Tasks",
+    description: "View all tasks across properties",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  },
+  viewAssignedTasks: {
+    title: "View Assigned Tasks",
+    description: "View tasks assigned to you",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]
+  },
+  assignTasks: {
+    title: "Assign Tasks",
+    description: "Assign tasks to staff members",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  },
+  viewInventory: {
+    title: "View Inventory",
+    description: "View inventory across properties",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "inventory_manager"]
+  },
+  manageInventory: {
+    title: "Manage Inventory",
+    description: "Add, edit, and remove inventory items",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "inventory_manager"]
+  },
+  approveTransfers: {
+    title: "Approve Transfers",
+    description: "Approve inventory transfer requests",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  },
+  viewUsers: {
+    title: "View Users",
+    description: "View user accounts",
+    allowedRoles: ["superadmin", "administrator"]
+  },
+  manageUsers: {
+    title: "Manage Users",
+    description: "Create, edit, and deactivate user accounts",
+    allowedRoles: ["superadmin", "administrator"]
+  },
+  manageSettings: {
+    title: "Manage Settings",
+    description: "Modify system settings and configurations",
+    allowedRoles: ["superadmin", "administrator"]
+  },
+  viewReports: {
+    title: "View Reports",
+    description: "Access system reports and analytics",
+    allowedRoles: ["superadmin", "administrator", "property_manager"]
+  }
 };
 
 export const ROLE_DETAILS = {
@@ -105,18 +167,15 @@ export const OFFLINE_CAPABILITIES = {
   inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"]
 };
 
-// Helper function to check if user has permission combining primary and secondary roles
 export const hasPermissionWithAllRoles = (
   userRole: UserRole, 
   secondaryRoles: UserRole[] | undefined, 
   permissionRoles: UserRole[]
 ): boolean => {
-  // Check primary role first
   if (permissionRoles.includes(userRole)) {
     return true;
   }
   
-  // Then check secondary roles if they exist
   if (secondaryRoles && secondaryRoles.length > 0) {
     return secondaryRoles.some(role => permissionRoles.includes(role));
   }
