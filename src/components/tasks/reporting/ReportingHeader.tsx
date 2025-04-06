@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Button } from "@/components/ui/button";
 
 interface ReportingHeaderProps {
   dateRange: string;
@@ -12,17 +13,42 @@ export const ReportingHeader = ({ dateRange, setDateRange }: ReportingHeaderProp
       <p className="text-muted-foreground">
         View historical data on housekeeping tasks and staff performance.
       </p>
-      <div className="space-x-2">
-        <select 
-          className="border rounded p-1 text-sm"
-          value={dateRange}
-          onChange={(e) => setDateRange(e.target.value)}
+      <div className="flex space-x-2">
+        <Button
+          variant={dateRange === "week" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateRange("week")}
         >
-          <option value="week">Last Week</option>
-          <option value="month">Last Month</option>
-          <option value="quarter">Last Quarter</option>
-          <option value="year">Last Year</option>
-        </select>
+          Week
+        </Button>
+        <Button
+          variant={dateRange === "month" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateRange("month")}
+        >
+          Month
+        </Button>
+        <Button
+          variant={dateRange === "quarter" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateRange("quarter")}
+        >
+          Quarter
+        </Button>
+        <Button
+          variant={dateRange === "year" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateRange("year")}
+        >
+          Year
+        </Button>
+        <Button
+          variant={dateRange === "custom" ? "default" : "outline"}
+          size="sm"
+          onClick={() => setDateRange("custom")}
+        >
+          Custom
+        </Button>
       </div>
     </div>
   );

@@ -1,16 +1,13 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { PropertyReporting } from './reporting/PropertyReporting';
 import { StaffReporting } from './reporting/StaffReporting';
 import { TimeAnalysis } from './reporting/TimeAnalysis';
 import { ReportingHeader } from './reporting/ReportingHeader';
-import { FileDown, Printer, Save } from "lucide-react";
-import { toastService } from "@/services/toast/toast.service";
-import { exportToCSV, preparePrint } from "@/utils/reportExportUtils";
-import { completionData, staffData, performanceByDayData } from './reporting/reportingData';
 import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
+import { ReportActionButtons } from './reporting/ReportActionButtons';
+import { completionData, staffData, performanceByDayData } from './reporting/reportingData';
 
 const TaskReporting = () => {
   const [dateRange, setDateRange] = useState('month'); // week, month, quarter, year
@@ -20,65 +17,18 @@ const TaskReporting = () => {
   });
   const [activeTab, setActiveTab] = useState("properties");
   
-  const handleExport = () => {
-    // Determine which data to export based on active tab
-    let dataToExport = [];
-    let filename = '';
-    
+  // Get data for current tab
+  const getCurrentData = () => {
     switch (activeTab) {
       case 'properties':
-        dataToExport = completionData;
-        filename = `property-tasks-report-${dateRange}`;
-        break;
+        return completionData;
       case 'staff':
-        dataToExport = staffData;
-        filename = `staff-performance-report-${dateRange}`;
-        break;
+        return staffData;
       case 'time':
-        dataToExport = performanceByDayData;
-        filename = `time-analysis-report-${dateRange}`;
-        break;
+        return performanceByDayData;
       default:
-        dataToExport = completionData;
-        filename = `tasks-report-${dateRange}`;
+        return completionData;
     }
-    
-    exportToCSV(dataToExport, filename);
-    toastService.success("Report exported successfully");
-  };
-  
-  const handlePrint = () => {
-    // Determine which data to print based on active tab
-    let dataToPrint = [];
-    let title = '';
-    
-    switch (activeTab) {
-      case 'properties':
-        dataToPrint = completionData;
-        title = "Property Tasks Report";
-        break;
-      case 'staff':
-        dataToPrint = staffData;
-        title = "Staff Performance Report";
-        break;
-      case 'time':
-        dataToPrint = performanceByDayData;
-        title = "Time Analysis Report";
-        break;
-      default:
-        dataToPrint = completionData;
-        title = "Tasks Report";
-    }
-    
-    toastService.info("Preparing report for printing...");
-    preparePrint(dataToPrint, title);
-  };
-  
-  const handleSaveReport = () => {
-    // In a real app, this would open a dialog to name and save the report
-    toastService.success("Report saved successfully", {
-      description: "You can access this report from the Scheduled Reports tab."
-    });
   };
 
   const handleDateRangeChange = (range: any) => {
@@ -104,20 +54,11 @@ const TaskReporting = () => {
             </div>
           )}
           
-          <div className="flex space-x-2">
-            <Button variant="outline" size="sm" onClick={handleExport}>
-              <FileDown className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <Button variant="outline" size="sm" onClick={handlePrint}>
-              <Printer className="mr-2 h-4 w-4" />
-              Print
-            </Button>
-            <Button variant="outline" size="sm" onClick={handleSaveReport}>
-              <Save className="mr-2 h-4 w-4" />
-              Save
-            </Button>
-          </div>
+          <ReportActionButtons 
+            activeTab={activeTab} 
+            dateRange={dateRange} 
+            data={getCurrentData()} 
+          />
         </div>
       </div>
       
