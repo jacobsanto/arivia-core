@@ -35,7 +35,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-center py-6">
         {/* Updated logo */}
         <img 
-          src="/arivia-logo-icon-gold-dark-bg.png" 
+          src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
           alt="Arivia Villas Logo" 
           className="h-14 w-auto" 
         />

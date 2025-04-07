@@ -14,7 +14,7 @@ const Login = () => {
       <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10"></div>
       <div className="w-full max-w-md z-10 animate-fade-in">
         <div className="mb-8 flex justify-center">
-          <img src="/arivia-logo-full-dark-bg.png" alt="Arivia Villas" className="h-20" />
+          <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-20" />
         </div>
         <Card className="border-0 shadow-2xl">
           <CardHeader className="space-y-1">
