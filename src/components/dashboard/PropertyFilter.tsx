@@ -1,29 +1,16 @@
-
 import React from 'react';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 interface PropertyFilterProps {
   selectedProperty: string;
   onPropertyChange: (property: string) => void;
 }
-
 const PropertyFilter: React.FC<PropertyFilterProps> = ({
   selectedProperty,
   onPropertyChange
 }) => {
-  return (
-    <div className="w-full sm:w-64 space-y-2">
-      <label className="text-sm font-medium">Filter by Property</label>
-      <Select 
-        value={selectedProperty} 
-        onValueChange={onPropertyChange}
-      >
+  return <div className="w-full sm:w-64 space-y-2">
+      <label className="text-sm font-medium mx-[5px]">Filter by Property</label>
+      <Select value={selectedProperty} onValueChange={onPropertyChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Select property" />
         </SelectTrigger>
@@ -36,8 +23,6 @@ const PropertyFilter: React.FC<PropertyFilterProps> = ({
           <SelectItem value="Villa Azure">Villa Azure</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-  );
+    </div>;
 };
-
 export default PropertyFilter;
