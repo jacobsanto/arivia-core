@@ -3,25 +3,25 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import PropertyFilter from "@/components/dashboard/PropertyFilter";
-import DateRangeFilter from "@/components/dashboard/DateRangeFilter";
+import { DateRangeSelector, type DateRange } from "@/components/reports/DateRangeSelector";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
   onPropertyChange: (property: string) => void;
-  date: Date;
-  onDateChange: (date: Date) => void;
+  dateRange: DateRange;
+  onDateRangeChange: (dateRange: DateRange) => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   selectedProperty,
   onPropertyChange,
-  date,
-  onDateChange
+  dateRange,
+  onDateRangeChange
 }) => {
   const { toast } = useToast();
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
@@ -34,9 +34,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             selectedProperty={selectedProperty}
             onPropertyChange={onPropertyChange}
           />
-          <DateRangeFilter
-            date={date}
-            onDateChange={onDateChange}
+          <DateRangeSelector
+            value={dateRange}
+            onChange={onDateRangeChange}
+            className="w-full sm:w-auto"
           />
         </div>
         <Button variant="outline" onClick={() => {

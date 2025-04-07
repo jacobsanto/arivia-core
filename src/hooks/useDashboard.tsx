@@ -1,31 +1,35 @@
 
 import { useState, useEffect } from 'react';
 import { getDashboardData } from "@/utils/dashboardDataUtils";
+import { type DateRange } from "@/components/reports/DateRangeSelector";
 
 export const useDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [date, setDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: new Date(),
+    to: new Date()
+  });
   const [dashboardData, setDashboardData] = useState<any>(null);
   
   useEffect(() => {
-    // Fetch dashboard data based on selected property and date
-    const data = getDashboardData(selectedProperty);
+    // Fetch dashboard data based on selected property and date range
+    const data = getDashboardData(selectedProperty, dateRange);
     setDashboardData(data);
-  }, [selectedProperty, date]);
+  }, [selectedProperty, dateRange]);
   
   const handlePropertyChange = (property: string) => {
     setSelectedProperty(property);
   };
   
-  const handleDateChange = (newDate: Date) => {
-    setDate(newDate);
+  const handleDateRangeChange = (newDateRange: DateRange) => {
+    setDateRange(newDateRange);
   };
   
   return {
     selectedProperty,
-    date,
+    dateRange,
     dashboardData,
     handlePropertyChange,
-    handleDateChange
+    handleDateRangeChange
   };
 };

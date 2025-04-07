@@ -7,10 +7,10 @@ import { useDashboard } from "@/hooks/useDashboard";
 const Dashboard = () => {
   const {
     selectedProperty,
-    date,
+    dateRange,
     dashboardData,
     handlePropertyChange,
-    handleDateChange
+    handleDateRangeChange
   } = useDashboard();
 
   // If data is not yet loaded, show loading state
@@ -23,8 +23,8 @@ const Dashboard = () => {
       <DashboardHeader 
         selectedProperty={selectedProperty}
         onPropertyChange={handlePropertyChange}
-        date={date}
-        onDateChange={handleDateChange}
+        dateRange={dateRange}
+        onDateRangeChange={handleDateRangeChange}
       />
       
       <DashboardContent dashboardData={dashboardData} />

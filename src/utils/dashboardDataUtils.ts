@@ -1,6 +1,6 @@
-
 import { revenueByPropertyData, expenseAnalysisData, profitLossData } from "@/components/reports/analytics/financialData";
 import { monthlyOccupancyData } from "@/components/reports/analytics/occupancyData";
+import { type DateRange } from "@/components/reports/DateRangeSelector";
 
 export interface DashboardData {
   properties: {
@@ -82,7 +82,7 @@ const upcomingTasksData = [
   },
 ];
 
-export const getBookingsByProperty = (propertyName?: string) => {
+export const getBookingsByProperty = (propertyName?: string, dateRange?: DateRange) => {
   // If no property is specified, return data for all properties
   if (!propertyName || propertyName === "all") {
     return [
@@ -105,7 +105,10 @@ export const getBookingsByProperty = (propertyName?: string) => {
   }));
 };
 
-export const getDashboardData = (propertyName?: string): DashboardData => {
+export const getDashboardData = (propertyName?: string, dateRange?: DateRange): DashboardData => {
+  // For now we're not using the dateRange parameter for filtering
+  // In a real application, you would filter data based on the dateRange
+
   // If no property is specified or "all" is selected, return aggregated data
   if (!propertyName || propertyName === "all") {
     return {
