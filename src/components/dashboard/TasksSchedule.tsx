@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -7,7 +6,6 @@ import { format } from "date-fns";
 import { isSameDay } from "date-fns";
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
-import { Separator } from "@/components/ui/separator";
 
 interface CombinedTask {
   id: number;
@@ -78,7 +76,23 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({ housekeepingTasks, mainte
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="space-y-2">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            className="rounded-md border"
+            modifiers={{
+              hasTasks: datesWithTasks,
+            }}
+            modifiersStyles={{
+              hasTasks: {
+                fontWeight: 'bold',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              }
+            }}
+          />
+          
+          <div className="space-y-2 mt-4">
             <h4 className="font-medium text-sm">Tasks for {format(selectedDate, 'MMM d, yyyy')}</h4>
             {tasksForSelectedDate.length === 0 ? (
               <p className="text-sm text-muted-foreground">No tasks scheduled for this day.</p>
@@ -87,26 +101,6 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({ housekeepingTasks, mainte
                 <TaskItem key={`${task.taskType}-${task.id}`} task={task} />
               ))
             )}
-          </div>
-          
-          <Separator className="my-4" />
-          
-          <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={(date) => date && setSelectedDate(date)}
-              className="rounded-md border w-full max-w-[350px]"
-              modifiers={{
-                hasTasks: datesWithTasks,
-              }}
-              modifiersStyles={{
-                hasTasks: {
-                  fontWeight: 'bold',
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                }
-              }}
-            />
           </div>
         </div>
       </CardContent>
