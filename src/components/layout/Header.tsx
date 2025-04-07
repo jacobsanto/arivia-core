@@ -6,28 +6,21 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
-
 const Header = () => {
-  const { user, logout } = useUser();
+  const {
+    user,
+    logout
+  } = useUser();
   const navigate = useNavigate();
-
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
-  return (
-    <header className="border-b border-border px-6 py-3 bg-background">
+  return <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          <img
-            src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png"
-            alt="Villa Sync"
-            className="h-8 mr-3"
-          />
-          <h1 className="text-lg font-semibold text-foreground">
-            Villa Sync
-          </h1>
+          <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Villa Sync" className="h-8 mr-3" />
+          
         </div>
         <div className="flex items-center space-x-4">
           <DropdownMenu>
@@ -97,16 +90,13 @@ const Header = () => {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
-
 const NotificationItem = ({
   title,
   message,
@@ -118,14 +108,12 @@ const NotificationItem = ({
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
     </div>;
 };
-
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
-
 const MessageItem = ({
   name,
   message,
@@ -145,5 +133,4 @@ const MessageItem = ({
       </div>
     </div>;
 };
-
 export default Header;
