@@ -1,3 +1,4 @@
+
 import React from "react";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 import BookingTrendsChart from "@/components/dashboard/BookingTrendsChart";
@@ -7,6 +8,7 @@ import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
 import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
+import { Separator } from "@/components/ui/separator";
 
 interface DashboardContentProps {
   dashboardData: any;
@@ -17,13 +19,16 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ dashboardData }) =>
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(initialMaintenanceTasks);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <div className="md:col-span-2 space-y-6">
-        <DashboardMetrics data={dashboardData} />
-        <BookingTrendsChart data={dashboardData.bookings} />
-      </div>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <DashboardMetrics data={dashboardData} />
       
-      <div>
+      {/* Separator */}
+      <Separator className="my-6" />
+      
+      {/* Tasks Schedule and Booking Trends */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <BookingTrendsChart data={dashboardData.bookings} />
         <TasksSchedule 
           housekeepingTasks={housekeepingTasks} 
           maintenanceTasks={maintenanceTasks}
