@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserContextType } from "./types";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { toastService } from "@/services/toast/toast.service";
 import { clearAuthData } from "@/services/auth/authService";
 import { 

@@ -5,7 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AppLayout from "./components/layout/AppLayout";
-import { UserProvider } from "./contexts/UserContext";
+import { UserProvider } from "./contexts/auth/UserContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import OfflineIndicator from "./components/layout/OfflineIndicator";
 

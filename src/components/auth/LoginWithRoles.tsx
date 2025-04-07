@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -110,7 +111,7 @@ const LoginWithRoles: React.FC = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="•••••��••" {...field} />
+                  <Input type="password" placeholder="•••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
