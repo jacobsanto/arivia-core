@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -15,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),

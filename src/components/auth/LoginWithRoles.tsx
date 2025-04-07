@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -16,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 import { ROLE_DETAILS, UserRole } from "@/types/auth";
 
 const formSchema = z.object({
@@ -111,7 +110,7 @@ const LoginWithRoles: React.FC = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
+                  <Input type="password" placeholder="•••••��••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

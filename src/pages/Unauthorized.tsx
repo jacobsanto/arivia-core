@@ -3,7 +3,7 @@ import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Shield, AlertCircle, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 import { ROLE_DETAILS, FEATURE_PERMISSIONS, UserRole } from "@/types/auth";
 import { Card, CardContent } from "@/components/ui/card";
 

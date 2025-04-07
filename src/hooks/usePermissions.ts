@@ -1,5 +1,5 @@
 
-import { useUser } from '@/contexts/UserContext';
+import { useUser } from '@/contexts/auth/UserContext';
 import { FEATURE_PERMISSIONS, OFFLINE_CAPABILITIES, UserRole, hasPermissionWithAllRoles } from '@/types/auth';
 
 interface PermissionsReturn {

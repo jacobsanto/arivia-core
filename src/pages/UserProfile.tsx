@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 import RoleInfo from "@/components/auth/RoleInfo";
 import RoleManagement from "@/components/auth/RoleManagement";
 import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
