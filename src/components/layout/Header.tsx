@@ -1,38 +1,25 @@
-
 import React from "react";
 import { Bell, MessageSquare, User, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
-
 const Header = () => {
-  const { user, logout } = useUser();
+  const {
+    user,
+    logout
+  } = useUser();
   const navigate = useNavigate();
-
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
-  return (
-    <header className="border-b border-border px-6 py-3 bg-background">
+  return <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          <img 
-            src="/arivia-logo-black-light-bg.png" 
-            alt="Arivia Villa Sync" 
-            className="h-8 mr-2" 
-          />
+          
           <h1 className="text-lg font-semibold text-foreground">
             Villa Sync
           </h1>
@@ -49,21 +36,9 @@ const Header = () => {
               <DropdownMenuLabel>Notifications</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-80 overflow-y-auto">
-                <NotificationItem
-                  title="New Maintenance Request"
-                  message="Villa Caldera has reported a plumbing issue in the master bathroom."
-                  time="10 minutes ago"
-                />
-                <NotificationItem
-                  title="Housekeeping Task Completed"
-                  message="Villa Azure cleanup has been completed and verified."
-                  time="1 hour ago"
-                />
-                <NotificationItem
-                  title="Low Inventory Alert"
-                  message="Bathroom supplies are running low at Villa Sunset."
-                  time="2 hours ago"
-                />
+                <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
+                <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
+                <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="justify-center text-primary">
@@ -82,24 +57,9 @@ const Header = () => {
               <DropdownMenuLabel>Messages</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-80 overflow-y-auto">
-                <MessageItem
-                  name="Maria Kowalska"
-                  message="When will the new supplies arrive?"
-                  time="5 min ago"
-                  avatar="/placeholder.svg"
-                />
-                <MessageItem
-                  name="Alex Chen"
-                  message="I've completed the Villa Oceana inspection."
-                  time="30 min ago"
-                  avatar="/placeholder.svg"
-                />
-                <MessageItem
-                  name="Stefan Müller"
-                  message="Guest requesting early check-in at Villa Sunset."
-                  time="1 hour ago"
-                  avatar="/placeholder.svg"
-                />
+                <MessageItem name="Maria Kowalska" message="When will the new supplies arrive?" time="5 min ago" avatar="/placeholder.svg" />
+                <MessageItem name="Alex Chen" message="I've completed the Villa Oceana inspection." time="30 min ago" avatar="/placeholder.svg" />
+                <MessageItem name="Stefan Müller" message="Guest requesting early check-in at Villa Sunset." time="1 hour ago" avatar="/placeholder.svg" />
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="justify-center text-primary">
@@ -113,11 +73,9 @@ const Header = () => {
               <Button variant="outline" className="flex items-center space-x-2">
                 <User className="h-5 w-5" />
                 <span>{user?.name || "Guest"}</span>
-                {user && (
-                  <Badge variant="outline" className="ml-2">
+                {user && <Badge variant="outline" className="ml-2">
                     {ROLE_DETAILS[user.role].title}
-                  </Badge>
-                )}
+                  </Badge>}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -134,36 +92,37 @@ const Header = () => {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
-
-const NotificationItem = ({ title, message, time }: NotificationItemProps) => {
-  return (
-    <div className="px-2 py-3 hover:bg-secondary cursor-pointer">
+const NotificationItem = ({
+  title,
+  message,
+  time
+}: NotificationItemProps) => {
+  return <div className="px-2 py-3 hover:bg-secondary cursor-pointer">
       <div className="font-medium text-sm">{title}</div>
       <div className="text-sm text-muted-foreground mt-1">{message}</div>
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
-    </div>
-  );
+    </div>;
 };
-
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
-
-const MessageItem = ({ name, message, time, avatar }: MessageItemProps) => {
-  return (
-    <div className="flex items-start space-x-3 px-2 py-3 hover:bg-secondary cursor-pointer">
+const MessageItem = ({
+  name,
+  message,
+  time,
+  avatar
+}: MessageItemProps) => {
+  return <div className="flex items-start space-x-3 px-2 py-3 hover:bg-secondary cursor-pointer">
       <div className="h-8 w-8 rounded-full overflow-hidden">
         <img src={avatar} alt={name} className="h-full w-full object-cover" />
       </div>
@@ -174,8 +133,6 @@ const MessageItem = ({ name, message, time, avatar }: MessageItemProps) => {
         </div>
         <div className="text-sm text-muted-foreground mt-1 truncate">{message}</div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Header;
