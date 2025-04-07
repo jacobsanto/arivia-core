@@ -28,8 +28,13 @@ const Header = () => {
     <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
+          <img 
+            src="/arivia-logo-black-light-bg.png" 
+            alt="Arivia Villa Sync" 
+            className="h-8 mr-2" 
+          />
           <h1 className="text-lg font-semibold text-foreground">
-            Arivia Villa Sync
+            Villa Sync
           </h1>
         </div>
         <div className="flex items-center space-x-4">

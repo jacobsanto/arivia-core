@@ -33,11 +33,11 @@ const Sidebar = () => {
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
-        {/* Logo goes here */}
+        {/* Updated logo */}
         <img 
-          src="/Secondary-Logo.png" 
+          src="/arivia-logo-icon-gold-dark-bg.png" 
           alt="Arivia Villas Logo" 
-          className="h-10 w-auto" 
+          className="h-14 w-auto" 
         />
       </div>
       
