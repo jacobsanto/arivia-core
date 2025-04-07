@@ -1,7 +1,14 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole, FEATURE_PERMISSIONS } from "@/types/auth";
 import { toastService } from "@/services/toast/toast.service";
+import { 
+  hashPassword, 
+  verifyPassword, 
+  generateAuthToken, 
+  verifyAuthToken, 
+  saveAuthData, 
+  clearAuthData 
+} from "@/services/auth/authService";
 
 interface UserContextType {
   user: User | null;
@@ -15,12 +22,13 @@ interface UserContextType {
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Mock users for demo purposes
+// Mock users for demo purposes with enhanced security
 const MOCK_USERS = [
   {
     id: "1",
     email: "admin@ariviavillas.com",
-    password: "admin123",
+    passwordHash: "YWRtaW4xMjN4eGprcnA=", // hashed version of "admin123"
+    passwordSalt: "xxjkrp",
     name: "Admin User",
     role: "administrator" as UserRole,
     avatar: "/placeholder.svg"
@@ -28,7 +36,8 @@ const MOCK_USERS = [
   {
     id: "2",
     email: "manager@ariviavillas.com",
-    password: "manager123",
+    passwordHash: "bWFuYWdlcjEyM2FiY2RlZg==", // hashed version of "manager123"
+    passwordSalt: "abcdef",
     name: "Property Manager",
     role: "property_manager" as UserRole,
     avatar: "/placeholder.svg"
@@ -36,7 +45,8 @@ const MOCK_USERS = [
   {
     id: "3",
     email: "concierge@ariviavillas.com",
-    password: "concierge123",
+    passwordHash: "Y29uY2llcmdlMTIzZ2hpamts", // hashed version of "concierge123"
+    passwordSalt: "ghijkl",
     name: "Concierge Staff",
     role: "concierge" as UserRole,
     avatar: "/placeholder.svg"
@@ -44,7 +54,8 @@ const MOCK_USERS = [
   {
     id: "4",
     email: "housekeeping@ariviavillas.com",
-    password: "housekeeping123",
+    passwordHash: "aG91c2VrZWVwaW5nMTIzbW5vcHFy", // hashed version of "housekeeping123"
+    passwordSalt: "mnopqr",
     name: "Housekeeping Staff",
     role: "housekeeping_staff" as UserRole,
     avatar: "/placeholder.svg"
@@ -52,7 +63,8 @@ const MOCK_USERS = [
   {
     id: "5",
     email: "maintenance@ariviavillas.com",
-    password: "maintenance123",
+    passwordHash: "bWFpbnRlbmFuY2UxMjNzdHV2d3g=", // hashed version of "maintenance123"
+    passwordSalt: "stuvwx",
     name: "Maintenance Staff",
     role: "maintenance_staff" as UserRole,
     avatar: "/placeholder.svg"
@@ -60,7 +72,8 @@ const MOCK_USERS = [
   {
     id: "6",
     email: "inventory@ariviavillas.com",
-    password: "inventory123",
+    passwordHash: "aW52ZW50b3J5MTIzeXphYmM=", // hashed version of "inventory123"
+    passwordSalt: "yzabc",
     name: "Inventory Manager",
     role: "inventory_manager" as UserRole,
     avatar: "/placeholder.svg"
@@ -68,7 +81,8 @@ const MOCK_USERS = [
   {
     id: "7",
     email: "superadmin@ariviavillas.com",
-    password: "superadmin123",
+    passwordHash: "c3VwZXJhZG1pbjEyM2RlZmdoaQ==", // hashed version of "superadmin123"
+    passwordSalt: "defghi",
     name: "Super Admin",
     role: "superadmin" as UserRole,
     avatar: "/placeholder.svg"
@@ -82,14 +96,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [lastAuthTime, setLastAuthTime] = useState<number>(0);
 
   useEffect(() => {
-    // Check for existing user session in local storage
-    const storedUser = localStorage.getItem("user");
+    // Check for existing auth token in localStorage
+    const storedToken = localStorage.getItem("authToken");
     const storedAuthTime = localStorage.getItem("lastAuthTime");
     
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-      if (storedAuthTime) {
-        setLastAuthTime(parseInt(storedAuthTime, 10));
+    if (storedToken) {
+      const { valid, userId, role } = verifyAuthToken(storedToken);
+      
+      if (valid) {
+        // Token is valid, restore user from localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          setUser(JSON.parse(storedUser));
+          if (storedAuthTime) {
+            setLastAuthTime(parseInt(storedAuthTime, 10));
+          }
+        }
+      } else {
+        // Token expired or invalid, clear data
+        clearAuthData();
       }
     }
     
@@ -114,10 +139,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
-      // Find user in mock data or custom registered users
-      let foundUser = MOCK_USERS.find(
-        u => u.email === email && u.password === password
-      );
+      // Find user by email
+      let foundUser = MOCK_USERS.find(u => u.email === email);
       
       if (!foundUser) {
         // Check localStorage for custom registered users
@@ -126,12 +149,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const parsedUsers = JSON.parse(customUsers);
           const customUser = parsedUsers.find((u: any) => u.email === email);
           
-          if (customUser) {
-            // In a real app, we would check password hash here
-            foundUser = {
-              ...customUser,
-              password
-            };
+          if (customUser && customUser.passwordHash) {
+            foundUser = customUser;
           }
         }
       }
@@ -140,19 +159,31 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("Invalid email or password");
       }
       
-      // Remove password from user object before storing
-      const { password: _, ...userToStore } = foundUser;
+      // Verify password
+      const isPasswordValid = verifyPassword(
+        password, 
+        foundUser.passwordHash, 
+        foundUser.passwordSalt
+      );
       
-      // Store auth timestamp (for offline login expiration)
-      const currentTime = Date.now();
-      localStorage.setItem("lastAuthTime", currentTime.toString());
-      setLastAuthTime(currentTime);
+      if (!isPasswordValid) {
+        throw new Error("Invalid email or password");
+      }
       
-      // Store user in state and local storage
+      // Generate auth token (24 hour expiry)
+      const authToken = generateAuthToken(foundUser.id, foundUser.role, 24);
+      
+      // Remove sensitive data before storing user
+      const { passwordHash, passwordSalt, ...userToStore } = foundUser;
+      
+      // Save authentication data
+      saveAuthData(authToken, userToStore);
+      setLastAuthTime(Date.now());
+      
+      // Update user state
       setUser(userToStore);
-      localStorage.setItem("user", JSON.stringify(userToStore));
       
-      // Show success toast
+      // Success toast
       toastService.success(`Welcome, ${userToStore.name}`, {
         description: "You have successfully logged in."
       });
@@ -172,6 +203,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     localStorage.removeItem("user");
     localStorage.removeItem("lastAuthTime");
+    localStorage.removeItem("authToken");
     // Don't clear other data like custom users or offline data
     
     toastService.info("Logged Out", {

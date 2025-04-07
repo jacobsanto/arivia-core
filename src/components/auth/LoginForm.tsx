@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useUser } from "@/contexts/UserContext";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -25,6 +26,9 @@ type FormValues = z.infer<typeof formSchema>;
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const { login } = useUser();
+  const [isLoading, setIsLoading] = React.useState(false);
+  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,13 +37,20 @@ const LoginForm = () => {
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    // In a real app, this would be an API call
-    console.log("Login data:", data);
+  const onSubmit = async (data: FormValues) => {
+    setIsLoading(true);
     
-    // Simulate successful login
-    toast.success("Login successful");
-    navigate("/");
+    try {
+      await login(data.email, data.password);
+      toast.success("Login successful");
+      navigate("/");
+    } catch (error) {
+      toast.error("Login failed", { 
+        description: "Invalid email or password" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,8 +97,8 @@ const LoginForm = () => {
           </a>
         </div>
 
-        <Button type="submit" className="w-full">
-          Sign In
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign In"}
         </Button>
       </form>
     </Form>

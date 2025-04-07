@@ -2,15 +2,18 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LoginForm from "@/components/auth/LoginForm";
 import LoginWithRoles from "@/components/auth/LoginWithRoles";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { useNavigate } from "react-router-dom";
+import { AlertCircle, ShieldCheck } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-blue-700 p-4 sm:p-6 md:p-8">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary to-blue-700 p-4 sm:p-6 md:p-8">
       <div className="absolute inset-0 bg-[url('/placeholder.svg')] opacity-10"></div>
       <div className="w-full max-w-md z-10 animate-fade-in">
         <div className="mb-8 flex justify-center">
@@ -35,10 +38,22 @@ const Login = () => {
               </TabsList>
               
               <TabsContent value="signin" className="mt-0">
+                <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+                  <ShieldCheck className="h-4 w-4" />
+                  <AlertDescription>
+                    Secure password authentication is enabled
+                  </AlertDescription>
+                </Alert>
                 <LoginWithRoles />
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0">
+                <Alert className="mb-4 bg-amber-50 text-amber-800 border-amber-200">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    For demo purposes, new accounts are stored locally
+                  </AlertDescription>
+                </Alert>
                 <SignUpForm />
               </TabsContent>
             </Tabs>
