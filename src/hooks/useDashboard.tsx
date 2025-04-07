@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { getDashboardData } from "@/utils/dashboardDataUtils";
 import { type DateRange } from "@/components/reports/DateRangeSelector";
+import { subDays } from 'date-fns';
 
 export const useDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  // Initialize date range with proper values - last 30 days by default
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
+    from: subDays(new Date(), 30),
     to: new Date()
   });
   const [dashboardData, setDashboardData] = useState<any>(null);

@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -21,15 +20,22 @@ export const DateRangeSelector = ({ onChange, value, className }: DateRangeSelec
   const [date, setDate] = useState<DateRange>(value || { from: undefined, to: undefined });
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   
-  const handleSelect = (range: DateRange | undefined) => {
-    if (!range) return;
+  useEffect(() => {
+    if (value && (value.from !== date.from || value.to !== date.to)) {
+      setDate(value);
+    }
+  }, [value]);
+  
+  const handleSelect = (newDate: DateRange | undefined) => {
+    if (!newDate) return;
     
-    setDate(range);
-    onChange(range);
+    setDate(newDate);
     
-    // Close the popover if both dates are selected
-    if (range.from && range.to) {
+    if (newDate.from && newDate.to) {
+      onChange(newDate);
       setIsCalendarOpen(false);
+    } else if (newDate.from) {
+      onChange({ ...newDate });
     }
   };
   

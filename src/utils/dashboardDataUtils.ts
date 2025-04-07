@@ -1,6 +1,8 @@
-import { revenueByPropertyData, expenseAnalysisData, profitLossData } from "@/components/reports/analytics/financialData";
+
+import { revenueByPropertyData, expenseAnalysisData } from "@/components/reports/analytics/financialData";
 import { monthlyOccupancyData } from "@/components/reports/analytics/occupancyData";
 import { type DateRange } from "@/components/reports/DateRangeSelector";
+import { isWithinInterval, parseISO, format } from "date-fns";
 
 export interface DashboardData {
   properties: {
@@ -106,8 +108,15 @@ export const getBookingsByProperty = (propertyName?: string, dateRange?: DateRan
 };
 
 export const getDashboardData = (propertyName?: string, dateRange?: DateRange): DashboardData => {
-  // For now we're not using the dateRange parameter for filtering
-  // In a real application, you would filter data based on the dateRange
+  // Filter tasks based on date range if provided
+  let filteredTasks = [...upcomingTasksData];
+  
+  if (dateRange && dateRange.from && dateRange.to) {
+    console.log("Filtering with date range:", dateRange.from, "to", dateRange.to);
+    // In a real app, you would filter tasks based on actual dates
+    // This is just a simulation since our demo data doesn't have real dates
+    filteredTasks = filteredTasks.slice(0, 3);
+  }
 
   // If no property is specified or "all" is selected, return aggregated data
   if (!propertyName || propertyName === "all") {
@@ -118,9 +127,9 @@ export const getDashboardData = (propertyName?: string, dateRange?: DateRange): 
         vacant: 1,
       },
       tasks: {
-        total: 18,
-        completed: 12,
-        pending: 6,
+        total: filteredTasks.length,
+        completed: Math.floor(filteredTasks.length * 0.7),
+        pending: Math.ceil(filteredTasks.length * 0.3),
       },
       maintenance: {
         total: 7,
@@ -128,18 +137,14 @@ export const getDashboardData = (propertyName?: string, dateRange?: DateRange): 
         standard: 5,
       },
       bookings: getBookingsByProperty(),
-      upcomingTasks: upcomingTasksData,
+      upcomingTasks: filteredTasks,
     };
   }
 
   // Filter tasks for the selected property
-  const filteredTasks = upcomingTasksData.filter(task => 
+  const propertyFilteredTasks = filteredTasks.filter(task => 
     task.title.includes(propertyName) || task.property === propertyName
   );
-
-  // Get financial data for the selected property
-  const propertyRevenue = revenueByPropertyData.find(item => item.property === propertyName);
-  const propertyExpenses = expenseAnalysisData.find(item => item.property === propertyName);
 
   // Calculate property-specific metrics
   const isOccupied = Math.random() > 0.3; // Simulate occupancy status
@@ -151,9 +156,9 @@ export const getDashboardData = (propertyName?: string, dateRange?: DateRange): 
       vacant: isOccupied ? 0 : 1,
     },
     tasks: {
-      total: Math.floor(Math.random() * 5) + 3,
-      completed: Math.floor(Math.random() * 3) + 1,
-      pending: Math.floor(Math.random() * 3) + 1,
+      total: propertyFilteredTasks.length,
+      completed: Math.floor(propertyFilteredTasks.length * 0.6),
+      pending: Math.ceil(propertyFilteredTasks.length * 0.4),
     },
     maintenance: {
       total: Math.floor(Math.random() * 3) + 1,
@@ -161,6 +166,6 @@ export const getDashboardData = (propertyName?: string, dateRange?: DateRange): 
       standard: Math.floor(Math.random() * 2) + 1,
     },
     bookings: getBookingsByProperty(propertyName),
-    upcomingTasks: filteredTasks,
+    upcomingTasks: propertyFilteredTasks,
   };
 };
