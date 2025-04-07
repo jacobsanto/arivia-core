@@ -1,7 +1,6 @@
 
 import React from "react";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
-import BookingTrendsChart from "@/components/dashboard/BookingTrendsChart";
 import TasksSchedule from "@/components/dashboard/TasksSchedule";
 import { useEffect, useState } from "react";
 import { Task } from "@/types/taskTypes"; 
@@ -26,13 +25,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({ dashboardData }) =>
       {/* Separator */}
       <Separator className="my-6" />
       
-      {/* Tasks Schedule and Booking Trends */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <BookingTrendsChart data={dashboardData.bookings} />
-        <TasksSchedule 
-          housekeepingTasks={housekeepingTasks} 
-          maintenanceTasks={maintenanceTasks}
-        />
+      {/* Tasks Schedule centered in one column */}
+      <div className="flex justify-center">
+        <div className="w-full max-w-3xl">
+          <TasksSchedule 
+            housekeepingTasks={housekeepingTasks} 
+            maintenanceTasks={maintenanceTasks}
+          />
+        </div>
       </div>
     </div>
   );
