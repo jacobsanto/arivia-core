@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface DateRange {
   from: Date | undefined;
@@ -59,7 +61,7 @@ export const DateRangeSelector = ({ onChange, value, className }: DateRangeSelec
   };
 
   return (
-    <div className={className}>
+    <div className={cn("relative", className)}>
       <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
         <PopoverTrigger asChild>
           <Button 
@@ -70,7 +72,7 @@ export const DateRangeSelector = ({ onChange, value, className }: DateRangeSelec
             {getDisplayText()}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0 z-50" align="start">
           <div className="p-3 flex justify-between items-center border-b">
             <h3 className="font-medium">Date Range</h3>
             {(date.from || date.to) && (
@@ -88,7 +90,8 @@ export const DateRangeSelector = ({ onChange, value, className }: DateRangeSelec
             selected={date}
             onSelect={handleSelect}
             initialFocus
-            numberOfMonths={2}
+            numberOfMonths={1}
+            className="pointer-events-auto"
           />
         </PopoverContent>
       </Popover>
