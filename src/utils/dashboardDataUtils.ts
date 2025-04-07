@@ -1,7 +1,6 @@
 
 import { revenueByPropertyData, expenseAnalysisData } from "@/components/reports/analytics/financialData";
 import { monthlyOccupancyData } from "@/components/reports/analytics/occupancyData";
-import { type DateRange } from "@/components/reports/DateRangeSelector";
 import { isWithinInterval, parseISO, format } from "date-fns";
 
 export interface DashboardData {
@@ -84,7 +83,7 @@ const upcomingTasksData = [
   },
 ];
 
-export const getBookingsByProperty = (propertyName?: string, dateRange?: DateRange) => {
+export const getBookingsByProperty = (propertyName?: string, dateRange?: any) => {
   // If no property is specified, return data for all properties
   if (!propertyName || propertyName === "all") {
     return [
@@ -107,7 +106,7 @@ export const getBookingsByProperty = (propertyName?: string, dateRange?: DateRan
   }));
 };
 
-export const getDashboardData = (propertyName?: string, dateRange?: DateRange): DashboardData => {
+export const getDashboardData = (propertyName?: string, dateRange?: any): DashboardData => {
   // Filter tasks based on date range if provided
   let filteredTasks = [...upcomingTasksData];
   

@@ -34,18 +34,6 @@ const MaintenanceHistory = ({
     return "Select date range";
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    if (!startDate) {
-      onDateRangeChange({ startDate: date, endDate: null });
-    } else if (!endDate && date > startDate) {
-      onDateRangeChange({ startDate, endDate: date });
-    } else {
-      onDateRangeChange({ startDate: date, endDate: null });
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -59,7 +47,7 @@ const MaintenanceHistory = ({
                 {formattedDateRange()}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">
+            <PopoverContent className="w-auto p-0 z-50" align="end">
               <Calendar
                 mode="range"
                 selected={{
@@ -73,6 +61,8 @@ const MaintenanceHistory = ({
                   });
                 }}
                 initialFocus
+                numberOfMonths={1}
+                className="pointer-events-auto"
               />
             </PopoverContent>
           </Popover>
