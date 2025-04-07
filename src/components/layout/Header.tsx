@@ -18,10 +18,7 @@ const Header = () => {
   };
   return <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
-        <div className="flex items-center">
-          <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Villa Sync" className="h-8 mr-3" />
-          
-        </div>
+        
         <div className="flex items-center space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

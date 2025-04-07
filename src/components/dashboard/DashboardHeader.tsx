@@ -1,33 +1,26 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import PropertyFilter from "@/components/dashboard/PropertyFilter";
 import { DateRangeSelector, type DateRange } from "@/components/reports/DateRangeSelector";
-
 interface DashboardHeaderProps {
   selectedProperty: string;
   onPropertyChange: (property: string) => void;
   dateRange: DateRange;
   onDateRangeChange: (dateRange: DateRange) => void;
 }
-
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   selectedProperty,
   onPropertyChange,
   dateRange,
   onDateRangeChange
 }) => {
-  const { toast } = useToast();
-  
-  return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+  const {
+    toast
+  } = useToast();
+  return <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
       <div className="flex items-center">
-        <img 
-          src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
-          alt="Villa Sync" 
-          className="h-10 mr-3" 
-        />
+        
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back </p>
@@ -39,16 +32,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <DateRangeSelector value={dateRange} onChange={onDateRangeChange} className="w-full sm:w-auto" />
         </div>
         <Button variant="outline" onClick={() => {
-          toast({
-            title: "Reports Generated",
-            description: "Monthly reports have been emailed to your inbox."
-          });
-        }}>
+        toast({
+          title: "Reports Generated",
+          description: "Monthly reports have been emailed to your inbox."
+        });
+      }}>
           Generate Reports
         </Button>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default DashboardHeader;
