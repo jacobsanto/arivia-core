@@ -91,21 +91,23 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({ housekeepingTasks, mainte
           
           <Separator className="my-4" />
           
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            className="rounded-md border"
-            modifiers={{
-              hasTasks: datesWithTasks,
-            }}
-            modifiersStyles={{
-              hasTasks: {
-                fontWeight: 'bold',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-              }
-            }}
-          />
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(date) => date && setSelectedDate(date)}
+              className="rounded-md border w-full max-w-[350px]"
+              modifiers={{
+                hasTasks: datesWithTasks,
+              }}
+              modifiersStyles={{
+                hasTasks: {
+                  fontWeight: 'bold',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                }
+              }}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
