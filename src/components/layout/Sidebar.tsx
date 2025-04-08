@@ -216,7 +216,6 @@ const SidebarLink = ({ to, icon, label, disabled = false, badge }: SidebarLinkPr
   );
 };
 
-// Import ROLE_DETAILS to properly display role names
-const { ROLE_DETAILS } = require("@/types/auth");
+// Removed the duplicate require statement here
 
 export default Sidebar;
