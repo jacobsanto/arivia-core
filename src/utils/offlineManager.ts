@@ -1,3 +1,4 @@
+
 /**
  * Offline Manager
  *
@@ -102,6 +103,31 @@ const clearOfflineData = (): void => {
 };
 
 /**
+ * Check if there is any unsynced data
+ */
+const hasUnsyncedData = (): boolean => {
+  try {
+    // Check if there are any unsynced tasks
+    const tasks = localStorage.getItem('offline_tasks') || '[]';
+    const taskList = JSON.parse(tasks);
+    
+    // Check if there are any unsynced photos
+    const photos = localStorage.getItem('offline_photos') || '[]';
+    const photoList = JSON.parse(photos);
+    
+    // Check if there are any unsynced forms
+    const forms = localStorage.getItem('offline_forms') || '[]';
+    const formList = JSON.parse(forms);
+    
+    // Return true if any of the lists have items
+    return taskList.length > 0 || photoList.length > 0 || formList.length > 0;
+  } catch (error) {
+    console.error('Error checking for unsynced data:', error);
+    return false;
+  }
+};
+
+/**
  * Simulate syncing offline data with a server
  */
 const syncOfflineData = async (): Promise<void> => {
@@ -168,5 +194,6 @@ export const offlineManager = {
   clearOfflineData,
   syncOfflineData,
   cacheUserAvatar,
-  getUserAvatar
+  getUserAvatar,
+  hasUnsyncedData
 };
