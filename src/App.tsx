@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -18,15 +19,9 @@ import Settings from "./pages/Settings";
 import Tasks from "./pages/Tasks";
 import Inventory from "./pages/Inventory";
 import GoogleSheetsIntegration from "./pages/GoogleSheetsIntegration";
+import GoogleDriveIntegration from "./pages/GoogleDriveIntegration";
 
 import AppLayout from "./components/layout/AppLayout";
-
-import { Table } from "lucide-react";
-import { PackageSearch } from "lucide-react";
-import { Home } from "lucide-react";
-
-import { GoogleDriveProvider } from "./contexts/GoogleDriveContext";
-import GoogleDriveIntegration from "./pages/GoogleDriveIntegration";
 
 function App() {
   const queryClient = new QueryClient();
@@ -35,139 +30,37 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Toaster position="top-right" />
-        <GoogleDriveProvider>
-          <Router>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Dashboard />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/properties"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Properties />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/properties/:id"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <PropertyDetails />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/bookings"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Bookings />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/guests"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Guests />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/users"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Users />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/settings"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Settings />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/tasks"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Tasks />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/inventory"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <Inventory />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/google-sheets"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <GoogleSheetsIntegration />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/drive-integration"
-                element={
-                  <ProtectedRoute>
-                    <AppLayout>
-                      <GoogleDriveIntegration />
-                    </AppLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/login"
-                element={
-                  <div className="container py-16 flex items-center justify-center">
-                    <Login />
-                  </div>
-                }
-              />
-              <Route
-                path="/register"
-                element={
-                  <div className="container py-16 flex items-center justify-center">
-                    <Login isRegister={true} />
-                  </div>
-                }
-              />
-            </Routes>
-          </Router>
-        </GoogleDriveProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={
+              <div className="container py-16 flex items-center justify-center">
+                <Login />
+              </div>
+            } />
+            <Route path="/register" element={
+              <div className="container py-16 flex items-center justify-center">
+                <Login isRegister={true} />
+              </div>
+            } />
+            
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/properties/:id" element={<PropertyDetails />} />
+                <Route path="/bookings" element={<Bookings />} />
+                <Route path="/guests" element={<Guests />} />
+                <Route path="/users" element={<Users />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/tasks" element={<Tasks />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/google-sheets" element={<GoogleSheetsIntegration />} />
+                <Route path="/drive-integration" element={<GoogleDriveIntegration />} />
+              </Route>
+            </Route>
+          </Routes>
+        </Router>
       </AuthProvider>
     </QueryClientProvider>
   );

@@ -8,18 +8,29 @@ import { Badge } from "@/components/ui/badge";
 interface SidebarLinkProps {
   to: string;
   icon: React.ReactNode;
-  active: boolean;
-  children: React.ReactNode;
+  label?: string; // Add label prop
+  active?: boolean;
   disabled?: boolean;
   badge?: string;
+  children?: React.ReactNode;
 }
 
-const SidebarLink = ({ to, icon, children, active, disabled = false, badge }: SidebarLinkProps) => {
+const SidebarLink: React.FC<SidebarLinkProps> = ({ 
+  to, 
+  icon, 
+  label, 
+  active = false, 
+  disabled = false, 
+  badge,
+  children 
+}) => {
+  const content = children || label; // Use children if provided, otherwise use label
+  
   if (disabled) {
     return (
       <div className="flex items-center px-4 py-2 rounded-md font-medium text-sidebar-muted opacity-50 cursor-not-allowed">
         <span className="mr-3">{icon}</span>
-        <span>{children}</span>
+        <span>{content}</span>
         <Lock size={14} className="ml-auto" />
       </div>
     );
@@ -38,7 +49,7 @@ const SidebarLink = ({ to, icon, children, active, disabled = false, badge }: Si
       }
     >
       <span className="mr-3">{icon}</span>
-      <span>{children}</span>
+      <span>{content}</span>
       {badge && (
         <Badge variant="destructive" className="ml-auto text-xs">
           {badge}

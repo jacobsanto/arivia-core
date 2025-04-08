@@ -6,9 +6,10 @@ import { UserRole } from "@/types/auth";
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
+  children?: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [] }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [], children }) => {
   const { user, isLoading, hasPermission } = useUser();
   const location = useLocation();
 
@@ -32,7 +33,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [] }) =>
   }
 
   // If authenticated and authorized, render the protected content
-  return <Outlet />;
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default ProtectedRoute;
