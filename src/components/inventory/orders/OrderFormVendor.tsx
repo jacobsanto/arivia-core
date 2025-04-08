@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import {
   FormField,
@@ -17,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 
 // Sample vendor data - in a real app this would come from a database or context
 const vendors = [

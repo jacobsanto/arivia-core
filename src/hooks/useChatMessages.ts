@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMessageStorage } from "./useMessageStorage";
 import { useTypingIndicator } from "./useTypingIndicator";
