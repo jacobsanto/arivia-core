@@ -154,9 +154,21 @@ export const useUserState = () => {
       }
       
       if (profile) {
-        // Update user with the latest profile data
+        // Update user with the latest profile data, properly converting types
         setUser(currentUser => {
           if (!currentUser) return null;
+          
+          // Convert the string[] to UserRole[] safely
+          const secondaryRoles = profile.secondary_roles ? 
+            profile.secondary_roles.map(role => role as UserRole) : 
+            undefined;
+          
+          // Convert the JSON to Record<string, boolean> safely
+          const customPermissions = profile.custom_permissions ? 
+            (typeof profile.custom_permissions === 'object' ? 
+              profile.custom_permissions as Record<string, boolean> : 
+              {}) : 
+            undefined;
           
           const updatedUser: User = {
             ...currentUser,
@@ -164,8 +176,8 @@ export const useUserState = () => {
             email: profile.email || currentUser.email,
             role: profile.role as UserRole || currentUser.role,
             avatar: profile.avatar || currentUser.avatar,
-            secondaryRoles: profile.secondary_roles,
-            customPermissions: profile.custom_permissions
+            secondaryRoles,
+            customPermissions
           };
           
           // Update localStorage for offline support
@@ -180,9 +192,10 @@ export const useUserState = () => {
   };
   
   // Refresh profile data function that can be called from components
-  const refreshUserProfile = async () => {
+  const refreshUserProfile = async (): Promise<boolean> => {
     if (user) {
-      return await fetchProfileData(user.id);
+      await fetchProfileData(user.id);
+      return true;
     }
     return false;
   };

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User, UserRole } from "@/types/auth";
@@ -253,14 +252,26 @@ export const syncUserWithProfile = async (
 
     // If we have a current user, update it with the latest profile data
     if (currentUser) {
+      // Convert the string[] to UserRole[] safely
+      const secondaryRoles = profile.secondary_roles ? 
+        profile.secondary_roles.map(role => role as UserRole) : 
+        undefined;
+      
+      // Convert the JSON to Record<string, boolean> safely
+      const customPermissions = profile.custom_permissions ? 
+        (typeof profile.custom_permissions === 'object' ? 
+          profile.custom_permissions as Record<string, boolean> : 
+          {}) : 
+        undefined;
+
       const updatedUser: User = {
         ...currentUser,
         name: profile.name,
         email: profile.email,
         role: profile.role as UserRole,
         avatar: profile.avatar || currentUser.avatar,
-        secondaryRoles: profile.secondary_roles,
-        customPermissions: profile.custom_permissions
+        secondaryRoles,
+        customPermissions
       };
 
       // Update state
@@ -335,3 +346,15 @@ export const updateUserProfile = async (
     return false;
   }
 };
+
+// Re-export other functions for organization
+export { 
+  login, 
+  logout, 
+  hasPermission, 
+  hasFeatureAccess, 
+  updateUserPermissions as updatePermissions,
+  updateUserAvatar as updateAvatar,
+  deleteUser as removeUser,
+  getOfflineLoginStatus
+} from "@/services/auth/userAuthService";

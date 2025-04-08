@@ -9,9 +9,9 @@ import {
   hasPermission, 
   hasFeatureAccess, 
   getOfflineLoginStatus, 
-  updateUserPermissions as updatePermissions,
-  updateUserAvatar as updateAvatar,
-  deleteUser as removeUser,
+  updatePermissions,
+  updateAvatar,
+  removeUser,
   syncUserWithProfile,
   updateUserProfile
 } from "./auth/userAuthOperations";
