@@ -7,6 +7,29 @@ export interface SheetData {
   headers?: string[];
 }
 
+export interface SheetInfo {
+  id: number;
+  title: string;
+  index: number;
+  hidden: boolean;
+}
+
+export interface NamedRange {
+  namedRangeId: string;
+  name: string;
+  range: {
+    sheetId: number;
+    startRowIndex: number;
+    endRowIndex: number;
+    startColumnIndex: number;
+    endColumnIndex: number;
+  };
+}
+
+export interface BatchUpdateRequest {
+  requests: object[];
+}
+
 export class GoogleSheetsService {
   /**
    * Fetch data from a Google Sheet
@@ -44,6 +67,64 @@ export class GoogleSheetsService {
     } catch (error) {
       console.error("Error in fetchSheetData:", error);
       toast.error("Failed to fetch sheet data");
+      return null;
+    }
+  }
+
+  /**
+   * Get a list of all sheets in a spreadsheet
+   */
+  static async getSheetsList(spreadsheetId: string): Promise<SheetInfo[] | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "GET",
+          operation: "GET_SHEETS_LIST",
+          spreadsheetId,
+        },
+      });
+
+      if (error) {
+        console.error("Error fetching sheets list:", error);
+        toast.error("Failed to fetch sheets list", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      return data.sheets || [];
+    } catch (error) {
+      console.error("Error in getSheetsList:", error);
+      toast.error("Failed to fetch sheets list");
+      return null;
+    }
+  }
+
+  /**
+   * Get named ranges in a spreadsheet
+   */
+  static async getNamedRanges(spreadsheetId: string): Promise<NamedRange[] | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "GET",
+          operation: "GET_NAMED_RANGES",
+          spreadsheetId,
+        },
+      });
+
+      if (error) {
+        console.error("Error fetching named ranges:", error);
+        toast.error("Failed to fetch named ranges", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      return data.namedRanges || [];
+    } catch (error) {
+      console.error("Error in getNamedRanges:", error);
+      toast.error("Failed to fetch named ranges");
       return null;
     }
   }
@@ -119,6 +200,82 @@ export class GoogleSheetsService {
       console.error("Error in appendToSheet:", error);
       toast.error("Failed to append data to sheet");
       return false;
+    }
+  }
+
+  /**
+   * Perform batch update operations on a Google Sheet
+   */
+  static async batchUpdate(
+    spreadsheetId: string,
+    batchRequests: object[]
+  ): Promise<object | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "BATCH_UPDATE",
+          spreadsheetId,
+          batchRequests,
+        },
+      });
+
+      if (error) {
+        console.error("Error performing batch update:", error);
+        toast.error("Failed to perform batch update", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      toast.success("Batch update completed successfully");
+      return data.responses || {};
+    } catch (error) {
+      console.error("Error in batchUpdate:", error);
+      toast.error("Failed to perform batch update");
+      return null;
+    }
+  }
+
+  /**
+   * Create a named range in a Google Sheet
+   */
+  static async createNamedRange(
+    spreadsheetId: string,
+    name: string,
+    rangeDefinition: {
+      sheetId: number;
+      startRowIndex: number;
+      endRowIndex: number;
+      startColumnIndex: number;
+      endColumnIndex: number;
+    }
+  ): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "CREATE_NAMED_RANGE",
+          spreadsheetId,
+          name,
+          rangeDefinition,
+        },
+      });
+
+      if (error) {
+        console.error("Error creating named range:", error);
+        toast.error("Failed to create named range", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      toast.success("Named range created successfully");
+      return data.namedRangeId || null;
+    } catch (error) {
+      console.error("Error in createNamedRange:", error);
+      toast.error("Failed to create named range");
+      return null;
     }
   }
 }

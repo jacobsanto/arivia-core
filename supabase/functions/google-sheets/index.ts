@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error("Google Sheets credentials not found");
     }
 
-    const { method, operation, spreadsheetId, sheetId, range, values } = await req.json();
+    const { method, operation, spreadsheetId, sheetId, range, values, batchRequests } = await req.json();
     console.log(`Processing ${method} request for operation: ${operation}`);
 
     // Parse the credentials
@@ -50,6 +50,42 @@ serve(async (req) => {
           const data = await readResponse.json();
           
           return new Response(JSON.stringify({ data }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "GET_SHEETS_LIST") {
+          console.log(`Getting sheets list for spreadsheet: ${spreadsheetId}`);
+          
+          const sheetsUrl = `${baseUrl}/${spreadsheetId}?fields=sheets.properties`;
+          const sheetsResponse = await fetch(sheetsUrl, { headers });
+          
+          if (!sheetsResponse.ok) {
+            throw new Error(`Failed to get sheets list: ${await sheetsResponse.text()}`);
+          }
+          
+          const sheetsData = await sheetsResponse.json();
+          const sheetsList = sheetsData.sheets.map((sheet: any) => ({
+            id: sheet.properties.sheetId,
+            title: sheet.properties.title,
+            index: sheet.properties.index,
+            hidden: sheet.properties.hidden || false,
+          }));
+          
+          return new Response(JSON.stringify({ sheets: sheetsList }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "GET_NAMED_RANGES") {
+          console.log(`Getting named ranges for spreadsheet: ${spreadsheetId}`);
+          
+          const namedRangesUrl = `${baseUrl}/${spreadsheetId}?fields=namedRanges`;
+          const namedRangesResponse = await fetch(namedRangesUrl, { headers });
+          
+          if (!namedRangesResponse.ok) {
+            throw new Error(`Failed to get named ranges: ${await namedRangesResponse.text()}`);
+          }
+          
+          const namedRangesData = await namedRangesResponse.json();
+          
+          return new Response(JSON.stringify({ namedRanges: namedRangesData.namedRanges || [] }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
@@ -98,6 +134,72 @@ serve(async (req) => {
           return new Response(JSON.stringify({ 
             success: true, 
             updatedCells: appendData.updates?.updatedCells || 0
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "BATCH_UPDATE") {
+          console.log(`Processing batch update for spreadsheet: ${spreadsheetId}`);
+          
+          if (!batchRequests || !Array.isArray(batchRequests) || batchRequests.length === 0) {
+            throw new Error("Batch requests array is required and must not be empty");
+          }
+          
+          const batchUrl = `${baseUrl}/${spreadsheetId}:batchUpdate`;
+          const batchResponse = await fetch(batchUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ requests: batchRequests }),
+          });
+          
+          if (!batchResponse.ok) {
+            throw new Error(`Failed to perform batch update: ${await batchResponse.text()}`);
+          }
+          
+          const batchData = await batchResponse.json();
+          
+          return new Response(JSON.stringify({ 
+            success: true, 
+            responses: batchData.replies || []
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "CREATE_NAMED_RANGE") {
+          console.log(`Creating named range in spreadsheet: ${spreadsheetId}`);
+          
+          const { name, rangeDefinition } = req.body;
+          if (!name || !rangeDefinition) {
+            throw new Error("Name and range definition are required for creating a named range");
+          }
+          
+          const namedRangeRequest = {
+            requests: [
+              {
+                addNamedRange: {
+                  namedRange: {
+                    name,
+                    range: rangeDefinition,
+                  },
+                },
+              },
+            ],
+          };
+          
+          const namedRangeUrl = `${baseUrl}/${spreadsheetId}:batchUpdate`;
+          const namedRangeResponse = await fetch(namedRangeUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(namedRangeRequest),
+          });
+          
+          if (!namedRangeResponse.ok) {
+            throw new Error(`Failed to create named range: ${await namedRangeResponse.text()}`);
+          }
+          
+          const namedRangeData = await namedRangeResponse.json();
+          
+          return new Response(JSON.stringify({ 
+            success: true, 
+            namedRangeId: namedRangeData.replies?.[0]?.addNamedRange?.namedRange?.namedRangeId 
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });

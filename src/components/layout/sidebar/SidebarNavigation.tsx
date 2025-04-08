@@ -1,63 +1,112 @@
 
 import React from "react";
 import { useLocation } from "react-router-dom";
+import { LayoutGrid, CalendarRange, ClipboardList, Hammer, LineChart, BarChart3, MessageSquare, FileText, BoxSelect, Truck, HelpCircle, FileSpreadsheet } from "lucide-react";
 import SidebarLink from "./SidebarLink";
-import { 
-  Home, 
-  Building2, 
-  Briefcase, 
-  Wrench, 
-  LayoutGrid, 
-  MessageSquare, 
-  PieChart, 
-  FileText,
-  Table
-} from "lucide-react";
-import { User } from "@/types/auth";
-import { hasPermission } from "@/services/auth/userAuthService";
+import { useUser } from "@/contexts/auth/UserContext";
 
-interface SidebarNavigationProps {
-  user: User;
-}
-
-const SidebarNavigation = ({ user }: SidebarNavigationProps) => {
+const SidebarNavigation = () => {
   const location = useLocation();
+  const { user } = useUser();
   
-  const isAdmin = hasPermission(user, ["administrator", "superadmin"]);
-  const isPropertyRelated = hasPermission(user, ["property_manager", "administrator", "superadmin"]);
-  const isMaintenanceRelated = hasPermission(user, ["maintenance_staff", "property_manager", "administrator", "superadmin"]);
-  const isHousekeepingRelated = hasPermission(user, ["housekeeping_staff", "property_manager", "administrator", "superadmin"]);
-  const isInventoryRelated = hasPermission(user, ["inventory_manager", "property_manager", "administrator", "superadmin"]);
+  // Check if the current route matches the given path
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
   
   return (
-    <div className="space-y-1 py-2 flex-1">
-      <SidebarLink to="/" icon={<Home />} active={location.pathname === '/'}>Dashboard</SidebarLink>
+    <div className="flex flex-col py-2 space-y-1">
+      <SidebarLink 
+        to="/" 
+        icon={<LayoutGrid size={20} />} 
+        active={isActive("/")}
+      >
+        Dashboard
+      </SidebarLink>
       
-      {isPropertyRelated && (
-        <SidebarLink to="/properties" icon={<Building2 />} active={location.pathname === '/properties'}>Properties</SidebarLink>
+      {(user.role === "administrator" || user.role === "property_manager" || user.role === "superadmin") && (
+        <SidebarLink 
+          to="/properties" 
+          icon={<CalendarRange size={20} />} 
+          active={isActive("/properties")}
+        >
+          Properties
+        </SidebarLink>
       )}
       
-      {isHousekeepingRelated && (
-        <SidebarLink to="/housekeeping" icon={<Briefcase />} active={location.pathname === '/housekeeping'}>Housekeeping</SidebarLink>
+      {(user.role === "administrator" || user.role === "property_manager" || user.role === "housekeeping_staff" || user.role === "maintenance_staff" || user.role === "superadmin") && (
+        <SidebarLink 
+          to="/housekeeping" 
+          icon={<ClipboardList size={20} />} 
+          active={isActive("/housekeeping")}
+        >
+          Housekeeping
+        </SidebarLink>
       )}
       
-      {isMaintenanceRelated && (
-        <SidebarLink to="/maintenance" icon={<Wrench />} active={location.pathname === '/maintenance'}>Maintenance</SidebarLink>
+      {(user.role === "administrator" || user.role === "property_manager" || user.role === "maintenance_staff" || user.role === "superadmin") && (
+        <SidebarLink 
+          to="/maintenance" 
+          icon={<Hammer size={20} />} 
+          active={isActive("/maintenance")}
+        >
+          Maintenance
+        </SidebarLink>
       )}
       
-      {isInventoryRelated && (
-        <SidebarLink to="/inventory" icon={<LayoutGrid />} active={location.pathname === '/inventory'}>Inventory</SidebarLink>
+      {(user.role === "administrator" || user.role === "property_manager" || user.role === "inventory_manager" || user.role === "superadmin") && (
+        <SidebarLink 
+          to="/inventory" 
+          icon={<BoxSelect size={20} />} 
+          active={isActive("/inventory")}
+        >
+          Inventory
+        </SidebarLink>
       )}
       
-      <SidebarLink to="/team-chat" icon={<MessageSquare />} active={location.pathname === '/team-chat'}>Team Chat</SidebarLink>
-      
-      {isAdmin && (
+      {(user.role === "administrator" || user.role === "property_manager" || user.role === "superadmin") && (
         <>
-          <SidebarLink to="/analytics" icon={<PieChart />} active={location.pathname === '/analytics'}>Analytics</SidebarLink>
-          <SidebarLink to="/reports" icon={<FileText />} active={location.pathname === '/reports'}>Reports</SidebarLink>
-          <SidebarLink to="/google-sheets" icon={<Table />} active={location.pathname === '/google-sheets'}>Google Sheets</SidebarLink>
+          <SidebarLink 
+            to="/analytics" 
+            icon={<LineChart size={20} />} 
+            active={isActive("/analytics")}
+          >
+            Analytics
+          </SidebarLink>
+          
+          <SidebarLink 
+            to="/reports" 
+            icon={<BarChart3 size={20} />} 
+            active={isActive("/reports")}
+          >
+            Reports
+          </SidebarLink>
+
+          <SidebarLink 
+            to="/google-sheets" 
+            icon={<FileSpreadsheet size={20} />} 
+            active={isActive("/google-sheets")}
+          >
+            Google Sheets
+          </SidebarLink>
         </>
       )}
+      
+      <SidebarLink 
+        to="/team-chat" 
+        icon={<MessageSquare size={20} />} 
+        active={isActive("/team-chat")}
+      >
+        Team Chat
+      </SidebarLink>
+      
+      <SidebarLink 
+        to="/troubleshooting" 
+        icon={<HelpCircle size={20} />} 
+        active={isActive("/troubleshooting")}
+      >
+        Help
+      </SidebarLink>
     </div>
   );
 };
