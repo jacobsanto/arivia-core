@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 
 import { AuthProvider } from "./contexts/auth/AuthContext";
@@ -20,11 +20,11 @@ import Inventory from "./pages/Inventory";
 import GoogleSheetsIntegration from "./pages/GoogleSheetsIntegration";
 
 import AppLayout from "./components/layout/AppLayout";
+
 import { Table } from "lucide-react";
 import { PackageSearch } from "lucide-react";
 import { Home } from "lucide-react";
 
-// Import the new GoogleDriveProvider and GoogleDriveIntegration page
 import { GoogleDriveProvider } from "./contexts/GoogleDriveContext";
 import GoogleDriveIntegration from "./pages/GoogleDriveIntegration";
 
@@ -139,8 +139,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              
-              {/* Add the new GoogleDriveIntegration route */}
               <Route
                 path="/drive-integration"
                 element={
@@ -151,7 +149,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-
               <Route
                 path="/login"
                 element={
