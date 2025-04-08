@@ -1,14 +1,20 @@
 
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from '@/contexts/auth/UserContext';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   
   useEffect(() => {
-    // Redirect to dashboard
-    navigate('/');
-  }, [navigate]);
+    // Redirect to dashboard if logged in, otherwise to login page
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
+  }, [navigate, user]);
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary to-blue-700">
