@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useUser } from "@/contexts/auth/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import { useOrders } from "@/contexts/OrderContext";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";

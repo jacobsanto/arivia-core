@@ -1,11 +1,9 @@
 
 import React, { useState } from "react";
-import { useUser } from "@/contexts/auth/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import RoleInfo from "@/components/auth/RoleInfo";
 import RoleManagement from "@/components/auth/RoleManagement";
 import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
-import AvatarUpload from "@/components/auth/AvatarUpload";
-import { uploadUserAvatar } from "@/services/users/userAvatarService";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Settings, Shield, Database } from "lucide-react";
@@ -21,7 +19,6 @@ const UserProfile = () => {
     photos: offlineManager.getPhotos().length,
     forms: offlineManager.getForms().length
   });
-  const [isUpdatingAvatar, setIsUpdatingAvatar] = useState(false);
 
   if (!user) {
     return (
@@ -30,22 +27,6 @@ const UserProfile = () => {
       </div>
     );
   }
-
-  const handleAvatarChange = async (file: File) => {
-    if (!user) return;
-    
-    try {
-      setIsUpdatingAvatar(true);
-      await uploadUserAvatar(user.id, file);
-      toast.success("Avatar updated successfully");
-    } catch (error) {
-      toast.error("Failed to update avatar", {
-        description: error instanceof Error ? error.message : "An unknown error occurred"
-      });
-    } finally {
-      setIsUpdatingAvatar(false);
-    }
-  };
 
   const handleClearOfflineData = () => {
     if (confirm("Are you sure you want to clear all offline data? This cannot be undone.")) {
@@ -116,12 +97,16 @@ const UserProfile = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-center mb-4">
-                    <AvatarUpload 
-                      currentAvatar={user.avatar} 
-                      onAvatarChange={handleAvatarChange}
-                      isUpdating={isUpdatingAvatar}
-                      size="lg"
-                    />
+                    <div className="relative">
+                      <img
+                        src={user.avatar || "/placeholder.svg"}
+                        alt={user.name}
+                        className="h-24 w-24 rounded-full object-cover border-2 border-primary"
+                      />
+                      <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold">Name</h4>

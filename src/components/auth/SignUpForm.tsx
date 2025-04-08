@@ -5,16 +5,19 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { signUpFormSchema, SignUpFormValues } from "@/lib/validation/auth-schema";
-import { useUser } from "@/contexts/auth/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import SignUpFormFields from "./SignUpFormFields";
-import { registerUser } from "@/services/auth/registerService";
+import { registerUser } from "@/services/authService";
 
 const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [superAdminExists, setSuperAdminExists] = useState(false);
   const { user } = useUser();
 
+  // Check if superadmin exists in mock data
   useEffect(() => {
+    // In a real app, this would be an API call to check if superadmin exists
+    // For demo purposes, we'll check localStorage
     const existingUsers = localStorage.getItem("users");
     if (existingUsers) {
       const users = JSON.parse(existingUsers);
@@ -40,8 +43,10 @@ const SignUpForm = () => {
     const success = await registerUser(data, superAdminExists);
     
     if (success) {
+      // Reset form after successful submission
       form.reset();
       
+      // If superadmin was created, update state
       if (data.role === "superadmin") {
         setSuperAdminExists(true);
       }

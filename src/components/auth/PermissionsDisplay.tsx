@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useUser } from '@/contexts/auth/UserContext';
+import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, X } from 'lucide-react';
 import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';

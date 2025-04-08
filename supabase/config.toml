@@ -1,9 +1,0 @@
-
-project_id = "lhhxxnbfdrkvjjbzxdjs"
-
-[functions.google-sheets]
-verify_jwt = true
-
-[functions.google-drive]
-verify_jwt = true
-

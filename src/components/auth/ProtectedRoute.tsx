@@ -1,15 +1,14 @@
 
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useUser } from "@/contexts/auth/UserContext";
+import { useUser } from "@/contexts/UserContext";
 import { UserRole } from "@/types/auth";
 
 interface ProtectedRouteProps {
   allowedRoles?: UserRole[];
-  children?: React.ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [], children }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [] }) => {
   const { user, isLoading, hasPermission } = useUser();
   const location = useLocation();
 
@@ -33,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles = [], chil
   }
 
   // If authenticated and authorized, render the protected content
-  return children ? <>{children}</> : <Outlet />;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

@@ -5,12 +5,9 @@ export interface User {
   role: UserRole;
   secondaryRoles?: UserRole[];
   avatar?: string;
-  googleId?: string;
-  pendingApproval?: boolean;
-  createdAt?: number;
 }
 
-export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager" | "guest";
+export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager";
 
 export const FEATURE_PERMISSIONS: Record<string, {
   title: string;
@@ -126,11 +123,6 @@ export const FEATURE_PERMISSIONS: Record<string, {
     title: "View Reports",
     description: "Access system reports and analytics",
     allowedRoles: ["superadmin", "administrator", "property_manager"]
-  },
-  managePendingUsers: {
-    title: "User Approval",
-    description: "Approve or reject pending user registrations",
-    allowedRoles: ["superadmin", "administrator"]
   }
 };
 
@@ -162,10 +154,6 @@ export const ROLE_DETAILS = {
   inventory_manager: {
     title: "Inventory Manager",
     description: "Manage supplies and inventory across properties"
-  },
-  guest: {
-    title: "Guest",
-    description: "Limited access while awaiting role approval"
   }
 };
 
@@ -176,8 +164,7 @@ export const OFFLINE_CAPABILITIES = {
   concierge: ["manage_bookings"],
   housekeeping_staff: ["view_tasks", "create_orders"],
   maintenance_staff: ["view_tasks", "create_orders"],
-  inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"],
-  guest: ["view_profile"]
+  inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"]
 };
 
 export const hasPermissionWithAllRoles = (

@@ -4,18 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginWithRoles from "@/components/auth/LoginWithRoles";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
-import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
-interface LoginProps {
-  isRegister?: boolean;
-}
-
-const Login = ({ isRegister }: LoginProps) => {
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">(isRegister ? "signup" : "signin");
-  const [isLoading, setIsLoading] = useState(false);
+const Login = () => {
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary to-blue-700 p-4 sm:p-6 md:p-8">
@@ -31,24 +26,6 @@ const Login = ({ isRegister }: LoginProps) => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="mb-4">
-              <GoogleSignInButton isLoading={isLoading} setIsLoading={setIsLoading} />
-              <p className="text-xs text-center mt-2 text-gray-500">
-                New Google users will need admin approval before full access
-              </p>
-            </div>
-
-            <div className="relative my-4">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with
-                </span>
-              </div>
-            </div>
-            
             <Tabs 
               defaultValue="signin" 
               value={activeTab}
