@@ -7,9 +7,12 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   return (
@@ -26,6 +29,21 @@ const Login = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <GoogleSignInButton isLoading={isLoading} setIsLoading={setIsLoading} />
+            </div>
+
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <Separator />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+            
             <Tabs 
               defaultValue="signin" 
               value={activeTab}

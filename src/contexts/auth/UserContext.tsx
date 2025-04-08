@@ -73,6 +73,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loginWithGoogle = async (user: User) => {
+    setUser(user);
+    setLastAuthTime(Date.now());
+    localStorage.setItem("lastAuthTime", Date.now().toString());
+  };
+
   const logout = () => {
     setUser(null);
     clearAuthData();
@@ -99,7 +105,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <UserContext.Provider value={{ 
       user, 
       isLoading, 
-      login, 
+      login,
+      loginWithGoogle,
       logout, 
       hasPermission, 
       hasFeatureAccess,

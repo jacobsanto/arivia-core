@@ -1,9 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import AppLayout from "./components/layout/AppLayout";
 import { UserProvider } from "./contexts/auth/UserContext";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
@@ -26,72 +26,77 @@ import Troubleshooting from "./pages/Troubleshooting";
 
 const queryClient = new QueryClient();
 
+// Google Client ID - in a real app, this would be in an environment variable
+const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google Client ID
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <UserProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth Route */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            
-            {/* Protected App Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<AppLayout />}>
-                <Route index element={<Dashboard />} />
-                
-                {/* Routes requiring specific roles */}
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="properties" element={<Properties />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]} />}>
-                  <Route path="housekeeping" element={<Housekeeping />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
-                  <Route path="maintenance" element={<Maintenance />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
-                  <Route path="inventory" element={<Inventory />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>
-                  <Route path="team-chat" element={<TeamChat />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="analytics" element={<Analytics />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="reports" element={<Reports />} />
-                </Route>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <TooltipProvider>
+        <UserProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Auth Route */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              
+              {/* Protected App Routes */}
+              <Route element={<ProtectedRoute />}>
+                <Route path="/" element={<AppLayout />}>
+                  <Route index element={<Dashboard />} />
+                  
+                  {/* Routes requiring specific roles */}
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
+                    <Route path="properties" element={<Properties />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]} />}>
+                    <Route path="housekeeping" element={<Housekeeping />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
+                    <Route path="maintenance" element={<Maintenance />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
+                    <Route path="inventory" element={<Inventory />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>
+                    <Route path="team-chat" element={<TeamChat />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
+                    <Route path="analytics" element={<Analytics />} />
+                  </Route>
+                  
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
+                    <Route path="reports" element={<Reports />} />
+                  </Route>
 
-                {/* Troubleshooting page accessible to everyone */}
-                <Route path="troubleshooting" element={<Troubleshooting />} />
-                
-                {/* User profile accessible to everyone */}
-                <Route path="profile" element={<UserProfile />} />
-                
-                {/* Settings route - only for admins and superadmins */}
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator"]} />}>
-                  <Route path="settings" element={<Navigate to="/profile" replace />} />
+                  {/* Troubleshooting page accessible to everyone */}
+                  <Route path="troubleshooting" element={<Troubleshooting />} />
+                  
+                  {/* User profile accessible to everyone */}
+                  <Route path="profile" element={<UserProfile />} />
+                  
+                  {/* Settings route - only for admins and superadmins */}
+                  <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator"]} />}>
+                    <Route path="settings" element={<Navigate to="/profile" replace />} />
+                  </Route>
                 </Route>
               </Route>
-            </Route>
-            
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <OfflineIndicator />
-        </BrowserRouter>
-      </UserProvider>
-    </TooltipProvider>
+              
+              {/* 404 Route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <OfflineIndicator />
+          </BrowserRouter>
+        </UserProvider>
+      </TooltipProvider>
+    </GoogleOAuthProvider>
   </QueryClientProvider>
 );
 

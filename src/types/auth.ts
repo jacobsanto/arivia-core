@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -5,6 +6,7 @@ export interface User {
   role: UserRole;
   secondaryRoles?: UserRole[];
   avatar?: string;
+  googleId?: string;
 }
 
 export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager";
