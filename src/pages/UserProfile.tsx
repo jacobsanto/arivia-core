@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import RoleInfo from "@/components/auth/RoleInfo";
 import RoleManagement from "@/components/auth/RoleManagement";
@@ -7,19 +7,29 @@ import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
 import AvatarUpload from "@/components/auth/AvatarUpload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Settings, Shield, Database } from "lucide-react";
+import { User, Settings, Shield, Database, RefreshCw } from "lucide-react";
 import { offlineManager } from "@/utils/offlineManager";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const UserProfile = () => {
-  const { user } = useUser();
+  const { user, syncUserProfile, refreshProfile } = useUser();
   const [activeTab, setActiveTab] = useState<string>("account");
   const [offlineStats, setOfflineStats] = useState({
     tasks: offlineManager.getTasks().length,
     photos: offlineManager.getPhotos().length,
     forms: offlineManager.getForms().length
   });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // Sync profile with Supabase on initial load
+  useEffect(() => {
+    if (user) {
+      refreshProfile().then(() => {
+        console.log("Profile refreshed on component mount");
+      });
+    }
+  }, []);
 
   if (!user) {
     return (
@@ -51,12 +61,46 @@ const UserProfile = () => {
       });
     });
   };
+  
+  const handleRefreshProfile = async () => {
+    setIsRefreshing(true);
+    try {
+      const success = await syncUserProfile();
+      if (success) {
+        toast.success("Profile refreshed successfully", {
+          description: "Your profile information is now up to date."
+        });
+      } else {
+        toast.info("No updates needed", {
+          description: "Your profile is already up to date."
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to refresh profile", {
+        description: "Please try again later."
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <div className="container py-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">User Profile</h1>
-        <p className="text-muted-foreground">Manage your account and permissions</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">User Profile</h1>
+          <p className="text-muted-foreground">Manage your account and permissions</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefreshProfile} 
+          disabled={isRefreshing}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh Profile
+        </Button>
       </div>
 
       <Tabs 

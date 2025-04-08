@@ -1,21 +1,47 @@
-import React from "react";
-import { Bell, MessageSquare, User, LogOut } from "lucide-react";
+
+import React, { useEffect } from "react";
+import { Bell, MessageSquare, User, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
+
 const Header = () => {
   const {
     user,
-    logout
+    logout,
+    refreshProfile
   } = useUser();
   const navigate = useNavigate();
+  
+  // Setup an interval to check for profile updates periodically
+  useEffect(() => {
+    if (!user) return;
+    
+    // Check for profile updates every 5 minutes
+    const intervalId = setInterval(() => {
+      if (navigator.onLine) {
+        refreshProfile().then((updated) => {
+          if (updated) {
+            console.log("Profile automatically refreshed");
+          }
+        });
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    // Also refresh once on component mount
+    refreshProfile();
+    
+    return () => clearInterval(intervalId);
+  }, [user, refreshProfile]);
+  
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+  
   return <header className="border-b border-border px-6 py-3 bg-background">
       <div className="flex justify-between items-center">
         
@@ -78,6 +104,10 @@ const Header = () => {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => refreshProfile()}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                <span>Refresh Profile</span>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
@@ -89,11 +119,13 @@ const Header = () => {
       </div>
     </header>;
 };
+
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
+
 const NotificationItem = ({
   title,
   message,
@@ -105,12 +137,14 @@ const NotificationItem = ({
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
     </div>;
 };
+
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
+
 const MessageItem = ({
   name,
   message,
@@ -130,4 +164,5 @@ const MessageItem = ({
       </div>
     </div>;
 };
+
 export default Header;

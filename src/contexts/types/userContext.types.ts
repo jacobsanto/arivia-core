@@ -13,4 +13,12 @@ export interface UserContextType {
   updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => void;
   updateUserAvatar: (userId: string, avatarUrl: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
+  syncUserProfile: () => Promise<boolean>;
+  updateProfile: (userId: string, profileData: Partial<{
+    name: string;
+    email: string;
+    role: UserRole;
+    secondaryRoles?: UserRole[];
+  }>) => Promise<boolean>;
+  refreshProfile: () => Promise<boolean>;
 }

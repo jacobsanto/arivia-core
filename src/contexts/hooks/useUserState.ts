@@ -65,6 +65,11 @@ export const useUserState = () => {
           // For development, update mock storage too
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("lastAuthTime", Date.now().toString());
+          
+          // Fetch profile data separately via setTimeout to avoid auth deadlock
+          setTimeout(() => {
+            fetchProfileData(supaSession.user.id);
+          }, 0);
         } else {
           setUser(null);
           setSession(null);
@@ -108,6 +113,9 @@ export const useUserState = () => {
         
         setUser(userData);
         setLastAuthTime(Date.now());
+        
+        // Get the latest profile data
+        fetchProfileData(data.session.user.id);
       } else {
         // Fall back to local storage for development
         const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
@@ -129,6 +137,56 @@ export const useUserState = () => {
     };
   }, []);
   
+  // Function to fetch profile data from Supabase
+  const fetchProfileData = async (userId: string) => {
+    if (!navigator.onLine) return;
+    
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
+      
+      if (profile) {
+        // Update user with the latest profile data
+        setUser(currentUser => {
+          if (!currentUser) return null;
+          
+          const updatedUser: User = {
+            ...currentUser,
+            name: profile.name || currentUser.name,
+            email: profile.email || currentUser.email,
+            role: profile.role as UserRole || currentUser.role,
+            avatar: profile.avatar || currentUser.avatar,
+            secondaryRoles: profile.secondary_roles,
+            customPermissions: profile.custom_permissions
+          };
+          
+          // Update localStorage for offline support
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          
+          return updatedUser;
+        });
+      }
+    } catch (err) {
+      console.error("Error in profile fetch:", err);
+    }
+  };
+  
+  // Refresh profile data function that can be called from components
+  const refreshUserProfile = async () => {
+    if (user) {
+      return await fetchProfileData(user.id);
+    }
+    return false;
+  };
+  
   // Save users to localStorage whenever they change
   useEffect(() => {
     if (users.length > 0) {
@@ -147,6 +205,7 @@ export const useUserState = () => {
     lastAuthTime,
     setLastAuthTime,
     users,
-    setUsers
+    setUsers,
+    refreshUserProfile
   };
 };

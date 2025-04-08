@@ -11,7 +11,9 @@ import {
   getOfflineLoginStatus, 
   updateUserPermissions as updatePermissions,
   updateUserAvatar as updateAvatar,
-  deleteUser as removeUser
+  deleteUser as removeUser,
+  syncUserWithProfile,
+  updateUserProfile
 } from "./auth/userAuthOperations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -27,7 +29,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     lastAuthTime, 
     setLastAuthTime, 
     users, 
-    setUsers 
+    setUsers,
+    refreshUserProfile
   } = useUserState();
 
   const handleLogin = async (email: string, password: string) => {
@@ -63,6 +66,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await removeUser(user, users, setUsers, userId);
   };
 
+  const handleSyncUserProfile = async () => {
+    if (user) {
+      return await syncUserWithProfile(user.id, setUser, user);
+    }
+    return false;
+  };
+
+  const handleUpdateProfile = async (
+    userId: string,
+    profileData: Partial<{
+      name: string;
+      email: string;
+      role: UserRole;
+      secondaryRoles?: UserRole[];
+    }>
+  ) => {
+    return await updateUserProfile(userId, profileData, setUser, user);
+  };
+  
+  const handleRefreshProfile = async () => {
+    return await refreshUserProfile();
+  };
+
   return (
     <UserContext.Provider value={{ 
       user,
@@ -75,7 +101,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       getOfflineLoginStatus: handleGetOfflineLoginStatus,
       updateUserPermissions: handleUpdateUserPermissions,
       updateUserAvatar: handleUpdateUserAvatar,
-      deleteUser: handleDeleteUser
+      deleteUser: handleDeleteUser,
+      syncUserProfile: handleSyncUserProfile,
+      updateProfile: handleUpdateProfile,
+      refreshProfile: handleRefreshProfile
     }}>
       {children}
     </UserContext.Provider>
