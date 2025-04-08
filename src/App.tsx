@@ -25,6 +25,7 @@ import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Unauthorized from "./pages/Unauthorized";
 import Troubleshooting from "./pages/Troubleshooting";
+import GoogleSheetsIntegration from "./pages/GoogleSheetsIntegration";
 
 // Google Client ID - in a real app, this would be in an environment variable
 const GOOGLE_CLIENT_ID = "57764291424-d8ennorcd7u6q2i3j57ajkucl99nls7i.apps.googleusercontent.com"; 
@@ -85,6 +86,11 @@ const App = () => {
                       
                       <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
                         <Route path="reports" element={<Reports />} />
+                      </Route>
+
+                      {/* Google Sheets integration page */}
+                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
+                        <Route path="google-sheets" element={<GoogleSheetsIntegration />} />
                       </Route>
 
                       {/* Troubleshooting page accessible to everyone */}

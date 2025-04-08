@@ -1,110 +1,64 @@
 
 import React from "react";
-import { 
-  LayoutDashboard, 
-  Home, 
-  BedDouble, 
-  Wrench, 
-  Package, 
-  MessageSquare, 
-  BarChart, 
-  FileText,
-  User 
-} from "lucide-react";
-import { User as UserType } from "@/types/auth";
+import { useLocation } from "react-router-dom";
 import SidebarLink from "./SidebarLink";
-import { usePermissions } from "@/hooks/usePermissions";
+import { 
+  Home, 
+  Building2, 
+  Briefcase, 
+  Wrench, 
+  LayoutGrid, 
+  MessageSquare, 
+  PieChart, 
+  FileText,
+  Table
+} from "lucide-react";
+import { User } from "@/types/auth";
+import { hasPermission } from "@/services/auth/userAuthService";
 
 interface SidebarNavigationProps {
-  user: UserType;
+  user: User;
 }
 
 const SidebarNavigation = ({ user }: SidebarNavigationProps) => {
-  const { canAccess } = usePermissions();
-  const isPending = user.pendingApproval === true;
+  const location = useLocation();
+  
+  const isAdmin = hasPermission(user, ["administrator", "superadmin"]);
+  const isPropertyRelated = hasPermission(user, ["property_manager", "administrator", "superadmin"]);
+  const isMaintenanceRelated = hasPermission(user, ["maintenance_staff", "property_manager", "administrator", "superadmin"]);
+  const isHousekeepingRelated = hasPermission(user, ["housekeeping_staff", "property_manager", "administrator", "superadmin"]);
+  const isInventoryRelated = hasPermission(user, ["inventory_manager", "property_manager", "administrator", "superadmin"]);
   
   return (
-    <nav className="mt-6 flex-1 space-y-1">
-      <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+    <div className="space-y-1 py-2 flex-1">
+      <SidebarLink to="/" icon={<Home />} active={location.pathname === '/'}>Dashboard</SidebarLink>
       
-      {/* Show disabled links for pending users */}
-      {isPending ? (
-        <>
-          <SidebarLink 
-            to="/properties" 
-            icon={<Home size={20} />} 
-            label="Properties" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/housekeeping" 
-            icon={<BedDouble size={20} />} 
-            label="Housekeeping" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/maintenance" 
-            icon={<Wrench size={20} />} 
-            label="Maintenance" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/inventory" 
-            icon={<Package size={20} />} 
-            label="Inventory" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/team-chat" 
-            icon={<MessageSquare size={20} />} 
-            label="Team Chat" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/analytics" 
-            icon={<BarChart size={20} />} 
-            label="Analytics" 
-            disabled={true}
-          />
-          <SidebarLink 
-            to="/reports" 
-            icon={<FileText size={20} />} 
-            label="Reports" 
-            disabled={true}
-          />
-        </>
-      ) : (
-        <>
-          {canAccess("viewProperties") && (
-            <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />
-          )}
-          
-          {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
-            <SidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />
-          )}
-          
-          {(user.role === "maintenance_staff" || canAccess("manageProperties")) && (
-            <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
-          )}
-          
-          {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
-            <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />
-          )}
-          
-          <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
-          
-          {canAccess("viewReports") && (
-            <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />
-          )}
-          
-          {canAccess("viewReports") && (
-            <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
-          )}
-        </>
+      {isPropertyRelated && (
+        <SidebarLink to="/properties" icon={<Building2 />} active={location.pathname === '/properties'}>Properties</SidebarLink>
       )}
       
-      <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
-    </nav>
+      {isHousekeepingRelated && (
+        <SidebarLink to="/housekeeping" icon={<Briefcase />} active={location.pathname === '/housekeeping'}>Housekeeping</SidebarLink>
+      )}
+      
+      {isMaintenanceRelated && (
+        <SidebarLink to="/maintenance" icon={<Wrench />} active={location.pathname === '/maintenance'}>Maintenance</SidebarLink>
+      )}
+      
+      {isInventoryRelated && (
+        <SidebarLink to="/inventory" icon={<LayoutGrid />} active={location.pathname === '/inventory'}>Inventory</SidebarLink>
+      )}
+      
+      <SidebarLink to="/team-chat" icon={<MessageSquare />} active={location.pathname === '/team-chat'}>Team Chat</SidebarLink>
+      
+      {isAdmin && (
+        <>
+          <SidebarLink to="/analytics" icon={<PieChart />} active={location.pathname === '/analytics'}>Analytics</SidebarLink>
+          <SidebarLink to="/reports" icon={<FileText />} active={location.pathname === '/reports'}>Reports</SidebarLink>
+          <SidebarLink to="/google-sheets" icon={<Table />} active={location.pathname === '/google-sheets'}>Google Sheets</SidebarLink>
+        </>
+      )}
+    </div>
   );
 };
 
