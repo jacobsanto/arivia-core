@@ -1,4 +1,6 @@
 
+import { Session as SupabaseSession, User as SupabaseUser } from "@supabase/supabase-js";
+
 export interface User {
   id: string;
   email: string;
@@ -11,7 +13,7 @@ export interface User {
   };
 }
 
-export interface Session {
+export interface Session extends Omit<SupabaseSession, "user"> {
   access_token: string;
   token_type: string;
   expires_in: number;

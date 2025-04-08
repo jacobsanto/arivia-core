@@ -24,7 +24,7 @@ const SignUpForm = () => {
           .from('profiles')
           .select('id')
           .eq('role', 'superadmin')
-          .single();
+          .maybeSingle();
         
         if (!error && data) {
           setSuperAdminExists(true);

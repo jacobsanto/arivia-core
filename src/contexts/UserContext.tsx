@@ -59,14 +59,32 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, supaSession) => {
-        setSession(supaSession);
-        
-        if (supaSession?.user) {
+        // Handle session change
+        if (supaSession) {
+          // Convert to our custom Session type
+          const customSession: Session = {
+            access_token: supaSession.access_token,
+            token_type: supaSession.token_type,
+            expires_in: supaSession.expires_in,
+            refresh_token: supaSession.refresh_token,
+            user: {
+              id: supaSession.user.id,
+              email: supaSession.user.email || '',
+              user_metadata: {
+                name: supaSession.user.user_metadata.name,
+                role: supaSession.user.user_metadata.role,
+                avatar: supaSession.user.user_metadata.avatar,
+              },
+            },
+          };
+          
+          setSession(customSession);
+          
           // Convert Supabase user to our User format
           const userData: User = {
             id: supaSession.user.id,
-            email: supaSession.user.email!,
-            name: supaSession.user.user_metadata?.name || supaSession.user.email!.split('@')[0],
+            email: supaSession.user.email || '',
+            name: supaSession.user.user_metadata?.name || supaSession.user.email?.split('@')[0] || 'User',
             role: supaSession.user.user_metadata?.role as UserRole || 'property_manager',
             avatar: supaSession.user.user_metadata?.avatar || "/placeholder.svg"
           };
@@ -79,25 +97,43 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           localStorage.setItem("lastAuthTime", Date.now().toString());
         } else {
           setUser(null);
+          setSession(null);
         }
       }
     );
     
     // THEN check for existing session
     const initializeUser = async () => {
-      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
       
-      if (existingSession?.user) {
+      if (data.session) {
         // User authenticated with Supabase
-        setSession(existingSession);
+        // Convert to our custom Session type
+        const customSession: Session = {
+          access_token: data.session.access_token,
+          token_type: data.session.token_type,
+          expires_in: data.session.expires_in,
+          refresh_token: data.session.refresh_token,
+          user: {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            user_metadata: {
+              name: data.session.user.user_metadata.name,
+              role: data.session.user.user_metadata.role,
+              avatar: data.session.user.user_metadata.avatar,
+            },
+          },
+        };
+        
+        setSession(customSession);
         
         // Convert to our User format
         const userData: User = {
-          id: existingSession.user.id,
-          email: existingSession.user.email!,
-          name: existingSession.user.user_metadata?.name || existingSession.user.email!.split('@')[0],
-          role: existingSession.user.user_metadata?.role as UserRole || 'property_manager',
-          avatar: existingSession.user.user_metadata?.avatar || "/placeholder.svg"
+          id: data.session.user.id,
+          email: data.session.user.email || '',
+          name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || 'User',
+          role: data.session.user.user_metadata?.role as UserRole || 'property_manager',
+          avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
         };
         
         setUser(userData);
