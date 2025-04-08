@@ -11,4 +11,6 @@ export interface UserContextType {
   hasFeatureAccess: (featureKey: string) => boolean;
   getOfflineLoginStatus: () => boolean;
   updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => void;
+  updateUserAvatar: (userId: string, avatarUrl: string) => Promise<boolean>;
+  deleteUser: (userId: string) => Promise<boolean>;
 }

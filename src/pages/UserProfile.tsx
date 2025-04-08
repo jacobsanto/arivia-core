@@ -4,6 +4,7 @@ import { useUser } from "@/contexts/UserContext";
 import RoleInfo from "@/components/auth/RoleInfo";
 import RoleManagement from "@/components/auth/RoleManagement";
 import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
+import AvatarUpload from "@/components/auth/AvatarUpload";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Settings, Shield, Database } from "lucide-react";
@@ -97,16 +98,7 @@ const UserProfile = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-center mb-4">
-                    <div className="relative">
-                      <img
-                        src={user.avatar || "/placeholder.svg"}
-                        alt={user.name}
-                        className="h-24 w-24 rounded-full object-cover border-2 border-primary"
-                      />
-                      <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    </div>
+                    <AvatarUpload user={user} size="lg" />
                   </div>
                   <div>
                     <h4 className="text-sm font-semibold">Name</h4>

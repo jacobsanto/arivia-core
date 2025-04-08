@@ -9,7 +9,9 @@ import {
   hasPermission, 
   hasFeatureAccess, 
   getOfflineLoginStatus, 
-  updateUserPermissions as updatePermissions 
+  updateUserPermissions as updatePermissions,
+  updateUserAvatar as updateAvatar,
+  deleteUser as removeUser
 } from "./auth/userAuthOperations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -52,6 +54,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleGetOfflineLoginStatus = () => {
     return getOfflineLoginStatus(user, lastAuthTime, isOffline);
   };
+  
+  const handleUpdateUserAvatar = async (userId: string, avatarUrl: string) => {
+    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser, user);
+  };
+  
+  const handleDeleteUser = async (userId: string) => {
+    return await removeUser(user, users, setUsers, userId);
+  };
 
   return (
     <UserContext.Provider value={{ 
@@ -63,7 +73,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasPermission: handleHasPermission, 
       hasFeatureAccess: handleHasFeatureAccess,
       getOfflineLoginStatus: handleGetOfflineLoginStatus,
-      updateUserPermissions: handleUpdateUserPermissions
+      updateUserPermissions: handleUpdateUserPermissions,
+      updateUserAvatar: handleUpdateUserAvatar,
+      deleteUser: handleDeleteUser
     }}>
       {children}
     </UserContext.Provider>
