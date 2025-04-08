@@ -4,10 +4,15 @@ import { useLocation } from "react-router-dom";
 import { LayoutGrid, CalendarRange, ClipboardList, Hammer, LineChart, BarChart3, MessageSquare, FileText, BoxSelect, Truck, HelpCircle, FileSpreadsheet } from "lucide-react";
 import SidebarLink from "./SidebarLink";
 import { useUser } from "@/contexts/auth/UserContext";
+import { User } from "@/types/auth";
 
-const SidebarNavigation = () => {
+// Add an interface for component props
+interface SidebarNavigationProps {
+  user: User;
+}
+
+const SidebarNavigation = ({ user }: SidebarNavigationProps) => {
   const location = useLocation();
-  const { user } = useUser();
   
   // Check if the current route matches the given path
   const isActive = (path: string) => {
