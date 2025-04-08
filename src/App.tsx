@@ -27,7 +27,7 @@ import Unauthorized from "./pages/Unauthorized";
 import Troubleshooting from "./pages/Troubleshooting";
 
 // Google Client ID - in a real app, this would be in an environment variable
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID"; // Replace with your Google Client ID
+const GOOGLE_CLIENT_ID = "57764291424-d8ennorcd7u6q2i3j57ajkucl99nls7i.apps.googleusercontent.com"; 
 
 const App = () => {
   // Create a new QueryClient instance inside the component
