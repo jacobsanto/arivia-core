@@ -7,6 +7,7 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import CreateSuperAdmin from "@/components/auth/CreateSuperAdmin";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
@@ -52,6 +53,7 @@ const Login = () => {
                   </AlertDescription>
                 </Alert>
                 <LoginForm />
+                <CreateSuperAdmin />
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0">
