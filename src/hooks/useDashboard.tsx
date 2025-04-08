@@ -11,11 +11,21 @@ export const useDashboard = () => {
     to: new Date()
   });
   const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    // Fetch dashboard data based on selected property and date range
-    const data = getDashboardData(selectedProperty, dateRange);
-    setDashboardData(data);
+    setIsLoading(true);
+    try {
+      // Fetch dashboard data based on selected property and date range
+      const data = getDashboardData(selectedProperty, dateRange);
+      setDashboardData(data);
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      // Set dashboardData to null in case of error
+      setDashboardData(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedProperty, dateRange]);
   
   const handlePropertyChange = (property: string) => {
@@ -30,6 +40,7 @@ export const useDashboard = () => {
     selectedProperty,
     dateRange,
     dashboardData,
+    isLoading,
     handlePropertyChange,
     handleDateRangeChange
   };

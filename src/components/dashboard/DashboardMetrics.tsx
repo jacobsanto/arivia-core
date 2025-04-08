@@ -39,10 +39,42 @@ interface DashboardMetricsProps {
       critical: number;
       standard: number;
     };
-  };
+  } | null;  // Allow null data
 }
 
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
+  // If data is null or undefined, display loading state or default values
+  if (!data) {
+    return (
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Loading metrics...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-10 w-full animate-pulse bg-gray-200 rounded"></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Loading metrics...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-10 w-full animate-pulse bg-gray-200 rounded"></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Loading metrics...</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-10 w-full animate-pulse bg-gray-200 rounded"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <MetricCard

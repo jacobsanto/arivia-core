@@ -12,6 +12,7 @@ const Dashboard = () => {
     selectedProperty, 
     dateRange, 
     dashboardData,
+    isLoading,
     handlePropertyChange,
     handleDateRangeChange
   } = useDashboard();
