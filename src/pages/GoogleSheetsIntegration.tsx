@@ -4,13 +4,14 @@ import { useUser } from "@/contexts/auth/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Info, FileSpreadsheet } from "lucide-react";
+import { AlertCircle, Info, FileSpreadsheet, HelpCircle } from "lucide-react";
 import GoogleSheetViewer from "@/components/googleSheets/GoogleSheetViewer";
 import GoogleSheetForm from "@/components/googleSheets/GoogleSheetForm";
 import SheetNavigator from "@/components/googleSheets/SheetNavigator";
 import BatchOperationForm from "@/components/googleSheets/BatchOperationForm";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 
 const GoogleSheetsIntegration = () => {
@@ -83,19 +84,47 @@ const GoogleSheetsIntegration = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2">
-            <Input 
-              placeholder="Enter Spreadsheet ID" 
-              value={spreadsheetId} 
-              onChange={(e) => setSpreadsheetId(e.target.value)}
-              className="flex-1"
-            />
-            <Button onClick={saveSpreadsheetId}>Save</Button>
+          <div className="flex flex-col gap-4">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input 
+                  placeholder="Enter Spreadsheet ID" 
+                  value={spreadsheetId} 
+                  onChange={(e) => setSpreadsheetId(e.target.value)}
+                  className="flex-1"
+                />
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <HelpCircle className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-sm">
+                    <div className="space-y-2 p-2">
+                      <p className="text-sm font-medium">How to find your Spreadsheet ID:</p>
+                      <p className="text-xs">
+                        The Spreadsheet ID is the value between /d/ and /edit in the Google Sheets URL.
+                      </p>
+                      <p className="text-xs break-all">
+                        Example: https://docs.google.com/spreadsheets/d/<span className="font-bold bg-primary/10 p-1 rounded">1SX0Uxf1UNRb7d95kDQvcdL8KehQJbfncCxndtkRWtiI</span>/edit
+                      </p>
+                      <p className="text-xs text-amber-500 mt-2">
+                        Important: Enter only the ID, not the full URL
+                      </p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button onClick={saveSpreadsheetId}>Save</Button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              <p className="mb-1">⚠️ The Spreadsheet ID is just the ID portion, not the full URL.</p>
+              <p>Example: For the URL "https://docs.google.com/spreadsheets/d/1SX0Uxf1UNRb7d95kDQvcdL8KehQJbfncCxndtkRWtiI/edit"</p>
+              <p>The ID is: <span className="font-mono bg-muted px-1">1SX0Uxf1UNRb7d95kDQvcdL8KehQJbfncCxndtkRWtiI</span></p>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            The Spreadsheet ID is the value between /d/ and /edit in the Google Sheets URL.
-            For example: https://docs.google.com/spreadsheets/d/<span className="font-bold">1SX0Uxf1UNRb7d95kDQvcdL8KehQJbfncCxndtkRWtiI</span>/edit
-          </p>
         </CardContent>
       </Card>
       

@@ -19,8 +19,12 @@ serve(async (req) => {
       throw new Error("Google Sheets credentials not found");
     }
 
-    const { method, operation, spreadsheetId, sheetId, range, values, batchRequests, backupTitle, sourceSpreadsheetId, sourceRange, targetSpreadsheetId, targetRange } = await req.json();
-    console.log(`Processing ${method} request for operation: ${operation}`);
+    const requestBody = await req.json();
+    const { method, operation, spreadsheetId, range, values, batchRequests, name, rangeDefinition, backupTitle } = requestBody;
+    
+    // Extract the actual spreadsheet ID from URL if needed
+    const extractedId = extractSpreadsheetId(spreadsheetId);
+    console.log(`Processing ${method} request for operation: ${operation} with spreadsheet ID: ${extractedId}`);
 
     // Parse the credentials
     const parsedCredentials = JSON.parse(credentials);
@@ -32,19 +36,22 @@ serve(async (req) => {
     });
 
     const baseUrl = "https://sheets.googleapis.com/v4/spreadsheets";
-    let response;
-
+    
     switch (method) {
       case "GET":
         // Handle read operations
         if (operation === "READ_SHEET") {
-          console.log(`Reading data from spreadsheet: ${spreadsheetId}, range: ${range || 'default'}`);
+          console.log(`Reading data from spreadsheet: ${extractedId}, range: ${range || 'default'}`);
           
-          const readUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(range || "Sheet1")}`;
+          const readUrl = `${baseUrl}/${extractedId}/values/${encodeURIComponent(range || "Sheet1")}`;
+          console.log(`API request URL: ${readUrl}`);
+          
           const readResponse = await fetch(readUrl, { headers });
           
           if (!readResponse.ok) {
-            throw new Error(`Failed to read spreadsheet: ${await readResponse.text()}`);
+            const errorText = await readResponse.text();
+            console.error(`Error response: ${readResponse.status} ${errorText}`);
+            throw new Error(`Failed to read spreadsheet: ${errorText}`);
           }
           
           const data = await readResponse.json();
@@ -53,13 +60,17 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "GET_SHEETS_LIST") {
-          console.log(`Getting sheets list for spreadsheet: ${spreadsheetId}`);
+          console.log(`Getting sheets list for spreadsheet: ${extractedId}`);
           
-          const sheetsUrl = `${baseUrl}/${spreadsheetId}?fields=sheets.properties`;
+          const sheetsUrl = `${baseUrl}/${extractedId}?fields=sheets.properties`;
+          console.log(`API request URL: ${sheetsUrl}`);
+          
           const sheetsResponse = await fetch(sheetsUrl, { headers });
           
           if (!sheetsResponse.ok) {
-            throw new Error(`Failed to get sheets list: ${await sheetsResponse.text()}`);
+            const errorText = await sheetsResponse.text();
+            console.error(`Error response: ${sheetsResponse.status} ${errorText}`);
+            throw new Error(`Failed to get sheets list: ${errorText}`);
           }
           
           const sheetsData = await sheetsResponse.json();
@@ -74,14 +85,18 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "GET_SPREADSHEET_METADATA") {
-          console.log(`Getting metadata for spreadsheet: ${spreadsheetId}`);
+          console.log(`Getting metadata for spreadsheet: ${extractedId}`);
           
           // We'll request different fields depending on what we need
-          const metadataUrl = `${baseUrl}/${spreadsheetId}?fields=properties,sheets.properties,namedRanges`;
+          const metadataUrl = `${baseUrl}/${extractedId}?fields=properties,sheets.properties,namedRanges`;
+          console.log(`API request URL: ${metadataUrl}`);
+          
           const metadataResponse = await fetch(metadataUrl, { headers });
           
           if (!metadataResponse.ok) {
-            throw new Error(`Failed to get spreadsheet metadata: ${await metadataResponse.text()}`);
+            const errorText = await metadataResponse.text();
+            console.error(`Error response: ${metadataResponse.status} ${errorText}`);
+            throw new Error(`Failed to get spreadsheet metadata: ${errorText}`);
           }
           
           const metadata = await metadataResponse.json();
@@ -90,13 +105,17 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "GET_NAMED_RANGES") {
-          console.log(`Getting named ranges for spreadsheet: ${spreadsheetId}`);
+          console.log(`Getting named ranges for spreadsheet: ${extractedId}`);
           
-          const namedRangesUrl = `${baseUrl}/${spreadsheetId}?fields=namedRanges`;
+          const namedRangesUrl = `${baseUrl}/${extractedId}?fields=namedRanges`;
+          console.log(`API request URL: ${namedRangesUrl}`);
+          
           const namedRangesResponse = await fetch(namedRangesUrl, { headers });
           
           if (!namedRangesResponse.ok) {
-            throw new Error(`Failed to get named ranges: ${await namedRangesResponse.text()}`);
+            const errorText = await namedRangesResponse.text();
+            console.error(`Error response: ${namedRangesResponse.status} ${errorText}`);
+            throw new Error(`Failed to get named ranges: ${errorText}`);
           }
           
           const namedRangesData = await namedRangesResponse.json();
@@ -110,9 +129,11 @@ serve(async (req) => {
       case "POST":
         // Handle write operations
         if (operation === "WRITE_SHEET") {
-          console.log(`Writing data to spreadsheet: ${spreadsheetId}, range: ${range || 'default'}`);
+          console.log(`Writing data to spreadsheet: ${extractedId}, range: ${range || 'default'}`);
           
-          const writeUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(range || "Sheet1")}?valueInputOption=USER_ENTERED`;
+          const writeUrl = `${baseUrl}/${extractedId}/values/${encodeURIComponent(range || "Sheet1")}?valueInputOption=USER_ENTERED`;
+          console.log(`API request URL: ${writeUrl}`);
+          
           const writeResponse = await fetch(writeUrl, {
             method: "PUT",
             headers,
@@ -120,7 +141,9 @@ serve(async (req) => {
           });
           
           if (!writeResponse.ok) {
-            throw new Error(`Failed to write to spreadsheet: ${await writeResponse.text()}`);
+            const errorText = await writeResponse.text();
+            console.error(`Error response: ${writeResponse.status} ${errorText}`);
+            throw new Error(`Failed to write to spreadsheet: ${errorText}`);
           }
           
           const writeData = await writeResponse.json();
@@ -132,9 +155,11 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "APPEND_SHEET") {
-          console.log(`Appending data to spreadsheet: ${spreadsheetId}, range: ${range || 'default'}`);
+          console.log(`Appending data to spreadsheet: ${extractedId}, range: ${range || 'default'}`);
           
-          const appendUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(range || "Sheet1")}:append?valueInputOption=USER_ENTERED`;
+          const appendUrl = `${baseUrl}/${extractedId}/values/${encodeURIComponent(range || "Sheet1")}:append?valueInputOption=USER_ENTERED`;
+          console.log(`API request URL: ${appendUrl}`);
+          
           const appendResponse = await fetch(appendUrl, {
             method: "POST",
             headers,
@@ -142,7 +167,9 @@ serve(async (req) => {
           });
           
           if (!appendResponse.ok) {
-            throw new Error(`Failed to append to spreadsheet: ${await appendResponse.text()}`);
+            const errorText = await appendResponse.text();
+            console.error(`Error response: ${appendResponse.status} ${errorText}`);
+            throw new Error(`Failed to append to spreadsheet: ${errorText}`);
           }
           
           const appendData = await appendResponse.json();
@@ -154,13 +181,16 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "BATCH_UPDATE") {
-          console.log(`Processing batch update for spreadsheet: ${spreadsheetId}`);
+          console.log(`Processing batch update for spreadsheet: ${extractedId}`);
           
           if (!batchRequests || !Array.isArray(batchRequests) || batchRequests.length === 0) {
             throw new Error("Batch requests array is required and must not be empty");
           }
           
-          const batchUrl = `${baseUrl}/${spreadsheetId}:batchUpdate`;
+          const batchUrl = `${baseUrl}/${extractedId}:batchUpdate`;
+          console.log(`API request URL: ${batchUrl}`);
+          console.log(`Batch requests: ${JSON.stringify(batchRequests).substring(0, 200)}...`);
+          
           const batchResponse = await fetch(batchUrl, {
             method: "POST",
             headers,
@@ -168,7 +198,9 @@ serve(async (req) => {
           });
           
           if (!batchResponse.ok) {
-            throw new Error(`Failed to perform batch update: ${await batchResponse.text()}`);
+            const errorText = await batchResponse.text();
+            console.error(`Error response: ${batchResponse.status} ${errorText}`);
+            throw new Error(`Failed to perform batch update: ${errorText}`);
           }
           
           const batchData = await batchResponse.json();
@@ -180,9 +212,8 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "CREATE_NAMED_RANGE") {
-          console.log(`Creating named range in spreadsheet: ${spreadsheetId}`);
+          console.log(`Creating named range in spreadsheet: ${extractedId}`);
           
-          const { name, rangeDefinition } = await req.json();
           if (!name || !rangeDefinition) {
             throw new Error("Name and range definition are required for creating a named range");
           }
@@ -200,7 +231,9 @@ serve(async (req) => {
             ],
           };
           
-          const namedRangeUrl = `${baseUrl}/${spreadsheetId}:batchUpdate`;
+          const namedRangeUrl = `${baseUrl}/${extractedId}:batchUpdate`;
+          console.log(`API request URL: ${namedRangeUrl}`);
+          
           const namedRangeResponse = await fetch(namedRangeUrl, {
             method: "POST",
             headers,
@@ -208,7 +241,9 @@ serve(async (req) => {
           });
           
           if (!namedRangeResponse.ok) {
-            throw new Error(`Failed to create named range: ${await namedRangeResponse.text()}`);
+            const errorText = await namedRangeResponse.text();
+            console.error(`Error response: ${namedRangeResponse.status} ${errorText}`);
+            throw new Error(`Failed to create named range: ${errorText}`);
           }
           
           const namedRangeData = await namedRangeResponse.json();
@@ -220,39 +255,49 @@ serve(async (req) => {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "CLEAR_RANGE") {
-          console.log(`Clearing range in spreadsheet: ${spreadsheetId}, range: ${range}`);
+          console.log(`Clearing range in spreadsheet: ${extractedId}, range: ${range}`);
           
-          const clearUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`;
+          const clearUrl = `${baseUrl}/${extractedId}/values/${encodeURIComponent(range)}:clear`;
+          console.log(`API request URL: ${clearUrl}`);
+          
           const clearResponse = await fetch(clearUrl, {
             method: "POST",
             headers,
           });
           
           if (!clearResponse.ok) {
-            throw new Error(`Failed to clear range: ${await clearResponse.text()}`);
+            const errorText = await clearResponse.text();
+            console.error(`Error response: ${clearResponse.status} ${errorText}`);
+            throw new Error(`Failed to clear range: ${errorText}`);
           }
           
           return new Response(JSON.stringify({ success: true }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "CREATE_BACKUP") {
-          console.log(`Creating backup of spreadsheet: ${spreadsheetId}`);
+          console.log(`Creating backup of spreadsheet: ${extractedId}`);
           
           // Create a new spreadsheet
-          const title = backupTitle || `Backup of ${spreadsheetId} - ${new Date().toISOString().split('T')[0]}`;
+          const title = backupTitle || `Backup of ${extractedId} - ${new Date().toISOString().split('T')[0]}`;
           
           // We first need to get the original spreadsheet to copy its structure
-          const getUrl = `${baseUrl}/${spreadsheetId}`;
+          const getUrl = `${baseUrl}/${extractedId}`;
+          console.log(`API request URL for getting original: ${getUrl}`);
+          
           const getResponse = await fetch(getUrl, { headers });
           
           if (!getResponse.ok) {
-            throw new Error(`Failed to get spreadsheet for backup: ${await getResponse.text()}`);
+            const errorText = await getResponse.text();
+            console.error(`Error response: ${getResponse.status} ${errorText}`);
+            throw new Error(`Failed to get spreadsheet for backup: ${errorText}`);
           }
           
           const originalSheet = await getResponse.json();
           
           // Now create a new spreadsheet
           const createUrl = "https://sheets.googleapis.com/v4/spreadsheets";
+          console.log(`API request URL for creating backup: ${createUrl}`);
+          
           const createResponse = await fetch(createUrl, {
             method: "POST",
             headers,
@@ -270,7 +315,9 @@ serve(async (req) => {
           });
           
           if (!createResponse.ok) {
-            throw new Error(`Failed to create backup spreadsheet: ${await createResponse.text()}`);
+            const errorText = await createResponse.text();
+            console.error(`Error response: ${createResponse.status} ${errorText}`);
+            throw new Error(`Failed to create backup spreadsheet: ${errorText}`);
           }
           
           const backupSheet = await createResponse.json();
@@ -281,7 +328,9 @@ serve(async (req) => {
             const sheetName = sheet.properties.title;
             
             // Get data from original
-            const dataUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(sheetName)}`;
+            const dataUrl = `${baseUrl}/${extractedId}/values/${encodeURIComponent(sheetName)}`;
+            console.log(`Getting data for sheet ${sheetName} from: ${dataUrl}`);
+            
             const dataResponse = await fetch(dataUrl, { headers });
             
             if (!dataResponse.ok) {
@@ -294,6 +343,8 @@ serve(async (req) => {
             if (sheetData.values && sheetData.values.length > 0) {
               // Write to backup
               const writeUrl = `${baseUrl}/${backupId}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW`;
+              console.log(`Writing data to backup sheet ${sheetName}: ${writeUrl}`);
+              
               const writeResponse = await fetch(writeUrl, {
                 method: "PUT",
                 headers,
@@ -335,6 +386,33 @@ serve(async (req) => {
     });
   }
 });
+
+// Helper function to extract the spreadsheet ID from a URL or return the ID as is
+function extractSpreadsheetId(input: string): string {
+  if (!input) {
+    throw new Error("Spreadsheet ID is required");
+  }
+  
+  // Check if it's a URL
+  if (input.includes('docs.google.com/spreadsheets/d/')) {
+    // Extract the ID from the URL
+    const matches = input.match(/\/d\/([\w-]+)/);
+    if (matches && matches[1]) {
+      return matches[1];
+    }
+    
+    // For edit URLs
+    const editMatches = input.match(/spreadsheets\/d\/([\w-]+)/);
+    if (editMatches && editMatches[1]) {
+      return editMatches[1];
+    }
+    
+    throw new Error("Invalid Google Sheets URL format");
+  }
+  
+  // If it's not a URL, assume it's already an ID
+  return input;
+}
 
 // Helper function to get an access token from service account credentials
 async function getAccessToken(credentials) {
