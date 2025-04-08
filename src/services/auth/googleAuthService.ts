@@ -3,6 +3,7 @@ import { jwtDecode } from "jwt-decode";
 import { User } from "@/types/auth";
 import { saveAuthData } from "./authService";
 import { toast } from "sonner";
+import { addUserNotification } from "@/services/notifications/notificationService";
 
 interface GoogleUser {
   email: string;
@@ -25,14 +26,16 @@ export const handleGoogleLogin = async (credential: string): Promise<User> => {
     let foundUser = users.find((u: any) => u.email === decodedToken.email);
     
     if (!foundUser) {
-      // Create a new user with default role
+      // Create a new user with guest role and pending approval
       const newUser: User = {
         id: `google-${decodedToken.sub}`,
         email: decodedToken.email,
         name: decodedToken.name,
-        role: "property_manager", // Default role for Google users
+        role: "guest", // Default role for new Google users
         avatar: decodedToken.picture || "/placeholder.svg",
-        googleId: decodedToken.sub
+        googleId: decodedToken.sub,
+        pendingApproval: true,
+        createdAt: Date.now()
       };
       
       // Add to local storage users
@@ -41,8 +44,19 @@ export const handleGoogleLogin = async (credential: string): Promise<User> => {
       
       foundUser = newUser;
       
-      toast.success("New account created", {
-        description: "Your Google account has been registered successfully",
+      // Create notification for admins about new user
+      addUserNotification({
+        id: `new-user-${newUser.id}`,
+        type: "new_user",
+        title: "New User Registration",
+        message: `${newUser.name} (${newUser.email}) has registered with Google and needs role approval.`,
+        createdAt: Date.now(),
+        userId: newUser.id,
+        read: false
+      });
+      
+      toast.success("Account created successfully", {
+        description: "Your account is pending approval from an administrator. Some features may be limited until approved.",
       });
     } else if (!foundUser.googleId) {
       // Link Google ID to existing account

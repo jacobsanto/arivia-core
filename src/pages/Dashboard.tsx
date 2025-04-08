@@ -1,33 +1,22 @@
 
 import React from "react";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
-import { useDashboard } from "@/hooks/useDashboard";
+import DashboardHeader from "@/components/dashboard/DashboardHeader";
+import RestrictedAccess from "@/components/layout/RestrictedAccess";
+import { useUser } from "@/contexts/auth/UserContext";
 
 const Dashboard = () => {
-  const {
-    selectedProperty,
-    dateRange,
-    dashboardData,
-    handlePropertyChange,
-    handleDateRangeChange
-  } = useDashboard();
-
-  // If data is not yet loaded, show loading state
-  if (!dashboardData) {
-    return <div className="flex items-center justify-center h-64">Loading dashboard data...</div>;
+  const { user } = useUser();
+  
+  // If user is a guest with pending approval, show restricted access view
+  if (user?.role === "guest" && user?.pendingApproval) {
+    return <RestrictedAccess />;
   }
-
+  
   return (
-    <div className="space-y-6">
-      <DashboardHeader 
-        selectedProperty={selectedProperty}
-        onPropertyChange={handlePropertyChange}
-        dateRange={dateRange}
-        onDateRangeChange={handleDateRangeChange}
-      />
-      
-      <DashboardContent dashboardData={dashboardData} />
+    <div className="container mx-auto py-6">
+      <DashboardHeader />
+      <DashboardContent />
     </div>
   );
 };

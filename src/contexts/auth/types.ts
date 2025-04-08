@@ -10,4 +10,5 @@ export interface UserContextType {
   hasPermission: (roles: UserRole[]) => boolean;
   hasFeatureAccess: (featureKey: string) => boolean;
   getOfflineLoginStatus: () => boolean;
+  unreadNotifications: number;
 }

@@ -11,6 +11,7 @@ import {
   hasFeatureAccess as checkFeatureAccess,
   checkOfflineLoginStatus
 } from "@/services/auth/userAuthService";
+import { getUnreadNotificationCount } from "@/services/notifications/notificationService";
 
 // Create the context with a default undefined value
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -20,6 +21,25 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [lastAuthTime, setLastAuthTime] = useState<number>(0);
+  const [unreadNotifications, setUnreadNotifications] = useState<number>(0);
+
+  // Check notifications periodically
+  useEffect(() => {
+    const checkNotifications = () => {
+      if (user && (user.role === "superadmin" || user.role === "administrator")) {
+        const count = getUnreadNotificationCount();
+        setUnreadNotifications(count);
+      } else {
+        setUnreadNotifications(0);
+      }
+    };
+    
+    // Check on mount and every 30 seconds
+    checkNotifications();
+    const interval = setInterval(checkNotifications, 30000);
+    
+    return () => clearInterval(interval);
+  }, [user]);
 
   useEffect(() => {
     // Check for existing auth token and validate session
@@ -104,13 +124,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <UserContext.Provider value={{ 
       user, 
-      isLoading, 
+      isLoading,
       login,
       loginWithGoogle,
       logout, 
       hasPermission, 
       hasFeatureAccess,
-      getOfflineLoginStatus 
+      getOfflineLoginStatus,
+      unreadNotifications
     }}>
       {children}
     </UserContext.Provider>

@@ -1,133 +1,171 @@
+
 import React from "react";
-import { Bell, MessageSquare, User, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
-import { ROLE_DETAILS } from "@/types/auth";
+import { Button } from "@/components/ui/button";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  Menu,
+  User,
+  LogOut,
+  Bell,
+  Settings
+} from "lucide-react";
+import { useUser } from "@/contexts/auth/UserContext";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
-const Header = () => {
-  const {
-    user,
-    logout
-  } = useUser();
+import MobileNav from "./MobileNav";
+import NotificationDrawer from "../notifications/NotificationDrawer"; 
+
+const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
+  const { user, logout, unreadNotifications } = useUser();
   const navigate = useNavigate();
+  const [notificationsOpen, setNotificationsOpen] = React.useState(false);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-  return <header className="border-b border-border px-6 py-3 bg-background">
-      <div className="flex justify-between items-center">
+
+  const navigateToProfile = () => {
+    navigate("/profile");
+  };
+
+  const navigateToSettings = () => {
+    navigate("/settings");
+  };
+
+  const openNotifications = () => {
+    setNotificationsOpen(true);
+  };
+
+  if (!user) return null;
+
+  const isAdmin = user.role === "administrator" || user.role === "superadmin";
+  
+  return (
+    <>
+      <header className="bg-background border-b flex h-14 items-center px-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden mr-2"
+          onClick={toggleSidebar}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
         
-        <div className="flex items-center space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
-                <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
-                <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                View All Notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="flex-1">
+          <MobileNav />
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Notification button */}
+          {isAdmin && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="relative"
+                    onClick={openNotifications}
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadNotifications > 0 && (
+                      <Badge 
+                        className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center" 
+                        variant="destructive"
+                      >
+                        {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                      </Badge>
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Notifications</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           
+          {/* User dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <MessageSquare className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Messages</DropdownMenuLabel>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="rounded-full">
+                      {user.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      ) : (
+                        <User className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>User menu</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{user.name}</p>
+                  <p className="text-xs leading-none text-muted-foreground">
+                    {user.email}
+                  </p>
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                <MessageItem name="Maria Kowalska" message="When will the new supplies arrive?" time="5 min ago" avatar="/placeholder.svg" />
-                <MessageItem name="Alex Chen" message="I've completed the Villa Oceana inspection." time="30 min ago" avatar="/placeholder.svg" />
-                <MessageItem name="Stefan Müller" message="Guest requesting early check-in at Villa Sunset." time="1 hour ago" avatar="/placeholder.svg" />
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                Open Team Chat
+              <DropdownMenuItem onClick={navigateToProfile}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+                {user.pendingApproval && (
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    Pending
+                  </Badge>
+                )}
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2">
-                <User className="h-5 w-5" />
-                <span>{user?.name || "Guest"}</span>
-                {user && <Badge variant="outline" className="ml-2">
-                    {ROLE_DETAILS[user.role].title}
-                  </Badge>}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
+              {(user.role === "administrator" || user.role === "superadmin") && (
+                <DropdownMenuItem onClick={navigateToSettings}>
+                  <Settings className="mr-2 h-4 w-4" />
+                  <span>Settings</span>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
+                <span>Log out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-    </header>;
+      </header>
+      
+      {/* Notification drawer */}
+      <NotificationDrawer 
+        open={notificationsOpen} 
+        onClose={() => setNotificationsOpen(false)} 
+      />
+    </>
+  );
 };
-interface NotificationItemProps {
-  title: string;
-  message: string;
-  time: string;
-}
-const NotificationItem = ({
-  title,
-  message,
-  time
-}: NotificationItemProps) => {
-  return <div className="px-2 py-3 hover:bg-secondary cursor-pointer">
-      <div className="font-medium text-sm">{title}</div>
-      <div className="text-sm text-muted-foreground mt-1">{message}</div>
-      <div className="text-xs text-muted-foreground mt-1">{time}</div>
-    </div>;
-};
-interface MessageItemProps {
-  name: string;
-  message: string;
-  time: string;
-  avatar: string;
-}
-const MessageItem = ({
-  name,
-  message,
-  time,
-  avatar
-}: MessageItemProps) => {
-  return <div className="flex items-start space-x-3 px-2 py-3 hover:bg-secondary cursor-pointer">
-      <div className="h-8 w-8 rounded-full overflow-hidden">
-        <img src={avatar} alt={name} className="h-full w-full object-cover" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex justify-between">
-          <div className="font-medium text-sm truncate">{name}</div>
-          <div className="text-xs text-muted-foreground">{time}</div>
-        </div>
-        <div className="text-sm text-muted-foreground mt-1 truncate">{message}</div>
-      </div>
-    </div>;
-};
+
 export default Header;

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginWithRoles from "@/components/auth/LoginWithRoles";
 import SignUpForm from "@/components/auth/SignUpForm";
-import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +12,6 @@ import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary to-blue-700 p-4 sm:p-6 md:p-8">
@@ -31,6 +29,9 @@ const Login = () => {
           <CardContent>
             <div className="mb-4">
               <GoogleSignInButton isLoading={isLoading} setIsLoading={setIsLoading} />
+              <p className="text-xs text-center mt-2 text-gray-500">
+                New Google users will need admin approval before full access
+              </p>
             </div>
 
             <div className="relative my-4">
