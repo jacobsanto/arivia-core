@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import LoginWithRoles from "@/components/auth/LoginWithRoles";
+import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck } from "lucide-react";
@@ -44,7 +44,7 @@ const Login = () => {
                     Secure password authentication is enabled
                   </AlertDescription>
                 </Alert>
-                <LoginWithRoles />
+                <LoginForm />
               </TabsContent>
               
               <TabsContent value="signup" className="mt-0">

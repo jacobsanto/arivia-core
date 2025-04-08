@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { signUpFormSchema, SignUpFormValues } from "@/lib/validation/auth-schema";
 import { useUser } from "@/contexts/UserContext";
 import SignUpFormFields from "./SignUpFormFields";
-import { registerUser } from "@/services/authService";
+import { registerUser } from "@/services/auth/registerService";
 
 const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
