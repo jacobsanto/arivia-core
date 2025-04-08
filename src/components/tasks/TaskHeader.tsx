@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, BedDouble, BarChart } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useUser } from "@/contexts/auth/UserContext";
 
 interface TaskHeaderProps {
   onCreateTask: () => void;
