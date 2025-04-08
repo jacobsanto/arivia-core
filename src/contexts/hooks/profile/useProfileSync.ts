@@ -6,7 +6,7 @@ import { getUserFromStorage } from "@/services/auth/userAuthService";
 
 export const useProfileSync = (
   user: User | null,
-  setUser: (user: User | null) => void
+  setUser: React.Dispatch<React.SetStateAction<User | null>>
 ) => {
   // Function to fetch profile data from Supabase
   const fetchProfileData = useCallback(async (userId: string): Promise<boolean> => {
