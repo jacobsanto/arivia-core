@@ -1,8 +1,8 @@
 
 import React from "react";
-import { User } from "lucide-react";
 import { User as UserType } from "@/types/auth";
 import { ROLE_DETAILS } from "@/types/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface SidebarUserInfoProps {
   user: UserType;
@@ -10,17 +10,17 @@ interface SidebarUserInfoProps {
 
 const SidebarUserInfo = ({ user }: SidebarUserInfoProps) => {
   const isPending = user.pendingApproval === true;
+  const userInitials = user.name ? user.name.substring(0, 1).toUpperCase() : 'U';
   
   return (
     <div className="flex items-center justify-center mb-6">
       <div className="flex flex-col items-center">
-        <div className="w-12 h-12 rounded-full bg-sidebar-accent flex items-center justify-center mb-2">
-          {user.avatar ? (
-            <img src={user.avatar} alt={user.name} className="w-12 h-12 rounded-full" />
-          ) : (
-            <User size={20} className="text-sidebar-accent-foreground" />
-          )}
-        </div>
+        <Avatar className="w-12 h-12 mb-2 border-2 border-sidebar-accent-foreground/20">
+          <AvatarImage src={user.avatar || undefined} alt={user.name} />
+          <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground">
+            {userInitials}
+          </AvatarFallback>
+        </Avatar>
         <p className="text-sm font-medium">{user.name}</p>
         <div className="flex items-center gap-1 mt-1">
           <span className="text-xs text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full">

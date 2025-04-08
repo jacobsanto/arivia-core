@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -18,6 +18,7 @@ import {
   Settings
 } from "lucide-react";
 import { useUser } from "@/contexts/auth/UserContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { 
   Tooltip,
   TooltipContent,
@@ -53,6 +54,7 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
   if (!user) return null;
 
   const isAdmin = user.role === "administrator" || user.role === "superadmin";
+  const userInitials = user.name ? user.name.substring(0, 1).toUpperCase() : 'U';
   
   return (
     <>
@@ -107,15 +109,12 @@ const Header = ({ toggleSidebar }: { toggleSidebar: () => void }) => {
                 <TooltipTrigger asChild>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="rounded-full">
-                      {user.avatar ? (
-                        <img
-                          src={user.avatar}
-                          alt={user.name}
-                          className="h-8 w-8 rounded-full"
-                        />
-                      ) : (
-                        <User className="h-5 w-5" />
-                      )}
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.avatar || undefined} alt={user.name} />
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {userInitials}
+                        </AvatarFallback>
+                      </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
