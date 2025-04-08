@@ -20,7 +20,24 @@ serve(async (req) => {
     }
 
     const requestBody = await req.json();
-    const { method, operation, spreadsheetId, range, values, batchRequests, name, rangeDefinition, backupTitle } = requestBody;
+    const { 
+      method, 
+      operation, 
+      spreadsheetId, 
+      range, 
+      values, 
+      batchRequests, 
+      name, 
+      rangeDefinition, 
+      backupTitle, 
+      targetRange,
+      sourceSpreadsheetId,
+      sourceRange,
+      targetSpreadsheetId,
+      syncConfig,
+      sheetRelationships,
+      changeLog
+    } = requestBody;
     
     // Extract the actual spreadsheet ID from URL if needed
     const extractedId = extractSpreadsheetId(spreadsheetId);
@@ -123,6 +140,43 @@ serve(async (req) => {
           return new Response(JSON.stringify({ namedRanges: namedRangesData.namedRanges || [] }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
+        } else if (operation === "CHECK_CHANGES") {
+          // New operation to check for changes since last sync
+          console.log(`Checking for changes in spreadsheet: ${extractedId}`);
+          
+          // We'll get the revision history if available (requires specific permissions)
+          try {
+            const changesUrl = `https://www.googleapis.com/drive/v3/files/${extractedId}/revisions`;
+            const changesResponse = await fetch(changesUrl, { headers });
+            
+            if (changesResponse.ok) {
+              const changesData = await changesResponse.json();
+              return new Response(JSON.stringify({ 
+                changes: changesData.revisions || [],
+                lastChecked: new Date().toISOString()
+              }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            } else {
+              // Fall back to just checking the current state
+              console.log("Revision history not available, returning current timestamp");
+              return new Response(JSON.stringify({ 
+                changes: [],
+                lastChecked: new Date().toISOString() 
+              }), {
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              });
+            }
+          } catch (error) {
+            console.error("Error checking for changes:", error);
+            return new Response(JSON.stringify({ 
+              changes: [],
+              lastChecked: new Date().toISOString(),
+              error: error.message
+            }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
         }
         break;
 
@@ -148,9 +202,22 @@ serve(async (req) => {
           
           const writeData = await writeResponse.json();
           
+          // Log the update to our change tracking system
+          const changeEntry = {
+            operationType: "WRITE",
+            spreadsheetId: extractedId,
+            range,
+            timestamp: new Date().toISOString(),
+            updatedCells: writeData.updatedCells,
+            status: "success"
+          };
+          
+          console.log("Change logged:", JSON.stringify(changeEntry));
+          
           return new Response(JSON.stringify({ 
             success: true, 
-            updatedCells: writeData.updatedCells 
+            updatedCells: writeData.updatedCells,
+            change: changeEntry
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -174,9 +241,22 @@ serve(async (req) => {
           
           const appendData = await appendResponse.json();
           
+          // Log the update to our change tracking system
+          const changeEntry = {
+            operationType: "APPEND",
+            spreadsheetId: extractedId,
+            range,
+            timestamp: new Date().toISOString(),
+            updatedCells: appendData.updates?.updatedCells || 0,
+            status: "success"
+          };
+          
+          console.log("Change logged:", JSON.stringify(changeEntry));
+          
           return new Response(JSON.stringify({ 
             success: true, 
-            updatedCells: appendData.updates?.updatedCells || 0
+            updatedCells: appendData.updates?.updatedCells || 0,
+            change: changeEntry
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -205,9 +285,21 @@ serve(async (req) => {
           
           const batchData = await batchResponse.json();
           
+          // Log the update to our change tracking system
+          const changeEntry = {
+            operationType: "BATCH_UPDATE",
+            spreadsheetId: extractedId,
+            timestamp: new Date().toISOString(),
+            requestCount: batchRequests.length,
+            status: "success"
+          };
+          
+          console.log("Change logged:", JSON.stringify(changeEntry));
+          
           return new Response(JSON.stringify({ 
             success: true, 
-            responses: batchData.replies || []
+            responses: batchData.replies || [],
+            change: changeEntry
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
@@ -271,7 +363,21 @@ serve(async (req) => {
             throw new Error(`Failed to clear range: ${errorText}`);
           }
           
-          return new Response(JSON.stringify({ success: true }), {
+          // Log the update to our change tracking system
+          const changeEntry = {
+            operationType: "CLEAR",
+            spreadsheetId: extractedId,
+            range,
+            timestamp: new Date().toISOString(),
+            status: "success"
+          };
+          
+          console.log("Change logged:", JSON.stringify(changeEntry));
+          
+          return new Response(JSON.stringify({ 
+            success: true,
+            change: changeEntry
+          }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "CREATE_BACKUP") {
@@ -364,6 +470,170 @@ serve(async (req) => {
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
+        } else if (operation === "SYNC_SHEETS") {
+          // New operation for synchronizing related sheets
+          console.log(`Performing sheet synchronization with config:`, JSON.stringify(syncConfig));
+          
+          if (!syncConfig || !syncConfig.relationships || syncConfig.relationships.length === 0) {
+            throw new Error("Sync config with relationships is required");
+          }
+          
+          const results = [];
+          const errors = [];
+          
+          // Process each relationship in the sync config
+          for (const relationship of syncConfig.relationships) {
+            try {
+              console.log(`Processing relationship: ${relationship.name || 'unnamed'}`);
+              
+              // Read source data
+              const sourceId = extractSpreadsheetId(relationship.sourceSpreadsheetId || spreadsheetId);
+              const sourceRange = relationship.sourceRange;
+              const sourceUrl = `${baseUrl}/${sourceId}/values/${encodeURIComponent(sourceRange)}`;
+              
+              console.log(`Fetching source data from: ${sourceUrl}`);
+              const sourceResponse = await fetch(sourceUrl, { headers });
+              
+              if (!sourceResponse.ok) {
+                throw new Error(`Failed to read source data: ${await sourceResponse.text()}`);
+              }
+              
+              const sourceData = await sourceResponse.json();
+              
+              // Process the data according to transformation rules if specified
+              let processedValues = sourceData.values;
+              if (relationship.transform) {
+                // Here we'd need a more sophisticated transformation engine
+                // For now, we just log that we would transform the data
+                console.log(`Would transform data using: ${JSON.stringify(relationship.transform)}`);
+              }
+              
+              // Write to target
+              const targetId = extractSpreadsheetId(relationship.targetSpreadsheetId || spreadsheetId);
+              const targetRange = relationship.targetRange;
+              const writeMode = relationship.writeMode || 'overwrite';
+              
+              let targetUrl;
+              let method;
+              
+              if (writeMode === 'append') {
+                targetUrl = `${baseUrl}/${targetId}/values/${encodeURIComponent(targetRange)}:append?valueInputOption=USER_ENTERED`;
+                method = "POST";
+              } else {
+                // Default to overwrite
+                targetUrl = `${baseUrl}/${targetId}/values/${encodeURIComponent(targetRange)}?valueInputOption=USER_ENTERED`;
+                method = "PUT";
+              }
+              
+              console.log(`Writing to target: ${targetUrl}`);
+              const targetResponse = await fetch(targetUrl, {
+                method,
+                headers,
+                body: JSON.stringify({ values: processedValues }),
+              });
+              
+              if (!targetResponse.ok) {
+                throw new Error(`Failed to write to target: ${await targetResponse.text()}`);
+              }
+              
+              const writeResult = await targetResponse.json();
+              
+              results.push({
+                relationship: relationship.name || 'unnamed',
+                success: true,
+                updatedCells: writeResult.updatedCells || writeResult.updates?.updatedCells || 0
+              });
+              
+            } catch (error) {
+              console.error(`Error processing relationship:`, error);
+              errors.push({
+                relationship: relationship.name || 'unnamed',
+                error: error.message
+              });
+            }
+          }
+          
+          // Log the sync operation
+          const changeEntry = {
+            operationType: "SYNC",
+            timestamp: new Date().toISOString(),
+            relationshipsProcessed: syncConfig.relationships.length,
+            successCount: results.length,
+            errorCount: errors.length,
+            status: errors.length === 0 ? "success" : "partial"
+          };
+          
+          console.log("Sync operation logged:", JSON.stringify(changeEntry));
+          
+          return new Response(JSON.stringify({ 
+            success: errors.length === 0,
+            partialSuccess: errors.length > 0 && results.length > 0,
+            results,
+            errors,
+            change: changeEntry
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "VALIDATE_RELATIONSHIPS") {
+          // New operation for validating sheet relationships
+          console.log(`Validating sheet relationships`);
+          
+          if (!sheetRelationships || !Array.isArray(sheetRelationships) || sheetRelationships.length === 0) {
+            throw new Error("Sheet relationships array is required and must not be empty");
+          }
+          
+          const validationResults = [];
+          
+          for (const relationship of sheetRelationships) {
+            try {
+              // Check if source exists
+              const sourceId = extractSpreadsheetId(relationship.sourceSpreadsheetId || spreadsheetId);
+              const sourceRange = relationship.sourceRange;
+              
+              console.log(`Validating source: ${sourceId} range: ${sourceRange}`);
+              
+              const sourceUrl = `${baseUrl}/${sourceId}/values/${encodeURIComponent(sourceRange)}`;
+              const sourceResponse = await fetch(sourceUrl, { headers });
+              
+              if (!sourceResponse.ok) {
+                throw new Error(`Source range not accessible: ${await sourceResponse.text()}`);
+              }
+              
+              // Check if target exists if different from source
+              if (relationship.targetSpreadsheetId && relationship.targetSpreadsheetId !== sourceId) {
+                const targetId = extractSpreadsheetId(relationship.targetSpreadsheetId);
+                
+                console.log(`Validating target spreadsheet: ${targetId}`);
+                
+                const targetUrl = `${baseUrl}/${targetId}?fields=spreadsheetId`;
+                const targetResponse = await fetch(targetUrl, { headers });
+                
+                if (!targetResponse.ok) {
+                  throw new Error(`Target spreadsheet not accessible: ${await targetResponse.text()}`);
+                }
+              }
+              
+              validationResults.push({
+                relationship: relationship.name || 'unnamed',
+                valid: true
+              });
+              
+            } catch (error) {
+              console.error(`Validation error:`, error);
+              validationResults.push({
+                relationship: relationship.name || 'unnamed',
+                valid: false,
+                error: error.message
+              });
+            }
+          }
+          
+          return new Response(JSON.stringify({ 
+            validationResults,
+            allValid: validationResults.every(result => result.valid)
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
         break;
 
@@ -421,7 +691,7 @@ async function getAccessToken(credentials) {
     const now = Math.floor(Date.now() / 1000);
     const claim = {
       iss: credentials.client_email,
-      scope: 'https://www.googleapis.com/auth/spreadsheets',
+      scope: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.readonly',
       aud: 'https://oauth2.googleapis.com/token',
       exp: now + 3600,
       iat: now

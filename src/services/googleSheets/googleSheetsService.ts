@@ -50,6 +50,42 @@ export interface SheetMetadata {
   namedRanges?: NamedRange[];
 }
 
+export interface SheetRelationship {
+  name: string;
+  sourceSpreadsheetId: string;
+  sourceRange: string;
+  targetSpreadsheetId?: string;
+  targetRange: string;
+  writeMode?: 'overwrite' | 'append';
+  keyColumn?: string;
+  transform?: SheetTransform;
+  description?: string;
+}
+
+export interface SheetTransform {
+  type: 'map' | 'filter' | 'aggregate' | 'join';
+  config: Record<string, any>;
+}
+
+export interface SyncConfig {
+  relationships: SheetRelationship[];
+  options?: {
+    createBackup?: boolean;
+    validateBeforeSync?: boolean;
+    notifyOnCompletion?: boolean;
+  };
+}
+
+export interface ChangeLogEntry {
+  operationType: string;
+  spreadsheetId: string;
+  range?: string;
+  timestamp: string;
+  updatedCells?: number;
+  status: string;
+  details?: Record<string, any>;
+}
+
 export class GoogleSheetsService {
   /**
    * Fetch data from a Google Sheet
@@ -174,6 +210,41 @@ export class GoogleSheetsService {
     } catch (error) {
       console.error("Error in getNamedRanges:", error);
       toast.error("Failed to fetch named ranges");
+      return null;
+    }
+  }
+
+  /**
+   * Check for changes since last sync
+   */
+  static async checkChanges(spreadsheetId: string): Promise<{
+    changes: any[];
+    lastChecked: string;
+  } | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "GET",
+          operation: "CHECK_CHANGES",
+          spreadsheetId,
+        },
+      });
+
+      if (error) {
+        console.error("Error checking changes:", error);
+        toast.error("Failed to check for changes", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      return {
+        changes: data.changes || [],
+        lastChecked: data.lastChecked
+      };
+    } catch (error) {
+      console.error("Error in checkChanges:", error);
+      toast.error("Failed to check for changes");
       return null;
     }
   }
@@ -432,6 +503,135 @@ export class GoogleSheetsService {
       console.error("Error importing from another sheet:", error);
       toast.error("Failed to import data");
       return false;
+    }
+  }
+
+  /**
+   * Synchronize sheets based on a sync configuration
+   */
+  static async synchronizeSheets(
+    spreadsheetId: string,
+    syncConfig: SyncConfig
+  ): Promise<{
+    success: boolean;
+    partialSuccess?: boolean;
+    results?: any[];
+    errors?: any[];
+  } | null> {
+    try {
+      // Create backup if requested
+      if (syncConfig.options?.createBackup) {
+        const backupTitle = `Backup before sync - ${new Date().toISOString().split('T')[0]}`;
+        await this.createBackup(spreadsheetId, backupTitle);
+      }
+      
+      // Validate relationships if requested
+      if (syncConfig.options?.validateBeforeSync) {
+        const validation = await this.validateRelationships(spreadsheetId, syncConfig.relationships);
+        if (!validation?.allValid) {
+          toast.error("Validation failed", {
+            description: "Some relationships failed validation. Check the console for details."
+          });
+          console.error("Relationship validation failed:", validation?.validationResults);
+          return null;
+        }
+      }
+      
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "SYNC_SHEETS",
+          spreadsheetId,
+          syncConfig,
+        },
+      });
+
+      if (error) {
+        console.error("Error synchronizing sheets:", error);
+        toast.error("Failed to synchronize sheets", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      if (data.errors && data.errors.length > 0) {
+        if (data.partialSuccess) {
+          toast.warning("Some synchronization operations failed", {
+            description: `${data.results.length} succeeded, ${data.errors.length} failed`,
+          });
+        } else {
+          toast.error("Failed to synchronize sheets", {
+            description: `All ${data.errors.length} operations failed`,
+          });
+        }
+      } else {
+        toast.success("Sheets synchronized successfully", {
+          description: `${data.results.length} operations completed`,
+        });
+      }
+      
+      if (syncConfig.options?.notifyOnCompletion) {
+        // Here you could implement additional notification logic
+        console.log("Sync completed, would send notification");
+      }
+      
+      return {
+        success: data.success,
+        partialSuccess: data.partialSuccess,
+        results: data.results,
+        errors: data.errors
+      };
+    } catch (error) {
+      console.error("Error in synchronizeSheets:", error);
+      toast.error("Failed to synchronize sheets");
+      return null;
+    }
+  }
+
+  /**
+   * Validate sheet relationships
+   */
+  static async validateRelationships(
+    spreadsheetId: string,
+    relationships: SheetRelationship[]
+  ): Promise<{
+    validationResults: { relationship: string; valid: boolean; error?: string }[];
+    allValid: boolean;
+  } | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "VALIDATE_RELATIONSHIPS",
+          spreadsheetId,
+          sheetRelationships: relationships,
+        },
+      });
+
+      if (error) {
+        console.error("Error validating relationships:", error);
+        toast.error("Failed to validate sheet relationships", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      const { validationResults, allValid } = data;
+      
+      if (!allValid) {
+        toast.warning("Some sheet relationships are invalid", {
+          description: "Check the console for details"
+        });
+        console.warn("Invalid relationships:", validationResults.filter(r => !r.valid));
+      } else {
+        toast.success("All sheet relationships are valid");
+      }
+      
+      return { validationResults, allValid };
+    } catch (error) {
+      console.error("Error in validateRelationships:", error);
+      toast.error("Failed to validate sheet relationships");
+      return null;
     }
   }
 }
