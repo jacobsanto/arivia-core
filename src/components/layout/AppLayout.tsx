@@ -1,18 +1,31 @@
 
 import React from "react";
-import { Outlet } from "react-router-dom";
-import Sidebar from "./Sidebar";
 import Header from "./Header";
+import Sidebar from "./Sidebar";
+import MobileNav from "./MobileNav";
+import OfflineIndicator from "./OfflineIndicator";
+import { useUser } from "@/contexts/auth/UserContext";
+import { Outlet } from "react-router-dom";
 
+// Create a simple toggleSidebar function that will be passed to children
 const AppLayout = () => {
+  const { user } = useUser();
+  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <Header />
-        <main className="flex-1 overflow-y-auto p-6">
+    <div className="min-h-screen bg-background flex">
+      {user && <Sidebar />}
+      <div className="flex-1 flex flex-col">
+        {user && <Header toggleSidebar={toggleSidebar} />}
+        <OfflineIndicator />
+        <main className="flex-1 p-4">
           <Outlet />
         </main>
+        {user && <MobileNav />}
       </div>
     </div>
   );

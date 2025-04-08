@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/auth/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Badge } from "@/components/ui/badge";
+import { ROLE_DETAILS } from "@/types/auth"; // Import ROLE_DETAILS directly
 
 const Sidebar = () => {
   const { user, logout, unreadNotifications } = useUser();
