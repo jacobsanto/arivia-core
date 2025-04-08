@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useUserState } from "./hooks/useUserState";
@@ -14,7 +13,7 @@ import {
   removeUser,
   syncUserWithProfile,
   updateUserProfile
-} from "./auth/userAuthOperations";
+} from "./auth/operations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
