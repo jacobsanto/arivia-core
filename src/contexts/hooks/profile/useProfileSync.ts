@@ -26,7 +26,7 @@ export const useProfileSync = (
       
       if (profile) {
         // Update user with the latest profile data, properly converting types
-        setUser(currentUser => {
+        setUser((currentUser) => {
           if (!currentUser) return null;
           
           // Convert the string[] to UserRole[] safely
