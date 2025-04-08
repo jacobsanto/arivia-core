@@ -18,9 +18,11 @@ const SidebarFooter = ({ user, unreadNotifications, onLogout }: SidebarFooterPro
         <SidebarLink 
           to="/settings" 
           icon={<Settings size={20} />} 
-          label="Settings" 
+          active={false}
           badge={unreadNotifications > 0 ? unreadNotifications.toString() : undefined}
-        />
+        >
+          Settings
+        </SidebarLink>
       )}
       
       <Button 
