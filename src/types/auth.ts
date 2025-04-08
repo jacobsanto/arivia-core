@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   email: string;
@@ -7,6 +8,22 @@ export interface User {
   avatar?: string;
   customPermissions?: {
     [key: string]: boolean;  // Permission key to boolean (granted/denied)
+  };
+}
+
+export interface Session {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token?: string;
+  user: {
+    id: string;
+    email: string;
+    user_metadata: {
+      name?: string;
+      role?: string;
+      avatar?: string;
+    };
   };
 }
 

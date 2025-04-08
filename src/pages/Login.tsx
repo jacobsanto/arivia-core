@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, ShieldCheck } from "lucide-react";
+import { AlertCircle, ShieldCheck, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Login = () => {
@@ -26,6 +26,13 @@ const Login = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Using Supabase authentication with database integration
+              </AlertDescription>
+            </Alert>
+            
             <Tabs 
               defaultValue="signin" 
               value={activeTab}
@@ -41,7 +48,7 @@ const Login = () => {
                 <Alert className="mb-4 bg-blue-50 text-blue-800 border-blue-200">
                   <ShieldCheck className="h-4 w-4" />
                   <AlertDescription>
-                    Secure password authentication is enabled
+                    Secure authentication powered by Supabase
                   </AlertDescription>
                 </Alert>
                 <LoginForm />
@@ -51,7 +58,7 @@ const Login = () => {
                 <Alert className="mb-4 bg-amber-50 text-amber-800 border-amber-200">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    For demo purposes, new accounts are stored locally
+                    Create a new account to access Arivia Villas
                   </AlertDescription>
                 </Alert>
                 <SignUpForm />

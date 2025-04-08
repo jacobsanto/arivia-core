@@ -8,22 +8,39 @@ import { signUpFormSchema, SignUpFormValues } from "@/lib/validation/auth-schema
 import { useUser } from "@/contexts/UserContext";
 import SignUpFormFields from "./SignUpFormFields";
 import { registerUser } from "@/services/auth/registerService";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SignUpForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [superAdminExists, setSuperAdminExists] = useState(false);
   const { user } = useUser();
 
-  // Check if superadmin exists in mock data
+  // Check if superadmin exists
   useEffect(() => {
-    // In a real app, this would be an API call to check if superadmin exists
-    // For demo purposes, we'll check localStorage
-    const existingUsers = localStorage.getItem("users");
-    if (existingUsers) {
-      const users = JSON.parse(existingUsers);
-      const hasSuperAdmin = users.some((user: any) => user.role === "superadmin");
-      setSuperAdminExists(hasSuperAdmin);
-    }
+    const checkForSuperAdmin = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'superadmin')
+          .single();
+        
+        if (!error && data) {
+          setSuperAdminExists(true);
+        }
+      } catch (error) {
+        // Fall back to localStorage check for development
+        const existingUsers = localStorage.getItem("users");
+        if (existingUsers) {
+          const users = JSON.parse(existingUsers);
+          const hasSuperAdmin = users.some((user: any) => user.role === "superadmin");
+          setSuperAdminExists(hasSuperAdmin);
+        }
+      }
+    };
+
+    checkForSuperAdmin();
   }, []);
 
   const form = useForm<SignUpFormValues>({
@@ -40,9 +57,42 @@ const SignUpForm = () => {
   const onSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
     
-    const success = await registerUser(data, superAdminExists);
-    
-    if (success) {
+    try {
+      // Check if trying to create superadmin when one already exists
+      if (data.role === "superadmin" && superAdminExists) {
+        toast.error("Super Admin role already exists", {
+          description: "Only one Super Admin account can be created.",
+        });
+        setIsLoading(false);
+        return false;
+      }
+
+      // Register with Supabase
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            name: data.name,
+            role: data.role,
+          },
+        }
+      });
+
+      if (error) {
+        toast.error("Registration failed", {
+          description: error.message,
+        });
+        return false;
+      }
+
+      toast.success("Account created successfully", {
+        description: "Please check your email for verification link",
+      });
+
+      // For development, still register with the mock system too
+      await registerUser(data, superAdminExists);
+      
       // Reset form after successful submission
       form.reset();
       
@@ -50,9 +100,17 @@ const SignUpForm = () => {
       if (data.role === "superadmin") {
         setSuperAdminExists(true);
       }
+
+      return true;
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast.error("Registration failed", {
+        description: "There was an error creating your account. Please try again.",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
