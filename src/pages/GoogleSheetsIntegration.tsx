@@ -4,7 +4,7 @@ import { useUser } from "@/contexts/auth/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import GoogleSheetViewer from "@/components/googleSheets/GoogleSheetViewer";
 import GoogleSheetForm from "@/components/googleSheets/GoogleSheetForm";
 
@@ -31,7 +31,7 @@ const GoogleSheetsIntegration = () => {
       </div>
       
       <Alert>
-        <InfoCircle className="h-4 w-4" />
+        <AlertCircle className="h-4 w-4" />
         <AlertTitle>Integration Setup Required</AlertTitle>
         <AlertDescription>
           To use this feature, you need to add your Google Sheets API credentials to Supabase secrets.
