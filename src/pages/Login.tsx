@@ -9,8 +9,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
-const Login = () => {
-  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
+interface LoginProps {
+  isRegister?: boolean;
+}
+
+const Login = ({ isRegister }: LoginProps) => {
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">(isRegister ? "signup" : "signin");
   const [isLoading, setIsLoading] = useState(false);
 
   return (
