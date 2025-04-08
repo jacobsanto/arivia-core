@@ -69,7 +69,7 @@ const GoogleSignInButton = ({
         locale="en" // Ensure English language to avoid translation issues
       />
       <div className="mt-2 text-xs text-center text-gray-500">
-        Developer: Check Google Cloud Console settings for this domain
+        Developer: Replace "YOUR_GOOGLE_CLIENT_ID" in App.tsx with your actual Google Client ID
       </div>
     </div>
   );
