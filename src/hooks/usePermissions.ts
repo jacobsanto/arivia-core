@@ -1,6 +1,12 @@
 
 import { useUser } from '@/contexts/UserContext';
-import { FEATURE_PERMISSIONS, OFFLINE_CAPABILITIES, UserRole, hasPermissionWithAllRoles, getAllPermissionKeys } from '@/types/auth';
+import { 
+  FEATURE_PERMISSIONS, 
+  OFFLINE_CAPABILITIES, 
+  UserRole, 
+  hasPermissionWithAllRoles, 
+  getAllPermissionKeys 
+} from '@/types/auth';
 
 interface PermissionsReturn {
   canAccess: (featureKey: string) => boolean;

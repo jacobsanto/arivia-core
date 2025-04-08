@@ -1,8 +1,9 @@
 
 import { User, UserRole, OFFLINE_CAPABILITIES } from "@/types/auth";
-import { toastService } from "@/services/toast/toast.service";
 
-// Get all offline capabilities for current user
+/**
+ * Get offline capabilities for a user
+ */
 export const getUserOfflineCapabilities = (user: User | null): string[] => {
   if (!user) return [];
   
@@ -22,7 +23,9 @@ export const getUserOfflineCapabilities = (user: User | null): string[] => {
   return capabilities;
 };
 
-// Check if user has a specific offline capability
+/**
+ * Check if user has access to a specific offline capability
+ */
 export const hasOfflineAccess = (user: User | null, capability: string): boolean => {
   if (!user) return false;
   
@@ -33,29 +36,28 @@ export const hasOfflineAccess = (user: User | null, capability: string): boolean
   return capabilities.includes(capability);
 };
 
-// Check if offline login is still valid (within 7 days)
+/**
+ * Check if user can still log in when offline
+ * 
+ * Rules:
+ * - Must have authenticated in the last 7 days
+ * - Must have offline access privileges
+ */
 export const checkOfflineLoginStatus = (
   user: User | null, 
   lastAuthTime: number, 
   isOffline: boolean
 ): boolean => {
-  if (!user || !lastAuthTime) return false;
+  if (!user || !isOffline) return false;
   
-  // If online, always allow access
-  if (!isOffline) return true;
+  // Check if last authentication was within 7 days
+  const sevenDaysMillis = 7 * 24 * 60 * 60 * 1000;
+  const isRecentlyAuthenticated = Date.now() - lastAuthTime < sevenDaysMillis;
   
-  // If offline, check if authentication is expired (7 days)
-  const now = Date.now();
-  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  if (!isRecentlyAuthenticated) return false;
   
-  // If more than 7 days since last auth, session is expired
-  if (now - lastAuthTime > sevenDaysMs) {
-    // Show a toast warning
-    toastService.warning("Offline session expired", {
-      description: "Please go online to re-authenticate."
-    });
-    return false;
-  }
+  // Check if user role has offline capabilities
+  const offlineCapabilities = getUserOfflineCapabilities(user);
   
-  return true;
+  return offlineCapabilities.length > 0;
 };
