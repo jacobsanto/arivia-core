@@ -13,7 +13,8 @@ export interface User {
   };
 }
 
-export interface Session extends Omit<SupabaseSession, "user"> {
+// Fixing the Session interface - no longer extending SupabaseSession to avoid conflicts
+export interface Session {
   access_token: string;
   token_type: string;
   expires_in: number;
