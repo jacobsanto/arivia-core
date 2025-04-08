@@ -13,9 +13,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, AlertTriangle } from "lucide-react";
+import { Shield, Lock, AlertTriangle, Users, Sliders } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PermissionManagement from "./PermissionManagement";
 
 // Mock user list for demonstration
 const MOCK_USER_LIST: User[] = [
@@ -36,10 +38,21 @@ const MOCK_USER_LIST: User[] = [
 
 const RoleManagement: React.FC = () => {
   const { user } = useUser();
-  const [users, setUsers] = useState<User[]>(MOCK_USER_LIST);
+  const [users, setUsers] = useState<User[]>(() => {
+    // Try to load users from localStorage first
+    const storedUsers = localStorage.getItem("users");
+    return storedUsers ? JSON.parse(storedUsers) : MOCK_USER_LIST;
+  });
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("roles");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  
+  // Save users to localStorage when they change
+  React.useEffect(() => {
+    localStorage.setItem("users", JSON.stringify(users));
+  }, [users]);
   
   // Only superadmins can access this component
   if (user?.role !== "superadmin") {
@@ -114,109 +127,176 @@ const RoleManagement: React.FC = () => {
     );
   };
   
+  const handleEditPermissions = (user: User) => {
+    setSelectedUser(user);
+    setActiveTab("permissions");
+  };
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Shield className="h-5 w-5" />
-          Role Management
+          User & Permission Management
         </CardTitle>
         <CardDescription>
-          Assign and manage user roles and permissions
+          Manage user roles and specific permissions
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Current Role</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>
-                  {editingUserId === user.id ? (
-                    <div className="space-y-4">
-                      <select 
-                        className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                        value={selectedRole}
-                        onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                      >
-                        {Object.entries(ROLE_DETAILS).map(([role, details]) => (
-                          <option key={role} value={role}>{details.title}</option>
-                        ))}
-                      </select>
-                      
-                      {selectedRole === "superadmin" && (
-                        <div className="p-3 border rounded-md space-y-3">
-                          <div className="flex items-center gap-1">
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            <span className="text-xs text-muted-foreground">
-                              Super Admin requires at least one secondary role
-                            </span>
-                          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="roles" className="flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              User Roles
+            </TabsTrigger>
+            <TabsTrigger value="permissions" className="flex items-center gap-1">
+              <Sliders className="h-4 w-4" />
+              Permissions
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="roles" className="mt-4">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Current Role</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {editingUserId === user.id ? (
+                        <div className="space-y-4">
+                          <select 
+                            className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                            value={selectedRole}
+                            onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                          >
+                            {Object.entries(ROLE_DETAILS).map(([role, details]) => (
+                              <option key={role} value={role}>{details.title}</option>
+                            ))}
+                          </select>
                           
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {Object.entries(ROLE_DETAILS)
-                              .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
-                              .map(([role, details]) => (
-                                <div key={role} className="flex items-center space-x-2">
-                                  <Checkbox 
-                                    id={`role-${role}`} 
-                                    checked={selectedSecondaryRoles.includes(role as UserRole)}
-                                    onCheckedChange={() => toggleSecondaryRole(role as UserRole)}
-                                  />
-                                  <label htmlFor={`role-${role}`} className="text-sm">
-                                    {details.title}
-                                  </label>
-                                </div>
+                          {selectedRole === "superadmin" && (
+                            <div className="p-3 border rounded-md space-y-3">
+                              <div className="flex items-center gap-1">
+                                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                <span className="text-xs text-muted-foreground">
+                                  Super Admin requires at least one secondary role
+                                </span>
+                              </div>
+                              
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {Object.entries(ROLE_DETAILS)
+                                  .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
+                                  .map(([role, details]) => (
+                                    <div key={role} className="flex items-center space-x-2">
+                                      <Checkbox 
+                                        id={`role-${role}`} 
+                                        checked={selectedSecondaryRoles.includes(role as UserRole)}
+                                        onCheckedChange={() => toggleSecondaryRole(role as UserRole)}
+                                      />
+                                      <label htmlFor={`role-${role}`} className="text-sm">
+                                        {details.title}
+                                      </label>
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
+                          
+                          {user.secondaryRoles && user.secondaryRoles.length > 0 && (
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {user.secondaryRoles.map((role) => (
+                                <Badge key={role} variant="secondary" className="text-xs">
+                                  +{ROLE_DETAILS[role].title}
+                                </Badge>
                               ))}
-                          </div>
+                            </div>
+                          )}
+                          
+                          {user.customPermissions && (
+                            <div className="mt-1">
+                              <Badge variant="outline" className="text-xs bg-blue-50">
+                                Custom Permissions
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  ) : (
-                    <div>
-                      <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
-                      
-                      {user.secondaryRoles && user.secondaryRoles.length > 0 && (
-                        <div className="mt-1 flex flex-wrap gap-1">
-                          {user.secondaryRoles.map((role) => (
-                            <Badge key={role} variant="secondary" className="text-xs">
-                              +{ROLE_DETAILS[role].title}
-                            </Badge>
-                          ))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {editingUserId === user.id ? (
+                        <div className="flex justify-end gap-2">
+                          <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                            Cancel
+                          </Button>
+                          <Button size="sm" onClick={() => handleSaveRole(user.id)}>
+                            Save
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEditPermissions(user)}
+                          >
+                            Permissions
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            onClick={() => handleEditRole(user.id)}
+                          >
+                            Change Role
+                          </Button>
                         </div>
                       )}
-                    </div>
-                  )}
-                </TableCell>
-                <TableCell className="text-right">
-                  {editingUserId === user.id ? (
-                    <div className="flex justify-end gap-2">
-                      <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                        Cancel
-                      </Button>
-                      <Button size="sm" onClick={() => handleSaveRole(user.id)}>
-                        Save
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button size="sm" variant="outline" onClick={() => handleEditRole(user.id)}>
-                      Change Role
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+          
+          <TabsContent value="permissions" className="mt-4">
+            {selectedUser ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">
+                    Permissions for {selectedUser.name}
+                  </h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setActiveTab("roles")}
+                  >
+                    Back to Users
+                  </Button>
+                </div>
+                <PermissionManagement selectedUser={selectedUser} />
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  Select a user from the Role Management tab to edit their permissions
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );

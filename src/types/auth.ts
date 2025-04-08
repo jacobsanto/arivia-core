@@ -5,6 +5,9 @@ export interface User {
   role: UserRole;
   secondaryRoles?: UserRole[];
   avatar?: string;
+  customPermissions?: {
+    [key: string]: boolean;  // Permission key to boolean (granted/denied)
+  };
 }
 
 export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager";
@@ -170,8 +173,14 @@ export const OFFLINE_CAPABILITIES = {
 export const hasPermissionWithAllRoles = (
   userRole: UserRole, 
   secondaryRoles: UserRole[] | undefined, 
-  permissionRoles: UserRole[]
+  permissionRoles: UserRole[],
+  customPermissions?: { [key: string]: boolean },
+  permissionKey?: string
 ): boolean => {
+  if (customPermissions && permissionKey && customPermissions[permissionKey] !== undefined) {
+    return customPermissions[permissionKey];
+  }
+  
   if (permissionRoles.includes(userRole)) {
     return true;
   }
@@ -181,4 +190,28 @@ export const hasPermissionWithAllRoles = (
   }
   
   return false;
+};
+
+export const getAllPermissionKeys = (): string[] => {
+  return Object.keys(FEATURE_PERMISSIONS);
+};
+
+export const getDefaultPermissionsForRole = (role: UserRole, secondaryRoles?: UserRole[]): Record<string, boolean> => {
+  const permissions: Record<string, boolean> = {};
+  
+  getAllPermissionKeys().forEach(permKey => {
+    const permDefinition = FEATURE_PERMISSIONS[permKey];
+    
+    if (permDefinition) {
+      const hasPermission = hasPermissionWithAllRoles(
+        role, 
+        secondaryRoles, 
+        permDefinition.allowedRoles
+      );
+      
+      permissions[permKey] = hasPermission;
+    }
+  });
+  
+  return permissions;
 };

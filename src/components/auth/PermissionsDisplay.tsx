@@ -3,17 +3,21 @@ import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X } from 'lucide-react';
+import { Check, X, AlertCircle } from 'lucide-react';
 import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';
 
 const PermissionsDisplay = () => {
   const { user } = useUser();
-  const { canAccess, getOfflineCapabilities } = usePermissions();
+  const { canAccess, getOfflineCapabilities, getAllPermissionsList } = usePermissions();
   
   if (!user) return null;
 
   const roleDetails = ROLE_DETAILS[user.role];
   const offlineCapabilities = getOfflineCapabilities();
+  const allPermissions = getAllPermissionsList();
+  
+  // Check if user has custom permissions
+  const hasCustomPermissions = user.customPermissions && Object.keys(user.customPermissions).length > 0;
   
   // Group permissions by category
   const permissionGroups = {
@@ -48,9 +52,20 @@ const PermissionsDisplay = () => {
           <CardTitle>Your Permissions</CardTitle>
           <CardDescription>
             Access levels for {roleDetails.title}
+            {hasCustomPermissions && " (with custom permissions)"}
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {hasCustomPermissions && (
+            <div className="mb-4 p-3 bg-blue-50 rounded-md flex gap-2 text-sm">
+              <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0" />
+              <div>
+                <p className="font-medium text-blue-700">You have custom permissions</p>
+                <p className="text-blue-600">Your access rights have been customized beyond your role's default permissions</p>
+              </div>
+            </div>
+          )}
+          
           <div className="space-y-4">
             {Object.entries(permissionGroups).map(([group, features]) => (
               <div key={group}>
@@ -64,20 +79,27 @@ const PermissionsDisplay = () => {
                     if (!permission) return null;
                     
                     const hasAccess = canAccess(feature);
+                    const isCustomized = user.customPermissions && 
+                                         user.customPermissions[feature] !== undefined;
                     
                     return (
                       <div 
                         key={feature} 
                         className={`flex justify-between items-center p-2 rounded-sm ${
-                          hasAccess ? 'bg-green-50' : 'bg-gray-50'
+                          isCustomized 
+                            ? hasAccess ? 'bg-blue-50' : 'bg-gray-100 border border-gray-200' 
+                            : hasAccess ? 'bg-green-50' : 'bg-gray-50'
                         }`}
                       >
                         <div>
                           <p className="text-sm font-medium">{permission.title}</p>
                           <p className="text-xs text-muted-foreground">{permission.description}</p>
+                          {isCustomized && (
+                            <span className="text-xs text-blue-600">(Custom)</span>
+                          )}
                         </div>
                         {hasAccess ? (
-                          <Check className="h-5 w-5 text-green-600" />
+                          <Check className={`h-5 w-5 ${isCustomized ? 'text-blue-600' : 'text-green-600'}`} />
                         ) : (
                           <X className="h-5 w-5 text-gray-400" />
                         )}

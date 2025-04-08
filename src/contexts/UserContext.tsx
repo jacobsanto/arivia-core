@@ -1,5 +1,6 @@
+
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole, FEATURE_PERMISSIONS } from "@/types/auth";
+import { User, UserRole, FEATURE_PERMISSIONS, hasPermissionWithAllRoles } from "@/types/auth";
 import { toastService } from "@/services/toast/toast.service";
 import { 
   hashPassword, 
@@ -18,6 +19,7 @@ interface UserContextType {
   hasPermission: (roles: UserRole[]) => boolean;
   hasFeatureAccess: (featureKey: string) => boolean;
   getOfflineLoginStatus: () => boolean;
+  updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -94,11 +96,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isOffline, setIsOffline] = useState<boolean>(!navigator.onLine);
   const [lastAuthTime, setLastAuthTime] = useState<number>(0);
-
+  const [users, setUsers] = useState<User[]>([]);
+  
   useEffect(() => {
     // Check for existing auth token in localStorage
     const storedToken = localStorage.getItem("authToken");
     const storedAuthTime = localStorage.getItem("lastAuthTime");
+    
+    // Load users from localStorage or initialize with MOCK_USERS
+    const storedUsers = localStorage.getItem("users");
+    const initialUsers = storedUsers ? JSON.parse(storedUsers) : MOCK_USERS;
+    setUsers(initialUsers);
     
     if (storedToken) {
       const { valid, userId, role } = verifyAuthToken(storedToken);
@@ -132,6 +140,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+  
+  // Save users to localStorage whenever they change
+  useEffect(() => {
+    if (users.length > 0) {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+  }, [users]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -231,8 +246,48 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const permission = FEATURE_PERMISSIONS[featureKey];
     if (!permission) return false;
     
-    // Check if user's role is in the allowed roles
-    return permission.allowedRoles.includes(user.role);
+    // Check custom permissions first
+    if (user.customPermissions && user.customPermissions[featureKey] !== undefined) {
+      return user.customPermissions[featureKey];
+    }
+    
+    // Fall back to role-based permissions
+    return hasPermissionWithAllRoles(user.role, user.secondaryRoles, permission.allowedRoles);
+  };
+
+  // Update permissions for a specific user
+  const updateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
+    // Only allow superadmins to modify permissions
+    if (user?.role !== "superadmin") {
+      toastService.error("Permission denied", {
+        description: "Only Super Admins can modify user permissions"
+      });
+      return;
+    }
+    
+    const updatedUsers = users.map(u => {
+      if (u.id === userId) {
+        return {
+          ...u,
+          customPermissions: permissions
+        };
+      }
+      return u;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // If the current user's permissions were updated, update the state
+    if (user?.id === userId) {
+      setUser({
+        ...user,
+        customPermissions: permissions
+      });
+    }
+    
+    toastService.success("Permissions updated", {
+      description: "User permissions have been updated successfully"
+    });
   };
 
   // Check if offline login is still valid (within 7 days)
@@ -266,7 +321,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout, 
       hasPermission, 
       hasFeatureAccess,
-      getOfflineLoginStatus 
+      getOfflineLoginStatus,
+      updateUserPermissions
     }}>
       {children}
     </UserContext.Provider>
