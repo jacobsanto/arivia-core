@@ -93,10 +93,17 @@ const SheetRelationshipManager: React.FC<SheetRelationshipManagerProps> = ({
   };
 
   const handleAddRelationship = (data: z.infer<typeof relationshipSchema>) => {
+    // Fix: Ensure all required properties are provided
     const newRelationship: SheetRelationship = {
-      ...data,
+      name: data.name, // Make sure name is explicitly included
+      sourceSpreadsheetId: data.sourceSpreadsheetId,
+      sourceRange: data.sourceRange,
+      targetRange: data.targetRange,
       // If target spreadsheet is empty, use source
-      targetSpreadsheetId: data.targetSpreadsheetId || data.sourceSpreadsheetId
+      targetSpreadsheetId: data.targetSpreadsheetId || data.sourceSpreadsheetId,
+      writeMode: data.writeMode,
+      keyColumn: data.keyColumn,
+      description: data.description
     };
 
     let updatedRelationships: SheetRelationship[];

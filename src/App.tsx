@@ -1,122 +1,179 @@
-
 import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { GoogleOAuthProvider } from "@react-oauth/google";
-import AppLayout from "./components/layout/AppLayout";
-import { UserProvider } from "./contexts/auth/UserContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import OfflineIndicator from "./components/layout/OfflineIndicator";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "react-query";
+import { Toaster } from "sonner";
 
-// Pages
+import { AuthProvider } from "./contexts/auth/AuthContext";
+import { ProtectedRoute } from "./contexts/auth/ProtectedRoute";
+
+import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties";
-import Housekeeping from "./pages/Housekeeping";
-import Maintenance from "./pages/Maintenance";
+import PropertyDetails from "./pages/PropertyDetails";
+import Bookings from "./pages/Bookings";
+import Guests from "./pages/Guests";
+import Users from "./pages/Users";
+import Settings from "./pages/Settings";
+import Tasks from "./pages/Tasks";
 import Inventory from "./pages/Inventory";
-import TeamChat from "./pages/TeamChat";
-import Analytics from "./pages/Analytics";
-import Reports from "./pages/Reports";
-import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound";
-import Unauthorized from "./pages/Unauthorized";
-import Troubleshooting from "./pages/Troubleshooting";
 import GoogleSheetsIntegration from "./pages/GoogleSheetsIntegration";
 
-// Google Client ID - in a real app, this would be in an environment variable
-const GOOGLE_CLIENT_ID = "57764291424-d8ennorcd7u6q2i3j57ajkucl99nls7i.apps.googleusercontent.com"; 
+import AppLayout from "./components/layout/AppLayout";
+import { Table } from "lucide-react";
+import { PackageSearch } from "lucide-react";
+import { Home } from "lucide-react";
 
-const App = () => {
-  // Create a new QueryClient instance inside the component
+// Import the new GoogleDriveProvider and GoogleDriveIntegration page
+import { GoogleDriveProvider } from "./contexts/GoogleDriveContext";
+import GoogleDriveIntegration from "./pages/GoogleDriveIntegration";
+
+function App() {
   const queryClient = new QueryClient();
-  
+
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <GoogleOAuthProvider 
-          clientId={GOOGLE_CLIENT_ID}
-          // Adding explicit configuration for allowed origins
-          onScriptLoadError={() => {
-            console.error("Google OAuth script failed to load");
-          }}
-        >
-          <TooltipProvider>
-            <UserProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  {/* Auth Route */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/unauthorized" element={<Unauthorized />} />
-                  
-                  {/* Protected App Routes */}
-                  <Route element={<ProtectedRoute />}>
-                    <Route path="/" element={<AppLayout />}>
-                      <Route index element={<Dashboard />} />
-                      
-                      {/* Routes requiring specific roles */}
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                        <Route path="properties" element={<Properties />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]} />}>
-                        <Route path="housekeeping" element={<Housekeeping />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
-                        <Route path="maintenance" element={<Maintenance />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
-                        <Route path="inventory" element={<Inventory />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>
-                        <Route path="team-chat" element={<TeamChat />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                        <Route path="analytics" element={<Analytics />} />
-                      </Route>
-                      
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                        <Route path="reports" element={<Reports />} />
-                      </Route>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Toaster position="top-right" />
+        <GoogleDriveProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Dashboard />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/properties"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Properties />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/properties/:id"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <PropertyDetails />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/bookings"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Bookings />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/guests"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Guests />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/users"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Users />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Settings />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Tasks />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/inventory"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <Inventory />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/google-sheets"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GoogleSheetsIntegration />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
+              
+              {/* Add the new GoogleDriveIntegration route */}
+              <Route
+                path="/drive-integration"
+                element={
+                  <ProtectedRoute>
+                    <AppLayout>
+                      <GoogleDriveIntegration />
+                    </AppLayout>
+                  </ProtectedRoute>
+                }
+              />
 
-                      {/* Google Sheets integration page */}
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                        <Route path="google-sheets" element={<GoogleSheetsIntegration />} />
-                      </Route>
-
-                      {/* Troubleshooting page accessible to everyone */}
-                      <Route path="troubleshooting" element={<Troubleshooting />} />
-                      
-                      {/* User profile accessible to everyone */}
-                      <Route path="profile" element={<UserProfile />} />
-                      
-                      {/* Settings route - only for admins and superadmins */}
-                      <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator"]} />}>
-                        <Route path="settings" element={<Navigate to="/profile" replace />} />
-                      </Route>
-                    </Route>
-                  </Route>
-                  
-                  {/* 404 Route */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <OfflineIndicator />
-              </BrowserRouter>
-            </UserProvider>
-          </TooltipProvider>
-        </GoogleOAuthProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+              <Route
+                path="/login"
+                element={
+                  <div className="container py-16 flex items-center justify-center">
+                    <Login />
+                  </div>
+                }
+              />
+              <Route
+                path="/register"
+                element={
+                  <div className="container py-16 flex items-center justify-center">
+                    <Login isRegister={true} />
+                  </div>
+                }
+              />
+            </Routes>
+          </Router>
+        </GoogleDriveProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
-};
+}
 
 export default App;

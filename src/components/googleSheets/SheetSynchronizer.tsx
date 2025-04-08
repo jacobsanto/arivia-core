@@ -160,7 +160,15 @@ const SheetSynchronizer: React.FC<SheetSynchronizerProps> = ({
               
               {syncResult && (
                 <div className="mt-4">
-                  <Alert variant={syncResult.success ? "default" : syncResult.partialSuccess ? "warning" : "destructive"}>
+                  <Alert 
+                    variant={
+                      syncResult.success 
+                        ? "default" 
+                        : syncResult.partialSuccess 
+                          ? "default" // Fixed: Changed "warning" to "default" since it's not a valid variant
+                          : "destructive"
+                    }
+                  >
                     {syncResult.success ? (
                       <Check className="h-4 w-4" />
                     ) : (

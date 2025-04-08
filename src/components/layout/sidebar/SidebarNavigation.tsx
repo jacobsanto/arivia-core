@@ -1,118 +1,69 @@
-
 import React from "react";
-import { useLocation } from "react-router-dom";
-import { LayoutGrid, CalendarRange, ClipboardList, Hammer, LineChart, BarChart3, MessageSquare, FileText, BoxSelect, Truck, HelpCircle, FileSpreadsheet } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import SidebarLink from "./SidebarLink";
-import { useUser } from "@/contexts/auth/UserContext";
-import { User } from "@/types/auth";
+import {
+  Home,
+  Building2,
+  CalendarDays,
+  Users,
+  Settings,
+  Wrench,
+  PackageSearch,
+  Table,
+  FileSpreadsheet,
+} from "lucide-react";
 
-// Add an interface for component props
-interface SidebarNavigationProps {
-  user: User;
-}
-
-const SidebarNavigation = ({ user }: SidebarNavigationProps) => {
-  const location = useLocation();
-  
-  // Check if the current route matches the given path
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-  
+const SidebarNavigation = () => {
   return (
-    <div className="flex flex-col py-2 space-y-1">
-      <SidebarLink 
-        to="/" 
-        icon={<LayoutGrid size={20} />} 
-        active={isActive("/")}
-      >
-        Dashboard
-      </SidebarLink>
-      
-      {(user.role === "administrator" || user.role === "property_manager" || user.role === "superadmin") && (
-        <SidebarLink 
-          to="/properties" 
-          icon={<CalendarRange size={20} />} 
-          active={isActive("/properties")}
-        >
-          Properties
-        </SidebarLink>
-      )}
-      
-      {(user.role === "administrator" || user.role === "property_manager" || user.role === "housekeeping_staff" || user.role === "maintenance_staff" || user.role === "superadmin") && (
-        <SidebarLink 
-          to="/housekeeping" 
-          icon={<ClipboardList size={20} />} 
-          active={isActive("/housekeeping")}
-        >
-          Housekeeping
-        </SidebarLink>
-      )}
-      
-      {(user.role === "administrator" || user.role === "property_manager" || user.role === "maintenance_staff" || user.role === "superadmin") && (
-        <SidebarLink 
-          to="/maintenance" 
-          icon={<Hammer size={20} />} 
-          active={isActive("/maintenance")}
-        >
-          Maintenance
-        </SidebarLink>
-      )}
-      
-      {(user.role === "administrator" || user.role === "property_manager" || user.role === "inventory_manager" || user.role === "superadmin") && (
-        <SidebarLink 
-          to="/inventory" 
-          icon={<BoxSelect size={20} />} 
-          active={isActive("/inventory")}
-        >
-          Inventory
-        </SidebarLink>
-      )}
-      
-      {(user.role === "administrator" || user.role === "property_manager" || user.role === "superadmin") && (
-        <>
-          <SidebarLink 
-            to="/analytics" 
-            icon={<LineChart size={20} />} 
-            active={isActive("/analytics")}
-          >
-            Analytics
-          </SidebarLink>
+    <ScrollArea className="h-[calc(100vh-140px)]">
+      <nav className="px-2 py-2">
+        <div className="space-y-4">
+          <SidebarLink to="/dashboard" icon={<Home size={18} />} label="Dashboard" />
           
-          <SidebarLink 
-            to="/reports" 
-            icon={<BarChart3 size={20} />} 
-            active={isActive("/reports")}
-          >
-            Reports
-          </SidebarLink>
+          <div className="pt-2">
+            <h3 className="px-3 text-xs font-semibold tracking-tight uppercase text-muted-foreground mb-2">Properties</h3>
+            <div className="space-y-1">
+              <SidebarLink to="/properties" icon={<Building2 size={18} />} label="Properties" />
+              <SidebarLink to="/bookings" icon={<CalendarDays size={18} />} label="Bookings" />
+            </div>
+          </div>
 
-          <SidebarLink 
-            to="/google-sheets" 
-            icon={<FileSpreadsheet size={20} />} 
-            active={isActive("/google-sheets")}
-          >
-            Google Sheets
-          </SidebarLink>
-        </>
-      )}
-      
-      <SidebarLink 
-        to="/team-chat" 
-        icon={<MessageSquare size={20} />} 
-        active={isActive("/team-chat")}
-      >
-        Team Chat
-      </SidebarLink>
-      
-      <SidebarLink 
-        to="/troubleshooting" 
-        icon={<HelpCircle size={20} />} 
-        active={isActive("/troubleshooting")}
-      >
-        Help
-      </SidebarLink>
-    </div>
+          <div className="pt-2">
+            <h3 className="px-3 text-xs font-semibold tracking-tight uppercase text-muted-foreground mb-2">Management</h3>
+            <div className="space-y-1">
+              <SidebarLink to="/maintenance" icon={<Wrench size={18} />} label="Maintenance" />
+              <SidebarLink to="/users" icon={<Users size={18} />} label="Users" />
+            </div>
+          </div>
+
+          <SidebarLink to="/inventory" icon={<PackageSearch size={18} />} label="Inventory" />
+
+          <div className="pt-2">
+            <h3 className="px-3 text-xs font-semibold tracking-tight uppercase text-muted-foreground mb-2">Integrations</h3>
+            <div className="space-y-1">
+              <SidebarLink 
+                to="/drive-integration" 
+                icon={<FileSpreadsheet size={18} />} 
+                label="Google Drive" 
+              />
+              
+              <SidebarLink 
+                to="/google-sheets" 
+                icon={<Table size={18} />} 
+                label="Google Sheets" 
+              />
+            </div>
+          </div>
+          
+          <div className="pt-2">
+            <h3 className="px-3 text-xs font-semibold tracking-tight uppercase text-muted-foreground mb-2">System</h3>
+            <div className="space-y-1">
+              <SidebarLink to="/settings" icon={<Settings size={18} />} label="Settings" />
+            </div>
+          </div>
+        </div>
+      </nav>
+    </ScrollArea>
   );
 };
 
