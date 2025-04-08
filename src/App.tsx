@@ -7,6 +7,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 import { AuthProvider } from "./contexts/auth/AuthContext";
 import { ProtectedRoute } from "./contexts/auth/ProtectedRoute";
+import { GoogleDriveProvider } from "./contexts/GoogleDriveContext";
 
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -62,7 +63,11 @@ function App() {
                   <Route path="/tasks" element={<Tasks />} />
                   <Route path="/inventory" element={<Inventory />} />
                   <Route path="/google-sheets" element={<GoogleSheetsIntegration />} />
-                  <Route path="/drive-integration" element={<GoogleDriveIntegration />} />
+                  <Route path="/drive-integration" element={
+                    <GoogleDriveProvider>
+                      <GoogleDriveIntegration />
+                    </GoogleDriveProvider>
+                  } />
                 </Route>
               </Route>
             </Routes>
