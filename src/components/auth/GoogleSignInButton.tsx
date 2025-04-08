@@ -39,6 +39,7 @@ const GoogleSignInButton = ({
       
       if (onSuccess) onSuccess();
     } catch (error) {
+      console.error("Google login error:", error);
       toast.error("Google login failed", {
         description: "Unable to authenticate with Google",
       });
@@ -47,22 +48,29 @@ const GoogleSignInButton = ({
     }
   };
 
+  const handleError = () => {
+    console.error("Google OAuth error occurred");
+    toast.error("Google login failed", {
+      description: "There was an error authenticating with Google. Please make sure your Google Cloud Console project is configured correctly.",
+    });
+  };
+
   return (
     <div className="w-full">
       <GoogleLogin
         onSuccess={handleSuccess}
-        onError={() => {
-          toast.error("Google login failed", {
-            description: "There was an error authenticating with Google",
-          });
-        }}
-        useOneTap
+        onError={handleError}
+        useOneTap={false} // Disable One Tap to avoid potential issues
         theme="outline"
         size="large"
         shape="rectangular"
         text="signin_with"
-        width="100%"
+        width="100%" // The Google SDK might complain about this, but it's the most responsive option
+        locale="en" // Ensure English language to avoid translation issues
       />
+      <div className="mt-2 text-xs text-center text-gray-500">
+        Developer: Check Google Cloud Console settings for this domain
+      </div>
     </div>
   );
 };

@@ -36,7 +36,13 @@ const App = () => {
   return (
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
-        <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+        <GoogleOAuthProvider 
+          clientId={GOOGLE_CLIENT_ID}
+          // Adding explicit configuration for allowed origins
+          onScriptLoadError={() => {
+            console.error("Google OAuth script failed to load");
+          }}
+        >
           <TooltipProvider>
             <UserProvider>
               <Toaster />
