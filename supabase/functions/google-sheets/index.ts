@@ -19,7 +19,7 @@ serve(async (req) => {
       throw new Error("Google Sheets credentials not found");
     }
 
-    const { method, operation, spreadsheetId, sheetId, range, values, batchRequests } = await req.json();
+    const { method, operation, spreadsheetId, sheetId, range, values, batchRequests, backupTitle, sourceSpreadsheetId, sourceRange, targetSpreadsheetId, targetRange } = await req.json();
     console.log(`Processing ${method} request for operation: ${operation}`);
 
     // Parse the credentials
@@ -71,6 +71,22 @@ serve(async (req) => {
           }));
           
           return new Response(JSON.stringify({ sheets: sheetsList }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "GET_SPREADSHEET_METADATA") {
+          console.log(`Getting metadata for spreadsheet: ${spreadsheetId}`);
+          
+          // We'll request different fields depending on what we need
+          const metadataUrl = `${baseUrl}/${spreadsheetId}?fields=properties,sheets.properties,namedRanges`;
+          const metadataResponse = await fetch(metadataUrl, { headers });
+          
+          if (!metadataResponse.ok) {
+            throw new Error(`Failed to get spreadsheet metadata: ${await metadataResponse.text()}`);
+          }
+          
+          const metadata = await metadataResponse.json();
+          
+          return new Response(JSON.stringify({ metadata }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else if (operation === "GET_NAMED_RANGES") {
@@ -166,7 +182,7 @@ serve(async (req) => {
         } else if (operation === "CREATE_NAMED_RANGE") {
           console.log(`Creating named range in spreadsheet: ${spreadsheetId}`);
           
-          const { name, rangeDefinition } = req.body;
+          const { name, rangeDefinition } = await req.json();
           if (!name || !rangeDefinition) {
             throw new Error("Name and range definition are required for creating a named range");
           }
@@ -200,6 +216,100 @@ serve(async (req) => {
           return new Response(JSON.stringify({ 
             success: true, 
             namedRangeId: namedRangeData.replies?.[0]?.addNamedRange?.namedRange?.namedRangeId 
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "CLEAR_RANGE") {
+          console.log(`Clearing range in spreadsheet: ${spreadsheetId}, range: ${range}`);
+          
+          const clearUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(range)}:clear`;
+          const clearResponse = await fetch(clearUrl, {
+            method: "POST",
+            headers,
+          });
+          
+          if (!clearResponse.ok) {
+            throw new Error(`Failed to clear range: ${await clearResponse.text()}`);
+          }
+          
+          return new Response(JSON.stringify({ success: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else if (operation === "CREATE_BACKUP") {
+          console.log(`Creating backup of spreadsheet: ${spreadsheetId}`);
+          
+          // Create a new spreadsheet
+          const title = backupTitle || `Backup of ${spreadsheetId} - ${new Date().toISOString().split('T')[0]}`;
+          
+          // We first need to get the original spreadsheet to copy its structure
+          const getUrl = `${baseUrl}/${spreadsheetId}`;
+          const getResponse = await fetch(getUrl, { headers });
+          
+          if (!getResponse.ok) {
+            throw new Error(`Failed to get spreadsheet for backup: ${await getResponse.text()}`);
+          }
+          
+          const originalSheet = await getResponse.json();
+          
+          // Now create a new spreadsheet
+          const createUrl = "https://sheets.googleapis.com/v4/spreadsheets";
+          const createResponse = await fetch(createUrl, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+              properties: {
+                title,
+              },
+              sheets: originalSheet.sheets.map((sheet: any) => ({
+                properties: {
+                  title: sheet.properties.title,
+                  gridProperties: sheet.properties.gridProperties,
+                }
+              }))
+            }),
+          });
+          
+          if (!createResponse.ok) {
+            throw new Error(`Failed to create backup spreadsheet: ${await createResponse.text()}`);
+          }
+          
+          const backupSheet = await createResponse.json();
+          const backupId = backupSheet.spreadsheetId;
+          
+          // Now copy data from each sheet
+          for (const sheet of originalSheet.sheets) {
+            const sheetName = sheet.properties.title;
+            
+            // Get data from original
+            const dataUrl = `${baseUrl}/${spreadsheetId}/values/${encodeURIComponent(sheetName)}`;
+            const dataResponse = await fetch(dataUrl, { headers });
+            
+            if (!dataResponse.ok) {
+              console.warn(`Warning: Could not copy data for sheet ${sheetName}: ${await dataResponse.text()}`);
+              continue;
+            }
+            
+            const sheetData = await dataResponse.json();
+            
+            if (sheetData.values && sheetData.values.length > 0) {
+              // Write to backup
+              const writeUrl = `${baseUrl}/${backupId}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW`;
+              const writeResponse = await fetch(writeUrl, {
+                method: "PUT",
+                headers,
+                body: JSON.stringify({ values: sheetData.values }),
+              });
+              
+              if (!writeResponse.ok) {
+                console.warn(`Warning: Could not write data to backup sheet ${sheetName}: ${await writeResponse.text()}`);
+              }
+            }
+          }
+          
+          return new Response(JSON.stringify({ 
+            success: true, 
+            backupSpreadsheetId: backupId,
+            title
           }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });

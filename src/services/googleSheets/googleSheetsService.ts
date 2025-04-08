@@ -30,6 +30,26 @@ export interface BatchUpdateRequest {
   requests: object[];
 }
 
+export interface SheetMetadata {
+  properties: {
+    title: string;
+  };
+  sheets: {
+    properties: {
+      sheetId: number;
+      title: string;
+      index: number;
+      sheetType: string;
+      gridProperties: {
+        rowCount: number;
+        columnCount: number;
+      };
+      hidden?: boolean;
+    };
+  }[];
+  namedRanges?: NamedRange[];
+}
+
 export class GoogleSheetsService {
   /**
    * Fetch data from a Google Sheet
@@ -96,6 +116,35 @@ export class GoogleSheetsService {
     } catch (error) {
       console.error("Error in getSheetsList:", error);
       toast.error("Failed to fetch sheets list");
+      return null;
+    }
+  }
+
+  /**
+   * Get complete metadata about a spreadsheet
+   */
+  static async getSpreadsheetMetadata(spreadsheetId: string): Promise<SheetMetadata | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "GET",
+          operation: "GET_SPREADSHEET_METADATA",
+          spreadsheetId,
+        },
+      });
+
+      if (error) {
+        console.error("Error fetching spreadsheet metadata:", error);
+        toast.error("Failed to fetch spreadsheet metadata", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      return data.metadata || null;
+    } catch (error) {
+      console.error("Error in getSpreadsheetMetadata:", error);
+      toast.error("Failed to fetch spreadsheet metadata");
       return null;
     }
   }
@@ -276,6 +325,113 @@ export class GoogleSheetsService {
       console.error("Error in createNamedRange:", error);
       toast.error("Failed to create named range");
       return null;
+    }
+  }
+
+  /**
+   * Clear data from a range in a Google Sheet
+   */
+  static async clearRange(
+    spreadsheetId: string,
+    range: string
+  ): Promise<boolean> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "CLEAR_RANGE",
+          spreadsheetId,
+          range,
+        },
+      });
+
+      if (error) {
+        console.error("Error clearing range:", error);
+        toast.error("Failed to clear data", {
+          description: error.message,
+        });
+        return false;
+      }
+
+      toast.success("Range cleared successfully");
+      return true;
+    } catch (error) {
+      console.error("Error in clearRange:", error);
+      toast.error("Failed to clear data");
+      return false;
+    }
+  }
+
+  /**
+   * Create a backup of a Google Sheet by copying it
+   */
+  static async createBackup(
+    spreadsheetId: string,
+    backupTitle?: string
+  ): Promise<string | null> {
+    try {
+      const { data, error } = await supabase.functions.invoke("google-sheets", {
+        body: {
+          method: "POST",
+          operation: "CREATE_BACKUP",
+          spreadsheetId,
+          backupTitle: backupTitle || `Backup - ${new Date().toISOString().split('T')[0]}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error creating backup:", error);
+        toast.error("Failed to create backup", {
+          description: error.message,
+        });
+        return null;
+      }
+
+      toast.success("Spreadsheet backup created successfully", {
+        description: `Backup ID: ${data.backupSpreadsheetId}`,
+      });
+      return data.backupSpreadsheetId || null;
+    } catch (error) {
+      console.error("Error in createBackup:", error);
+      toast.error("Failed to create backup");
+      return null;
+    }
+  }
+
+  /**
+   * Import data from another Google Sheet
+   */
+  static async importFromAnotherSheet(
+    sourceSpreadsheetId: string,
+    sourceRange: string,
+    targetSpreadsheetId: string,
+    targetRange: string
+  ): Promise<boolean> {
+    try {
+      // First, fetch the data from the source spreadsheet
+      const sourceData = await this.fetchSheetData(sourceSpreadsheetId, sourceRange);
+      
+      if (!sourceData || sourceData.values.length === 0) {
+        toast.error("No data to import");
+        return false;
+      }
+      
+      // Then write it to the target spreadsheet
+      const success = await this.writeToSheet(
+        targetSpreadsheetId,
+        targetRange,
+        sourceData.values
+      );
+      
+      if (success) {
+        toast.success("Data imported successfully");
+      }
+      
+      return success;
+    } catch (error) {
+      console.error("Error importing from another sheet:", error);
+      toast.error("Failed to import data");
+      return false;
     }
   }
 }

@@ -4,7 +4,7 @@ import { useUser } from "@/contexts/auth/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
+import { AlertCircle, Info, FileSpreadsheet } from "lucide-react";
 import GoogleSheetViewer from "@/components/googleSheets/GoogleSheetViewer";
 import GoogleSheetForm from "@/components/googleSheets/GoogleSheetForm";
 import SheetNavigator from "@/components/googleSheets/SheetNavigator";
@@ -106,6 +106,7 @@ const GoogleSheetsIntegration = () => {
               spreadsheetId={storedSpreadsheetId}
               onSheetChange={handleSheetChange}
               className="mb-4"
+              displayMode="grouped" // Using the new grouped mode
             />
           </div>
 
