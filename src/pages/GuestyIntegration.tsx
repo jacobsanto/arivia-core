@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { GuestyProvider } from '@/contexts/GuestyContext';
 import PropertySync from '@/components/guesty/PropertySync';
 import BookingSync from '@/components/guesty/BookingSync';
+import TaskSync from '@/components/guesty/TaskSync';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -77,12 +78,7 @@ export default function GuestyIntegration() {
           </TabsContent>
           
           <TabsContent value="tasks">
-            <Card className="p-8 text-center shadow-md">
-              <h3 className="text-xl font-medium mb-2">Task Sync Coming Soon</h3>
-              <p className="text-muted-foreground">
-                Task synchronization between Guesty and Arivia Villas will be available in a future update.
-              </p>
-            </Card>
+            <TaskSync />
           </TabsContent>
         </Tabs>
       </GuestyProvider>
