@@ -1,1 +1,5 @@
+
 project_id = "lhhxxnbfdrkvjjbzxdjs"
+
+[functions.guesty-auth]
+verify_jwt = true
