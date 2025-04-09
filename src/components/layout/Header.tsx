@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Bell, MessageSquare, User, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,21 +60,21 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
               <Button variant="outline" size="icon" className="relative hidden md:flex">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-80">
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <div className="max-h-80 overflow-y-auto">
-                  <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
-                  <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
-                  <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="justify-center text-primary">
-                  View All Notifications
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+              </Button>
             </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="max-h-80 overflow-y-auto">
+                <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
+                <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
+                <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="justify-center text-primary">
+                View All Notifications
+              </DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
           
           <DropdownMenu>
@@ -103,8 +104,8 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 <User className="h-5 w-5" />
                 <span className="hidden md:inline">{user?.name || "Guest"}</span>
                 {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs">
-                    {ROLE_DETAILS[user.role].title}
-                  </Badge>}
+                  {ROLE_DETAILS[user.role].title}
+                </Badge>}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
