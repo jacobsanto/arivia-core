@@ -13,9 +13,12 @@ import OrderForm from "@/components/inventory/orders/OrderForm";
 import OrderList from "@/components/inventory/orders/OrderList";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const isMobile = useIsMobile();
 
   return (
     <InventoryProvider>
@@ -29,18 +32,36 @@ const Inventory = () => {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b">
-              <TabsList className="bg-transparent -mb-px">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
-                <TabsTrigger value="add-item">Add Item</TabsTrigger>
-                <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
-                <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
-                <TabsTrigger value="usage">Usage Reports</TabsTrigger>
-                <TabsTrigger value="vendors">Vendors</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-                <TabsTrigger value="create-order">Create Order</TabsTrigger>
-              </TabsList>
+            <div className="border-b overflow-hidden">
+              {isMobile ? (
+                <div className="mobile-scroll">
+                  <TabsList className="bg-transparent -mb-px w-[800px] min-w-full">
+                    <TabsTrigger value="overview" className="truncate">Overview</TabsTrigger>
+                    <TabsTrigger value="stock-levels" className="truncate">Stock Levels</TabsTrigger>
+                    <TabsTrigger value="add-item" className="truncate">Add Item</TabsTrigger>
+                    <TabsTrigger value="receipts" className="truncate">Stock Receipt</TabsTrigger>
+                    <TabsTrigger value="transfers" className="truncate">Transfer Stock</TabsTrigger>
+                    <TabsTrigger value="usage" className="truncate">Usage Reports</TabsTrigger>
+                    <TabsTrigger value="vendors" className="truncate">Vendors</TabsTrigger>
+                    <TabsTrigger value="orders" className="truncate">Orders</TabsTrigger>
+                    <TabsTrigger value="create-order" className="truncate">Create Order</TabsTrigger>
+                  </TabsList>
+                </div>
+              ) : (
+                <ScrollArea className="w-full">
+                  <TabsList className="bg-transparent -mb-px">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
+                    <TabsTrigger value="add-item">Add Item</TabsTrigger>
+                    <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
+                    <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
+                    <TabsTrigger value="usage">Usage Reports</TabsTrigger>
+                    <TabsTrigger value="vendors">Vendors</TabsTrigger>
+                    <TabsTrigger value="orders">Orders</TabsTrigger>
+                    <TabsTrigger value="create-order">Create Order</TabsTrigger>
+                  </TabsList>
+                </ScrollArea>
+              )}
             </div>
             
             <Card className="mt-6 border-t-0 rounded-t-none">
