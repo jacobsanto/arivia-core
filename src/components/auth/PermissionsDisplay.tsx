@@ -5,13 +5,21 @@ import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, X, AlertCircle } from 'lucide-react';
 import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobilePermissionsDisplay from './MobilePermissionsDisplay';
 
 const PermissionsDisplay = () => {
   const { user } = useUser();
   const { canAccess, getOfflineCapabilities, getAllPermissionsList } = usePermissions();
+  const isMobile = useIsMobile();
   
   if (!user) return null;
 
+  // Use the mobile-specific component for mobile devices
+  if (isMobile) {
+    return <MobilePermissionsDisplay />;
+  }
+  
   const roleDetails = ROLE_DETAILS[user.role];
   const offlineCapabilities = getOfflineCapabilities();
   const allPermissions = getAllPermissionsList();

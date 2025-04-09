@@ -1,9 +1,10 @@
-
 import React from "react";
 import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, User as UserIcon } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileRoleInfo from "./MobileRoleInfo";
 
 interface RoleInfoProps {
   user: User;
@@ -30,6 +31,12 @@ const getRoleIcon = (role: UserRole) => {
 };
 
 const RoleInfo: React.FC<RoleInfoProps> = ({ user }) => {
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return <MobileRoleInfo user={user} />;
+  }
+  
   const roleDetails = ROLE_DETAILS[user.role];
   
   return (
