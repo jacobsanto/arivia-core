@@ -11,7 +11,6 @@ import {
   MessageSquare,
   BarChart,
   FileText,
-  Settings,
   LogOut,
   User,
   Lock,
@@ -81,14 +80,10 @@ const Sidebar = () => {
         {canAccess("viewReports") && (
           <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
         )}
-        
-        <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
       </nav>
       
-      <div className="pt-4 border-t border-sidebar-border mt-6">
-        {(user.role === "administrator" || user.role === "superadmin") && (
-          <SidebarLink to="/settings" icon={<Settings size={20} />} label="Settings" />
-        )}
+      <div className="pt-4 border-t border-sidebar-border mt-6 space-y-1">
+        <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
         
         <Button 
           variant="ghost" 
