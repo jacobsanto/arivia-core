@@ -1,16 +1,16 @@
-
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { inventoryData } from "@/data/inventoryData";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const StockLevels = () => {
   const [location, setLocation] = useState("all");
   const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
 
-  // Filter inventory items based on search and selected location
   const filteredItems = inventoryData.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
     const matchesLocation = location === "all" || item.location === location;
@@ -40,7 +40,7 @@ const StockLevels = () => {
         </div>
         <div className="w-full md:w-1/4">
           <Select value={location} onValueChange={setLocation}>
-            <SelectTrigger>
+            <SelectTrigger className="w-full">
               <SelectValue placeholder="Select location" />
             </SelectTrigger>
             <SelectContent>
@@ -56,7 +56,7 @@ const StockLevels = () => {
         </div>
       </div>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
@@ -74,12 +74,14 @@ const StockLevels = () => {
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.category}</TableCell>
                 <TableCell>
-                  {item.location === "main" ? "Main Storage" : 
-                   item.location === "villa_caldera" ? "Villa Caldera" :
-                   item.location === "villa_oceana" ? "Villa Oceana" :
-                   item.location === "villa_azure" ? "Villa Azure" :
-                   item.location === "villa_sunset" ? "Villa Sunset" :
-                   "Villa Paradiso"}
+                  {isMobile 
+                    ? item.location.replace('villa_', 'V. ')
+                    : item.location === "main" ? "Main Storage" : 
+                      item.location === "villa_caldera" ? "Villa Caldera" :
+                      item.location === "villa_oceana" ? "Villa Oceana" :
+                      item.location === "villa_azure" ? "Villa Azure" :
+                      item.location === "villa_sunset" ? "Villa Sunset" :
+                      "Villa Paradiso"}
                 </TableCell>
                 <TableCell className="text-right">{item.currentStock}</TableCell>
                 <TableCell className="text-right">{item.minLevel}</TableCell>

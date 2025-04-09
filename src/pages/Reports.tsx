@@ -38,26 +38,30 @@ const Reports = () => {
   };
 
   return (
-    <div className="container max-w-7xl mx-auto p-4 space-y-6">
-      <ReportsHeader 
-        activeView={activeView}
-        setActiveView={setActiveView}
-        onCreateReport={handleCreateReport}
-      />
-      
-      <ReportsFilters 
-        dateRange={dateRange}
-        setDateRange={setDateRange}
-      />
-      
-      {activeView === 'reporting' ? (
-        <ReportingContent 
-          reportsCount={reports.length} 
-          isLoading={isLoading} 
+    <div className="w-full max-w-full overflow-hidden">
+      <div className="container max-w-7xl mx-auto p-2 md:p-4 space-y-6">
+        <ReportsHeader 
+          activeView={activeView}
+          setActiveView={setActiveView}
+          onCreateReport={handleCreateReport}
         />
-      ) : (
-        <AnalyticsContent />
-      )}
+        
+        <div className="w-full overflow-x-hidden">
+          <ReportsFilters 
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+          />
+        </div>
+        
+        {activeView === 'reporting' ? (
+          <ReportingContent 
+            reportsCount={reports.length} 
+            isLoading={isLoading} 
+          />
+        ) : (
+          <AnalyticsContent />
+        )}
+      </div>
     </div>
   );
 };

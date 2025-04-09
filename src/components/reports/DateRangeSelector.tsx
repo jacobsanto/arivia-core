@@ -6,6 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface DateRange {
   from: Date | undefined;
@@ -23,14 +24,19 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   onChange,
   className
 }) => {
+  const isMobile = useIsMobile();
+
   const formattedValue = () => {
     if (value.from && value.to) {
+      if (isMobile) {
+        return `${format(value.from, 'MM/dd')} - ${format(value.to, 'MM/dd')}`;
+      }
       return `${format(value.from, 'PPP')} - ${format(value.to, 'PPP')}`;
     }
     if (value.from) {
-      return format(value.from, 'PPP');
+      return isMobile ? format(value.from, 'MM/dd') : format(value.from, 'PPP');
     }
-    return "Select date range";
+    return "Select date";
   };
 
   return (
@@ -38,10 +44,10 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={cn("w-full justify-start text-left font-normal", className)}
+          className={cn("w-full justify-start text-left font-normal overflow-hidden", className)}
         >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {formattedValue()}
+          <CalendarIcon className="mr-2 h-4 w-4 flex-shrink-0" />
+          <span className="truncate">{formattedValue()}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom">
@@ -57,7 +63,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
               to: range?.to
             });
           }} 
-          numberOfMonths={1} 
+          numberOfMonths={isMobile ? 1 : 2} 
           initialFocus 
           className="pointer-events-auto" 
         />

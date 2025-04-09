@@ -29,15 +29,25 @@ export const PropertyReporting = () => {
       <Card>
         <CardContent className="pt-6">
           <h3 className="text-lg font-medium mb-4">Task Completion by Property</h3>
-          <div className="h-80">
+          <div className="h-80 chart-responsive">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={completionData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                margin={isMobile ? { top: 5, right: 10, left: 0, bottom: 60 } : { top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" fontSize={12} angle={isMobile ? -45 : 0} textAnchor={isMobile ? "end" : "middle"} height={60} />
-                <YAxis />
+                <XAxis 
+                  dataKey="name" 
+                  fontSize={12} 
+                  angle={isMobile ? -45 : 0} 
+                  textAnchor={isMobile ? "end" : "middle"} 
+                  height={60}
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                />
+                <YAxis 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  width={isMobile ? 30 : 40}
+                />
                 <Tooltip />
                 <Bar dataKey="completed" name="Total Completed" fill={barColors.completed} />
                 <Bar dataKey="rejected" name="Rejected" fill={barColors.rejected} />
@@ -48,10 +58,11 @@ export const PropertyReporting = () => {
         </CardContent>
       </Card>
       
-      <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
-          <div className="overflow-x-auto">
+      <div className="mobile-scroll">
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
+            {/* Table will automatically have mobile-scroll from our updated Table component */}
             <Table>
               <TableHeader>
                 <TableRow>
@@ -86,9 +97,9 @@ export const PropertyReporting = () => {
                 </TableRow>
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
