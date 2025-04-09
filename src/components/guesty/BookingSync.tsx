@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, ArrowDown, ArrowUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { toastService } from '@/services/toast/toast.service';
-import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
+import DateRangeFilter from '@/components/dashboard/DateRangeFilter';
 
 export default function BookingSync() {
   const { reservations } = useGuesty();
