@@ -2,7 +2,9 @@
 import React from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
+import MobileDashboard from "@/components/dashboard/MobileDashboard";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Dashboard = () => {
   const {
@@ -12,6 +14,7 @@ const Dashboard = () => {
     handlePropertyChange,
     handleDateRangeChange
   } = useDashboard();
+  const isMobile = useIsMobile();
 
   // If data is not yet loaded, show loading state
   if (!dashboardData) {
@@ -27,7 +30,11 @@ const Dashboard = () => {
         onDateRangeChange={handleDateRangeChange}
       />
       
-      <DashboardContent dashboardData={dashboardData} />
+      {isMobile ? (
+        <MobileDashboard dashboardData={dashboardData} />
+      ) : (
+        <DashboardContent dashboardData={dashboardData} />
+      )}
     </div>
   );
 };

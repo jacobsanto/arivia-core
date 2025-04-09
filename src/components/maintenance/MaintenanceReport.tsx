@@ -1,141 +1,140 @@
 
-import React from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { MaintenanceTask, MaintenanceReport as MaintenanceReportType } from "@/hooks/useMaintenanceTasks";
+import { Label } from "@/components/ui/label";
+import { MaintenanceReport as ReportType, MaintenanceTask } from "@/types/maintenanceTypes";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MaintenanceReportProps {
   task: MaintenanceTask;
   onClose: () => void;
-  onSubmit: (report: MaintenanceReportType) => void;
-  report: MaintenanceReportType;
+  onSubmit: (report: ReportType) => void;
+  report: ReportType;
 }
-
-const reportSchema = z.object({
-  timeSpent: z.string().min(1, "Time spent is required"),
-  materialsUsed: z.string().min(1, "Materials used is required"),
-  cost: z.string().min(1, "Cost is required"),
-  notes: z.string(),
-});
 
 const MaintenanceReport = ({
   task,
   onClose,
   onSubmit,
-  report,
+  report: initialReport,
 }: MaintenanceReportProps) => {
-  const form = useForm<z.infer<typeof reportSchema>>({
-    resolver: zodResolver(reportSchema),
-    defaultValues: {
-      timeSpent: report.timeSpent || "",
-      materialsUsed: report.materialsUsed || "",
-      cost: report.cost || "",
-      notes: report.notes || "",
-    },
-  });
+  const [report, setReport] = useState<ReportType>(initialReport);
+  const isMobile = useIsMobile();
 
-  const handleSubmit = (values: z.infer<typeof reportSchema>) => {
-    // Ensure all required fields are present in the report
-    const completedReport: MaintenanceReportType = {
-      timeSpent: values.timeSpent,
-      materialsUsed: values.materialsUsed,
-      cost: values.cost,
-      notes: values.notes,
-    };
-    
-    onSubmit(completedReport);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setReport((prev) => ({ ...prev, [name]: value }));
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
-      <div className="bg-background rounded-lg shadow-lg w-full max-w-md p-6">
-        <h2 className="text-2xl font-bold mb-6">Maintenance Report</h2>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="timeSpent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Time Spent</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. 2 hours 30 minutes" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="materialsUsed"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Materials Used</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Replacement parts, tools" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cost</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. $125.75" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Resolution Notes</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe how the issue was resolved and any follow-up needed" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                Complete Task
-              </Button>
-            </div>
-          </form>
-        </Form>
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(report);
+  };
+
+  const content = (
+    <>
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">{task.title}</h2>
+        <p className="text-sm text-muted-foreground">{task.property}</p>
       </div>
-    </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="timeSpent">Time Spent</Label>
+            <Input
+              id="timeSpent"
+              name="timeSpent"
+              placeholder="e.g. 1.5 hours"
+              value={report.timeSpent}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="cost">Cost</Label>
+            <Input
+              id="cost"
+              name="cost"
+              placeholder="e.g. €25.00"
+              value={report.cost}
+              onChange={handleInputChange}
+              required
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="materialsUsed">Materials Used</Label>
+          <Input
+            id="materialsUsed"
+            name="materialsUsed"
+            placeholder="e.g. Pipe fittings, sealant"
+            value={report.materialsUsed}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            id="notes"
+            name="notes"
+            placeholder="Additional notes or comments"
+            className="min-h-[120px]"
+            value={report.notes}
+            onChange={handleInputChange}
+            required
+          />
+        </div>
+        <div className="flex justify-between pt-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit">Submit Report</Button>
+        </div>
+      </form>
+    </>
+  );
+
+  // Use a Sheet component for mobile and Dialog for desktop
+  if (isMobile) {
+    return (
+      <Sheet open={true} onOpenChange={onClose}>
+        <SheetContent side="bottom" className="h-[90vh] pt-6 overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Maintenance Report</SheetTitle>
+          </SheetHeader>
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Maintenance Report</DialogTitle>
+        </DialogHeader>
+        {content}
+      </DialogContent>
+    </Dialog>
   );
 };
 

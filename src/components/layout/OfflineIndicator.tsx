@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 const OfflineIndicator = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [hasPendingSync, setHasPendingSync] = useState(offlineManager.hasUnsyncedData());
+  const [syncCount, setSyncCount] = useState(offlineManager.getOfflineDataSummary().total);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -15,7 +16,9 @@ const OfflineIndicator = () => {
     
     // Check for pending sync data
     const checkPendingSync = () => {
-      setHasPendingSync(offlineManager.hasUnsyncedData());
+      const summary = offlineManager.getOfflineDataSummary();
+      setHasPendingSync(summary.total > 0);
+      setSyncCount(summary.total);
     };
     
     window.addEventListener('online', handleOnline);
@@ -27,12 +30,19 @@ const OfflineIndicator = () => {
     // Update once when component mounts
     checkPendingSync();
     
+    // If we come back online and have pending data, try to sync automatically
+    if (isOnline && hasPendingSync) {
+      setTimeout(() => {
+        offlineManager.syncOfflineData().then(checkPendingSync);
+      }, 3000);
+    }
+    
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
       clearInterval(intervalId);
     };
-  }, []);
+  }, [isOnline, hasPendingSync]);
 
   const handleSyncNow = () => {
     if (!isOnline) {
@@ -45,20 +55,21 @@ const OfflineIndicator = () => {
     offlineManager.syncOfflineData().then(() => {
       // Update sync status after sync completes
       setHasPendingSync(offlineManager.hasUnsyncedData());
+      setSyncCount(offlineManager.getOfflineDataSummary().total);
     });
   };
 
   if (isOnline && !hasPendingSync) return null;
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg shadow-lg px-3 py-2 ${
+    <div className={`fixed bottom-20 md:bottom-4 right-4 z-50 flex items-center gap-2 rounded-lg shadow-lg px-3 py-2 ${
       isOnline ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800'
     }`}>
       {isOnline ? (
         <>
           <Wifi size={18} />
           <span className="text-sm font-medium">
-            {hasPendingSync ? 'Unsynced Changes' : 'Online'}
+            {hasPendingSync ? `${syncCount} Unsynced Changes` : 'Online'}
           </span>
           {hasPendingSync && (
             <Button 

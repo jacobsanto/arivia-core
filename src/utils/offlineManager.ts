@@ -1,278 +1,130 @@
 
-import { toastService } from "@/services/toast/toast.service";
+/**
+ * Utility for managing offline data and sync operations
+ */
+import { toast } from "sonner";
 
-// Types for offline data
-interface OfflineData {
-  tasks: OfflineTask[];
-  photos: OfflinePhoto[];
-  forms: OfflineForm[];
+type SyncableData = {
+  id: string;
   timestamp: number;
-}
+  entityType: string;
+  action: 'create' | 'update' | 'delete';
+  data: any;
+};
 
-interface OfflineTask {
-  id: string;
-  title: string;
-  description: string;
-  status: string;
-  assignedTo: string;
-  createdAt: string;
-  updatedAt: string;
-  isSynced: boolean;
-}
-
-interface OfflinePhoto {
-  id: string;
-  relatedItemId: string; // ID of the task/form the photo is related to
-  dataUrl: string; // Base64 string of the image
-  createdAt: string;
-  isSynced: boolean;
-}
-
-interface OfflineForm {
-  id: string;
-  formType: string;
-  data: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
-  isSynced: boolean;
-}
-
-// Main class to handle offline functionality
 class OfflineManager {
-  private storageKey: string = 'arivia_offline_data';
-  private networkStatus: boolean = navigator.onLine;
-  private syncInProgress: boolean = false;
-
-  constructor() {
-    // Initialize offline data if not exists
-    if (!localStorage.getItem(this.storageKey)) {
-      this.resetOfflineData();
-    }
-
-    // Set up event listeners for online/offline status
-    window.addEventListener('online', this.handleNetworkStatusChange.bind(this));
-    window.addEventListener('offline', this.handleNetworkStatusChange.bind(this));
-  }
-
-  // Get offline data from localStorage
-  private getOfflineData(): OfflineData {
-    const data = localStorage.getItem(this.storageKey);
-    return data ? JSON.parse(data) : this.resetOfflineData();
-  }
-
-  // Save offline data to localStorage
-  private saveOfflineData(data: OfflineData): void {
-    localStorage.setItem(this.storageKey, JSON.stringify({
-      ...data,
-      timestamp: Date.now()
-    }));
-  }
-
-  // Reset offline data
-  private resetOfflineData(): OfflineData {
-    const emptyData: OfflineData = {
-      tasks: [],
-      photos: [],
-      forms: [],
-      timestamp: Date.now()
-    };
-    localStorage.setItem(this.storageKey, JSON.stringify(emptyData));
-    return emptyData;
-  }
-
-  // Handle network status changes
-  private handleNetworkStatusChange(): void {
-    const isOnline = navigator.onLine;
-    this.networkStatus = isOnline;
-    
-    if (isOnline) {
-      toastService.info("You're back online!", {
-        description: "Syncing your data now..."
-      });
-      this.syncOfflineData();
-    } else {
-      toastService.warning("You're offline", {
-        description: "Don't worry, changes will be saved and synced when you're back online."
-      });
-    }
-  }
-
-  // Check if device is online
-  public isOnline(): boolean {
-    return this.networkStatus;
-  }
-
-  // Save a task offline
-  public saveTask(task: OfflineTask): string {
-    const data = this.getOfflineData();
-    const taskId = task.id || `task_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
-    const newTask: OfflineTask = {
-      ...task,
-      id: taskId,
-      isSynced: false,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Update existing task or add new one
-    const taskIndex = data.tasks.findIndex(t => t.id === taskId);
-    
-    if (taskIndex >= 0) {
-      data.tasks[taskIndex] = newTask;
-    } else {
-      data.tasks.push(newTask);
-    }
-    
-    this.saveOfflineData(data);
-    return taskId;
-  }
-
-  // Save a photo offline (base64)
-  public savePhoto(photo: Omit<OfflinePhoto, 'id' | 'isSynced' | 'createdAt'>): string {
-    const data = this.getOfflineData();
-    const photoId = `photo_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
-    const newPhoto: OfflinePhoto = {
-      ...photo,
-      id: photoId,
-      isSynced: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    data.photos.push(newPhoto);
-    this.saveOfflineData(data);
-    
-    return photoId;
-  }
-
-  // Save a form offline
-  public saveForm(form: Omit<OfflineForm, 'id' | 'isSynced' | 'updatedAt'>): string {
-    const data = this.getOfflineData();
-    // Generate a new ID if one isn't provided (since we're using Omit to exclude id)
-    const formId = `form_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    
-    const newForm: OfflineForm = {
-      ...form,
-      id: formId,
-      isSynced: false,
-      updatedAt: new Date().toISOString()
-    };
-    
-    // Update existing form or add new one - using our generated formId
-    const formIndex = data.forms.findIndex(f => f.id === formId);
-    
-    if (formIndex >= 0) {
-      data.forms[formIndex] = newForm;
-    } else {
-      data.forms.push(newForm);
-    }
-    
-    this.saveOfflineData(data);
-    return formId;
-  }
-
-  // Get all offline tasks
-  public getTasks(): OfflineTask[] {
-    return this.getOfflineData().tasks;
-  }
-
-  // Get all offline photos
-  public getPhotos(): OfflinePhoto[] {
-    return this.getOfflineData().photos;
-  }
-
-  // Get all offline forms
-  public getForms(): OfflineForm[] {
-    return this.getOfflineData().forms;
-  }
-
-  // Check if there's any unsynced data
+  private STORAGE_KEY = 'arivia_offline_data';
+  
+  /**
+   * Check if there is unsynchronized data
+   */
   public hasUnsyncedData(): boolean {
-    const data = this.getOfflineData();
-    return (
-      data.tasks.some(task => !task.isSynced) ||
-      data.photos.some(photo => !photo.isSynced) ||
-      data.forms.some(form => !form.isSynced)
-    );
+    const offlineData = this.getOfflineData();
+    return offlineData.length > 0;
   }
-
-  // Sync all offline data when back online
-  public async syncOfflineData(): Promise<void> {
-    if (!this.networkStatus || this.syncInProgress) return;
+  
+  /**
+   * Get all stored offline data
+   */
+  public getOfflineData(): SyncableData[] {
+    try {
+      const storedData = localStorage.getItem(this.STORAGE_KEY);
+      return storedData ? JSON.parse(storedData) : [];
+    } catch (error) {
+      console.error('Error reading offline data:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Store data for offline use
+   */
+  public storeOfflineData(entityType: string, action: 'create' | 'update' | 'delete', data: any): void {
+    try {
+      const offlineData = this.getOfflineData();
+      
+      // Create a new data entry
+      const newEntry: SyncableData = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: Date.now(),
+        entityType,
+        action,
+        data
+      };
+      
+      // Add to storage
+      offlineData.push(newEntry);
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(offlineData));
+      
+      // Show toast notification
+      toast.success('Saved offline', {
+        description: 'Changes will sync when you reconnect.'
+      });
+    } catch (error) {
+      console.error('Error storing offline data:', error);
+      toast.error('Failed to save offline', {
+        description: 'Please try again.'
+      });
+    }
+  }
+  
+  /**
+   * Sync offline data when online
+   */
+  public async syncOfflineData(): Promise<boolean> {
+    const offlineData = this.getOfflineData();
     
-    this.syncInProgress = true;
+    if (offlineData.length === 0) {
+      return true; // Nothing to sync
+    }
+    
+    // Show toast that sync started
+    toast('Syncing data...', {
+      duration: 2000
+    });
     
     try {
-      const data = this.getOfflineData();
+      // In a real app, this would be an API call to sync data
+      // For now, we'll simulate success after a delay
+      console.log('Syncing offline data:', offlineData);
       
-      // Simulate API sync for tasks
-      const unsyncedTasks = data.tasks.filter(task => !task.isSynced);
-      if (unsyncedTasks.length > 0) {
-        // In a real app, you would send these to your API
-        console.log('Syncing tasks:', unsyncedTasks);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-        
-        // Mark tasks as synced
-        data.tasks = data.tasks.map(task => ({
-          ...task,
-          isSynced: true
-        }));
-      }
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API delay
       
-      // Simulate API sync for photos
-      const unsyncedPhotos = data.photos.filter(photo => !photo.isSynced);
-      if (unsyncedPhotos.length > 0) {
-        // In a real app, you would upload these to your API
-        console.log('Syncing photos:', unsyncedPhotos);
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
-        
-        // Mark photos as synced
-        data.photos = data.photos.map(photo => ({
-          ...photo,
-          isSynced: true
-        }));
-      }
+      // Clear synced data
+      localStorage.removeItem(this.STORAGE_KEY);
       
-      // Simulate API sync for forms
-      const unsyncedForms = data.forms.filter(form => !form.isSynced);
-      if (unsyncedForms.length > 0) {
-        // In a real app, you would send these to your API
-        console.log('Syncing forms:', unsyncedForms);
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate API call
-        
-        // Mark forms as synced
-        data.forms = data.forms.map(form => ({
-          ...form,
-          isSynced: true
-        }));
-      }
+      // Show success toast
+      toast.success('Data synchronized successfully', {
+        description: `${offlineData.length} items synchronized`
+      });
       
-      // Save updated sync status
-      this.saveOfflineData(data);
-      
-      if (unsyncedTasks.length > 0 || unsyncedPhotos.length > 0 || unsyncedForms.length > 0) {
-        toastService.success('Sync completed', {
-          description: `Synced ${unsyncedTasks.length} tasks, ${unsyncedPhotos.length} photos, and ${unsyncedForms.length} forms.`
-        });
-      }
+      return true;
     } catch (error) {
       console.error('Error syncing offline data:', error);
-      toastService.error('Sync failed', {
-        description: 'There was an error syncing your offline data. We\'ll try again later.'
+      toast.error('Sync failed', {
+        description: 'Please try again later.'
       });
-    } finally {
-      this.syncInProgress = false;
+      return false;
     }
   }
-
-  // Clear all offline data
-  public clearOfflineData(): void {
-    this.resetOfflineData();
-    toastService.info('Offline data cleared', {
-      description: 'All cached data has been removed.'
-    });
+  
+  /**
+   * Get data counts by type
+   */
+  public getOfflineDataSummary() {
+    const offlineData = this.getOfflineData();
+    
+    // Group by entityType
+    const summary = offlineData.reduce((acc: Record<string, number>, item) => {
+      acc[item.entityType] = (acc[item.entityType] || 0) + 1;
+      return acc;
+    }, {});
+    
+    return {
+      total: offlineData.length,
+      summary
+    };
   }
 }
 
-// Create a singleton instance
 export const offlineManager = new OfflineManager();

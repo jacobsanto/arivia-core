@@ -1,28 +1,52 @@
+
 import React from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 interface PropertyFilterProps {
   selectedProperty: string;
-  onPropertyChange: (property: string) => void;
+  onPropertyChange: (value: string) => void;
 }
+
 const PropertyFilter: React.FC<PropertyFilterProps> = ({
   selectedProperty,
   onPropertyChange
 }) => {
-  return <div className="w-full sm:w-64 space-y-2">
-      <label className="text-sm font-medium mx-[5px]">Filter by Property</label>
+  const isMobile = useIsMobile();
+  
+  const properties = [
+    { id: "all", name: "All Properties" },
+    { id: "villa-caldera", name: "Villa Caldera" },
+    { id: "villa-azure", name: "Villa Azure" },
+    { id: "villa-sunset", name: "Villa Sunset" },
+    { id: "villa-oceana", name: "Villa Oceana" },
+    { id: "villa-paradiso", name: "Villa Paradiso" },
+  ];
+
+  return (
+    <div className="space-y-1.5">
+      {!isMobile && <Label htmlFor="property-filter">Property</Label>}
       <Select value={selectedProperty} onValueChange={onPropertyChange}>
-        <SelectTrigger className="w-full">
-          <SelectValue placeholder="Select property" />
+        <SelectTrigger className={isMobile ? "h-10" : ""} id="property-filter">
+          <SelectValue placeholder="Select Property" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Properties</SelectItem>
-          <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
-          <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
-          <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
-          <SelectItem value="Villa Paradiso">Villa Paradiso</SelectItem>
-          <SelectItem value="Villa Azure">Villa Azure</SelectItem>
+          {properties.map(property => (
+            <SelectItem key={property.id} value={property.id}>
+              {property.name}
+            </SelectItem>
+          ))}
         </SelectContent>
       </Select>
-    </div>;
+    </div>
+  );
 };
+
 export default PropertyFilter;

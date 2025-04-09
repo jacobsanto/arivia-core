@@ -35,10 +35,12 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             selectedProperty={selectedProperty}
             onPropertyChange={onPropertyChange}
           />
-          <DateRangeSelector 
-            value={dateRange} 
-            onChange={onDateRangeChange} 
-          />
+          {!isMobile && (
+            <DateRangeSelector 
+              value={dateRange} 
+              onChange={onDateRangeChange} 
+            />
+          )}
         </div>
         
         <Button 
