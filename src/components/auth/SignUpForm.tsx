@@ -1,13 +1,10 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
-import { ROLE_DETAILS, UserRole } from "@/types/auth";
 
 interface SignUpFormProps {
   isMobile?: boolean;
@@ -15,13 +12,13 @@ interface SignUpFormProps {
 
 const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
   const navigate = useNavigate();
-  const { register } = useUser();
+  const { signup } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [signUpData, setSignUpData] = useState({
-    name: "",
+    fullName: "",
     email: "",
     password: "",
-    role: "staff" as UserRole,
+    confirmPassword: ""
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -31,34 +28,23 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
     }));
   };
 
-  const handleRoleChange = (value: string) => {
-    setSignUpData(prev => ({
-      ...prev,
-      role: value as UserRole
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (signUpData.password !== signUpData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+    
     setIsLoading(true);
-
+    
     try {
-      const success = await register(
-        signUpData.email, 
-        signUpData.password, 
-        signUpData.name, 
-        signUpData.role
-      );
-      
-      if (success) {
-        toast.success("Registration successful");
-        navigate("/");
-      } else {
-        toast.error("Registration failed");
-      }
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred during registration");
-      console.error("Registration error:", error);
+      await signup(signUpData.email, signUpData.password, signUpData.fullName);
+      toast.success("Account created successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to create account");
+      console.error("Signup error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -67,12 +53,12 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
   return (
     <form onSubmit={handleSubmit} className={`space-y-${isMobile ? '4' : '6'}`}>
       <div className="space-y-2">
-        <Label htmlFor="name">Full Name</Label>
+        <Label htmlFor="fullName">Full Name</Label>
         <Input 
-          id="name" 
-          name="name"
+          id="fullName" 
+          name="fullName"
           placeholder="John Doe" 
-          value={signUpData.name} 
+          value={signUpData.fullName} 
           onChange={handleChange}
           required
           className={isMobile ? "h-10" : ""}
@@ -109,27 +95,20 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
         </p>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="role">Role</Label>
-        <Select 
-          value={signUpData.role}
-          onValueChange={handleRoleChange}
-        >
-          <SelectTrigger id="role" className={isMobile ? "h-10" : ""}>
-            <SelectValue placeholder="Select Role" />
-          </SelectTrigger>
-          <SelectContent>
-            {Object.entries(ROLE_DETAILS)
-              .filter(([key]) => key !== "superadmin") // Filter out superadmin
-              .map(([key, { title }]) => (
-                <SelectItem key={key} value={key}>
-                  {title}
-                </SelectItem>
-              ))
-            }
-          </SelectContent>
-        </Select>
+        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Input 
+          id="confirmPassword" 
+          name="confirmPassword"
+          type="password" 
+          placeholder="••••••••" 
+          value={signUpData.confirmPassword} 
+          onChange={handleChange}
+          required
+          minLength={8}
+          className={isMobile ? "h-10" : ""}
+        />
         <p className="text-xs text-muted-foreground">
-          Your role determines your access level in the system
+          Confirm your password
         </p>
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>

@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { TrendingUp, Calendar, DollarSign } from "lucide-react";
 import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
 import { PieChart, Pie, Cell } from "recharts";

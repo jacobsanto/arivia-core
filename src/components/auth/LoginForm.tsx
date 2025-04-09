@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,14 +31,9 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
     setIsLoading(true);
 
     try {
-      const success = await login(loginData.email, loginData.password);
-      
-      if (success) {
-        toast.success("Login successful");
-        navigate("/");
-      } else {
-        toast.error("Invalid email or password");
-      }
+      await login(loginData.email, loginData.password);
+      toast.success("Login successful");
+      navigate("/");
     } catch (error) {
       toast.error("An error occurred during login");
       console.error("Login error:", error);
