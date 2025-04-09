@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePermissions } from "@/hooks/usePermissions";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TaskFiltersProps {
   searchQuery: string;
@@ -54,13 +55,25 @@ const TaskFilters = ({
         onValueChange={onTabChange}
         className="w-full"
       >
-        <TabsList className={`grid w-full ${isManager ? 'grid-cols-5' : 'grid-cols-4'}`}>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="inProgress">In Progress</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          {isManager && <TabsTrigger value="needsApproval">Needs Approval</TabsTrigger>}
-        </TabsList>
+        {isMobile ? (
+          <ScrollArea orientation="horizontal" className="w-full pb-2">
+            <TabsList className="inline-flex w-auto min-w-full">
+              <TabsTrigger value="all" className="whitespace-nowrap px-3">All</TabsTrigger>
+              <TabsTrigger value="pending" className="whitespace-nowrap px-3">Pending</TabsTrigger>
+              <TabsTrigger value="inProgress" className="whitespace-nowrap px-3">In Progress</TabsTrigger>
+              <TabsTrigger value="completed" className="whitespace-nowrap px-3">Completed</TabsTrigger>
+              {isManager && <TabsTrigger value="needsApproval" className="whitespace-nowrap px-3">Needs Approval</TabsTrigger>}
+            </TabsList>
+          </ScrollArea>
+        ) : (
+          <TabsList className={`grid w-full ${isManager ? 'grid-cols-5' : 'grid-cols-4'}`}>
+            <TabsTrigger value="all">All</TabsTrigger>
+            <TabsTrigger value="pending">Pending</TabsTrigger>
+            <TabsTrigger value="inProgress">In Progress</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
+            {isManager && <TabsTrigger value="needsApproval">Needs Approval</TabsTrigger>}
+          </TabsList>
+        )}
       </Tabs>
     </div>
   );

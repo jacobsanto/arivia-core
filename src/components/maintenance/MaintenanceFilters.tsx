@@ -2,6 +2,8 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Select,
   SelectContent,
@@ -28,6 +30,7 @@ const MaintenanceFilters = ({
   onPriorityFilter,
 }: MaintenanceFiltersProps) => {
   const properties = ["Villa Caldera", "Villa Azure", "Villa Sunset", "Villa Oceana"];
+  const isMobile = useIsMobile();
   
   return (
     <div className="space-y-4">
@@ -38,7 +41,7 @@ const MaintenanceFilters = ({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Select onValueChange={(value) => onPropertyFilter(value)}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Properties" />
@@ -68,12 +71,23 @@ const MaintenanceFilters = ({
       </div>
 
       <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
-          <TabsTrigger value="pending" className="flex-1 sm:flex-none">Pending</TabsTrigger>
-          <TabsTrigger value="inProgress" className="flex-1 sm:flex-none">In Progress</TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1 sm:flex-none">Completed</TabsTrigger>
-        </TabsList>
+        {isMobile ? (
+          <ScrollArea orientation="horizontal" className="w-full pb-2">
+            <TabsList className="inline-flex w-auto min-w-full">
+              <TabsTrigger value="all" className="whitespace-nowrap px-3">All</TabsTrigger>
+              <TabsTrigger value="pending" className="whitespace-nowrap px-3">Pending</TabsTrigger>
+              <TabsTrigger value="inProgress" className="whitespace-nowrap px-3">In Progress</TabsTrigger>
+              <TabsTrigger value="completed" className="whitespace-nowrap px-3">Completed</TabsTrigger>
+            </TabsList>
+          </ScrollArea>
+        ) : (
+          <TabsList className="w-full sm:w-auto">
+            <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 sm:flex-none">Pending</TabsTrigger>
+            <TabsTrigger value="inProgress" className="flex-1 sm:flex-none">In Progress</TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 sm:flex-none">Completed</TabsTrigger>
+          </TabsList>
+        )}
       </Tabs>
     </div>
   );

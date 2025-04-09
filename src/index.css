@@ -1,4 +1,5 @@
 
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -163,4 +164,18 @@ table {
   .w-full-mobile {
     width: 100% !important;
   }
+  
+  /* Horizontal scrolling tabs */
+  .scroll-tabs {
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .scroll-tabs::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
 }
+
