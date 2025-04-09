@@ -13,10 +13,19 @@ import OrderForm from "@/components/inventory/orders/OrderForm";
 import OrderList from "@/components/inventory/orders/OrderList";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { OrderProvider } from "@/contexts/OrderContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileInventory from "@/components/inventory/MobileInventory";
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const isMobile = useIsMobile();
 
+  // Render mobile-specific UI
+  if (isMobile) {
+    return <MobileInventory />;
+  }
+
+  // Desktop UI
   return (
     <InventoryProvider>
       <OrderProvider>

@@ -4,6 +4,7 @@ import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MobileNavigation from "./MobileNavigation";
+import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const AppLayout = () => {
@@ -21,7 +22,7 @@ const AppLayout = () => {
       
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header onMobileMenuToggle={toggleMobileMenu} />
-        <main className="flex-1 overflow-y-auto overflow-x-hidden p-2 md:p-6">
+        <main className={`flex-1 overflow-y-auto overflow-x-hidden p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
           <div className="max-w-full">
             <Outlet />
           </div>
@@ -29,7 +30,10 @@ const AppLayout = () => {
         
         {/* Mobile navigation - only visible on mobile */}
         {isMobile && (
-          <MobileNavigation isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+          <>
+            <MobileNavigation isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+            <MobileBottomNav onOpenMenu={toggleMobileMenu} />
+          </>
         )}
       </div>
     </div>

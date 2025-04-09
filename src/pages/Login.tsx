@@ -8,10 +8,17 @@ import { useNavigate } from "react-router-dom";
 import { AlertCircle, ShieldCheck, Info } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import CreateSuperAdmin from "@/components/auth/CreateSuperAdmin";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileLogin from "@/components/auth/MobileLogin";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return <MobileLogin />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary to-blue-700 p-4 sm:p-6 md:p-8">

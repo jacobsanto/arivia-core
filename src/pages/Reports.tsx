@@ -6,6 +6,8 @@ import { ReportsHeader } from '@/components/reports/ReportsHeader';
 import { ReportsFilters } from '@/components/reports/ReportsFilters';
 import { ReportingContent } from '@/components/reports/ReportingContent';
 import { AnalyticsContent } from '@/components/reports/AnalyticsContent';
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileReports from '@/components/reports/MobileReports';
 
 const Reports = () => {
   // Initialize the reports hook for task reports
@@ -15,6 +17,7 @@ const Reports = () => {
     from: undefined,
     to: undefined
   });
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     // Load reports when the component mounts
@@ -37,6 +40,21 @@ const Reports = () => {
     });
   };
 
+  // Render mobile UI
+  if (isMobile) {
+    return (
+      <div className="container max-w-7xl mx-auto p-2">
+        <MobileReports 
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          reports={reports}
+          isLoading={isLoading}
+        />
+      </div>
+    );
+  }
+
+  // Desktop UI
   return (
     <div className="w-full max-w-full overflow-hidden">
       <div className="container max-w-7xl mx-auto p-2 md:p-4 space-y-6">
