@@ -1,6 +1,6 @@
 
 import React from "react";
-import AnalyticsDashboard from "@/components/reports/AnalyticsDashboard";
+import { AnalyticsContent } from "@/components/reports/AnalyticsContent";
 import MobileAnalyticsDashboard from "@/components/reports/mobile/MobileAnalyticsDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -17,7 +17,7 @@ const Analytics = () => {
       {isMobile ? (
         <MobileAnalyticsDashboard />
       ) : (
-        <AnalyticsDashboard />
+        <AnalyticsContent />
       )}
     </div>
   );
