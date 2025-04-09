@@ -13,7 +13,8 @@ import {
   updateAvatar,
   removeUser,
   syncUserWithProfile,
-  updateUserProfile
+  updateUserProfile,
+  signup // Import the signup function
 } from "./auth/operations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -35,6 +36,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleLogin = async (email: string, password: string) => {
     await login(email, password, setUser, setLastAuthTime, setIsLoading);
+  };
+
+  // Add the signup handler
+  const handleSignup = async (email: string, password: string, fullName: string) => {
+    await signup(email, password, fullName, setUser, setLastAuthTime, setIsLoading);
   };
 
   const handleLogout = () => {
@@ -94,7 +100,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       session,
       isLoading, 
-      login: handleLogin, 
+      login: handleLogin,
+      signup: handleSignup, // Add the signup method
       logout: handleLogout, 
       hasPermission: handleHasPermission, 
       hasFeatureAccess: handleHasFeatureAccess,

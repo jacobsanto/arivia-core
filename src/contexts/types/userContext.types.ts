@@ -6,6 +6,7 @@ export interface UserContextType {
   session: Session | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, fullName: string) => Promise<void>; // Added the missing signup method
   logout: () => void;
   hasPermission: (roles: UserRole[]) => boolean;
   hasFeatureAccess: (featureKey: string) => boolean;
