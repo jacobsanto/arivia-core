@@ -20,13 +20,13 @@ export const ReportsFilters: React.FC<ReportsFiltersProps> = ({ dateRange, setDa
         <Filter className="h-4 w-4" /> Filters:
       </div>
       <div className="flex flex-wrap gap-2">
-        <Badge variant="outline" className="bg-muted/50">
+        <Badge variant="outline" className="bg-muted/50 text-nowrap">
           <Clock className="mr-1 h-3 w-3" /> Last 30 Days
         </Badge>
-        <Badge variant="outline" className="bg-muted/50">
+        <Badge variant="outline" className="bg-muted/50 text-nowrap">
           <Layers className="mr-1 h-3 w-3" /> All Properties
         </Badge>
-        <Button variant="ghost" size="sm" className="text-xs h-7">
+        <Button variant="ghost" size="sm" className="text-xs h-7 text-nowrap">
           + Add Filter
         </Button>
       </div>

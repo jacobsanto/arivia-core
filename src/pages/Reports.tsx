@@ -46,7 +46,7 @@ const Reports = () => {
           onCreateReport={handleCreateReport}
         />
         
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full overflow-hidden">
           <ReportsFilters 
             dateRange={dateRange}
             setDateRange={setDateRange}
@@ -54,12 +54,16 @@ const Reports = () => {
         </div>
         
         {activeView === 'reporting' ? (
-          <ReportingContent 
-            reportsCount={reports.length} 
-            isLoading={isLoading} 
-          />
+          <div className="overflow-hidden">
+            <ReportingContent 
+              reportsCount={reports.length} 
+              isLoading={isLoading} 
+            />
+          </div>
         ) : (
-          <AnalyticsContent />
+          <div className="overflow-hidden">
+            <AnalyticsContent />
+          </div>
         )}
       </div>
     </div>
