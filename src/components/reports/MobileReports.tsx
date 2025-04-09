@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -8,10 +7,11 @@ import { FileText, BarChart, Plus, PieChart, Calendar, ChevronRight } from "luci
 import { Badge } from "@/components/ui/badge";
 import MobileReportsList from './mobile/MobileReportsList';
 import MobileAnalyticsDashboard from './mobile/MobileAnalyticsDashboard';
+import { DateRange } from "./DateRangeSelector";
 
 interface MobileReportsProps {
-  dateRange: {from: Date | undefined, to: Date | undefined};
-  setDateRange: (range: {from: Date | undefined, to: Date | undefined}) => void;
+  dateRange: DateRange;
+  setDateRange: (range: DateRange) => void;
   reports: any[];
   isLoading: boolean;
 }
@@ -66,7 +66,10 @@ const MobileReports: React.FC<MobileReportsProps> = ({
       </div>
       
       <div className="pb-2">
-        <DatePickerWithRange value={dateRange} onChange={setDateRange} />
+        <DatePickerWithRange 
+          value={dateRange} 
+          onChange={(newRange) => setDateRange(newRange || { from: undefined, to: undefined })} 
+        />
       </div>
       
       <Tabs value={activeView} className="space-y-4">

@@ -8,12 +8,13 @@ import { ReportingContent } from '@/components/reports/ReportingContent';
 import { AnalyticsContent } from '@/components/reports/AnalyticsContent';
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileReports from '@/components/reports/MobileReports';
+import { DateRange } from '@/components/reports/DateRangeSelector';
 
 const Reports = () => {
   // Initialize the reports hook for task reports
   const { reports, isLoading, loadReports } = useReports('task');
   const [activeView, setActiveView] = useState('reporting'); // reporting, analytics
-  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined
   });

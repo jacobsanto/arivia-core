@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
@@ -26,7 +25,6 @@ import { Badge } from "@/components/ui/badge";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 
 const MobileAnalyticsView = () => {
-  // Change the state type to match the DateRange type from DateRangeSelector
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined
@@ -34,7 +32,6 @@ const MobileAnalyticsView = () => {
   
   const [activeSection, setActiveSection] = useState<'overview' | 'financial' | 'operational' | 'occupancy'>('overview');
   
-  // Mock data for charts
   const revenueData = [
     { name: 'Jan', value: 12000 },
     { name: 'Feb', value: 15000 },
@@ -64,7 +61,6 @@ const MobileAnalyticsView = () => {
 
   return (
     <div className="space-y-4 pb-20">
-      {/* Header with title and date filter */}
       <div className="flex flex-col space-y-3">
         <h1 className="text-2xl font-bold tracking-tight flex items-center">
           <BarChart className="mr-2 h-6 w-6" /> Analytics
@@ -72,11 +68,12 @@ const MobileAnalyticsView = () => {
         
         <DatePickerWithRange 
           value={dateRange} 
-          onChange={(newRange) => setDateRange(newRange || { from: undefined, to: undefined })} 
+          onChange={(newRange) => {
+            setDateRange(newRange || { from: undefined, to: undefined });
+          }} 
         />
       </div>
       
-      {/* Quick Analytics Section Switcher */}
       <ScrollArea className="w-full whitespace-nowrap pb-2">
         <div className="flex gap-2 w-max">
           <Button 
@@ -114,7 +111,6 @@ const MobileAnalyticsView = () => {
         </div>
       </ScrollArea>
       
-      {/* KPI Summary Cards */}
       <div className="grid grid-cols-2 gap-3">
         <Card className="bg-blue-50 border-blue-100">
           <CardContent className="p-4 flex flex-col items-center justify-center">
@@ -137,10 +133,8 @@ const MobileAnalyticsView = () => {
         </Card>
       </div>
       
-      {/* Main Content Based on Active Section */}
       {activeSection === 'overview' && (
         <>
-          {/* Revenue Trend Chart */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center">
@@ -164,7 +158,6 @@ const MobileAnalyticsView = () => {
             </CardContent>
           </Card>
 
-          {/* Property Distribution */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base">Occupancy Distribution</CardTitle>
@@ -207,7 +200,6 @@ const MobileAnalyticsView = () => {
             </CardContent>
           </Card>
           
-          {/* Task Completion */}
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center">
@@ -232,7 +224,6 @@ const MobileAnalyticsView = () => {
         </>
       )}
       
-      {/* Financial Section Placeholder */}
       {activeSection === 'financial' && (
         <div className="space-y-4">
           <Card>
@@ -241,7 +232,6 @@ const MobileAnalyticsView = () => {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-4">
-                {/* Financial metrics cards */}
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="text-sm font-medium text-blue-700">Total Revenue</div>
                   <div className="text-2xl font-bold">€147,890</div>
@@ -273,7 +263,6 @@ const MobileAnalyticsView = () => {
               <CardTitle className="text-base">Property Financial Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="pt-0 px-0">
-              {/* Property financial cards */}
               <div className="divide-y">
                 <div className="py-3 px-4 flex items-center justify-between">
                   <div>
@@ -313,9 +302,6 @@ const MobileAnalyticsView = () => {
         </div>
       )}
       
-      {/* Other section placeholders can be added as needed */}
-      
-      {/* Action Buttons */}
       <div className="flex gap-2">
         <Button variant="outline" className="flex-1">
           <Filter className="mr-2 h-4 w-4" />

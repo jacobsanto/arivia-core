@@ -7,10 +7,11 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { DateRange as DayPickerDateRange } from "react-day-picker";
 
-export interface DateRange {
-  from: Date | undefined;
-  to: Date | undefined;
+// Update DateRange to match the react-day-picker's DateRange structure
+export interface DateRange extends DayPickerDateRange {
+  // This will inherit from react-day-picker's DateRange where 'to' is optional
 }
 
 interface DateRangeSelectorProps {
@@ -58,10 +59,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
             to: value.to
           }} 
           onSelect={range => {
-            onChange({
-              from: range?.from,
-              to: range?.to
-            });
+            onChange(range || { from: undefined, to: undefined });
           }} 
           numberOfMonths={isMobile ? 1 : 2} 
           initialFocus 
