@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Channel and DM types
@@ -45,24 +45,33 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  // For mobile, the sidebar takes up the full screen when open
+  const sidebarClasses = isMobile 
+    ? sidebarOpen ? "fixed inset-0 z-30 bg-background" : "hidden"
+    : "relative flex flex-col w-64 border rounded-lg overflow-hidden";
+
   return (
-    <div 
-      className={`${
-        sidebarOpen ? "fixed inset-0 z-10 bg-background" : "hidden"
-      } md:relative md:flex md:flex-col md:w-64 border rounded-lg overflow-hidden`}
-    >
+    <div className={sidebarClasses}>
       <Tabs defaultValue={activeTab} className="w-full" onValueChange={setActiveTab}>
-        <TabsList className="grid grid-cols-2">
-          <TabsTrigger value="direct">Direct</TabsTrigger>
-          <TabsTrigger value="channels">Channels</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center justify-between px-4 py-3">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="direct">Direct</TabsTrigger>
+            <TabsTrigger value="channels">Channels</TabsTrigger>
+          </TabsList>
+          
+          {isMobile && (
+            <Button variant="ghost" size="sm" className="ml-2" onClick={toggleSidebar}>
+              <X className="h-5 w-5" />
+            </Button>
+          )}
+        </div>
         
-        <div className="px-4 py-3">
+        <div className="px-4 py-2">
           <Input placeholder="Search..." className="text-sm" />
         </div>
         
         <TabsContent value="direct" className="m-0">
-          <ScrollArea className="h-[calc(100vh-20rem)]">
+          <ScrollArea className={isMobile ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-20rem)]"}>
             <div className="p-2 space-y-1">
               {directMessages.map((dm) => (
                 <div
@@ -72,7 +81,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       ? "bg-secondary"
                       : "hover:bg-secondary/50"
                   }`}
-                  onClick={() => handleSelectChat(dm.name)}
+                  onClick={() => {
+                    handleSelectChat(dm.name);
+                    if (isMobile) toggleSidebar();
+                  }}
                 >
                   <Avatar className="h-8 w-8 relative">
                     <AvatarImage src={dm.avatar} alt={dm.name} />
@@ -102,7 +114,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
         </TabsContent>
         
         <TabsContent value="channels" className="m-0">
-          <ScrollArea className="h-[calc(100vh-20rem)]">
+          <ScrollArea className={isMobile ? "h-[calc(100vh-8rem)]" : "h-[calc(100vh-20rem)]"}>
             <div className="p-2 space-y-1">
               {channels.map((channel) => (
                 <div
@@ -112,7 +124,10 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       ? "bg-secondary"
                       : "hover:bg-secondary/50"
                   }`}
-                  onClick={() => handleSelectChat(channel.name)}
+                  onClick={() => {
+                    handleSelectChat(channel.name);
+                    if (isMobile) toggleSidebar();
+                  }}
                 >
                   <span className="text-sm font-medium">#{channel.name}</span>
                 </div>
@@ -121,15 +136,6 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </ScrollArea>
         </TabsContent>
       </Tabs>
-
-      {/* Mobile close button */}
-      {isMobile && sidebarOpen && (
-        <div className="absolute top-4 right-4">
-          <Button variant="outline" size="icon" onClick={toggleSidebar}>
-            <X className="h-5 w-5" />
-          </Button>
-        </div>
-      )}
     </div>
   );
 };

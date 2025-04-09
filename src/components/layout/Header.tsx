@@ -1,20 +1,21 @@
-
 import React, { useEffect } from "react";
-import { Bell, MessageSquare, User, LogOut, RefreshCw } from "lucide-react";
+import { Bell, MessageSquare, User, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
-const Header = () => {
-  const {
-    user,
-    logout,
-    refreshProfile
-  } = useUser();
+interface HeaderProps {
+  onMobileMenuToggle?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
+  const { user, logout, refreshProfile } = useUser();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   
   // Setup an interval to check for profile updates periodically
   useEffect(() => {
@@ -42,35 +43,42 @@ const Header = () => {
     navigate("/login");
   };
   
-  return <header className="border-b border-border px-6 py-3 bg-background">
+  return (
+    <header className="border-b border-border px-4 py-2 md:px-6 md:py-3 bg-background">
       <div className="flex justify-between items-center">
-        
-        <div className="flex items-center space-x-4">
+        {isMobile && (
+          <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
+          </Button>
+        )}
+
+        <div className="flex-1 flex justify-end items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="relative">
+              <Button variant="outline" size="icon" className="relative hidden md:flex">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
-              </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80">
+                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <div className="max-h-80 overflow-y-auto">
+                  <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
+                  <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
+                  <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="justify-center text-primary">
+                  View All Notifications
+                </DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
-                <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
-                <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                View All Notifications
-              </DropdownMenuItem>
-            </DropdownMenuContent>
           </DropdownMenu>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="hidden md:flex">
                 <MessageSquare className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -91,10 +99,10 @@ const Header = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-2">
+              <Button variant="outline" className="flex items-center space-x-1 md:space-x-2">
                 <User className="h-5 w-5" />
-                <span>{user?.name || "Guest"}</span>
-                {user && <Badge variant="outline" className="ml-2">
+                <span className="hidden md:inline">{user?.name || "Guest"}</span>
+                {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs">
                     {ROLE_DETAILS[user.role].title}
                   </Badge>}
               </Button>
@@ -117,7 +125,8 @@ const Header = () => {
           </DropdownMenu>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
 
 interface NotificationItemProps {

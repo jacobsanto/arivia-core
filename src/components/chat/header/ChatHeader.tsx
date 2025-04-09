@@ -2,7 +2,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatHeaderProps {
@@ -19,7 +19,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   const isMobile = useIsMobile();
 
   return (
-    <div className="border-b px-6 py-3 flex items-center justify-between">
+    <div className="border-b px-4 py-3 flex items-center justify-between">
+      {isMobile && (
+        <Button variant="ghost" size="sm" onClick={toggleSidebar} className="mr-2">
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+      )}
+      
       <div className="font-medium">
         {activeTab === "direct" ? (
           <div className="flex items-center space-x-2">
@@ -34,10 +40,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         )}
       </div>
       
-      {/* Mobile sidebar toggle */}
-      {isMobile && (
+      {!isMobile && (
         <Button variant="ghost" size="sm" onClick={toggleSidebar}>
-          <ChevronRight className="h-4 w-4" />
+          <Menu className="h-4 w-4" />
         </Button>
       )}
     </div>
