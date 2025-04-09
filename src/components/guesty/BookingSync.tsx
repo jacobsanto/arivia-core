@@ -38,15 +38,26 @@ export default function BookingSync() {
       case 'confirmed':
         return 'default';
       case 'checked-in':
-        return 'success';
+        return 'default'; // Changed from 'success' to 'default' with custom styling
       case 'checked-out':
         return 'secondary';
       case 'canceled':
         return 'destructive';
       case 'pending':
-        return 'warning';
+        return 'outline'; // Changed from 'warning' to 'outline'
       default:
         return 'outline';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'checked-in':
+        return 'bg-green-500 hover:bg-green-600';
+      case 'pending':
+        return 'bg-amber-500 hover:bg-amber-600';
+      default:
+        return '';
     }
   };
 
@@ -114,7 +125,10 @@ export default function BookingSync() {
                       <div className="font-medium">
                         {reservation.guest.firstName} {reservation.guest.lastName}
                       </div>
-                      <Badge variant={getStatusVariant(reservation.status)}>
+                      <Badge 
+                        variant={getStatusVariant(reservation.status)}
+                        className={getStatusColor(reservation.status)}
+                      >
                         {reservation.status}
                       </Badge>
                     </div>

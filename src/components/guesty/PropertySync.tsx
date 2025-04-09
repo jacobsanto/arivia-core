@@ -35,7 +35,7 @@ export default function PropertySync() {
 
   const renderStatus = (listing: GuestyListing) => {
     if (listing.active) {
-      return <Badge variant="success" className="ml-2 flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Active</Badge>;
+      return <Badge variant="default" className="ml-2 flex items-center gap-1 bg-green-500 hover:bg-green-600"><CheckCircle className="w-3 h-3" /> Active</Badge>;
     }
     return <Badge variant="destructive" className="ml-2 flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Inactive</Badge>;
   };
