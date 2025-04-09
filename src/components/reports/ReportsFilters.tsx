@@ -3,12 +3,12 @@ import React from 'react';
 import { Filter, Clock, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
-import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
+import { DateRangeSelector, DateRange } from '@/components/reports/DateRangeSelector';
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ReportsFiltersProps {
-  dateRange: {from: Date | undefined, to: Date | undefined};
-  setDateRange: (range: {from: Date | undefined, to: Date | undefined}) => void;
+  dateRange: DateRange;
+  setDateRange: (range: DateRange) => void;
 }
 
 export const ReportsFilters: React.FC<ReportsFiltersProps> = ({ dateRange, setDateRange }) => {

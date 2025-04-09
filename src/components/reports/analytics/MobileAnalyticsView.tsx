@@ -68,9 +68,7 @@ const MobileAnalyticsView = () => {
         
         <DatePickerWithRange 
           value={dateRange} 
-          onChange={(newRange) => {
-            setDateRange(newRange || { from: undefined, to: undefined });
-          }} 
+          onChange={(newRange) => setDateRange(newRange || { from: undefined, to: undefined })}
         />
       </div>
       
