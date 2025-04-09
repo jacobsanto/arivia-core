@@ -8,18 +8,19 @@ import { Badge } from '@/components/ui/badge';
 import { RefreshCw, ArrowDown, ArrowUp, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { toastService } from '@/services/toast/toast.service';
+import { DateRangeFilter } from '@/components/dashboard/DateRangeFilter';
 
 export default function BookingSync() {
   const { reservations } = useGuesty();
   const [syncInProgress, setSyncInProgress] = useState(false);
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [filterDate, setFilterDate] = useState(new Date());
 
   const syncAllBookings = async () => {
     try {
       setSyncInProgress(true);
-      // This would typically be implemented to synchronize bookings
-      // between Guesty and your local database
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Force a refetch of bookings
+      await reservations.refetch();
       
       toastService.success('Bookings synchronized', {
         description: `${reservations.reservations.length} bookings have been synced from Guesty`
@@ -31,6 +32,12 @@ export default function BookingSync() {
     } finally {
       setSyncInProgress(false);
     }
+  };
+
+  const handleDateChange = (date: Date) => {
+    setFilterDate(date);
+    // Apply booking filter based on check-in date
+    reservations.filterByDateRange(date);
   };
 
   const getStatusVariant = (status: string) => {
@@ -99,6 +106,16 @@ export default function BookingSync() {
       </CardHeader>
 
       <CardContent>
+        <div className="mb-6">
+          <DateRangeFilter 
+            date={filterDate} 
+            onDateChange={handleDateChange} 
+          />
+          <p className="text-xs text-muted-foreground mt-2">
+            Showing bookings with check-in from {format(filterDate, 'PP')} onwards
+          </p>
+        </div>
+
         <Tabs 
           defaultValue="upcoming" 
           value={activeTab} 

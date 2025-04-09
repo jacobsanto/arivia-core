@@ -33,7 +33,13 @@ export const useGuestyListings = (initialParams: ListingsQueryParams = { limit: 
       if (queryParams.skip) params.skip = queryParams.skip.toString();
       if (queryParams.active !== undefined) params.active = queryParams.active.toString();
       if (queryParams.sort) params.sort = queryParams.sort;
-      if (queryParams.fields) params.fields = queryParams.fields;
+      
+      // By default, we want all fields
+      if (!queryParams.fields) {
+        params.fields = '*'; // Request all available fields
+      } else {
+        params.fields = queryParams.fields;
+      }
       
       return guestyClient.get<GuestyPaginatedResponse<GuestyListing>>('/listings', params);
     }
@@ -41,7 +47,7 @@ export const useGuestyListings = (initialParams: ListingsQueryParams = { limit: 
 
   // Get a single listing by ID
   const getListing = async (id: string) => {
-    return guestyClient.get<GuestyListing>(`/listings/${id}`);
+    return guestyClient.get<GuestyListing>(`/listings/${id}?fields=*`);
   };
 
   // Update a listing

@@ -1,6 +1,6 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { guestyClient } from "@/integrations/guesty/client";
+import { guestyClient, guestyUtils } from "@/integrations/guesty/client";
 import { GuestyReservation, GuestyPaginatedResponse } from "@/types/guesty";
 import { useState } from "react";
 import { toastService } from "@/services/toast/toast.service";
@@ -16,9 +16,14 @@ interface ReservationsQueryParams {
   checkOutFrom?: string;
   checkOutTo?: string;
   sort?: string;
+  fields?: string;
 }
 
-export const useGuestyReservations = (initialParams: ReservationsQueryParams = { limit: 20, skip: 0 }) => {
+export const useGuestyReservations = (initialParams: ReservationsQueryParams = { 
+  limit: 20, 
+  skip: 0,
+  checkInFrom: guestyUtils.getDefaultStartDate() // Default to Jan 1, 2024
+}) => {
   const [queryParams, setQueryParams] = useState<ReservationsQueryParams>(initialParams);
   const queryClient = useQueryClient();
 
@@ -39,11 +44,21 @@ export const useGuestyReservations = (initialParams: ReservationsQueryParams = {
       if (queryParams.listingId) params.listingId = queryParams.listingId;
       if (queryParams.guestId) params.guestId = queryParams.guestId;
       if (queryParams.status) params.status = queryParams.status;
-      if (queryParams.checkInFrom) params.checkInFrom = queryParams.checkInFrom;
+      
+      // Ensure we're filtering for reservations from 2024 onwards
+      params.checkInFrom = queryParams.checkInFrom || guestyUtils.getDefaultStartDate();
+      
       if (queryParams.checkInTo) params.checkInTo = queryParams.checkInTo;
       if (queryParams.checkOutFrom) params.checkOutFrom = queryParams.checkOutFrom;
       if (queryParams.checkOutTo) params.checkOutTo = queryParams.checkOutTo;
       if (queryParams.sort) params.sort = queryParams.sort;
+      
+      // By default, request all fields
+      if (!queryParams.fields) {
+        params.fields = '*';
+      } else {
+        params.fields = queryParams.fields;
+      }
       
       return guestyClient.get<GuestyPaginatedResponse<GuestyReservation>>('/reservations', params);
     }
@@ -51,7 +66,7 @@ export const useGuestyReservations = (initialParams: ReservationsQueryParams = {
 
   // Get a single reservation by ID
   const getReservation = async (id: string) => {
-    return guestyClient.get<GuestyReservation>(`/reservations/${id}`);
+    return guestyClient.get<GuestyReservation>(`/reservations/${id}?fields=*`);
   };
 
   // Update a reservation
@@ -96,6 +111,16 @@ export const useGuestyReservations = (initialParams: ReservationsQueryParams = {
     }
   });
 
+  // Filter reservations by date range
+  const filterByDateRange = (startDate?: Date, endDate?: Date) => {
+    const params = {
+      ...queryParams,
+      ...guestyUtils.createDateRangeParams('checkIn', startDate, endDate),
+      skip: 0 // Reset pagination when filters change
+    };
+    setQueryParams(params);
+  };
+
   // Pagination controls
   const nextPage = () => {
     if (data && data.results.length === queryParams.limit) {
@@ -128,6 +153,7 @@ export const useGuestyReservations = (initialParams: ReservationsQueryParams = {
     prevPage,
     getReservation,
     updateReservation,
-    createReservation
+    createReservation,
+    filterByDateRange
   };
 };

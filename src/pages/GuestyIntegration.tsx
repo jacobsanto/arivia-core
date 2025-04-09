@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { GuestyProvider } from '@/contexts/GuestyContext';
 import PropertySync from '@/components/guesty/PropertySync';
 import BookingSync from '@/components/guesty/BookingSync';
-import TaskSync from '@/components/guesty/TaskSync';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { ArrowUpDown, Building, Calendar, CheckSquare } from 'lucide-react';
+import { ArrowUpDown, Building, Calendar } from 'lucide-react';
 
 export default function GuestyIntegration() {
   const [activeTab, setActiveTab] = useState('properties');
@@ -32,12 +31,7 @@ export default function GuestyIntegration() {
             <ArrowUpDown className="h-5 w-5" />
             Sync Status
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-600 font-medium">Last Sync</p>
-              <p className="text-2xl font-bold text-blue-700">Today at 08:32</p>
-              <p className="text-xs text-blue-600 mt-1">Completed successfully</p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
             <div className="bg-green-50 p-4 rounded-lg">
               <p className="text-sm text-green-600 font-medium">Properties</p>
               <p className="text-2xl font-bold text-green-700">12 <span className="text-sm font-normal">synced</span></p>
@@ -54,7 +48,7 @@ export default function GuestyIntegration() {
 
       <GuestyProvider>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building className="h-4 w-4" />
               Properties
@@ -62,10 +56,6 @@ export default function GuestyIntegration() {
             <TabsTrigger value="bookings" className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
               Bookings
-            </TabsTrigger>
-            <TabsTrigger value="tasks" className="flex items-center gap-2">
-              <CheckSquare className="h-4 w-4" />
-              Tasks
             </TabsTrigger>
           </TabsList>
           
@@ -75,10 +65,6 @@ export default function GuestyIntegration() {
           
           <TabsContent value="bookings">
             <BookingSync />
-          </TabsContent>
-          
-          <TabsContent value="tasks">
-            <TaskSync />
           </TabsContent>
         </Tabs>
       </GuestyProvider>

@@ -39,7 +39,7 @@ export const guestyClient = {
 };
 
 /**
- * Utils specifically for Guesty API pagination handling
+ * Utils specifically for Guesty API pagination and data handling
  */
 export const guestyUtils = {
   /**
@@ -57,5 +57,31 @@ export const guestyUtils = {
    */
   formatDate(date: Date): string {
     return date.toISOString();
+  },
+
+  /**
+   * Get the first day of 2024 as the default start date for booking queries
+   */
+  getDefaultStartDate(): string {
+    return new Date(2024, 0, 1).toISOString(); // January 1, 2024
+  },
+
+  /**
+   * Create date range parameters for Guesty API requests
+   * Used for filtering bookings by check-in or check-out dates
+   */
+  createDateRangeParams(type: 'checkIn' | 'checkOut', fromDate?: Date, toDate?: Date): Record<string, string> {
+    const params: Record<string, string> = {};
+    
+    // Always include at least the start of 2024 as the minimum date
+    params[`${type}From`] = fromDate 
+      ? this.formatDate(fromDate) 
+      : this.getDefaultStartDate();
+    
+    if (toDate) {
+      params[`${type}To`] = this.formatDate(toDate);
+    }
+    
+    return params;
   }
 };

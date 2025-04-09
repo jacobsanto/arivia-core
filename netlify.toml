@@ -14,3 +14,10 @@
   command = "npm run dev"
   targetPort = 5173
   port = 8888
+
+# Environment variables needed for Guesty integration:
+# GUESTY_USERNAME - Guesty account username
+# GUESTY_PASSWORD - Guesty account password
+# GUESTY_CLIENT_ID - OAuth client ID from Guesty
+# GUESTY_SECRET - OAuth client secret from Guesty
+

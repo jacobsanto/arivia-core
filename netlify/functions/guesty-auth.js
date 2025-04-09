@@ -87,10 +87,16 @@ async function getGuestyToken() {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Guesty auth error:', errorText);
       throw new Error(`Guesty auth failed with status: ${response.status}`);
     }
 
     const data = await response.json();
+    if (!data.access_token) {
+      throw new Error('Invalid token response from Guesty');
+    }
+    
     return data.access_token;
   } catch (error) {
     console.error('Error fetching Guesty token:', error);
