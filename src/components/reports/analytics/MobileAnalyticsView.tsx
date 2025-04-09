@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
@@ -22,9 +23,11 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DateRange } from "@/components/reports/DateRangeSelector";
 
 const MobileAnalyticsView = () => {
-  const [dateRange, setDateRange] = useState<{from: Date | undefined, to: Date | undefined}>({
+  // Change the state type to match the DateRange type from DateRangeSelector
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined
   });
@@ -69,7 +72,7 @@ const MobileAnalyticsView = () => {
         
         <DatePickerWithRange 
           value={dateRange} 
-          onChange={setDateRange} 
+          onChange={(newRange) => setDateRange(newRange || { from: undefined, to: undefined })} 
         />
       </div>
       
