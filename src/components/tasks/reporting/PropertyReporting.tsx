@@ -20,6 +20,7 @@ import {
 } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { completionData, barColors } from "./reportingData";
+import { Badge } from "@/components/ui/badge";
 
 export const PropertyReporting = () => {
   const isMobile = useIsMobile();
@@ -58,48 +59,132 @@ export const PropertyReporting = () => {
         </CardContent>
       </Card>
       
-      <div className="mobile-scroll">
-        <Card>
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
-            {/* Table will automatically have mobile-scroll from our updated Table component */}
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Property</TableHead>
-                  <TableHead>Tasks Completed</TableHead>
-                  <TableHead>Avg. Cleaning Time</TableHead>
-                  <TableHead>Approval Rate</TableHead>
-                  <TableHead>Common Issues</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell>Villa Caldera</TableCell>
-                  <TableCell>45</TableCell>
-                  <TableCell>72 min</TableCell>
-                  <TableCell>91%</TableCell>
-                  <TableCell>Bathroom cleaning</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Villa Sunset</TableCell>
-                  <TableCell>36</TableCell>
-                  <TableCell>68 min</TableCell>
-                  <TableCell>89%</TableCell>
-                  <TableCell>Dust on surfaces</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell>Villa Oceana</TableCell>
-                  <TableCell>52</TableCell>
-                  <TableCell>65 min</TableCell>
-                  <TableCell>98%</TableCell>
-                  <TableCell>None significant</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+      {isMobile ? (
+        // Mobile card-based layout
+        <div className="space-y-3">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
+              <div className="space-y-4">
+                {/* Villa Caldera Card */}
+                <Card className="bg-slate-50 border-slate-200">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">Villa Caldera</h4>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">91%</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Tasks Completed</div>
+                        <div className="font-medium">45</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Avg. Time</div>
+                        <div className="font-medium">72 min</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground">Common Issues</div>
+                        <div className="font-medium">Bathroom cleaning</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Villa Sunset Card */}
+                <Card className="bg-slate-50 border-slate-200">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">Villa Sunset</h4>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">89%</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Tasks Completed</div>
+                        <div className="font-medium">36</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Avg. Time</div>
+                        <div className="font-medium">68 min</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground">Common Issues</div>
+                        <div className="font-medium">Dust on surfaces</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Villa Oceana Card */}
+                <Card className="bg-slate-50 border-slate-200">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <h4 className="font-medium">Villa Oceana</h4>
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-200">98%</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div>
+                        <div className="text-xs text-muted-foreground">Tasks Completed</div>
+                        <div className="font-medium">52</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-muted-foreground">Avg. Time</div>
+                        <div className="font-medium">65 min</div>
+                      </div>
+                      <div className="col-span-2">
+                        <div className="text-xs text-muted-foreground">Common Issues</div>
+                        <div className="font-medium">None significant</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : (
+        // Desktop table layout
+        <div className="mobile-scroll">
+          <Card>
+            <CardContent className="pt-6">
+              <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Property</TableHead>
+                    <TableHead>Tasks Completed</TableHead>
+                    <TableHead>Avg. Cleaning Time</TableHead>
+                    <TableHead>Approval Rate</TableHead>
+                    <TableHead>Common Issues</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell>Villa Caldera</TableCell>
+                    <TableCell>45</TableCell>
+                    <TableCell>72 min</TableCell>
+                    <TableCell>91%</TableCell>
+                    <TableCell>Bathroom cleaning</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Villa Sunset</TableCell>
+                    <TableCell>36</TableCell>
+                    <TableCell>68 min</TableCell>
+                    <TableCell>89%</TableCell>
+                    <TableCell>Dust on surfaces</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell>Villa Oceana</TableCell>
+                    <TableCell>52</TableCell>
+                    <TableCell>65 min</TableCell>
+                    <TableCell>98%</TableCell>
+                    <TableCell>None significant</TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

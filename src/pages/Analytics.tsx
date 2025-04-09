@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,16 @@ import { BarChart, FileText, Clock, Calendar as CalendarIcon, Plus } from "lucid
 import TaskReporting from "@/components/tasks/TaskReporting";
 import { FinancialReports } from "@/components/reports/analytics/FinancialReports";
 import { OccupancyAnalysis } from "@/components/reports/analytics/OccupancyAnalysis";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileAnalyticsView from "@/components/reports/analytics/MobileAnalyticsView";
 
 const Analytics = () => {
   const [dateRange, setDateRange] = useState<Date | undefined>(new Date());
+  const isMobile = useIsMobile();
+  
+  if (isMobile) {
+    return <MobileAnalyticsView />;
+  }
   
   return (
     <div className="container max-w-7xl mx-auto p-4 space-y-6">
