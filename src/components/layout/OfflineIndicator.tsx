@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 
 const OfflineIndicator = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [hasPendingSync, setHasPendingSync] = useState(offlineManager.hasUnsyncedData());
-  const [syncCount, setSyncCount] = useState(offlineManager.getOfflineDataSummary().total);
+  const [hasPendingSync, setHasPendingSync] = useState(false);
+  const [syncCount, setSyncCount] = useState(0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -16,9 +16,17 @@ const OfflineIndicator = () => {
     
     // Check for pending sync data
     const checkPendingSync = () => {
-      const summary = offlineManager.getOfflineDataSummary();
-      setHasPendingSync(summary.total > 0);
-      setSyncCount(summary.total);
+      try {
+        const hasUnsyncedData = offlineManager.hasUnsyncedData();
+        setHasPendingSync(hasUnsyncedData);
+        
+        const summary = offlineManager.getOfflineDataSummary();
+        setSyncCount(summary.total);
+      } catch (error) {
+        console.error('Error checking offline data:', error);
+        setHasPendingSync(false);
+        setSyncCount(0);
+      }
     };
     
     window.addEventListener('online', handleOnline);

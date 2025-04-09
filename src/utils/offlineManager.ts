@@ -114,14 +114,14 @@ class OfflineManager {
   public getOfflineDataSummary() {
     const offlineData = this.getOfflineData();
     
-    // Group by entityType
-    const summary = offlineData.reduce((acc: Record<string, number>, item) => {
+    // Ensure offlineData is an array before calling reduce
+    const summary = Array.isArray(offlineData) ? offlineData.reduce((acc: Record<string, number>, item) => {
       acc[item.entityType] = (acc[item.entityType] || 0) + 1;
       return acc;
-    }, {});
+    }, {}) : {};
     
     return {
-      total: offlineData.length,
+      total: Array.isArray(offlineData) ? offlineData.length : 0,
       summary
     };
   }
