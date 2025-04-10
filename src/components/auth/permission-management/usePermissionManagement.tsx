@@ -1,0 +1,133 @@
+
+import { useState, useEffect } from 'react';
+import { User, getDefaultPermissionsForRole } from "@/types/auth";
+import { toast } from "sonner";
+
+interface UsePermissionManagementProps {
+  selectedUser: User | null;
+  updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => void;
+}
+
+export const usePermissionManagement = ({ 
+  selectedUser, 
+  updateUserPermissions 
+}: UsePermissionManagementProps) => {
+  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<string>("all");
+  
+  // Group permissions by category
+  const permissionGroups = {
+    "Properties": [
+      "viewProperties",
+      "manageProperties"
+    ],
+    "Tasks": [
+      "viewAllTasks",
+      "viewAssignedTasks",
+      "assignTasks"
+    ],
+    "Inventory": [
+      "viewInventory",
+      "manageInventory",
+      "approveTransfers"
+    ],
+    "Users": [
+      "viewUsers",
+      "manageUsers"
+    ],
+    "System": [
+      "manageSettings",
+      "viewReports"
+    ],
+    "Bookings": [
+      "manage_bookings"
+    ],
+    "Orders": [
+      "create_orders",
+      "approve_orders",
+      "finalize_orders"
+    ],
+    "Reports": [
+      "view_reports"
+    ]
+  };
+  
+  // Initialize permissions when user changes
+  useEffect(() => {
+    if (selectedUser) {
+      // Start with default role-based permissions
+      const defaultPermissions = getDefaultPermissionsForRole(
+        selectedUser.role, 
+        selectedUser.secondaryRoles
+      );
+      
+      // Override with any custom permissions
+      const initialPermissions = {
+        ...defaultPermissions,
+        ...(selectedUser.customPermissions || {})
+      };
+      
+      setPermissions(initialPermissions);
+    }
+  }, [selectedUser]);
+  
+  const handlePermissionToggle = (key: string) => {
+    setPermissions(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  const handleSave = () => {
+    if (!selectedUser) return;
+    
+    setIsSaving(true);
+    
+    // Artificial delay to show loading state
+    setTimeout(() => {
+      updateUserPermissions(selectedUser.id, permissions);
+      setIsSaving(false);
+    }, 500);
+  };
+  
+  const handleResetToDefault = () => {
+    if (!selectedUser) return;
+    
+    if (confirm("Are you sure you want to reset to default permissions based on role?")) {
+      const defaultPermissions = getDefaultPermissionsForRole(
+        selectedUser.role, 
+        selectedUser.secondaryRoles
+      );
+      setPermissions(defaultPermissions);
+      toast.info("Permissions reset to role defaults", {
+        description: "Changes won't be saved until you click Save"
+      });
+    }
+  };
+  
+  // Filter permissions based on selected category
+  const getFilteredPermissions = () => {
+    if (activeCategory === "all") {
+      return Object.keys(permissionGroups).reduce((acc, group) => {
+        return [...acc, ...permissionGroups[group as keyof typeof permissionGroups]];
+      }, [] as string[]);
+    }
+    
+    return permissionGroups[activeCategory as keyof typeof permissionGroups] || [];
+  };
+  
+  return {
+    permissions,
+    isSaving,
+    activeCategory,
+    permissionGroups,
+    handlePermissionToggle,
+    handleSave,
+    handleResetToDefault,
+    setActiveCategory,
+    getFilteredPermissions
+  };
+};
+
+export default usePermissionManagement;

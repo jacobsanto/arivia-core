@@ -5,7 +5,7 @@ import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PermissionManagement from "./PermissionManagement";
+import PermissionManagement from "./permission-management/PermissionManagement";
 import UserRolesList from "./role-management/UserRolesList";
 import UnauthorizedAccess from "./role-management/UnauthorizedAccess";
 import UserDeleteDialog from "./role-management/UserDeleteDialog";
