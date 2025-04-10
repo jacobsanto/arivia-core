@@ -15,7 +15,7 @@ export const MetricCard = ({ title, value, description, footer }: MetricCardProp
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="text-3xl font-bold">{value}</div>
+      <div className="text-2xl font-bold">{value}</div>
       <p className="text-xs text-muted-foreground">{description}</p>
       {footer && <div className="mt-2">{footer}</div>}
     </CardContent>
