@@ -20,7 +20,7 @@ const TaskHeader = ({ onCreateTask, onViewReports }: TaskHeaderProps) => {
           <BedDouble className="mr-2 h-7 w-7" /> Housekeeping Tasks
         </h1>
         <p className="text-sm text-muted-foreground tracking-tight">
-          Manage room cleaning, laundry, and guest turnover tasks.
+          Manage room cleaning, laundry, and guest turnover tasks efficiently.
         </p>
       </div>
       <div className="flex gap-2">
