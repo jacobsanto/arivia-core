@@ -33,8 +33,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   const handleLinkClick = () => {
     onClose();
   };
-  return <Sheet open={isOpen} onOpenChange={onClose} className="font-semibold text-blue-900 text-sm">
-      <SheetContent side="left" className="w-[280px] p-0">
+  return <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent side="left" className="w-[280px] p-0 bg-blue-950">
         <SheetHeader className="p-4 border-b text-left">
           <SheetTitle className="flex justify-center">
             <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas Logo" className="h-10 w-auto" />
