@@ -20,7 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
+				sans: ['Open Sans', 'system-ui', 'sans-serif'],
+				heading: ['Montserrat', 'sans-serif'],
 				serif: ['Georgia', 'serif'],
 			},
 			colors: {
