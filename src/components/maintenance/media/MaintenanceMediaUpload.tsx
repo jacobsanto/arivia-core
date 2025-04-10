@@ -92,7 +92,7 @@ const MaintenanceMediaUpload = ({
               <span className="text-xs text-muted-foreground mt-1">Add Video</span>
             </label>
             {videos.map((video, index) => (
-              <div key={index} className="bg-secondary rounded h-24 relative">
+              <div key={index} className="bg-secondary rounded h-24 relative flex items-center justify-center overflow-hidden">
                 <video className="h-full w-full object-cover rounded">
                   <source src={video} />
                   Your browser does not support the video tag.
