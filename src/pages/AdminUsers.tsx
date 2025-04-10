@@ -1,0 +1,75 @@
+
+import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import RoleManagement from "@/components/auth/RoleManagement";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Users } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
+import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+
+const AdminUsers = () => {
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("users");
+  
+  // Check for superadmin access
+  if (user?.role !== "superadmin") {
+    // Redirect non-superadmins away
+    React.useEffect(() => {
+      toast.error("Access denied", {
+        description: "You need superadmin privileges to access this area"
+      });
+      navigate("/");
+    }, [navigate]);
+    
+    return null;
+  }
+  
+  return (
+    <>
+      <Helmet>
+        <title>User Management - Arivia Villa Sync</title>
+      </Helmet>
+      
+      <div className="space-y-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            {isMobile && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => navigate(-1)}
+                className="mr-1"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+            )}
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center">
+                <Users className="mr-2 h-7 w-7" /> User Management
+              </h1>
+              <p className="text-sm text-muted-foreground tracking-tight">
+                Manage users, roles, and permissions
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full md:w-auto">
+            <TabsTrigger value="users">Users & Roles</TabsTrigger>
+          </TabsList>
+          <TabsContent value="users" className="mt-6">
+            <RoleManagement />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
+  );
+};
+
+export default AdminUsers;

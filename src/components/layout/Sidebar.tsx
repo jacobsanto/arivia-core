@@ -14,10 +14,14 @@ import {
   LogOut,
   User,
   Lock,
+  Users,
+  Shield,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
+import AvatarUpload from "@/components/auth/AvatarUpload";
 
 const Sidebar = () => {
   const { user, logout } = useUser();
@@ -28,11 +32,13 @@ const Sidebar = () => {
   };
 
   if (!user) return null;
+  
+  const isSuperAdmin = user.role === "superadmin";
 
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
-        {/* Updated logo */}
+        {/* Logo */}
         <img 
           src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
           alt="Arivia Villas Logo" 
@@ -42,8 +48,8 @@ const Sidebar = () => {
       
       <div className="flex items-center justify-center mb-6">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full bg-sidebar-accent flex items-center justify-center mb-2">
-            <User size={20} className="text-sidebar-accent-foreground" />
+          <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
+            <AvatarUpload user={user} size="sm" editable={false} />
           </div>
           <p className="text-sm font-medium">{user.name}</p>
           <span className="text-xs text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1">
@@ -79,6 +85,30 @@ const Sidebar = () => {
         
         {canAccess("viewReports") && (
           <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
+        )}
+        
+        {/* Admin Section - Only for superadmins */}
+        {isSuperAdmin && (
+          <div className="pt-4 border-t border-sidebar-border mt-4">
+            <h3 className="px-4 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">
+              Admin Controls
+            </h3>
+            <SidebarLink 
+              to="/admin/users" 
+              icon={<Users size={20} />} 
+              label="User Management" 
+            />
+            <SidebarLink 
+              to="/admin/permissions" 
+              icon={<Shield size={20} />} 
+              label="Permissions" 
+            />
+            <SidebarLink 
+              to="/admin/settings" 
+              icon={<Settings size={20} />} 
+              label="System Settings" 
+            />
+          </div>
         )}
       </nav>
       

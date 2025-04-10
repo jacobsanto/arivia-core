@@ -1,106 +1,47 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AppLayout from "./components/layout/AppLayout";
-import { UserProvider } from "./contexts/UserContext";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import OfflineIndicator from "./components/layout/OfflineIndicator";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
+import { HelmetProvider } from "react-helmet-async";
+
+// Layouts
+import MainLayout from "@/components/layout/MainLayout";
 
 // Pages
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Properties from "./pages/Properties";
-import Housekeeping from "./pages/Housekeeping";
-import Maintenance from "./pages/Maintenance";
-import Inventory from "./pages/Inventory";
-import TeamChat from "./pages/TeamChat";
-import Analytics from "./pages/Analytics";
-import Reports from "./pages/Reports";
-import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound";
-import Unauthorized from "./pages/Unauthorized";
-import Troubleshooting from "./pages/Troubleshooting";
+import Dashboard from "@/pages/Dashboard";
+import UserProfile from "@/pages/UserProfile";
+import HousekeepingTasks from "@/pages/HousekeepingTasks";
+import MaintenanceTasks from "@/pages/MaintenanceTasks";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes (replacing cacheTime which is deprecated)
-    },
-  },
-});
+// New Admin Pages
+import AdminUsers from "@/pages/AdminUsers";
+import AdminPermissions from "@/pages/AdminPermissions";
+import AdminSettings from "@/pages/AdminSettings";
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <UserProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth Route */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/unauthorized" element={<Unauthorized />} />
+const App = () => {
+  return (
+    <HelmetProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="housekeeping" element={<HousekeepingTasks />} />
+            <Route path="maintenance" element={<MaintenanceTasks />} />
             
-            {/* Protected App Routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<AppLayout />}>
-                <Route index element={<Dashboard />} />
-                
-                {/* Routes requiring specific roles */}
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="properties" element={<Properties />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]} />}>
-                  <Route path="housekeeping" element={<Housekeeping />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "maintenance_staff"]} />}>
-                  <Route path="maintenance" element={<Maintenance />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "inventory_manager"]} />}>
-                  <Route path="inventory" element={<Inventory />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager", "concierge", "housekeeping_staff", "maintenance_staff", "inventory_manager"]} />}>
-                  <Route path="team-chat" element={<TeamChat />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="analytics" element={<Analytics />} />
-                </Route>
-                
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator", "property_manager"]} />}>
-                  <Route path="reports" element={<Reports />} />
-                </Route>
-
-                {/* Troubleshooting page accessible to everyone */}
-                <Route path="troubleshooting" element={<Troubleshooting />} />
-                
-                {/* User profile accessible to everyone */}
-                <Route path="profile" element={<UserProfile />} />
-                
-                {/* Settings route - only for admins and superadmins */}
-                <Route element={<ProtectedRoute allowedRoles={["superadmin", "administrator"]} />}>
-                  <Route path="settings" element={<Navigate to="/profile" replace />} />
-                </Route>
-              </Route>
-            </Route>
+            {/* Admin routes */}
+            <Route path="admin/users" element={<AdminUsers />} />
+            <Route path="admin/permissions" element={<AdminPermissions />} />
+            <Route path="admin/settings" element={<AdminSettings />} />
             
-            {/* 404 Route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <OfflineIndicator />
-        </BrowserRouter>
-      </UserProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+            {/* Redirect unknown paths to dashboard */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
+      </Router>
+      <Toaster richColors />
+    </HelmetProvider>
+  );
+};
 
 export default App;

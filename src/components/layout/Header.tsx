@@ -1,6 +1,6 @@
 
 import React, { useEffect } from "react";
-import { Bell, MessageSquare, User, LogOut, RefreshCw, Menu } from "lucide-react";
+import { Bell, MessageSquare, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
@@ -8,6 +8,7 @@ import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import AvatarUpload from "@/components/auth/AvatarUpload";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -101,7 +102,11 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center space-x-1 md:space-x-2">
-                <User className="h-5 w-5" />
+                {user && (
+                  <div className="h-6 w-6 rounded-full overflow-hidden mr-1">
+                    <AvatarUpload user={user} size="sm" editable={false} />
+                  </div>
+                )}
                 <span className="hidden md:inline">{user?.name || "Guest"}</span>
                 {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs">
                   {ROLE_DETAILS[user.role].title}
