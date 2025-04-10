@@ -63,7 +63,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             
             {(user.role === "maintenance_staff" || canAccess("manageProperties")) && <MobileSidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" onClick={handleLinkClick} />}
             
-            {(user.role === "inventory_manager" || canAccess("viewInventory")) && <MobileSidebarLink to="/inventory" icon={<Package size={20} className="text-zinc-50" />} label="Inventory" onClick={handleLinkClick} />}
+            {(user.role === "inventory_manager" || canAccess("viewInventory")) && <MobileSidebarLink to="/inventory" icon={<Package size={20} className="text-gray-400" />} label="Inventory" onClick={handleLinkClick} />}
             
             <MobileSidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" onClick={handleLinkClick} />
             
