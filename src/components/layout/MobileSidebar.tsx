@@ -33,8 +33,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   const handleLinkClick = () => {
     onClose();
   };
-  return <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-[280px] p-0 bg-blue-950">
+  return <Sheet open={isOpen} onOpenChange={onClose} className="font-semibold text-blue-900 text-sm">
+      <SheetContent side="left" className="w-[280px] p-0">
         <SheetHeader className="p-4 border-b text-left">
           <SheetTitle className="flex justify-center">
             <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas Logo" className="h-10 w-auto" />
@@ -55,7 +55,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
         
         <div className="py-2">
           <nav className="space-y-1 px-2">
-            <MobileSidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={handleLinkClick} className="text-zinc-50" />
+            <MobileSidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={handleLinkClick} />
             
             {canAccess("viewProperties") && <MobileSidebarLink to="/properties" icon={<Home size={20} />} label="Properties" onClick={handleLinkClick} />}
             
@@ -63,7 +63,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             
             {(user.role === "maintenance_staff" || canAccess("manageProperties")) && <MobileSidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" onClick={handleLinkClick} />}
             
-            {(user.role === "inventory_manager" || canAccess("viewInventory")) && <MobileSidebarLink to="/inventory" icon={<Package size={20} className="text-zinc-50" />} label="Inventory" onClick={handleLinkClick} />}
+            {(user.role === "inventory_manager" || canAccess("viewInventory")) && <MobileSidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" onClick={handleLinkClick} />}
             
             <MobileSidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" onClick={handleLinkClick} />
             
