@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
@@ -7,12 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Camera, UserCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+
 interface AvatarUploadProps {
   user: User;
   size?: "sm" | "md" | "lg";
   onAvatarChange?: (url: string) => void;
   editable?: boolean;
 }
+
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
   user,
   size = "md",
@@ -24,14 +27,17 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  
   const sizeClasses = {
     sm: "h-12 w-12",
     md: "h-24 w-24",
     lg: "h-32 w-32"
   };
+  
   const getInitials = (name: string) => {
     return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
   };
+  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -88,17 +94,30 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       setIsUploading(false);
     }
   };
+  
   if (!editable) {
-    return <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={user.avatar} alt={user.name} className="object-fill" />
+    return (
+      <Avatar className={sizeClasses[size]}>
+        <AvatarImage 
+          src={user.avatar} 
+          alt={user.name} 
+          className="object-cover object-center" 
+        />
         <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-      </Avatar>;
+      </Avatar>
+    );
   }
-  return <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+  
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <div className="relative cursor-pointer group">
           <Avatar className={sizeClasses[size]}>
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage 
+              src={user.avatar} 
+              alt={user.name} 
+              className="object-cover object-center"
+            />
             <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1 group-hover:bg-primary/10 transition-colors">
@@ -112,7 +131,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         </DialogHeader>
         <div className="flex flex-col items-center space-y-4 py-4">
           <Avatar className="h-40 w-40">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage 
+              src={user.avatar} 
+              alt={user.name} 
+              className="object-cover object-center"
+            />
             <AvatarFallback className="text-4xl">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           
@@ -136,6 +159,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           </div>
         </div>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
+
 export default AvatarUpload;
