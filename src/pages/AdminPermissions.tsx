@@ -7,7 +7,7 @@ import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, FEATURE_PERMISSIONS } from "@/types/auth";
+import { FEATURE_PERMISSIONS } from "@/types/auth";
 import { toast } from "sonner";
 
 const AdminPermissions = () => {

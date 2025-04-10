@@ -10,8 +10,8 @@ import MainLayout from "@/components/layout/MainLayout";
 // Pages
 import Dashboard from "@/pages/Dashboard";
 import UserProfile from "@/pages/UserProfile";
-import HousekeepingTasks from "@/pages/HousekeepingTasks";
-import MaintenanceTasks from "@/pages/MaintenanceTasks";
+import Maintenance from "@/pages/Maintenance";  // Updated import
+import Housekeeping from "@/pages/Housekeeping"; // Updated import
 
 // New Admin Pages
 import AdminUsers from "@/pages/AdminUsers";
@@ -26,8 +26,8 @@ const App = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<UserProfile />} />
-            <Route path="housekeeping" element={<HousekeepingTasks />} />
-            <Route path="maintenance" element={<MaintenanceTasks />} />
+            <Route path="housekeeping" element={<Housekeeping />} /> {/* Updated component name */}
+            <Route path="maintenance" element={<Maintenance />} /> {/* Updated component name */}
             
             {/* Admin routes */}
             <Route path="admin/users" element={<AdminUsers />} />
