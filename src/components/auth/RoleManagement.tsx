@@ -27,6 +27,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PermissionManagement from "./PermissionManagement";
 import AvatarUpload from "./AvatarUpload";
+import MobileUserCard from "./MobileUserCard";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Mock user list for demonstration
 const MOCK_USER_LIST: User[] = [
@@ -47,6 +49,7 @@ const MOCK_USER_LIST: User[] = [
 
 const RoleManagement: React.FC = () => {
   const { user, deleteUser } = useUser();
+  const isMobile = useIsMobile();
   const [users, setUsers] = useState<User[]>(() => {
     // Try to load users from localStorage first
     const storedUsers = localStorage.getItem("users");
@@ -59,6 +62,7 @@ const RoleManagement: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
   
   // Save users to localStorage when they change
   React.useEffect(() => {
@@ -170,6 +174,14 @@ const RoleManagement: React.FC = () => {
     
     setUserToDelete(user);
   };
+
+  const toggleExpandUser = (userId: string) => {
+    setExpandedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId) 
+        : [...prev, userId]
+    );
+  };
   
   return (
     <Card>
@@ -184,7 +196,7 @@ const RoleManagement: React.FC = () => {
       </CardHeader>
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
+          <TabsList className="w-full overflow-x-auto flex-nowrap">
             <TabsTrigger value="roles" className="flex items-center gap-1">
               <Users className="h-4 w-4" />
               User Roles
@@ -196,132 +208,151 @@ const RoleManagement: React.FC = () => {
           </TabsList>
           
           <TabsContent value="roles" className="mt-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Current Role</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            {/* Mobile view - Card-based layout */}
+            {isMobile ? (
+              <div className="space-y-2">
                 {users.map((user) => (
-                  <TableRow key={user.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <AvatarUpload user={user} size="sm" editable={false} />
-                        <span className="font-medium">{user.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>
-                      {editingUserId === user.id ? (
-                        <div className="space-y-4">
-                          <select 
-                            className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
-                            value={selectedRole}
-                            onChange={(e) => setSelectedRole(e.target.value as UserRole)}
-                          >
-                            {Object.entries(ROLE_DETAILS).map(([role, details]) => (
-                              <option key={role} value={role}>{details.title}</option>
-                            ))}
-                          </select>
-                          
-                          {selectedRole === "superadmin" && (
-                            <div className="p-3 border rounded-md space-y-3">
-                              <div className="flex items-center gap-1">
-                                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                <span className="text-xs text-muted-foreground">
-                                  Super Admin requires at least one secondary role
-                                </span>
-                              </div>
-                              
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                {Object.entries(ROLE_DETAILS)
-                                  .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
-                                  .map(([role, details]) => (
-                                    <div key={role} className="flex items-center space-x-2">
-                                      <Checkbox 
-                                        id={`role-${role}`} 
-                                        checked={selectedSecondaryRoles.includes(role as UserRole)}
-                                        onCheckedChange={() => toggleSecondaryRole(role as UserRole)}
-                                      />
-                                      <label htmlFor={`role-${role}`} className="text-sm">
-                                        {details.title}
-                                      </label>
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div>
-                          <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
-                          
-                          {user.secondaryRoles && user.secondaryRoles.length > 0 && (
-                            <div className="mt-1 flex flex-wrap gap-1">
-                              {user.secondaryRoles.map((role) => (
-                                <Badge key={role} variant="secondary" className="text-xs">
-                                  +{ROLE_DETAILS[role].title}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {user.customPermissions && (
-                            <div className="mt-1">
-                              <Badge variant="outline" className="text-xs bg-blue-50">
-                                Custom Permissions
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {editingUserId === user.id ? (
-                        <div className="flex justify-end gap-2">
-                          <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                            Cancel
-                          </Button>
-                          <Button size="sm" onClick={() => handleSaveRole(user.id)}>
-                            Save
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleEditPermissions(user)}
-                          >
-                            Permissions
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            onClick={() => handleEditRole(user.id)}
-                          >
-                            Change Role
-                          </Button>
-                          {user.id !== user?.id && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDeleteClick(user)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
+                  <MobileUserCard
+                    key={user.id}
+                    user={user}
+                    currentUser={user}
+                    onEditRole={handleEditRole}
+                    onEditPermissions={handleEditPermissions}
+                    onDeleteClick={handleDeleteClick}
+                    isExpanded={expandedUsers.includes(user.id)}
+                    toggleExpand={toggleExpandUser}
+                  />
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            ) : (
+              /* Desktop view - Table-based layout */
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Current Role</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <AvatarUpload user={user} size="sm" editable={false} />
+                          <span className="font-medium">{user.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{user.email}</TableCell>
+                      <TableCell>
+                        {editingUserId === user.id ? (
+                          <div className="space-y-4">
+                            <select 
+                              className="w-full rounded-md border border-input bg-background px-3 py-1 text-sm"
+                              value={selectedRole}
+                              onChange={(e) => setSelectedRole(e.target.value as UserRole)}
+                            >
+                              {Object.entries(ROLE_DETAILS).map(([role, details]) => (
+                                <option key={role} value={role}>{details.title}</option>
+                              ))}
+                            </select>
+                            
+                            {selectedRole === "superadmin" && (
+                              <div className="p-3 border rounded-md space-y-3">
+                                <div className="flex items-center gap-1">
+                                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                  <span className="text-xs text-muted-foreground">
+                                    Super Admin requires at least one secondary role
+                                  </span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {Object.entries(ROLE_DETAILS)
+                                    .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
+                                    .map(([role, details]) => (
+                                      <div key={role} className="flex items-center space-x-2">
+                                        <Checkbox 
+                                          id={`role-${role}`} 
+                                          checked={selectedSecondaryRoles.includes(role as UserRole)}
+                                          onCheckedChange={() => toggleSecondaryRole(role as UserRole)}
+                                        />
+                                        <label htmlFor={`role-${role}`} className="text-sm">
+                                          {details.title}
+                                        </label>
+                                      </div>
+                                    ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div>
+                            <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
+                            
+                            {user.secondaryRoles && user.secondaryRoles.length > 0 && (
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {user.secondaryRoles.map((role) => (
+                                  <Badge key={role} variant="secondary" className="text-xs">
+                                    +{ROLE_DETAILS[role].title}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {user.customPermissions && (
+                              <div className="mt-1">
+                                <Badge variant="outline" className="text-xs bg-blue-50">
+                                  Custom Permissions
+                                </Badge>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {editingUserId === user.id ? (
+                          <div className="flex justify-end gap-2">
+                            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                              Cancel
+                            </Button>
+                            <Button size="sm" onClick={() => handleSaveRole(user.id)}>
+                              Save
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleEditPermissions(user)}
+                            >
+                              Permissions
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleEditRole(user.id)}
+                            >
+                              Change Role
+                            </Button>
+                            {user.id !== user?.id && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteClick(user)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </TabsContent>
           
           <TabsContent value="permissions" className="mt-4">
