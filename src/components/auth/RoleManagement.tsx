@@ -190,7 +190,7 @@ const RoleManagement: React.FC = () => {
           
           <TabsContent value="roles" className="mt-4">
             {/* Mobile view - Card-based layout */}
-            {isMobile ? <div className="space-y-2">
+            {isMobile ? <div className="space-y-2 px-[3px]">
                 {users.map(user => <MobileUserCard key={user.id} user={user} currentUser={user} onEditRole={handleEditRole} onEditPermissions={handleEditPermissions} onDeleteClick={handleDeleteClick} isExpanded={expandedUsers.includes(user.id)} toggleExpand={toggleExpandUser} />)}
               </div> : (/* Desktop view - Table-based layout */
           <Table>
