@@ -68,9 +68,10 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       // Upload to Supabase Storage
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/avatar`;
+      const fileName = `avatar.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
       
-      console.log("Attempting to upload to:", filePath);
+      console.log("Attempting to upload to bucket 'avatars' at path:", filePath);
       
       const { data, error } = await supabase.storage
         .from('avatars')
@@ -92,6 +93,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       if (publicUrlData?.publicUrl) {
         // Add a timestamp to bust cache
         const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+
+        console.log("File uploaded successfully. Public URL:", avatarUrl);
 
         // Update user profile with new avatar URL
         await updateUserAvatar(userId, avatarUrl);
