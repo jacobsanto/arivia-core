@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -8,12 +7,13 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-
 const AdminSettings = () => {
-  const { user } = useUser();
+  const {
+    user
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  
+
   // Check for superadmin access
   if (user?.role !== "superadmin") {
     // Redirect non-superadmins away
@@ -23,12 +23,9 @@ const AdminSettings = () => {
       });
       navigate("/");
     }, [navigate]);
-    
     return null;
   }
-  
-  return (
-    <>
+  return <>
       <Helmet>
         <title>System Settings - Arivia Villa Sync</title>
       </Helmet>
@@ -36,21 +33,14 @@ const AdminSettings = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate(-1)}
-                className="mr-1"
-              >
+            {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1">
                 <ArrowLeft className="h-5 w-5" />
-              </Button>
-            )}
+              </Button>}
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center">
+              <h1 className="md:text-3xl font-bold tracking-tight flex items-center text-xl px-px">
                 <Settings className="mr-2 h-7 w-7" /> System Settings
               </h1>
-              <p className="text-sm text-muted-foreground tracking-tight">
+              <p className="text-sm text-muted-foreground tracking-tight px-0 mx-0">
                 Configure global system settings
               </p>
             </div>
@@ -73,8 +63,6 @@ const AdminSettings = () => {
           </Card>
         </div>
       </div>
-    </>
-  );
+    </>;
 };
-
 export default AdminSettings;
