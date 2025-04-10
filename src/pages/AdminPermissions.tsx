@@ -60,7 +60,7 @@ const AdminPermissions = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1">
+            {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1 px-0 text-left">
                 <ArrowLeft className="h-5 w-5" />
               </Button>}
             <div>
