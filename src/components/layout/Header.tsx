@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           
           <Link to="/" className="flex items-center">
             <img 
-              src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
+              src="/lovable-uploads/9517a274-dacb-499e-abfc-4e4a6432e216.png" 
               alt="Arivia Villas" 
               className="h-8 md:h-10" 
             />
