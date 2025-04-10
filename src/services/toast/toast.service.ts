@@ -84,19 +84,26 @@ class ToastService {
    * Show a toast using Sonner
    */
   private showSonnerToast(title: string, options?: ToastOptions) {
-    const { description, action, duration, position, variant } = options || {};
+    const { description, duration, position, variant } = options || {};
     
     switch (variant) {
       case 'success':
-        return sonnerToast.success(title, { description });
+        return sonnerToast.success(title, { description, duration, position });
       case 'destructive':
-        return sonnerToast.error(title, { description });
+        return sonnerToast.error(title, { description, duration, position });
       case 'warning':
-        return sonnerToast.warning(title, { description });  
+        return sonnerToast.warning(title, { description, duration, position });  
       case 'info':
-        return sonnerToast.info(title, { description });
+        // Note: Sonner doesn't have a direct info method, so we use a custom one
+        return sonnerToast(title, { 
+          description, 
+          duration, 
+          position,
+          // For info style, we can add a custom style if needed
+          className: "bg-blue-50 border-blue-200"
+        });
       default:
-        return sonnerToast(title, { description });
+        return sonnerToast(title, { description, duration, position });
     }
   }
 

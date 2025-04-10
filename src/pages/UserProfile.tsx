@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -17,7 +16,7 @@ import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { toast } from "sonner";
 
 const UserProfile = () => {
-  const { toast } = useToast();
+  const { toast: shadcnToast } = useToast();
   const { user } = useUser();
   const { canAccess } = usePermissions();
   const [syncingData, setSyncingData] = useState(false);
@@ -44,7 +43,7 @@ const UserProfile = () => {
     if (isMobile) {
       const hasSeenSwipeTip = localStorage.getItem('seen_swipe_tip');
       if (!hasSeenSwipeTip) {
-        toast.info("Swipe Tip", {
+        toast("Swipe Tip", {
           description: "Swipe left or right to navigate between tabs."
         });
         localStorage.setItem('seen_swipe_tip', 'true');
@@ -56,12 +55,12 @@ const UserProfile = () => {
     setSyncingData(true);
     try {
       await offlineManager.syncOfflineData();
-      toast({
+      shadcnToast({
         title: "Data synchronized",
         description: "All your offline changes have been uploaded"
       });
     } catch (error) {
-      toast({
+      shadcnToast({
         title: "Sync failed",
         description: "Please check your connection and try again",
         variant: "destructive"
@@ -74,13 +73,13 @@ const UserProfile = () => {
   const handleClearOfflineData = () => {
     try {
       localStorage.removeItem(offlineManager["STORAGE_KEY"]);
-      toast({
+      shadcnToast({
         title: "Offline data cleared",
         description: "All cached data has been removed from your device"
       });
       window.location.reload();
     } catch (error) {
-      toast({
+      shadcnToast({
         title: "Error",
         description: "Could not clear offline data",
         variant: "destructive"

@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useEffect } from "react";
-import { Card, CardProps } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useSwipe } from "@/hooks/use-swipe";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -40,7 +39,6 @@ const SwipeableCard = React.forwardRef<
   const [swipeAmount, setSwipeAmount] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Reset swipe amount when not swiping
   useEffect(() => {
     if (!swipeDirection) {
       const timer = setTimeout(() => setSwipeAmount(0), 300);
@@ -72,7 +70,6 @@ const SwipeableCard = React.forwardRef<
     }
   });
 
-  // Enhanced touch handler with visual feedback
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!swipeEnabled || !cardRef.current) return;
     
@@ -81,7 +78,6 @@ const SwipeableCard = React.forwardRef<
     const startX = cardRect.left;
     const deltaX = touchX - startX - (cardRect.width / 2);
     
-    // Limit the swipe amount
     const maxSwipe = cardRect.width * 0.3;
     const limitedDelta = Math.max(Math.min(deltaX, maxSwipe), -maxSwipe);
     
@@ -89,7 +85,6 @@ const SwipeableCard = React.forwardRef<
     onTouchMove(e);
   };
 
-  // Dynamic background based on swipe direction for visual feedback
   const getBackgroundStyle = () => {
     if (!swipeDirection || !swiping) return {};
     
@@ -113,7 +108,6 @@ const SwipeableCard = React.forwardRef<
 
   return (
     <div className="relative" ref={ref}>
-      {/* Swipe indicators */}
       {swipeIndicators && swipeEnabled && (
         <>
           <div 
@@ -137,7 +131,6 @@ const SwipeableCard = React.forwardRef<
         </>
       )}
       
-      {/* The actual card */}
       <div 
         style={{
           transform: `translateX(${swipeAmount}px)`,
