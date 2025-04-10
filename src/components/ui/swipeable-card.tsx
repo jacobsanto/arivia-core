@@ -1,10 +1,10 @@
 
 import React from "react";
-import { Card, CardProps } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useSwipe } from "@/hooks/use-swipe";
 import { cn } from "@/lib/utils";
 
-interface SwipeableCardProps extends CardProps {
+interface SwipeableCardProps extends React.HTMLAttributes<HTMLDivElement> {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   onSwipeUp?: () => void;

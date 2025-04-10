@@ -101,7 +101,7 @@ const SheetContent = React.forwardRef<
       </SheetPrimitive.Content>
     </SheetPortal>
   );
-})
+});
 
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
