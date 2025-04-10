@@ -1,9 +1,9 @@
 
 import React from "react";
-import { OfflineDataSummary } from "@/types/offline";
+import type { OfflineDataSummary as OfflineDataSummaryType } from "@/types/offline";
 
 interface OfflineDataSummaryProps {
-  offlineData: OfflineDataSummary;
+  offlineData: OfflineDataSummaryType;
 }
 
 const OfflineDataSummary: React.FC<OfflineDataSummaryProps> = ({ offlineData }) => {
