@@ -33,7 +33,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   const handleLinkClick = () => {
     onClose();
   };
-  return <Sheet open={isOpen} onOpenChange={onClose}>
+  return <Sheet open={isOpen} onOpenChange={onClose} className="text-base font-medium text-blue-900">
       <SheetContent side="left" className="w-[280px] p-0">
         <SheetHeader className="p-4 border-b text-left">
           <SheetTitle className="flex justify-center">
