@@ -90,9 +90,16 @@
     @apply border-border;
   }
 
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   body {
     @apply bg-background text-foreground font-normal;
     overflow-x: hidden;
+    /* Font smoothing for better readability */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   #root {
@@ -106,15 +113,15 @@
   }
 
   h1 {
-    @apply text-3xl;
+    @apply text-2xl md:text-3xl;
   }
 
   h2 {
-    @apply text-2xl;
+    @apply text-xl md:text-2xl;
   }
 
   h3 {
-    @apply text-xl;
+    @apply text-lg md:text-xl;
   }
 }
 
@@ -125,11 +132,11 @@
   }
 
   .card-title {
-    @apply text-sm font-medium;
+    @apply text-sm font-medium leading-tight;
   }
 
   .stat-value {
-    @apply text-2xl font-bold;
+    @apply text-xl md:text-2xl font-bold;
   }
 
   .stat-title {
@@ -141,11 +148,34 @@
   }
 
   .page-heading {
-    @apply text-3xl font-bold tracking-tight;
+    @apply text-2xl md:text-3xl font-bold tracking-tight;
   }
 
   .section-heading {
-    @apply text-lg font-medium;
+    @apply text-lg font-medium tracking-tight;
+  }
+  
+  /* Mobile-optimized components */
+  .mobile-text {
+    @apply text-sm leading-tight tracking-tight;
+  }
+  
+  .mobile-heading {
+    @apply text-lg font-medium tracking-tight;
+  }
+  
+  /* Condensed text for information-dense areas */
+  .condensed-text {
+    @apply font-condensed;
+  }
+  
+  /* Data display typography */
+  .data-value {
+    @apply font-condensed font-medium text-base md:text-lg tracking-tight;
+  }
+  
+  .data-label {
+    @apply font-medium text-xs text-muted-foreground;
   }
 }
 

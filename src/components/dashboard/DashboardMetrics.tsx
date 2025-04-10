@@ -15,7 +15,7 @@ export const MetricCard = ({ title, value, description, footer }: MetricCardProp
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
     <CardContent>
-      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-xl md:text-2xl font-bold tracking-tight">{value}</div>
       <p className="text-xs text-muted-foreground">{description}</p>
       {footer && <div className="mt-2">{footer}</div>}
     </CardContent>
@@ -50,7 +50,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value={data.properties.total.toString()}
         description="Properties Managed"
         footer={
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground font-condensed">
             <span className="text-green-500 font-medium">{data.properties.occupied}</span> Occupied | 
             <span className="text-blue-500 font-medium"> {data.properties.vacant}</span> Vacant
           </div>
@@ -61,7 +61,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value={data.tasks.total.toString()}
         description="Active Tasks"
         footer={
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground font-condensed">
             <span className="text-green-500 font-medium">{data.tasks.completed}</span> Completed | 
             <span className="text-amber-500 font-medium"> {data.tasks.pending}</span> Pending
           </div>
@@ -72,7 +72,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value={data.maintenance.total.toString()}
         description="Maintenance Issues"
         footer={
-          <div className="text-xs text-muted-foreground">
+          <div className="text-xs text-muted-foreground font-condensed">
             <span className="text-red-500 font-medium">{data.maintenance.critical}</span> Critical | 
             <span className="text-blue-500 font-medium"> {data.maintenance.standard}</span> Standard
           </div>

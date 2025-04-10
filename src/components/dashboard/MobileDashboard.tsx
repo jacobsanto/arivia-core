@@ -33,7 +33,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
           <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
             <Calendar className="h-5 w-5 text-blue-600" />
           </div>
-          <span className="text-sm">View Tasks</span>
+          <span className="text-sm font-condensed">View Tasks</span>
         </Button>
         
         <Button 
@@ -44,7 +44,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
           <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
             <Calendar className="h-5 w-5 text-amber-600" />
           </div>
-          <span className="text-sm">Maintenance</span>
+          <span className="text-sm font-condensed">Maintenance</span>
         </Button>
       </div>
       
@@ -52,9 +52,9 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       <Card>
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">Today's Tasks</CardTitle>
+            <CardTitle className="text-base mobile-heading">Today's Tasks</CardTitle>
             <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate('/housekeeping')}>
-              View All
+              <span className="font-condensed text-sm tracking-tight">View All</span>
               <ArrowRight className="h-3 w-3" />
             </Button>
           </div>
@@ -70,20 +70,20 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
                   }`}
                 >
                   <div>
-                    <p className="font-medium text-sm">{task.title}</p>
-                    <p className="text-xs text-muted-foreground">{task.property}</p>
+                    <p className="font-medium text-sm mobile-text">{task.title}</p>
+                    <p className="text-xs text-muted-foreground font-condensed">{task.property}</p>
                   </div>
                   <div className="flex items-center">
                     <Badge variant={task.priority === "high" ? "destructive" : 
                       task.priority === "medium" ? "default" : "outline"}>
-                      {task.dueDate}
+                      <span className="font-condensed text-xs tracking-tight">{task.dueDate}</span>
                     </Badge>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-6">No tasks scheduled for today.</p>
+            <p className="text-sm text-muted-foreground text-center py-6 font-condensed">No tasks scheduled for today.</p>
           )}
         </CardContent>
       </Card>
@@ -93,7 +93,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       {/* Offline Indicator and Sync Button */}
       <div className="bg-muted p-4 rounded-md text-center space-y-2">
         <p className="text-sm font-medium">All data synced</p>
-        <p className="text-xs text-muted-foreground">You're good to go!</p>
+        <p className="text-xs text-muted-foreground font-condensed">You're good to go!</p>
       </div>
     </div>
   );

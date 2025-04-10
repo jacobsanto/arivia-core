@@ -16,10 +16,10 @@ const TaskHeader = ({ onCreateTask, onViewReports }: TaskHeaderProps) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center">
           <BedDouble className="mr-2 h-7 w-7" /> Housekeeping Tasks
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground tracking-tight">
           Manage room cleaning, laundry, and guest turnover tasks.
         </p>
       </div>
@@ -27,12 +27,12 @@ const TaskHeader = ({ onCreateTask, onViewReports }: TaskHeaderProps) => {
         {isManager && onViewReports && (
           <Button variant="outline" onClick={onViewReports}>
             <BarChart className="mr-2 h-4 w-4" />
-            Reports
+            <span className="font-medium">Reports</span>
           </Button>
         )}
         <Button onClick={onCreateTask}>
           <Plus className="mr-2 h-4 w-4" />
-          Create Task
+          <span className="font-medium">Create Task</span>
         </Button>
       </div>
     </div>
