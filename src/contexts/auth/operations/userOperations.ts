@@ -13,6 +13,9 @@ export const updateAvatar = async (
   currentUser: User | null
 ) => {
   try {
+    console.log("Updating avatar for user:", userId);
+    console.log("Avatar URL:", avatarUrl);
+    
     // Try to update Supabase profile
     if (navigator.onLine) {
       const { error } = await supabase
@@ -24,6 +27,8 @@ export const updateAvatar = async (
         console.error("Error updating profile with avatar URL:", error);
         throw error;
       }
+      
+      console.log("Profile updated successfully in Supabase");
     }
     
     // Update local state

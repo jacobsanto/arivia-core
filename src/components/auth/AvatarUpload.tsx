@@ -68,7 +68,9 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       // Upload to Supabase Storage
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
-      const filePath = `${userId}/avatar.${fileExt}`;
+      const filePath = `${userId}/avatar`;
+      
+      console.log("Attempting to upload to:", filePath);
       
       const { data, error } = await supabase.storage
         .from('avatars')

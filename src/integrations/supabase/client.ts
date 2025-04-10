@@ -14,6 +14,11 @@ export const supabase = createClient<Database>(
       storage: localStorage,
       persistSession: true,
       autoRefreshToken: true,
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'ArivivaOpsApp'
+      }
     }
   }
 );
