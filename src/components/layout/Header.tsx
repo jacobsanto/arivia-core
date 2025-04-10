@@ -44,12 +44,12 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   };
   
   return (
-    <header className="border-b border-border px-4 py-2 md:px-6 md:py-3 bg-background">
+    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
           {isMobile && (
-            <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2">
+            <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
             </Button>
@@ -59,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
             <img 
               src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
               alt="Arivia Villas" 
-              className="h-8 md:h-10" 
+              className="h-8 md:h-10 invert brightness-0 filter" 
             />
           </Link>
         </div>
@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
         <div className="flex items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="relative hidden md:flex">
+              <Button variant="outline" size="icon" className="relative hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
               </Button>
@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="hidden md:flex">
+              <Button variant="outline" size="icon" className="hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
                 <MessageSquare className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -111,14 +111,14 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center space-x-1 md:space-x-2">
+              <Button variant="outline" className="flex items-center space-x-1 md:space-x-2 border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
                 {user && (
                   <div className="h-6 w-6 rounded-full overflow-hidden mr-1">
                     <AvatarUpload user={user} size="sm" editable={false} />
                   </div>
                 )}
                 <span className="hidden md:inline">{user?.name || "Guest"}</span>
-                {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs">
+                {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs border-sidebar-foreground text-sidebar-foreground">
                   {ROLE_DETAILS[user.role].title}
                 </Badge>}
               </Button>
