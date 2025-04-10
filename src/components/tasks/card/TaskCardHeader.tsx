@@ -27,12 +27,12 @@ export const TaskCardHeader = ({
   return (
     <div className="space-y-1">
       <div className="flex items-center space-x-2">
-        <h3 className="font-medium">{property}</h3>
+        <h3 className="font-medium">{type}</h3>
         {approvalIcon}
       </div>
       <div className="flex items-center">
         <Badge variant="outline" className="border-blue-200 text-blue-800">
-          {type}
+          {property}
         </Badge>
       </div>
       <p className="text-sm text-muted-foreground py-0 my-[2px]">{title}</p>
