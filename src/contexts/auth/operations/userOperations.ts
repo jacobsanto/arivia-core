@@ -21,6 +21,7 @@ export const updateAvatar = async (
         .eq('id', userId);
         
       if (error) {
+        console.error("Error updating profile with avatar URL:", error);
         throw error;
       }
     }

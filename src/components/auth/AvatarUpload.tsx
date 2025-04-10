@@ -70,23 +70,22 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/avatar.${fileExt}`;
       
-      // Check if avatars bucket exists, if not this will fail and we'll see the error
-      const {
-        data,
-        error
-      } = await supabase.storage.from('avatars').upload(filePath, file, {
-        upsert: true,
-        contentType: file.type
-      });
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type
+        });
       
       if (error) {
-        throw error;
+        console.error("Storage error details:", error);
+        throw new Error(`Upload failed: ${error.message}`);
       }
 
       // Get the public URL of the uploaded file
-      const {
-        data: publicUrlData
-      } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
       
       if (publicUrlData?.publicUrl) {
         // Add a timestamp to bust cache
