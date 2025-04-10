@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
@@ -8,88 +7,75 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Camera, UserCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
 interface AvatarUploadProps {
   user: User;
   size?: "sm" | "md" | "lg";
   onAvatarChange?: (url: string) => void;
   editable?: boolean;
 }
-
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
   user,
   size = "md",
   onAvatarChange,
   editable = true
 }) => {
-  const { updateUserAvatar } = useUser();
+  const {
+    updateUserAvatar
+  } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
   const sizeClasses = {
     sm: "h-12 w-12",
     md: "h-24 w-24",
     lg: "h-32 w-32"
   };
-  
   const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
+    return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
   };
-  
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
     try {
       setIsUploading(true);
-      
+
       // Make sure the file is an image and not too large
       if (!file.type.startsWith('image/')) {
         throw new Error('Please upload an image file');
       }
-      
       if (file.size > 2 * 1024 * 1024) {
         throw new Error('Image size should be less than 2MB');
       }
-      
+
       // Upload to Supabase Storage
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/avatar.${fileExt}`;
-      
-      const { data, error } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, {
-          upsert: true,
-          contentType: file.type
-        });
-      
+      const {
+        data,
+        error
+      } = await supabase.storage.from('avatars').upload(filePath, file, {
+        upsert: true,
+        contentType: file.type
+      });
       if (error) {
         throw error;
       }
-      
+
       // Get the public URL of the uploaded file
-      const { data: publicUrlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-      
+      const {
+        data: publicUrlData
+      } = supabase.storage.from('avatars').getPublicUrl(filePath);
       if (publicUrlData?.publicUrl) {
         // Add a timestamp to bust cache
         const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
-        
+
         // Update user profile with new avatar URL
         await updateUserAvatar(userId, avatarUrl);
-        
+
         // Call the callback if provided
         if (onAvatarChange) {
           onAvatarChange(avatarUrl);
         }
-        
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);
       }
@@ -102,18 +88,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       setIsUploading(false);
     }
   };
-  
   if (!editable) {
-    return (
-      <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={user.avatar} alt={user.name} />
+    return <Avatar className={sizeClasses[size]}>
+        <AvatarImage src={user.avatar} alt={user.name} className="object-cover" />
         <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
-      </Avatar>
-    );
+      </Avatar>;
   }
-  
-  return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+  return <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <div className="relative cursor-pointer group">
           <Avatar className={sizeClasses[size]}>
@@ -141,37 +122,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             </p>
             
             <label className="relative">
-              <Button
-                disabled={isUploading}
-                variant="outline"
-                type="button"
-                className="flex gap-2"
-              >
-                {isUploading ? (
-                  <>
+              <Button disabled={isUploading} variant="outline" type="button" className="flex gap-2">
+                {isUploading ? <>
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Uploading...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <UserCircle2 className="h-4 w-4" />
                     Choose Image
-                  </>
-                )}
+                  </>}
               </Button>
-              <input
-                type="file"
-                accept="image/*"
-                disabled={isUploading}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={handleFileChange}
-              />
+              <input type="file" accept="image/*" disabled={isUploading} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onChange={handleFileChange} />
             </label>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default AvatarUpload;
