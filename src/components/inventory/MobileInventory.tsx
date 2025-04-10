@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState, useRef } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -17,6 +17,7 @@ const MobileInventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sheetContent, setSheetContent] = useState<string | null>(null);
+  const tabsRef = useRef(null);
 
   const openSheet = (content: string) => {
     setSheetContent(content);
@@ -100,13 +101,19 @@ const MobileInventory = () => {
             </Button>
           </div>
           
-          <div className="pb-16">
-            {activeTab === "overview" && <MobileOverview />}
-            {activeTab === "stock-levels" && <MobileStockLevels />}
-          </div>
+          <SwipeableTabsProvider>
+            <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="pb-16">
+              <TabsContent value="overview" tabsRoot={tabsRef}>
+                <MobileOverview />
+              </TabsContent>
+              <TabsContent value="stock-levels" tabsRoot={tabsRef}>
+                <MobileStockLevels />
+              </TabsContent>
+            </Tabs>
+          </SwipeableTabsProvider>
           
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetContent side="bottom" className="h-[85vh] pt-6">
+            <SheetContent side="bottom" className="h-[85vh] pt-6" swipeEnabled={true}>
               <SheetHeader>
                 <SheetTitle>{sheetContent ? sheetTitles[sheetContent] : ""}</SheetTitle>
               </SheetHeader>

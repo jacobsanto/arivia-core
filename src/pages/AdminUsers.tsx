@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import RoleManagement from "@/components/auth/RoleManagement";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { ArrowLeft, Users } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
 const AdminUsers = () => {
@@ -15,6 +15,7 @@ const AdminUsers = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("users");
+  const tabsRef = useRef(null);
   
   // Check for superadmin access
   if (user?.role !== "superadmin") {
@@ -59,14 +60,16 @@ const AdminUsers = () => {
           </div>
         </div>
         
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full scroll-tabs">
-            <TabsTrigger value="users">Users & Roles</TabsTrigger>
-          </TabsList>
-          <TabsContent value="users" className="mt-6">
-            <RoleManagement />
-          </TabsContent>
-        </Tabs>
+        <SwipeableTabsProvider>
+          <Tabs ref={tabsRef} value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full scroll-tabs">
+              <TabsTrigger value="users">Users & Roles</TabsTrigger>
+            </TabsList>
+            <TabsContent value="users" className="mt-6" tabsRoot={tabsRef}>
+              <RoleManagement />
+            </TabsContent>
+          </Tabs>
+        </SwipeableTabsProvider>
       </div>
     </>
   );
