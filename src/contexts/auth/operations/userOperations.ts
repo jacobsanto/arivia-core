@@ -111,13 +111,19 @@ export const removeUser = async (
       if (error) {
         console.error("Error from delete-user function:", error);
         
-        // Show more detailed error message for OAuth users
-        if (userIdToDelete.includes('-')) {
-          toastService.error("Error deleting OAuth user", {
-            description: "The user profile was removed but there was an issue removing the authentication record. The user won't be able to log in anymore."
+        // Determine if we should update the UI even with an error
+        const isNonCriticalError = 
+          // For OAuth users, we often can delete the profile but not the auth record
+          userIdToDelete.includes('-') || 
+          // For numeric IDs (timestamps), we may not be able to delete from auth but can remove profile
+          /^\d+$/.test(userIdToDelete);
+        
+        if (isNonCriticalError) {
+          toastService.warning("Partial user deletion", {
+            description: "The user's profile was removed, but there may be remnants in the authentication system. The user won't be able to log in anymore."
           });
           
-          // Still update local state as the user effectively can't use the system anymore
+          // Update local state as the user effectively can't use the system anymore
           const updatedUsers = users.filter(u => u.id !== userIdToDelete);
           setUsers(updatedUsers);
           return true;
@@ -136,7 +142,7 @@ export const removeUser = async (
     setUsers(updatedUsers);
     
     toastService.success("User deleted successfully", {
-      description: "The user has been permanently deleted"
+      description: "The user has been permanently deleted from the system"
     });
     
     return true;
