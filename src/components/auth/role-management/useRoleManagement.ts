@@ -4,43 +4,50 @@ import { useUser } from "@/contexts/UserContext";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 
-// Mock user list for demonstration
+// Mock user list with proper avatar URLs
 const MOCK_USER_LIST: User[] = [{
   id: "1",
   email: "admin@ariviavillas.com",
   name: "Admin User",
-  role: "administrator"
+  role: "administrator",
+  avatar: "/placeholder.svg"
 }, {
   id: "2",
   email: "manager@ariviavillas.com",
   name: "Property Manager",
-  role: "property_manager"
+  role: "property_manager",
+  avatar: "/placeholder.svg"
 }, {
   id: "3",
   email: "concierge@ariviavillas.com",
   name: "Concierge Staff",
-  role: "concierge"
+  role: "concierge",
+  avatar: "/placeholder.svg"
 }, {
   id: "4",
   email: "housekeeping@ariviavillas.com",
   name: "Housekeeping Staff",
-  role: "housekeeping_staff"
+  role: "housekeeping_staff",
+  avatar: "/placeholder.svg"
 }, {
   id: "5",
   email: "maintenance@ariviavillas.com",
   name: "Maintenance Staff",
-  role: "maintenance_staff"
+  role: "maintenance_staff",
+  avatar: "/placeholder.svg"
 }, {
   id: "6",
   email: "inventory@ariviavillas.com",
   name: "Inventory Manager",
-  role: "inventory_manager"
+  role: "inventory_manager",
+  avatar: "/placeholder.svg"
 }, {
   id: "7",
   email: "superadmin@ariviavillas.com",
   name: "Super Admin",
   role: "superadmin",
-  secondaryRoles: ["administrator"]
+  secondaryRoles: ["administrator"],
+  avatar: "/placeholder.svg"
 }];
 
 export const useRoleManagement = () => {
@@ -49,7 +56,15 @@ export const useRoleManagement = () => {
   const [users, setUsers] = useState<User[]>(() => {
     // Try to load users from localStorage first
     const storedUsers = localStorage.getItem("users");
-    return storedUsers ? JSON.parse(storedUsers) : MOCK_USER_LIST;
+    if (storedUsers) {
+      // Make sure all users have the avatar property
+      const parsedUsers = JSON.parse(storedUsers);
+      return parsedUsers.map((u: User) => ({
+        ...u,
+        avatar: u.avatar || "/placeholder.svg"
+      }));
+    }
+    return MOCK_USER_LIST;
   });
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
