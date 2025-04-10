@@ -19,7 +19,7 @@ const TaskHeader = ({
         <h1 className="md:text-3xl font-bold tracking-tight flex items-center px-0 py-[19px] mx-0 text-xl">
           <BedDouble className="mr-2 h-7 w-7" /> Housekeeping Tasks
         </h1>
-        <p className="text-sm text-muted-foreground tracking-tight">
+        <p className="text-muted-foreground tracking-tight text-xs">
           Manage room cleaning, laundry, and guest turnover tasks efficiently.
         </p>
       </div>
