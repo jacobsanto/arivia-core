@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +27,17 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>(user.avatar || "/placeholder.svg");
+  const previousAvatarRef = useRef<string>(user.avatar || "/placeholder.svg");
+  
+  // Update timestamp only when avatar actually changes
+  useEffect(() => {
+    if (user.avatar !== previousAvatarRef.current) {
+      const newUrl = getAvatarUrl(user.avatar);
+      setAvatarUrl(newUrl);
+      previousAvatarRef.current = user.avatar || "/placeholder.svg";
+    }
+  }, [user.avatar]);
   
   // Standardized size classes
   const sizeClasses = {
@@ -39,7 +50,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
   };
   
-  // Add timestamp to avatar URL for cache busting
+  // Add timestamp to avatar URL for cache busting only when needed
   const getAvatarUrl = (url: string | undefined) => {
     if (!url) return "/placeholder.svg";
     
@@ -92,16 +103,22 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       
       if (publicUrlData?.publicUrl) {
         // Add a timestamp to bust cache
-        const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+        const newAvatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
 
-        console.log("File uploaded successfully. Public URL:", avatarUrl);
+        console.log("File uploaded successfully. Public URL:", newAvatarUrl);
 
         // Update user profile with new avatar URL
-        await updateUserAvatar(userId, avatarUrl);
+        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        
+        // Update local state
+        setAvatarUrl(newAvatarUrl);
+        
+        // Update previous avatar reference
+        previousAvatarRef.current = publicUrlData.publicUrl;
 
         // Call the callback if provided
         if (onAvatarChange) {
-          onAvatarChange(avatarUrl);
+          onAvatarChange(publicUrlData.publicUrl);
         }
         
         toast.success("Avatar updated successfully");
@@ -121,7 +138,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     return (
       <Avatar className={sizeClasses[size]}>
         <AvatarImage 
-          src={getAvatarUrl(user.avatar)} 
+          src={avatarUrl} 
           alt={user.name || "User"} 
           className="object-cover object-center" 
         />
@@ -136,7 +153,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <div className="relative cursor-pointer group">
           <Avatar className={sizeClasses[size]}>
             <AvatarImage 
-              src={getAvatarUrl(user.avatar)} 
+              src={avatarUrl} 
               alt={user.name || "User"} 
               className="object-cover object-center"
             />
@@ -154,7 +171,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <div className="flex flex-col items-center space-y-4 py-4">
           <Avatar className="h-40 w-40">
             <AvatarImage 
-              src={getAvatarUrl(user.avatar)} 
+              src={avatarUrl} 
               alt={user.name || "User"} 
               className="object-cover object-center"
             />
