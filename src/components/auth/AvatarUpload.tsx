@@ -28,6 +28,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   
+  // Standardized size classes
   const sizeClasses = {
     sm: "h-12 w-12",
     md: "h-24 w-24",
@@ -36,6 +37,18 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   
   const getInitials = (name: string) => {
     return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
+  };
+  
+  // Add timestamp to avatar URL for cache busting
+  const getAvatarUrl = (url: string | undefined) => {
+    if (!url) return "/placeholder.svg";
+    
+    // Skip cache busting for placeholder images
+    if (url.includes('placeholder.svg')) return url;
+    
+    // Add cache busting timestamp
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
   };
   
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +69,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
       const filePath = `${userId}/avatar.${fileExt}`;
+      
+      // Check if avatars bucket exists, if not this will fail and we'll see the error
       const {
         data,
         error
@@ -63,6 +78,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         upsert: true,
         contentType: file.type
       });
+      
       if (error) {
         throw error;
       }
@@ -71,6 +87,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
       const {
         data: publicUrlData
       } = supabase.storage.from('avatars').getPublicUrl(filePath);
+      
       if (publicUrlData?.publicUrl) {
         // Add a timestamp to bust cache
         const avatarUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
@@ -82,6 +99,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         if (onAvatarChange) {
           onAvatarChange(avatarUrl);
         }
+        
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);
       }
@@ -99,11 +117,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     return (
       <Avatar className={sizeClasses[size]}>
         <AvatarImage 
-          src={user.avatar} 
-          alt={user.name} 
+          src={getAvatarUrl(user.avatar)} 
+          alt={user.name || "User"} 
           className="object-cover object-center" 
         />
-        <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+        <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
       </Avatar>
     );
   }
@@ -114,11 +132,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <div className="relative cursor-pointer group">
           <Avatar className={sizeClasses[size]}>
             <AvatarImage 
-              src={user.avatar} 
-              alt={user.name} 
+              src={getAvatarUrl(user.avatar)} 
+              alt={user.name || "User"} 
               className="object-cover object-center"
             />
-            <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1 group-hover:bg-primary/10 transition-colors">
             <Camera className="h-4 w-4 text-muted-foreground" />
@@ -132,11 +150,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         <div className="flex flex-col items-center space-y-4 py-4">
           <Avatar className="h-40 w-40">
             <AvatarImage 
-              src={user.avatar} 
-              alt={user.name} 
+              src={getAvatarUrl(user.avatar)} 
+              alt={user.name || "User"} 
               className="object-cover object-center"
             />
-            <AvatarFallback className="text-4xl">{getInitials(user.name)}</AvatarFallback>
+            <AvatarFallback className="text-4xl">{getInitials(user.name || "User")}</AvatarFallback>
           </Avatar>
           
           <div className="flex flex-col items-center gap-2">

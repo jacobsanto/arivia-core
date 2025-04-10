@@ -47,7 +47,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
         <div className="flex items-center justify-center py-6 border-b border-sidebar-border">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-              <AvatarUpload user={user} editable={false} />
+              <AvatarUpload user={user} size="md" editable={false} />
             </div>
             <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
             <span className="text-xs px-2 py-1 bg-sidebar-accent rounded-full mt-1 text-sidebar-accent-foreground">

@@ -38,7 +38,9 @@ const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <AvatarUpload user={user} />
+        <div className="flex justify-center sm:justify-start">
+          <AvatarUpload user={user} size="lg" />
+        </div>
         <div className="space-y-1">
           <h2 className="text-xl font-bold">{user.name}</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1">
