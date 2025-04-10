@@ -1,10 +1,9 @@
-
 import React from "react";
 import { User } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { Mail } from "lucide-react";
 import { ROLE_DETAILS } from "@/types/auth";
-import AvatarUpload from "../AvatarUpload";
+import AvatarUpload from "../avatar/AvatarUpload";
 
 interface UserProfileInfoProps {
   user: User;

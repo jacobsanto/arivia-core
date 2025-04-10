@@ -1,4 +1,3 @@
-
 import React from "react";
 import { User, ROLE_DETAILS } from "@/types/auth";
 import { 
@@ -9,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import AvatarUpload from "./AvatarUpload";
+import AvatarUpload from "./avatar/AvatarUpload";
 
 interface MobileUserCardProps {
   user: User;

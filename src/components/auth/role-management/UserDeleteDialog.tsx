@@ -1,4 +1,3 @@
-
 import React from "react";
 import { User, ROLE_DETAILS } from "@/types/auth";
 import { 
@@ -11,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import AvatarUpload from "../AvatarUpload";
+import AvatarUpload from "../avatar/AvatarUpload";
 
 interface UserDeleteDialogProps {
   userToDelete: User | null;
