@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -7,7 +6,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AvatarUpload from "@/components/auth/AvatarUpload";
+import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
 
 interface MobileSidebarProps {
   isOpen: boolean;
@@ -30,7 +29,6 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
     onClose();
   };
 
-  // Close the mobile sidebar when a link is clicked
   const handleLinkClick = () => {
     onClose();
   };
@@ -86,7 +84,6 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
               <MobileSidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" onClick={handleLinkClick} />
             }
             
-            {/* Admin section for superadmins */}
             {isSuperAdmin && (
               <div className="pt-2 mt-2 border-t border-sidebar-border">
                 <h3 className="px-3 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">

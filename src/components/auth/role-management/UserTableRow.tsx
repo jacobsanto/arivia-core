@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
-import AvatarUpload from "../AvatarUpload";
+import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
 
 interface UserTableRowProps {

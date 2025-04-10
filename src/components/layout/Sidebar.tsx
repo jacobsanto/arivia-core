@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -21,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import AvatarUpload from "@/components/auth/AvatarUpload";
+import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
 
 const Sidebar = () => {
   const { user, logout } = useUser();
@@ -38,7 +37,6 @@ const Sidebar = () => {
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
-        {/* Logo */}
         <img 
           src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
           alt="Arivia Villas Logo" 
@@ -87,7 +85,6 @@ const Sidebar = () => {
           <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
         )}
         
-        {/* Admin Section - Only for superadmins */}
         {isSuperAdmin && (
           <div className="pt-4 border-t border-sidebar-border mt-4">
             <h3 className="px-4 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Bell, MessageSquare, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
-import AvatarUpload from "@/components/auth/AvatarUpload";
+import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -19,11 +18,9 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
-  // Setup an interval to check for profile updates periodically
   useEffect(() => {
     if (!user) return;
     
-    // Check for profile updates every 5 minutes
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
         refreshProfile().then((updated) => {
@@ -34,7 +31,6 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
       }
     }, 5 * 60 * 1000); // 5 minutes
     
-    // Also refresh once on component mount
     refreshProfile();
     
     return () => clearInterval(intervalId);
