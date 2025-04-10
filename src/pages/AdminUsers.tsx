@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import RoleManagement from "@/components/auth/RoleManagement";
@@ -9,14 +8,15 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { toast } from "sonner";
-
 const AdminUsers = () => {
-  const { user } = useUser();
+  const {
+    user
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("users");
   const tabsRef = useRef(null);
-  
+
   // Check for superadmin access
   if (user?.role !== "superadmin") {
     // Redirect non-superadmins away
@@ -26,12 +26,9 @@ const AdminUsers = () => {
       });
       navigate("/");
     }, [navigate]);
-    
     return null;
   }
-  
-  return (
-    <>
+  return <>
       <Helmet>
         <title>User Management - Arivia Villa Sync</title>
       </Helmet>
@@ -39,18 +36,11 @@ const AdminUsers = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            {isMobile && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => navigate(-1)}
-                className="mr-1"
-              >
+            {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1">
                 <ArrowLeft className="h-5 w-5" />
-              </Button>
-            )}
+              </Button>}
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight flex items-center">
+              <h1 className="md:text-3xl font-bold tracking-tight flex items-center text-xl px-0 mx-0 text-left">
                 <Users className="mr-2 h-7 w-7" /> User Management
               </h1>
               <p className="text-sm text-muted-foreground tracking-tight">
@@ -71,8 +61,6 @@ const AdminUsers = () => {
           </Tabs>
         </SwipeableTabsProvider>
       </div>
-    </>
-  );
+    </>;
 };
-
 export default AdminUsers;
