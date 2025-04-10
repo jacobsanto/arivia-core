@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -46,7 +47,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
             <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
               <AvatarUpload user={user} editable={false} />
             </div>
-            <p className="text-sm font-medium">{user.name}</p>
+            <p className="text-sm font-medium text-white">{user.name}</p>
             <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded-full mt-1">
               {user.role.replace('_', ' ')}
             </span>
