@@ -1,10 +1,13 @@
+
 import React from "react";
 import { BedDouble } from "lucide-react";
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Task } from "@/types/taskTypes";
+
 interface TaskDetailHeaderProps {
   task: Task;
 }
+
 const TaskDetailHeader = ({
   task
 }: TaskDetailHeaderProps) => {
@@ -13,9 +16,10 @@ const TaskDetailHeader = ({
       <div className="space-y-1">
         <CardTitle className="text-xl">{task.title}</CardTitle>
         <CardDescription>
-          {task.property} • {task.type}
+          {task.type}
         </CardDescription>
       </div>
     </div>;
 };
+
 export default TaskDetailHeader;
