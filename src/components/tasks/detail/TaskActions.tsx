@@ -56,7 +56,7 @@ const TaskActions = ({
               variant="default"
               onClick={onApprove}
               className="bg-green-600 hover:bg-green-700"
-              size={iMobile ? "sm" : "default"}
+              size={isMobile ? "sm" : "default"}
             >
               Approve
             </Button>
