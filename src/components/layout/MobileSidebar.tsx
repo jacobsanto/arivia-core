@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -38,6 +39,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
       <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
         <SheetHeader className="p-4 border-b border-sidebar-border text-left">
           <SheetTitle className="flex justify-center">
+            {/* Using the same logo path as in Header for consistency */}
             <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas Logo" className="h-10 w-auto" />
           </SheetTitle>
         </SheetHeader>

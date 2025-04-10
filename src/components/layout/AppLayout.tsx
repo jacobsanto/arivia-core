@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
-import MobileNavigation from "./MobileNavigation";
+import MobileSidebar from "./MobileSidebar";
 import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -31,7 +31,7 @@ const AppLayout = () => {
         {/* Mobile navigation - only visible on mobile */}
         {isMobile && (
           <>
-            <MobileNavigation isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
+            <MobileSidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
             <MobileBottomNav onOpenMenu={toggleMobileMenu} />
           </>
         )}

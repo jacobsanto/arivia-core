@@ -57,13 +57,14 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           
           <Link to="/" className="flex items-center">
             <img 
-              src="/arivia-logo-black-light-bg.png" 
+              src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
               alt="Arivia Villas" 
               className="h-8 md:h-10" 
             />
           </Link>
         </div>
 
+        {/* User controls on the right */}
         <div className="flex items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

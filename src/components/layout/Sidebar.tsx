@@ -37,11 +37,7 @@ const Sidebar = () => {
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
-        <img 
-          src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
-          alt="Arivia Villas Logo" 
-          className="h-14 w-auto" 
-        />
+        {/* Logo removed from here - now only in Header */}
       </div>
       
       <div className="flex items-center justify-center mb-6">
