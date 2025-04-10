@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Bell, MessageSquare, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
+import { Link } from "react-router-dom";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -44,14 +46,25 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
   return (
     <header className="border-b border-border px-4 py-2 md:px-6 md:py-3 bg-background">
       <div className="flex justify-between items-center">
-        {isMobile && (
-          <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2">
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        )}
+        {/* Logo on the left */}
+        <div className="flex items-center">
+          {isMobile && (
+            <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          )}
+          
+          <Link to="/" className="flex items-center">
+            <img 
+              src="/arivia-logo-black-light-bg.png" 
+              alt="Arivia Villas" 
+              className="h-8 md:h-10" 
+            />
+          </Link>
+        </div>
 
-        <div className="flex-1 flex justify-end items-center space-x-2 md:space-x-4">
+        <div className="flex items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon" className="relative hidden md:flex">
