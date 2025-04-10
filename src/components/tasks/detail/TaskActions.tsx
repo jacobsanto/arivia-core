@@ -1,7 +1,6 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle } from "lucide-react";
 
 interface TaskActionsProps {
   onClose: () => void;
@@ -51,16 +50,14 @@ const TaskActions = ({
               onClick={onReject}
               size={isMobile ? "sm" : "default"}
             >
-              <XCircle className="mr-2 h-4 w-4" />
               Reject
             </Button>
             <Button
               variant="default"
               onClick={onApprove}
               className="bg-green-600 hover:bg-green-700"
-              size={isMobile ? "sm" : "default"}
+              size={iMobile ? "sm" : "default"}
             >
-              <CheckCircle className="mr-2 h-4 w-4" />
               Approve
             </Button>
           </>
