@@ -30,8 +30,8 @@ export const TaskCardStatusBadges = ({
   };
 
   return (
-    <div className={`flex ${isMobile ? 'flex-wrap gap-1' : 'items-center space-x-2'}`}>
-      <span className="text-sm text-muted-foreground">
+    <div className="space-y-2">
+      <span className="text-sm text-muted-foreground block">
         Due: {new Date(dueDate).toLocaleString("en-US", { 
           month: "short", 
           day: "numeric",
@@ -39,28 +39,31 @@ export const TaskCardStatusBadges = ({
           minute: "2-digit" 
         })}
       </span>
-      <Badge
-        className={priorityColors[priority as keyof typeof priorityColors]}
-      >
-        {priority}
-      </Badge>
-      <Badge
-        className={statusColors[status as keyof typeof statusColors]}
-      >
-        {status}
-      </Badge>
-      {approvalStatus && (
+      
+      <div className={`flex ${isMobile ? 'flex-wrap gap-1' : 'items-center space-x-2'}`}>
         <Badge
-          variant="outline"
-          className={
-            approvalStatus === "Approved" ? "border-green-200 text-green-800 bg-green-50" :
-            approvalStatus === "Rejected" ? "border-red-200 text-red-800 bg-red-50" :
-            "border-yellow-200 text-yellow-800 bg-yellow-50"
-          }
+          className={priorityColors[priority as keyof typeof priorityColors]}
         >
-          {approvalStatus}
+          {priority}
         </Badge>
-      )}
+        <Badge
+          className={statusColors[status as keyof typeof statusColors]}
+        >
+          {status}
+        </Badge>
+        {approvalStatus && (
+          <Badge
+            variant="outline"
+            className={
+              approvalStatus === "Approved" ? "border-green-200 text-green-800 bg-green-50" :
+              approvalStatus === "Rejected" ? "border-red-200 text-red-800 bg-red-50" :
+              "border-yellow-200 text-yellow-800 bg-yellow-50"
+            }
+          >
+            {approvalStatus}
+          </Badge>
+        )}
+      </div>
     </div>
   );
 };
