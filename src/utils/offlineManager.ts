@@ -3,6 +3,7 @@
  * Utility for managing offline data and sync operations
  */
 import { toast } from "sonner";
+import { OfflineDataSummary } from "@/types/offline";
 
 type SyncableData = {
   id: string;
@@ -111,7 +112,7 @@ class OfflineManager {
   /**
    * Get data counts by type
    */
-  public getOfflineDataSummary() {
+  public getOfflineDataSummary(): OfflineDataSummary {
     const offlineData = this.getOfflineData();
     
     // Ensure offlineData is an array before calling reduce
