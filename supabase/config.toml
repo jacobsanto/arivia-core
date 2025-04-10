@@ -1,5 +1,8 @@
 
 project_id = "lhhxxnbfdrkvjjbzxdjs"
 
+[functions.delete-user]
+verify_jwt = true
+
 [functions.guesty-auth]
 verify_jwt = true

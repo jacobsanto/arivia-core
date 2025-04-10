@@ -81,11 +81,19 @@ export const removeUser = async (
     
     // Try to delete user in Supabase if online
     if (navigator.onLine) {
+      console.log("Attempting to delete user:", userIdToDelete);
+      
       // Delete user's avatar from storage if exists
       const user = users.find(u => u.id === userIdToDelete);
       if (user?.avatar && !user.avatar.includes('placeholder.svg')) {
         try {
-          const filePath = `${userIdToDelete}/avatar`;
+          // Extract the correct file path from the avatar URL
+          const urlParts = user.avatar.split('/');
+          const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
+          const filePath = `${userIdToDelete}/${fileName}`;
+          
+          console.log("Deleting avatar file:", filePath);
+          
           await supabase.storage
             .from('avatars')
             .remove([filePath]);
@@ -95,17 +103,22 @@ export const removeUser = async (
         }
       }
       
-      // Delete the user from auth
-      const { error } = await supabase.functions.invoke('delete-user', {
+      // Delete the user using the edge function
+      const { data, error } = await supabase.functions.invoke('delete-user', {
         body: { userId: userIdToDelete }
       });
       
       if (error) {
+        console.error("Error from delete-user function:", error);
         throw error;
       }
+      
+      console.log("Delete user response:", data);
+    } else {
+      console.log("Device is offline, updating local state only");
     }
     
-    // Update local state
+    // Update local state regardless of online status
     const updatedUsers = users.filter(u => u.id !== userIdToDelete);
     setUsers(updatedUsers);
     
