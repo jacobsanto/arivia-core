@@ -19,22 +19,20 @@ export const ReportingContent: React.FC<ReportingContentProps> = ({
   
   return (
     <Tabs defaultValue="task-reports" className="space-y-4">
-      <div className="mobile-scroll">
-        <TabsList className={`${isMobile ? 'w-[400px] min-w-full' : 'w-full'} grid grid-cols-3 mb-4`}>
-          <TabsTrigger value="task-reports" className="truncate">
-            Task Reports
-            <span className="ml-2 text-xs bg-muted rounded-full px-2 py-0.5">
-              {isLoading ? '...' : reportsCount}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="scheduled-reports" data-value="scheduled-reports" className="truncate">
-            Scheduled Reports
-          </TabsTrigger>
-          <TabsTrigger value="custom-reports" className="truncate">
-            Custom Reports
-          </TabsTrigger>
-        </TabsList>
-      </div>
+      <TabsList className="w-full scroll-tabs mb-4">
+        <TabsTrigger value="task-reports" className="truncate">
+          Task Reports
+          <span className="ml-2 text-xs bg-muted rounded-full px-2 py-0.5">
+            {isLoading ? '...' : reportsCount}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger value="scheduled-reports" data-value="scheduled-reports" className="truncate">
+          Scheduled Reports
+        </TabsTrigger>
+        <TabsTrigger value="custom-reports" className="truncate">
+          Custom Reports
+        </TabsTrigger>
+      </TabsList>
       
       <TabsContent value="task-reports" className="space-y-4">
         <TaskReporting />

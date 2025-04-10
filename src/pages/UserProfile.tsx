@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
@@ -9,8 +8,7 @@ import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DatabaseZap, Shield, User, CloudOff } from "lucide-react";
-
-// Import new components
+import { useIsMobile } from "@/hooks/use-mobile";
 import UserInformation from "@/components/auth/UserInformation";
 import SecurityActivity from "@/components/auth/SecurityActivity";
 import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
@@ -21,8 +19,8 @@ const UserProfile = () => {
   const { canAccess } = usePermissions();
   const [syncingData, setSyncingData] = useState(false);
   const [activeTab, setActiveTab] = useState("info");
+  const isMobile = useIsMobile();
   
-  // Get offline data summary
   const offlineData = offlineManager.getOfflineDataSummary();
   const totalOfflineItems = offlineData.total;
   
@@ -47,13 +45,11 @@ const UserProfile = () => {
 
   const handleClearOfflineData = () => {
     try {
-      // Instead of using clearOfflineData, remove all data
       localStorage.removeItem(offlineManager["STORAGE_KEY"]);
       toast({
         title: "Offline data cleared",
         description: "All cached data has been removed from your device"
       });
-      // Force refresh to update UI
       window.location.reload();
     } catch (error) {
       toast({
@@ -64,7 +60,6 @@ const UserProfile = () => {
     }
   };
 
-  // Check if user has permission to see permissions tab
   const showPermissions = user?.role === "superadmin" || canAccess("viewPermissions");
 
   return (
@@ -72,7 +67,7 @@ const UserProfile = () => {
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">My Profile</h1>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-6">
+        <TabsList className="mb-6 w-full scroll-tabs">
           <TabsTrigger value="info" className="flex items-center gap-1">
             <User className="h-4 w-4" />
             Information
@@ -119,7 +114,6 @@ const UserProfile = () => {
                   <div className="text-2xl font-bold">{totalOfflineItems}</div>
                   <div className="text-sm text-muted-foreground">Pending Changes</div>
                 </div>
-                {/* Display summary of offline data types */}
                 {Object.entries(offlineData.summary || {}).map(([type, count]) => (
                   <div key={type} className="p-4 bg-secondary/50 rounded-lg text-center">
                     <div className="text-2xl font-bold">{count}</div>

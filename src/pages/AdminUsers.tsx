@@ -60,7 +60,7 @@ const AdminUsers = () => {
         </div>
         
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full md:w-auto scroll-tabs">
+          <TabsList className="w-full scroll-tabs">
             <TabsTrigger value="users">Users & Roles</TabsTrigger>
           </TabsList>
           <TabsContent value="users" className="mt-6">
