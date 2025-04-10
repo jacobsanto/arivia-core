@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -7,12 +8,23 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useSwipe } from "@/hooks/use-swipe";
+
 const AdminSettings = () => {
   const {
     user
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Add swipe gesture to navigate back
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
+    onSwipeRight: () => {
+      if (isMobile) {
+        navigate(-1);
+      }
+    }
+  });
 
   // Check for superadmin access
   if (user?.role !== "superadmin") {
@@ -25,7 +37,15 @@ const AdminSettings = () => {
     }, [navigate]);
     return null;
   }
-  return <>
+  
+  const gestureProps = isMobile ? {
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd
+  } : {};
+  
+  return (
+    <div {...gestureProps}>
       <Helmet>
         <title>System Settings - Arivia Villa Sync</title>
       </Helmet>
@@ -63,6 +83,8 @@ const AdminSettings = () => {
           </Card>
         </div>
       </div>
-    </>;
+    </div>
+  );
 };
+
 export default AdminSettings;

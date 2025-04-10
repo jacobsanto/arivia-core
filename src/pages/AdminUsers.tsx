@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import RoleManagement from "@/components/auth/RoleManagement";
@@ -8,6 +9,8 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { useSwipe } from "@/hooks/use-swipe";
+
 const AdminUsers = () => {
   const {
     user
@@ -16,6 +19,15 @@ const AdminUsers = () => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("users");
   const tabsRef = useRef(null);
+  
+  // Add swipe gesture to navigate back
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
+    onSwipeRight: () => {
+      if (isMobile) {
+        navigate(-1);
+      }
+    }
+  });
 
   // Check for superadmin access
   if (user?.role !== "superadmin") {
@@ -28,7 +40,15 @@ const AdminUsers = () => {
     }, [navigate]);
     return null;
   }
-  return <>
+  
+  const gestureProps = isMobile ? {
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd
+  } : {};
+  
+  return (
+    <div {...gestureProps}>
       <Helmet>
         <title>User Management - Arivia Villa Sync</title>
       </Helmet>
@@ -61,6 +81,8 @@ const AdminUsers = () => {
           </Tabs>
         </SwipeableTabsProvider>
       </div>
-    </>;
+    </div>
+  );
 };
+
 export default AdminUsers;

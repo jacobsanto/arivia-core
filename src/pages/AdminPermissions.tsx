@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -8,12 +9,23 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FEATURE_PERMISSIONS } from "@/types/auth";
 import { toast } from "sonner";
+import { useSwipe } from "@/hooks/use-swipe";
+
 const AdminPermissions = () => {
   const {
     user
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  
+  // Add swipe gesture to navigate back
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
+    onSwipeRight: () => {
+      if (isMobile) {
+        navigate(-1);
+      }
+    }
+  });
 
   // Check for superadmin access
   if (user?.role !== "superadmin") {
@@ -26,6 +38,7 @@ const AdminPermissions = () => {
     }, [navigate]);
     return null;
   }
+  
   const permissionsByCategory = React.useMemo(() => {
     const categories: Record<string, typeof FEATURE_PERMISSIONS> = {
       "Property": {},
@@ -52,7 +65,15 @@ const AdminPermissions = () => {
     });
     return categories;
   }, []);
-  return <>
+  
+  const gestureProps = isMobile ? {
+    onTouchStart,
+    onTouchMove,
+    onTouchEnd
+  } : {};
+  
+  return (
+    <div {...gestureProps}>
       <Helmet>
         <title>System Permissions - Arivia Villa Sync</title>
       </Helmet>
@@ -106,6 +127,8 @@ const AdminPermissions = () => {
         })}
         </div>
       </div>
-    </>;
+    </div>
+  );
 };
+
 export default AdminPermissions;

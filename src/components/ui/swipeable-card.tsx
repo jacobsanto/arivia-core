@@ -1,8 +1,9 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
+import React, { useState, useRef, useEffect } from "react";
+import { Card, CardProps } from "@/components/ui/card";
 import { useSwipe } from "@/hooks/use-swipe";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface SwipeableCardProps extends React.HTMLAttributes<HTMLDivElement> {
   onSwipeLeft?: () => void;
@@ -12,6 +13,9 @@ interface SwipeableCardProps extends React.HTMLAttributes<HTMLDivElement> {
   swipeThreshold?: number;
   swipeEnabled?: boolean;
   feedbackColor?: string;
+  swipeIndicators?: boolean;
+  swipeLeftText?: string;
+  swipeRightText?: string;
 }
 
 const SwipeableCard = React.forwardRef<
@@ -27,9 +31,22 @@ const SwipeableCard = React.forwardRef<
   swipeThreshold = 50,
   swipeEnabled = true,
   feedbackColor = "rgba(0, 0, 0, 0.1)",
+  swipeIndicators = false,
+  swipeLeftText = "Delete",
+  swipeRightText = "Complete",
   ...props
 }, ref) => {
-  const [swipeDirection, setSwipeDirection] = React.useState<string | null>(null);
+  const [swipeDirection, setSwipeDirection] = useState<string | null>(null);
+  const [swipeAmount, setSwipeAmount] = useState(0);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Reset swipe amount when not swiping
+  useEffect(() => {
+    if (!swipeDirection) {
+      const timer = setTimeout(() => setSwipeAmount(0), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [swipeDirection]);
 
   const { onTouchStart, onTouchMove, onTouchEnd, swiping } = useSwipe({
     threshold: swipeThreshold,
@@ -55,6 +72,23 @@ const SwipeableCard = React.forwardRef<
     }
   });
 
+  // Enhanced touch handler with visual feedback
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!swipeEnabled || !cardRef.current) return;
+    
+    const touchX = e.touches[0].clientX;
+    const cardRect = cardRef.current.getBoundingClientRect();
+    const startX = cardRect.left;
+    const deltaX = touchX - startX - (cardRect.width / 2);
+    
+    // Limit the swipe amount
+    const maxSwipe = cardRect.width * 0.3;
+    const limitedDelta = Math.max(Math.min(deltaX, maxSwipe), -maxSwipe);
+    
+    setSwipeAmount(limitedDelta);
+    onTouchMove(e);
+  };
+
   // Dynamic background based on swipe direction for visual feedback
   const getBackgroundStyle = () => {
     if (!swipeDirection || !swiping) return {};
@@ -73,24 +107,58 @@ const SwipeableCard = React.forwardRef<
 
   const gestureProps = swipeEnabled ? {
     onTouchStart,
-    onTouchMove,
+    onTouchMove: handleTouchMove,
     onTouchEnd
   } : {};
 
   return (
-    <Card
-      ref={ref}
-      className={cn(
-        "transition-all duration-200",
-        swiping && "cursor-grabbing",
-        className
+    <div className="relative" ref={ref}>
+      {/* Swipe indicators */}
+      {swipeIndicators && swipeEnabled && (
+        <>
+          <div 
+            className={cn(
+              "absolute left-0 top-0 bottom-0 flex items-center justify-center opacity-0 bg-red-500/20 text-white font-medium px-4 transition-opacity",
+              swipeAmount < -20 && "opacity-100"
+            )}
+            style={{ width: '80px' }}
+          >
+            {swipeLeftText}
+          </div>
+          <div 
+            className={cn(
+              "absolute right-0 top-0 bottom-0 flex items-center justify-center opacity-0 bg-green-500/20 text-white font-medium px-4 transition-opacity",
+              swipeAmount > 20 && "opacity-100"
+            )}
+            style={{ width: '80px' }}
+          >
+            {swipeRightText}
+          </div>
+        </>
       )}
-      style={getBackgroundStyle()}
-      {...gestureProps}
-      {...props}
-    >
-      {children}
-    </Card>
+      
+      {/* The actual card */}
+      <div 
+        style={{
+          transform: `translateX(${swipeAmount}px)`,
+          transition: swipeAmount === 0 ? 'transform 0.3s ease' : 'none'
+        }}
+      >
+        <Card
+          ref={cardRef}
+          className={cn(
+            "transition-all duration-200",
+            swiping && "cursor-grabbing",
+            className
+          )}
+          style={getBackgroundStyle()}
+          {...gestureProps}
+          {...props}
+        >
+          {children}
+        </Card>
+      </div>
+    </div>
   );
 });
 
