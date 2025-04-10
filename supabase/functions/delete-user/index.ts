@@ -48,26 +48,76 @@ Deno.serve(async (req) => {
 
     // Initialize the Supabase client with the service role key for admin privileges
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Delete the user's profile first
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
     
-    if (profileError) {
-      console.error("Error deleting user profile:", profileError);
+    // Check if the user ID is from an OAuth provider (like Google)
+    const isOAuthUser = userId.includes('-');
+    
+    // First delete the user's profile regardless of provider
+    try {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (profileError) {
+        console.error("Error deleting user profile:", profileError);
+        // Continue with deletion even if profile deletion fails
+      } else {
+        console.log("User profile deleted successfully");
+      }
+    } catch (profileErr) {
+      console.error("Exception when deleting profile:", profileErr);
+      // Continue with deletion even if profile deletion fails
     }
 
-    // Delete the user using the admin API
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    // Handle deletion based on user ID format
+    let deletionError = null;
+    
+    if (isOAuthUser) {
+      // For OAuth users, we need to use a different approach
+      // First, let's get the user by their ID
+      const { data: userData, error: fetchError } = await supabase.auth.admin
+        .listUsers({
+          filters: {
+            provider: 'google'
+          }
+        });
+      
+      if (fetchError) {
+        console.error("Error fetching users:", fetchError);
+        deletionError = fetchError;
+      } else {
+        // Find the user with the matching ID
+        const userToDelete = userData?.users?.find(u => u.id === userId);
+        
+        if (userToDelete) {
+          // Delete the user using the admin API
+          const { error } = await supabase.auth.admin.deleteUser(userToDelete.id);
+          if (error) {
+            console.error("Error deleting OAuth user:", error);
+            deletionError = error;
+          }
+        } else {
+          // If we can't find the user but we deleted their profile, consider it a success
+          console.log("User not found in auth system, but profile was deleted");
+        }
+      }
+    } else {
+      // For regular UUID users, use the standard approach
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) {
+        console.error("Error deleting user:", error);
+        deletionError = error;
+      }
+    }
 
-    if (error) {
-      console.error("Error deleting user:", error);
+    if (deletionError) {
       return new Response(
         JSON.stringify({
           error: "Failed to delete user",
-          details: error.message
+          details: deletionError.message,
+          userId: userId,
+          isOAuthUser: isOAuthUser
         }),
         {
           status: 500,

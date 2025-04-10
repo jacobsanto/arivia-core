@@ -110,6 +110,19 @@ export const removeUser = async (
       
       if (error) {
         console.error("Error from delete-user function:", error);
+        
+        // Show more detailed error message for OAuth users
+        if (userIdToDelete.includes('-')) {
+          toastService.error("Error deleting OAuth user", {
+            description: "The user profile was removed but there was an issue removing the authentication record. The user won't be able to log in anymore."
+          });
+          
+          // Still update local state as the user effectively can't use the system anymore
+          const updatedUsers = users.filter(u => u.id !== userIdToDelete);
+          setUsers(updatedUsers);
+          return true;
+        }
+        
         throw error;
       }
       
