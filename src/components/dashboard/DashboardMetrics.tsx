@@ -132,7 +132,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: 8,
         isPositive: true
       },
-      variant: 'accent'
+      variant: 'accent' as const
     },
     {
       title: "Tasks",
@@ -153,7 +153,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: 12,
         isPositive: data.tasks.completed > data.tasks.pending
       },
-      variant: data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success'
+      variant: data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success' as const
     },
     {
       title: "Maintenance",
@@ -174,7 +174,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: data.maintenance.critical > 0 ? 5 : 2,
         isPositive: data.maintenance.critical === 0
       },
-      variant: data.maintenance.critical > 0 ? 'warning' : 'success'
+      variant: data.maintenance.critical > 0 ? 'warning' : 'success' as const
     }
   ];
   
