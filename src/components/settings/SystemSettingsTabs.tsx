@@ -44,6 +44,7 @@ const SystemSettingsTabs: React.FC = () => {
     },
     integrations: { 
       status: "not-configured" as const 
+      // Note: No lastUpdated for not-configured status
     },
     security: { 
       status: "configured" as const,
