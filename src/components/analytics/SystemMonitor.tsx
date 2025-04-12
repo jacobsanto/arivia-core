@@ -107,7 +107,14 @@ const SystemMetricCard: React.FC<SystemMetricCardProps> = ({ title, value, icon 
         </div>
         <span className="text-xs font-mono">{value}%</span>
       </div>
-      <Progress value={value} className="h-1.5" indicatorClassName={getProgressColor(value)} />
+      <Progress 
+        value={value} 
+        className="h-1.5" 
+        // Instead of using indicatorClassName, modify the className of the Progress component
+        style={{ 
+          "--progress-indicator-color": getProgressColor(value) 
+        } as React.CSSProperties}
+      />
     </div>
   );
 };

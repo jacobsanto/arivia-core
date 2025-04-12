@@ -1,18 +1,17 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Clock, Signal, History } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Sample activity data for demonstration
+// Sample activity data for demonstration with properly typed status values
 const activityData = [
-  { id: 1, type: "login", user: "Maria Karapataki", time: "Today, 08:23 AM", status: "success" },
-  { id: 2, type: "task_completion", user: "Nikos Papadopoulos", time: "Today, 09:45 AM", status: "success" },
-  { id: 3, type: "inventory_update", user: "Elena Andreou", time: "Today, 10:12 AM", status: "warning" },
-  { id: 4, type: "booking_change", user: "System", time: "Today, 11:30 AM", status: "info" },
-  { id: 5, type: "maintenance_request", user: "George Demetriou", time: "Today, 01:15 PM", status: "error" },
-  { id: 6, type: "login", user: "Alex Ioannou", time: "Today, 02:40 PM", status: "success" },
+  { id: 1, type: "login", user: "Maria Karapataki", time: "Today, 08:23 AM", status: "success" as const },
+  { id: 2, type: "task_completion", user: "Nikos Papadopoulos", time: "Today, 09:45 AM", status: "success" as const },
+  { id: 3, type: "inventory_update", user: "Elena Andreou", time: "Today, 10:12 AM", status: "warning" as const },
+  { id: 4, type: "booking_change", user: "System", time: "Today, 11:30 AM", status: "info" as const },
+  { id: 5, type: "maintenance_request", user: "George Demetriou", time: "Today, 01:15 PM", status: "error" as const },
+  { id: 6, type: "login", user: "Alex Ioannou", time: "Today, 02:40 PM", status: "success" as const },
 ];
 
 interface ActivityMonitorProps {
