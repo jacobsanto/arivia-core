@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PerformanceMetricsChart } from '@/components/analytics/PerformanceMetricsChart';
 import { MetricSummary } from '@/components/analytics/MetricSummary';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Calendar, Users, Home, Clock } from "lucide-react";
+import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { formatOccupancyReportData } from './occupancyData';
 
 // Sample data
 const monthlyOccupancyData = [
@@ -40,8 +41,23 @@ const seasonalData = [
 ];
 
 export const OccupancyAnalysis: React.FC = () => {
-  const [selectedYear, setSelectedYear] = useState('2025');
+  const { selectedProperty, selectedYear } = useAnalytics();
   const isMobile = useIsMobile();
+  
+  // Filter data based on selected property
+  const getFilteredPropertyData = () => {
+    if (selectedProperty === 'all') {
+      return propertyOccupancyData;
+    }
+    return propertyOccupancyData.filter(item => item.name === selectedProperty);
+  };
+  
+  // Get occupancy description
+  const getOccupancyDescription = () => {
+    return selectedProperty === 'all' 
+      ? `Detailed occupancy insights across all properties for ${selectedYear}`
+      : `Detailed occupancy insights for ${selectedProperty} in ${selectedYear}`;
+  };
   
   return (
     <div className="space-y-6">
@@ -50,18 +66,8 @@ export const OccupancyAnalysis: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle>Occupancy Analysis</CardTitle>
-              <CardDescription>Detailed insights into property occupancy patterns</CardDescription>
+              <CardDescription>{getOccupancyDescription()}</CardDescription>
             </div>
-            
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -89,7 +95,8 @@ export const OccupancyAnalysis: React.FC = () => {
               <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
                 <MetricSummary 
                   title="Average Occupancy"
-                  value="84.5%"
+                  value={selectedProperty === 'all' ? "84.5%" : 
+                    `${propertyOccupancyData.find(p => p.name === selectedProperty)?.occupancy || 0}%`}
                   change={{ value: 3.2, isPositive: true }}
                   variant="accent"
                   size={isMobile ? "sm" : "md"}
@@ -110,7 +117,8 @@ export const OccupancyAnalysis: React.FC = () => {
                 />
                 <MetricSummary 
                   title="Avg. Stay Length"
-                  value="5.3 days"
+                  value={selectedProperty === 'all' ? "5.3 days" :
+                    `${propertyOccupancyData.find(p => p.name === selectedProperty)?.avgStay || 0} days`}
                   change={{ value: 0.4, isPositive: true }}
                   variant="warning"
                   size={isMobile ? "sm" : "md"}
@@ -120,7 +128,7 @@ export const OccupancyAnalysis: React.FC = () => {
               <div>
                 <PerformanceMetricsChart 
                   title="Monthly Occupancy Rate" 
-                  description="Occupancy percentage throughout the year"
+                  description={`Occupancy percentage throughout ${selectedYear} ${selectedProperty !== 'all' ? `for ${selectedProperty}` : ''}`}
                   type="line"
                   data={monthlyOccupancyData}
                   dataKeys={[
@@ -132,7 +140,7 @@ export const OccupancyAnalysis: React.FC = () => {
               <div>
                 <PerformanceMetricsChart 
                   title="Monthly Bookings" 
-                  description="Number of bookings per month"
+                  description={`Number of bookings per month ${selectedProperty !== 'all' ? `for ${selectedProperty}` : ''}`}
                   type="bar"
                   data={monthlyOccupancyData}
                   dataKeys={[
@@ -143,24 +151,38 @@ export const OccupancyAnalysis: React.FC = () => {
             </TabsContent>
             
             <TabsContent value="properties" className="space-y-6">
-              <div>
-                <PerformanceMetricsChart 
-                  title="Occupancy by Property" 
-                  description="Average occupancy percentage for each property"
-                  type="bar"
-                  data={propertyOccupancyData}
-                  dataKeys={[
-                    { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
-                  ]}
-                />
-              </div>
+              {selectedProperty === 'all' ? (
+                <div>
+                  <PerformanceMetricsChart 
+                    title="Occupancy by Property" 
+                    description="Average occupancy percentage for each property"
+                    type="bar"
+                    data={getFilteredPropertyData()}
+                    dataKeys={[
+                      { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                    ]}
+                  />
+                </div>
+              ) : (
+                <div>
+                  <PerformanceMetricsChart 
+                    title={`${selectedProperty} Occupancy`}
+                    description={`Monthly occupancy details for ${selectedProperty}`}
+                    type="line"
+                    data={monthlyOccupancyData}
+                    dataKeys={[
+                      { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                    ]}
+                  />
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="seasonal" className="space-y-6">
               <div>
                 <PerformanceMetricsChart 
                   title="Seasonal Analysis" 
-                  description="Occupancy and average rate by season"
+                  description={`Occupancy and average rate by season ${selectedProperty !== 'all' ? `for ${selectedProperty}` : ''}`}
                   type="multi-line"
                   data={seasonalData}
                   dataKeys={[
@@ -177,7 +199,7 @@ export const OccupancyAnalysis: React.FC = () => {
                   title="Average Stay Length" 
                   description="Average stay duration in days by property"
                   type="bar"
-                  data={propertyOccupancyData}
+                  data={getFilteredPropertyData()}
                   dataKeys={[
                     { key: "avgStay", name: "Avg. Stay (Days)", color: "#ec4899" }
                   ]}

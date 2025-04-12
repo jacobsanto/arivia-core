@@ -3,6 +3,7 @@ import React from "react";
 import { AnalyticsContent } from "@/components/reports/AnalyticsContent";
 import MobileAnalyticsDashboard from "@/components/reports/mobile/MobileAnalyticsDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 
 const Analytics = () => {
   const isMobile = useIsMobile();
@@ -14,11 +15,13 @@ const Analytics = () => {
         <p className="text-muted-foreground">Performance metrics and insights</p>
       </div>
       
-      {isMobile ? (
-        <MobileAnalyticsDashboard />
-      ) : (
-        <AnalyticsContent />
-      )}
+      <AnalyticsProvider>
+        {isMobile ? (
+          <MobileAnalyticsDashboard />
+        ) : (
+          <AnalyticsContent />
+        )}
+      </AnalyticsProvider>
     </div>
   );
 };

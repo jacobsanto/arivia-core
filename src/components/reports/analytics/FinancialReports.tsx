@@ -1,12 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PerformanceMetricsChart } from '@/components/analytics/PerformanceMetricsChart';
 import { MetricSummary } from '@/components/analytics/MetricSummary';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DollarSign, TrendingUp, BarChart3, PieChart } from "lucide-react";
+import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { formatFinancialReportData } from './financialData';
 
 // Sample data
 const revenueData = [
@@ -42,8 +43,30 @@ const expenseCategories = [
 ];
 
 export const FinancialReports: React.FC = () => {
-  const [selectedYear, setSelectedYear] = useState('2025');
+  const { selectedProperty, selectedYear } = useAnalytics();
   const isMobile = useIsMobile();
+  
+  // Filter data based on selected property
+  const getFilteredData = () => {
+    if (selectedProperty === 'all') {
+      return profitabilityByPropertyData;
+    }
+    return profitabilityByPropertyData.filter(item => item.name === selectedProperty);
+  };
+
+  // Get the financial overview title based on filters
+  const getFinancialOverviewTitle = () => {
+    return selectedProperty === 'all' 
+      ? "Annual Financial Overview" 
+      : `${selectedProperty} Financial Overview`;
+  };
+
+  // Get the financial overview description
+  const getFinancialOverviewDescription = () => {
+    return selectedProperty === 'all'
+      ? `Combined monthly revenue, expenses and profit for ${selectedYear}`
+      : `Monthly revenue, expenses and profit for ${selectedProperty} in ${selectedYear}`;
+  };
   
   return (
     <div className="space-y-6">
@@ -52,18 +75,13 @@ export const FinancialReports: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <CardTitle>Financial Reports</CardTitle>
-              <CardDescription>Comprehensive financial data and performance metrics</CardDescription>
+              <CardDescription>
+                {selectedProperty === 'all'
+                  ? 'Comprehensive financial data across all properties'
+                  : `Financial data for ${selectedProperty}`
+                }
+              </CardDescription>
             </div>
-            
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select Year" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -120,8 +138,8 @@ export const FinancialReports: React.FC = () => {
               </div>
               
               <PerformanceMetricsChart 
-                title="Annual Financial Overview" 
-                description="Monthly revenue, expenses and profit"
+                title={getFinancialOverviewTitle()} 
+                description={getFinancialOverviewDescription()}
                 type="multi-line"
                 data={revenueData}
                 dataKeys={[
@@ -131,24 +149,26 @@ export const FinancialReports: React.FC = () => {
                 ]}
               />
               
-              <PerformanceMetricsChart 
-                title="Property Profitability" 
-                description="Revenue, expenses and profit by property"
-                type="bar"
-                data={profitabilityByPropertyData}
-                dataKeys={[
-                  { key: "revenue", name: "Revenue", color: "#8b5cf6" },
-                  { key: "expenses", name: "Expenses", color: "#f97316" },
-                  { key: "profit", name: "Profit", color: "#10b981" }
-                ]}
-              />
+              {selectedProperty === 'all' && (
+                <PerformanceMetricsChart 
+                  title="Property Profitability" 
+                  description="Revenue, expenses and profit by property"
+                  type="bar"
+                  data={getFilteredData()}
+                  dataKeys={[
+                    { key: "revenue", name: "Revenue", color: "#8b5cf6" },
+                    { key: "expenses", name: "Expenses", color: "#f97316" },
+                    { key: "profit", name: "Profit", color: "#10b981" }
+                  ]}
+                />
+              )}
             </TabsContent>
             
             <TabsContent value="revenue" className="space-y-6">
               {/* Revenue-specific content can be added here */}
               <PerformanceMetricsChart 
                 title="Revenue Trends" 
-                description="Monthly revenue breakdown"
+                description={`Monthly revenue for ${selectedProperty === 'all' ? 'all properties' : selectedProperty}`}
                 type="line"
                 data={revenueData}
                 dataKeys={[
@@ -161,7 +181,7 @@ export const FinancialReports: React.FC = () => {
               {/* Expenses-specific content can be added here */}
               <PerformanceMetricsChart 
                 title="Expense Categories" 
-                description="Breakdown of expense types"
+                description={`Breakdown of expense types for ${selectedProperty === 'all' ? 'all properties' : selectedProperty}`}
                 type="bar"
                 data={expenseCategories}
                 dataKeys={[
@@ -176,7 +196,7 @@ export const FinancialReports: React.FC = () => {
                 title="Property Comparison" 
                 description="Profit margin by property"
                 type="bar"
-                data={profitabilityByPropertyData}
+                data={getFilteredData()}
                 dataKeys={[
                   { key: "profit", name: "Profit (€)", color: "#10b981" }
                 ]}

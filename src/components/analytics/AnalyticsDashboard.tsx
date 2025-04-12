@@ -5,8 +5,9 @@ import { MetricSummary } from './MetricSummary';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Building, Users, CalendarClock, Wrench } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { MonitoringDashboard } from './MonitoringDashboard';
+import { PropertyFilter } from '@/contexts/AnalyticsContext';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
 
 // Sample data for demonstration
 const revenueData = [
@@ -39,6 +40,35 @@ const occupancyData = [
   { name: 'Dec', occupancy: 90 }
 ];
 
+// Property-specific data
+const propertyRevenueData = {
+  'Villa Caldera': [
+    { name: 'Jan', revenue: 3000, expenses: 1800, profit: 1200 },
+    { name: 'Feb', revenue: 2500, expenses: 1100, profit: 1400 },
+    // ... more data
+  ],
+  'Villa Sunset': [
+    { name: 'Jan', revenue: 3500, expenses: 2000, profit: 1500 },
+    { name: 'Feb', revenue: 3200, expenses: 1700, profit: 1500 },
+    // ... more data
+  ],
+  'Villa Oceana': [
+    { name: 'Jan', revenue: 4200, expenses: 2200, profit: 2000 },
+    { name: 'Feb', revenue: 3800, expenses: 2000, profit: 1800 },
+    // ... more data
+  ],
+  'Villa Paradiso': [
+    { name: 'Jan', revenue: 3800, expenses: 2100, profit: 1700 },
+    { name: 'Feb', revenue: 3600, expenses: 1900, profit: 1700 },
+    // ... more data
+  ],
+  'Villa Azure': [
+    { name: 'Jan', revenue: 3200, expenses: 1700, profit: 1500 },
+    { name: 'Feb', revenue: 2900, expenses: 1500, profit: 1400 },
+    // ... more data
+  ]
+};
+
 const propertyPerformanceData = [
   { name: 'Villa Caldera', revenue: 45000, occupancy: 87, rating: 4.8 },
   { name: 'Villa Sunset', revenue: 38000, occupancy: 82, rating: 4.6 },
@@ -57,13 +87,46 @@ const taskCompletionData = [
 interface AnalyticsDashboardProps {
   showAllCharts?: boolean;
   showMonitoring?: boolean;
+  propertyFilter?: PropertyFilter;
 }
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ 
   showAllCharts = true,
-  showMonitoring = false
+  showMonitoring = false,
+  propertyFilter
 }) => {
   const isMobile = useIsMobile();
+  // If no prop is provided, use the context
+  const { selectedProperty, selectedYear } = useAnalytics();
+  const activeProperty = propertyFilter || selectedProperty;
+  
+  // Filter data based on selected property
+  const getFilteredRevenueData = () => {
+    if (activeProperty === 'all') {
+      return revenueData;
+    }
+    return propertyRevenueData[activeProperty] || revenueData;
+  };
+
+  const getFilteredPropertyData = () => {
+    if (activeProperty === 'all') {
+      return propertyPerformanceData;
+    }
+    return propertyPerformanceData.filter(item => item.name === activeProperty);
+  };
+
+  // Prepare description text based on filter
+  const getFinancialDescription = () => {
+    return activeProperty === 'all'
+      ? "Combined revenue, expenses and profit for all properties"
+      : `Revenue, expenses and profit for ${activeProperty}`;
+  };
+
+  const getPropertyDescription = () => {
+    return activeProperty === 'all'
+      ? "Comparing revenue and occupancy across properties"
+      : `Performance metrics for ${activeProperty}`;
+  };
   
   return (
     <div className="space-y-6">
@@ -71,7 +134,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
         <MetricSummary 
           title="Properties"
-          value="5"
+          value={activeProperty === 'all' ? "5" : "1"}
           change={{ value: 0, isPositive: true }}
           icon={<Building className="h-5 w-5" />}
           variant="accent"
@@ -79,7 +142,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         />
         <MetricSummary 
           title="Avg. Occupancy"
-          value="86%"
+          value={activeProperty === 'all' ? "86%" : 
+            `${propertyPerformanceData.find(p => p.name === activeProperty)?.occupancy || 0}%`}
           change={{ value: 4, isPositive: true }}
           icon={<Users className="h-5 w-5" />}
           variant="success"
@@ -111,7 +175,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <CardTitle className="text-lg">Activity & System Monitoring</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
-              <MonitoringDashboard compact={isMobile} />
+              <MonitoringDashboard 
+                compact={isMobile} 
+                propertyFilter={activeProperty} 
+              />
             </CardContent>
           </Card>
         </div>
@@ -123,9 +190,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         <div>
           <PerformanceMetricsChart 
             title="Financial Performance" 
-            description="Revenue, expenses and profit over time"
+            description={getFinancialDescription()}
             type="multi-line"
-            data={revenueData}
+            data={getFilteredRevenueData()}
             dataKeys={[
               { key: "revenue", name: "Revenue", color: "#8b5cf6" },
               { key: "expenses", name: "Expenses", color: "#f97316" },
@@ -134,13 +201,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           />
         </div>
         
-        {/* Property Performance Comparison */}
+        {/* Property Performance Comparison - only show if "all" is selected or we're showing a single property */}
         <div>
           <PerformanceMetricsChart 
             title="Property Performance" 
-            description="Comparing revenue and occupancy across properties"
+            description={getPropertyDescription()}
             type="bar"
-            data={propertyPerformanceData}
+            data={getFilteredPropertyData()}
             dataKeys={[
               { key: "revenue", name: "Revenue (€)", color: "#8b5cf6" },
               { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
