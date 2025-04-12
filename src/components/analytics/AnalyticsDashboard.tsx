@@ -3,7 +3,7 @@ import React from 'react';
 import { PerformanceMetricsChart } from './PerformanceMetricsChart';
 import { MetricSummary } from './MetricSummary';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Building, Users, CalendarClock, Tool } from "lucide-react";
+import { Building, Users, CalendarClock, Wrench } from "lucide-react";
 
 // Sample data for demonstration
 const revenueData = [
@@ -90,7 +90,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ showAllC
           title="Maint. Issues"
           value="7"
           change={{ value: 3, isPositive: false }}
-          icon={<Tool className="h-5 w-5" />}
+          icon={<Wrench className="h-5 w-5" />}
           variant="warning"
           size={isMobile ? "sm" : "md"}
         />
