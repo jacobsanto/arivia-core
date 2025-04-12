@@ -1,26 +1,36 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Clock, Signal, History } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { PropertyFilter } from '@/contexts/AnalyticsContext';
 
 // Sample activity data for demonstration with properly typed status values
 const activityData = [
-  { id: 1, type: "login", user: "Maria Karapataki", time: "Today, 08:23 AM", status: "success" as const },
-  { id: 2, type: "task_completion", user: "Nikos Papadopoulos", time: "Today, 09:45 AM", status: "success" as const },
-  { id: 3, type: "inventory_update", user: "Elena Andreou", time: "Today, 10:12 AM", status: "warning" as const },
-  { id: 4, type: "booking_change", user: "System", time: "Today, 11:30 AM", status: "info" as const },
-  { id: 5, type: "maintenance_request", user: "George Demetriou", time: "Today, 01:15 PM", status: "error" as const },
-  { id: 6, type: "login", user: "Alex Ioannou", time: "Today, 02:40 PM", status: "success" as const },
+  { id: 1, type: "login", user: "Maria Karapataki", time: "Today, 08:23 AM", status: "success" as const, property: "Villa Caldera" },
+  { id: 2, type: "task_completion", user: "Nikos Papadopoulos", time: "Today, 09:45 AM", status: "success" as const, property: "Villa Sunset" },
+  { id: 3, type: "inventory_update", user: "Elena Andreou", time: "Today, 10:12 AM", status: "warning" as const, property: "Villa Oceana" },
+  { id: 4, type: "booking_change", user: "System", time: "Today, 11:30 AM", status: "info" as const, property: "Villa Paradiso" },
+  { id: 5, type: "maintenance_request", user: "George Demetriou", time: "Today, 01:15 PM", status: "error" as const, property: "Villa Azure" },
+  { id: 6, type: "login", user: "Alex Ioannou", time: "Today, 02:40 PM", status: "success" as const, property: "Villa Caldera" },
 ];
 
 interface ActivityMonitorProps {
   limit?: number;
+  propertyFilter?: PropertyFilter;
 }
 
-export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5 }) => {
+export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, propertyFilter = 'all' }) => {
   const isMobile = useIsMobile();
-  const limitedActivity = activityData.slice(0, limit);
+  
+  // Filter activities by property if a specific property is selected
+  const filteredActivity = propertyFilter === 'all' 
+    ? activityData 
+    : activityData.filter(activity => activity.property === propertyFilter);
+  
+  // Apply the limit after filtering
+  const limitedActivity = filteredActivity.slice(0, limit);
   
   return (
     <Card>
@@ -31,7 +41,11 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5 }) =
               <Activity className="h-5 w-5 text-primary" />
               Recent Activity
             </CardTitle>
-            <CardDescription>System and user activities across all villas</CardDescription>
+            <CardDescription>
+              {propertyFilter === 'all' 
+                ? 'System and user activities across all villas' 
+                : `System and user activities for ${propertyFilter}`}
+            </CardDescription>
           </div>
           <Badge variant="outline" className="text-xs">
             Last 24hrs
@@ -40,9 +54,13 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5 }) =
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {limitedActivity.map((activity) => (
-            <ActivityItem key={activity.id} activity={activity} />
-          ))}
+          {limitedActivity.length > 0 ? (
+            limitedActivity.map((activity) => (
+              <ActivityItem key={activity.id} activity={activity} />
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center py-4">No recent activity for this property</p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -56,6 +74,7 @@ interface ActivityItemProps {
     user: string;
     time: string;
     status: "success" | "warning" | "error" | "info";
+    property: string;
   };
 }
 
