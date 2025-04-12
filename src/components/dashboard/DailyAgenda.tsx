@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarClock, ChevronRight, ChevronLeft, ChevronDown } from "lucide-react";
-import { format, addDays } from 'date-fns';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ChevronDown } from "lucide-react";
+import { addDays } from 'date-fns';
 import { Task } from '@/types/taskTypes';
 import { MaintenanceTask } from '@/types/maintenanceTypes';
 import { useSwipe } from "@/hooks/use-swipe";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import AgendaHeader from './agenda/AgendaHeader';
+import AgendaContent from './agenda/AgendaContent';
 import { 
   CombinedTask,
   combineTasks, 
@@ -17,7 +18,6 @@ import {
   sortTasksByTime,
   groupTasksByTimeOfDay
 } from './agenda/agendaUtils';
-import TaskGroup from './agenda/TaskGroup';
 
 interface DailyAgendaProps {
   housekeepingTasks: Task[];
@@ -82,26 +82,9 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   };
 
   const handleTaskClick = (task: CombinedTask) => {
-    // No-op function as we now handle this in the AgendaTask component
     console.log("Task clicked:", task.title);
   };
-
-  // Animation variants for day transitions
-  const variants = {
-    enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
-      opacity: 0
-    }),
-    center: {
-      x: 0,
-      opacity: 1
-    },
-    exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
-      opacity: 0
-    })
-  };
-
+  
   // Track swipe direction for animations
   const [swipeDirection, setSwipeDirection] = useState<number>(0);
   
@@ -113,35 +96,10 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   return (
     <Card className="w-full overflow-hidden relative">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base md:text-lg flex items-center gap-2">
-            <CalendarClock className="h-5 w-5" />
-            Daily Agenda
-          </CardTitle>
-          <div className="flex items-center space-x-1">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigateToDay('prev')}
-              className="h-8 w-8"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous Day</span>
-            </Button>
-            <div className="font-medium text-sm">
-              {format(selectedDate, 'EEEE, MMM d')}
-            </div>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => navigateToDay('next')}
-              className="h-8 w-8"
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next Day</span>
-            </Button>
-          </div>
-        </div>
+        <AgendaHeader 
+          selectedDate={selectedDate} 
+          onNavigateDay={navigateToDay} 
+        />
       </CardHeader>
       
       <div 
@@ -171,44 +129,15 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
           style={{ transform: pullMoveY > 0 ? `translateY(${pullMoveY}px)` : 'none' }}
         >
           <AnimatePresence initial={false} mode="wait" custom={swipeDirection}>
-            <motion.div
-              key={selectedDate.toISOString()}
-              custom={swipeDirection}
-              variants={variants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{
-                type: "tween",
-                duration: 0.3
-              }}
-            >
-              {sortedTasks.length === 0 ? (
-                <div className="text-center py-6 text-muted-foreground">
-                  No tasks scheduled for {format(selectedDate, 'MMMM d')}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <TaskGroup
-                    title="Morning"
-                    tasks={morningTasks}
-                    onTaskClick={handleTaskClick}
-                  />
-                  
-                  <TaskGroup
-                    title="Afternoon"
-                    tasks={afternoonTasks}
-                    onTaskClick={handleTaskClick}
-                  />
-                  
-                  <TaskGroup
-                    title="Evening"
-                    tasks={eveningTasks}
-                    onTaskClick={handleTaskClick}
-                  />
-                </div>
-              )}
-            </motion.div>
+            <AgendaContent
+              selectedDate={selectedDate}
+              sortedTasks={sortedTasks}
+              morningTasks={morningTasks}
+              afternoonTasks={afternoonTasks}
+              eveningTasks={eveningTasks}
+              onTaskClick={handleTaskClick}
+              swipeDirection={swipeDirection}
+            />
           </AnimatePresence>
         </CardContent>
       </div>
