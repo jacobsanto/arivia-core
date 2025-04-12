@@ -5,11 +5,16 @@ import { SwipeableCard } from "@/components/ui/swipeable-card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
+export interface MetricCardFooterData {
+  text: string;
+  [key: string]: any; // Allow for additional data properties
+}
+
 export interface MetricCardProps {
   title: string;
   value: string;
   description: string;
-  footer?: React.ReactNode;
+  footer?: MetricCardFooterData;
   swipeable?: boolean;
   trend?: {
     value: number;
@@ -43,6 +48,59 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         return "";
     }
   };
+
+  // Render the footer content based on the data structure
+  const renderFooter = () => {
+    if (!footer) return null;
+
+    if (isMobile) {
+      return (
+        <div className="text-2xs text-muted-foreground">
+          {footer.occupied !== undefined && footer.vacant !== undefined && (
+            <>
+              <span className="text-green-500">{footer.occupied}</span> Occ | 
+              <span className="text-blue-500"> {footer.vacant}</span> Vac
+            </>
+          )}
+          {footer.completed !== undefined && footer.pending !== undefined && (
+            <>
+              <span className="text-green-500">{footer.completed}</span> Done | 
+              <span className="text-amber-500"> {footer.pending}</span> Pend
+            </>
+          )}
+          {footer.critical !== undefined && footer.standard !== undefined && (
+            <>
+              <span className="text-red-500">{footer.critical}</span> Crit | 
+              <span className="text-blue-500"> {footer.standard}</span> Std
+            </>
+          )}
+        </div>
+      );
+    } else {
+      return (
+        <div className="text-xs text-muted-foreground font-condensed">
+          {footer.occupied !== undefined && footer.vacant !== undefined && (
+            <>
+              <span className="text-green-500 font-medium">{footer.occupied}</span> Occupied | 
+              <span className="text-blue-500 font-medium"> {footer.vacant}</span> Vacant
+            </>
+          )}
+          {footer.completed !== undefined && footer.pending !== undefined && (
+            <>
+              <span className="text-green-500 font-medium">{footer.completed}</span> Completed | 
+              <span className="text-amber-500 font-medium"> {footer.pending}</span> Pending
+            </>
+          )}
+          {footer.critical !== undefined && footer.standard !== undefined && (
+            <>
+              <span className="text-red-500 font-medium">{footer.critical}</span> Critical | 
+              <span className="text-blue-500 font-medium"> {footer.standard}</span> Standard
+            </>
+          )}
+        </div>
+      );
+    }
+  };
   
   const cardContent = (
     <>
@@ -63,7 +121,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           )}
         </div>
         <p className={`${isMobile ? 'text-2xs' : 'text-xs'} text-muted-foreground`}>{description}</p>
-        {footer && <div className={`${isMobile ? 'mt-1' : 'mt-2'}`}>{footer}</div>}
+        {footer && <div className={`${isMobile ? 'mt-1' : 'mt-2'}`}>{renderFooter()}</div>}
       </CardContent>
     </>
   );

@@ -1,5 +1,6 @@
 
 import { MetricCardProps } from "./MetricCard";
+import React from "react";
 
 export interface DashboardMetricData {
   properties: {
@@ -24,22 +25,49 @@ export const createMetricCards = (data: DashboardMetricData, isMobile: boolean):
   const tasksVariant: 'warning' | 'success' = data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success';
   const maintenanceVariant: 'warning' | 'success' = data.maintenance.critical > 0 ? 'warning' : 'success';
   
+  // Create footer content as string representations instead of JSX
+  const propertiesFooterMobile = {
+    text: `${data.properties.occupied} Occ | ${data.properties.vacant} Vac`,
+    occupied: data.properties.occupied,
+    vacant: data.properties.vacant
+  };
+  
+  const propertiesFooterDesktop = {
+    text: `${data.properties.occupied} Occupied | ${data.properties.vacant} Vacant`,
+    occupied: data.properties.occupied,
+    vacant: data.properties.vacant
+  };
+  
+  const tasksFooterMobile = {
+    text: `${data.tasks.completed} Done | ${data.tasks.pending} Pend`,
+    completed: data.tasks.completed,
+    pending: data.tasks.pending
+  };
+  
+  const tasksFooterDesktop = {
+    text: `${data.tasks.completed} Completed | ${data.tasks.pending} Pending`,
+    completed: data.tasks.completed,
+    pending: data.tasks.pending
+  };
+  
+  const maintenanceFooterMobile = {
+    text: `${data.maintenance.critical} Crit | ${data.maintenance.standard} Std`,
+    critical: data.maintenance.critical,
+    standard: data.maintenance.standard
+  };
+  
+  const maintenanceFooterDesktop = {
+    text: `${data.maintenance.critical} Critical | ${data.maintenance.standard} Standard`,
+    critical: data.maintenance.critical,
+    standard: data.maintenance.standard
+  };
+  
   return [
     {
       title: "Properties",
       value: data.properties.total.toString(),
       description: "Properties Managed",
-      footer: isMobile ? (
-        <div className="text-2xs text-muted-foreground">
-          <span className="text-green-500">{data.properties.occupied}</span> Occ | 
-          <span className="text-blue-500"> {data.properties.vacant}</span> Vac
-        </div>
-      ) : (
-        <div className="text-xs text-muted-foreground font-condensed">
-          <span className="text-green-500 font-medium">{data.properties.occupied}</span> Occupied | 
-          <span className="text-blue-500 font-medium"> {data.properties.vacant}</span> Vacant
-        </div>
-      ),
+      footer: isMobile ? propertiesFooterMobile : propertiesFooterDesktop,
       trend: {
         value: 8,
         isPositive: true
@@ -50,17 +78,7 @@ export const createMetricCards = (data: DashboardMetricData, isMobile: boolean):
       title: "Tasks",
       value: data.tasks.total.toString(),
       description: "Active Tasks",
-      footer: isMobile ? (
-        <div className="text-2xs text-muted-foreground">
-          <span className="text-green-500">{data.tasks.completed}</span> Done | 
-          <span className="text-amber-500"> {data.tasks.pending}</span> Pend
-        </div>
-      ) : (
-        <div className="text-xs text-muted-foreground font-condensed">
-          <span className="text-green-500 font-medium">{data.tasks.completed}</span> Completed | 
-          <span className="text-amber-500 font-medium"> {data.tasks.pending}</span> Pending
-        </div>
-      ),
+      footer: isMobile ? tasksFooterMobile : tasksFooterDesktop,
       trend: {
         value: 12,
         isPositive: data.tasks.completed > data.tasks.pending
@@ -71,17 +89,7 @@ export const createMetricCards = (data: DashboardMetricData, isMobile: boolean):
       title: "Maintenance",
       value: data.maintenance.total.toString(),
       description: "Maintenance Issues",
-      footer: isMobile ? (
-        <div className="text-2xs text-muted-foreground">
-          <span className="text-red-500">{data.maintenance.critical}</span> Crit | 
-          <span className="text-blue-500"> {data.maintenance.standard}</span> Std
-        </div>
-      ) : (
-        <div className="text-xs text-muted-foreground font-condensed">
-          <span className="text-red-500 font-medium">{data.maintenance.critical}</span> Critical | 
-          <span className="text-blue-500 font-medium"> {data.maintenance.standard}</span> Standard
-        </div>
-      ),
+      footer: isMobile ? maintenanceFooterMobile : maintenanceFooterDesktop,
       trend: {
         value: data.maintenance.critical > 0 ? 5 : 2,
         isPositive: data.maintenance.critical === 0
