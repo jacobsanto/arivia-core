@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -6,7 +5,7 @@ import {
   Users, 
   Mail, 
   Wrench, 
-  Plugs, 
+  Plug, 
   Shield, 
   PaintBucket,
   Bell
@@ -44,7 +43,7 @@ const SystemSettingsTabs: React.FC = () => {
             <span>Maintenance</span>
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center gap-2">
-            <Plugs className="h-4 w-4" />
+            <Plug className="h-4 w-4" />
             <span>Integrations</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
