@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
@@ -109,6 +110,10 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const cardsPerPage = isMobile ? 2 : 3;
   
+  // Fix: Define the variant values separately instead of using the ternary expressions directly with as const
+  const tasksVariant: 'warning' | 'success' = data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success';
+  const maintenanceVariant: 'warning' | 'success' = data.maintenance.critical > 0 ? 'warning' : 'success';
+  
   const allCards = [
     {
       title: "Properties",
@@ -150,7 +155,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: 12,
         isPositive: data.tasks.completed > data.tasks.pending
       },
-      variant: (data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success') as const
+      variant: tasksVariant
     },
     {
       title: "Maintenance",
@@ -171,7 +176,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: data.maintenance.critical > 0 ? 5 : 2,
         isPositive: data.maintenance.critical === 0
       },
-      variant: (data.maintenance.critical > 0 ? 'warning' : 'success') as const
+      variant: maintenanceVariant
     }
   ];
   
