@@ -19,4 +19,10 @@ export interface Task {
   rejectionReason: string | null;
   photos?: string[];
   checklist: ChecklistItem[];
+  // Adding new fields to support more rich task management
+  isRecurring?: boolean;
+  category?: string;
+  estimatedTime?: number; // in minutes
+  actualTime?: number; // in minutes
+  location?: string; // specific location within property
 }

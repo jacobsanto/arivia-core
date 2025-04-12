@@ -1,12 +1,16 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight, CalendarClock, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import DailyAgenda from "./DailyAgenda";
+import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
+import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface MobileDashboardProps {
   dashboardData: any;
@@ -14,6 +18,7 @@ interface MobileDashboardProps {
 
 const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
   const navigate = useNavigate();
+  const [selectedTab, setSelectedTab] = useState<string>("today");
   
   // Get upcoming tasks, limited to 3 for mobile view
   const upcomingTasks = dashboardData.upcomingTasks?.slice(0, 3) || [];
@@ -23,70 +28,74 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       {/* Stats Cards */}
       <DashboardMetrics data={dashboardData} />
       
-      {/* Quick Actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Button 
-          variant="outline" 
-          className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-          onClick={() => navigate('/housekeeping')}
-        >
-          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-            <Calendar className="h-5 w-5 text-blue-600" />
-          </div>
-          <span className="text-sm font-condensed">View Tasks</span>
-        </Button>
+      {/* Tabs for Today's Agenda and Quick Actions */}
+      <Tabs defaultValue="today" className="w-full" onValueChange={setSelectedTab}>
+        <TabsList className="w-full grid grid-cols-2">
+          <TabsTrigger value="today" className="flex items-center gap-2">
+            <CalendarClock className="h-4 w-4" />
+            <span>Today</span>
+          </TabsTrigger>
+          <TabsTrigger value="actions" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>Actions</span>
+          </TabsTrigger>
+        </TabsList>
         
-        <Button 
-          variant="outline" 
-          className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-          onClick={() => navigate('/maintenance')}
-        >
-          <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-            <Calendar className="h-5 w-5 text-amber-600" />
-          </div>
-          <span className="text-sm font-condensed">Maintenance</span>
-        </Button>
-      </div>
-      
-      {/* Upcoming Tasks Section */}
-      <Card>
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base mobile-heading">Today's Tasks</CardTitle>
-            <Button variant="ghost" size="sm" className="h-8 gap-1" onClick={() => navigate('/housekeeping')}>
-              <span className="font-condensed text-sm tracking-tight">View All</span>
-              <ArrowRight className="h-3 w-3" />
+        <TabsContent value="today" className="mt-4">
+          <DailyAgenda 
+            housekeepingTasks={initialHousekeepingTasks}
+            maintenanceTasks={initialMaintenanceTasks}
+          />
+        </TabsContent>
+        
+        <TabsContent value="actions" className="mt-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              onClick={() => navigate('/housekeeping')}
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-blue-600" />
+              </div>
+              <span className="text-sm font-condensed">View Tasks</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              onClick={() => navigate('/maintenance')}
+            >
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-amber-600" />
+              </div>
+              <span className="text-sm font-condensed">Maintenance</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              onClick={() => navigate('/inventory')}
+            >
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-green-600" />
+              </div>
+              <span className="text-sm font-condensed">Inventory</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              onClick={() => navigate('/reports')}
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-purple-600" />
+              </div>
+              <span className="text-sm font-condensed">Reports</span>
             </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {upcomingTasks.length > 0 ? (
-            <div className="space-y-2">
-              {upcomingTasks.map((task, index) => (
-                <div 
-                  key={task.id}
-                  className={`flex items-center justify-between p-2 rounded-md ${
-                    index < upcomingTasks.length - 1 ? "border-b" : ""
-                  }`}
-                >
-                  <div>
-                    <p className="font-medium text-sm mobile-text">{task.title}</p>
-                    <p className="text-xs text-muted-foreground font-condensed">{task.property}</p>
-                  </div>
-                  <div className="flex items-center">
-                    <Badge variant={task.priority === "high" ? "destructive" : 
-                      task.priority === "medium" ? "default" : "outline"}>
-                      <span className="font-condensed text-xs tracking-tight">{task.dueDate}</span>
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-6 font-condensed">No tasks scheduled for today.</p>
-          )}
-        </CardContent>
-      </Card>
+        </TabsContent>
+      </Tabs>
       
       <Separator />
       

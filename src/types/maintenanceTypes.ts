@@ -28,12 +28,13 @@ export interface MaintenanceTask {
   afterPhotos: string[];
   beforeVideos: string[];
   afterVideos: string[];
-  specialInstructions?: string;
   createdAt: string;
   report?: MaintenanceReport;
-}
-
-export interface DateRangeFilter {
-  startDate: Date | null;
-  endDate: Date | null;
+  // Adding new fields to match Task type for compatibility
+  type: string; // For consistency when merging with housekeeping tasks
+  // Additional fields for enhanced task management
+  isRecurring?: boolean;
+  category?: string;
+  estimatedTime?: number; // in minutes
+  actualTime?: number; // in minutes
 }
