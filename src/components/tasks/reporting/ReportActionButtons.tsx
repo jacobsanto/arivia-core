@@ -9,7 +9,7 @@ import {
   Share2, 
   Download, 
   FileSpreadsheet, 
-  FilePdf 
+  FileType 
 } from "lucide-react";
 import { toastService } from "@/services/toast/toast.service";
 import { exportToCSV, preparePrint } from "@/utils/reportExportUtils";
@@ -156,7 +156,7 @@ export const ReportActionButtons: React.FC<ReportActionButtonsProps> = ({
             <span>Export as Excel</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleExport('pdf')}>
-            <FilePdf className="mr-2 h-4 w-4" />
+            <FileType className="mr-2 h-4 w-4" />
             <span>Export as PDF</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
