@@ -156,7 +156,8 @@ const SystemSettingsTabs: React.FC = () => {
           <h2 className="text-xl font-semibold">Integration Settings</h2>
           <SettingsSectionBadge 
             status={settingsStatus.integrations.status} 
-            lastUpdated={settingsStatus.integrations.lastUpdated} 
+            /* Pass undefined for lastUpdated since it doesn't exist in this object */
+            lastUpdated={undefined} 
           />
         </div>
         <IntegrationSettings />
