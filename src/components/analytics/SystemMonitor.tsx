@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CircleCheck, AlertCircle, RefreshCcw, Monitor, SaveAsReportButton } from "lucide-react";
+import { CircleCheck, AlertCircle, RefreshCcw, Monitor } from "lucide-react";
 import { toastService } from "@/services/toast/toast.service";
+import { SaveAsReportButton } from '@/components/reports/analytics/SaveAsReportButton';
 
 interface SystemStatus {
   name: string;
