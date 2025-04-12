@@ -45,13 +45,23 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
     maintenance: "bg-emerald-100 text-emerald-800 border-emerald-200"
   };
 
-  // Extract task name without villa name
+  // Extract task name without villa name and "at"
   const getTaskNameWithoutVilla = () => {
     const villaName = task.property;
-    if (task.title.includes(villaName)) {
-      return task.title.replace(`${villaName} `, '').replace(`${villaName}`, '');
+    let cleanTitle = task.title;
+    
+    // Remove property name if it appears in the title
+    if (cleanTitle.includes(villaName)) {
+      cleanTitle = cleanTitle.replace(`${villaName} `, '').replace(`${villaName}`, '');
     }
-    return task.title;
+    
+    // Remove "at" if it appears at the beginning of the title after cleanup
+    cleanTitle = cleanTitle.trim();
+    if (cleanTitle.toLowerCase().startsWith('at ')) {
+      cleanTitle = cleanTitle.substring(3);
+    }
+    
+    return cleanTitle.trim();
   };
 
   return (
