@@ -118,7 +118,7 @@ export const SystemMonitor = () => {
   };
 
   return (
-    <Card>
+    <Card className="h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>

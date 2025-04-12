@@ -45,7 +45,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
     switch (type) {
       case 'line':
         return (
-          <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" />}
             <XAxis 
               dataKey="name" 
@@ -62,7 +62,8 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
                 type="monotone" 
                 dataKey={dataKey.key} 
                 stroke={dataKey.color} 
-                activeDot={{ r: 8 }} 
+                activeDot={{ r: 6 }} 
+                strokeWidth={2}
               />
             ))}
           </LineChart>
@@ -70,7 +71,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
       
       case 'bar':
         return (
-          <BarChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <BarChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" />}
             <XAxis 
               dataKey="name" 
@@ -93,7 +94,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
       
       case 'multi-line':
         return (
-          <LineChart data={data} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 10 }}>
             {showGrid && <CartesianGrid strokeDasharray="3 3" />}
             <XAxis 
               dataKey="name" 
@@ -123,13 +124,13 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
   };
 
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full">
+      <CardHeader className="pb-2">
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-        <div className={`h-[${isMobile ? '250px' : '300px'}] w-full`}>
+        <div className="h-64 w-full">
           <ChartContainer config={config}>
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}

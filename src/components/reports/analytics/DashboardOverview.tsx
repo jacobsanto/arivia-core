@@ -8,13 +8,13 @@ export const DashboardOverview: React.FC = () => {
   const isMobile = useIsMobile();
   
   return (
-    <div className="space-y-6">
+    <div>
       <Card>
         <CardHeader>
           <CardTitle>Executive Dashboard</CardTitle>
           <CardDescription>A comprehensive overview of key performance metrics across all operations</CardDescription>
         </CardHeader>
-        <CardContent className="pt-0">
+        <CardContent className="pt-2">
           <AnalyticsDashboard showAllCharts={!isMobile} showMonitoring={true} />
         </CardContent>
       </Card>

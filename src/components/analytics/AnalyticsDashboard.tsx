@@ -103,10 +103,10 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         />
       </div>
       
-      {/* Activity Monitoring Section (New in Phase 2) */}
+      {/* Activity Monitoring Section */}
       {showMonitoring && (
-        <>
-          <Card className="border-accent/50">
+        <div className="mb-6">
+          <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Activity & System Monitoring</CardTitle>
             </CardHeader>
@@ -114,62 +114,72 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
               <MonitoringDashboard compact={isMobile} />
             </CardContent>
           </Card>
-          <Separator className="my-2" />
-        </>
+        </div>
       )}
       
-      {/* Financial Performance Chart */}
-      <PerformanceMetricsChart 
-        title="Financial Performance" 
-        description="Revenue, expenses and profit over time"
-        type="multi-line"
-        data={revenueData}
-        dataKeys={[
-          { key: "revenue", name: "Revenue", color: "#8b5cf6" },
-          { key: "expenses", name: "Expenses", color: "#f97316" },
-          { key: "profit", name: "Profit", color: "#10b981" }
-        ]}
-      />
-      
-      {/* Property Performance Comparison */}
-      <PerformanceMetricsChart 
-        title="Property Performance" 
-        description="Comparing revenue and occupancy across properties"
-        type="bar"
-        data={propertyPerformanceData}
-        dataKeys={[
-          { key: "revenue", name: "Revenue (€)", color: "#8b5cf6" },
-          { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
-        ]}
-      />
-      
-      {/* Only show these charts if showAllCharts is true */}
-      {showAllCharts && (
-        <>
-          {/* Occupancy Trends */}
+      {/* Charts Grid */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {/* Financial Performance Chart */}
+        <div className="h-full">
           <PerformanceMetricsChart 
-            title="Occupancy Trends" 
-            description="Monthly occupancy percentage"
-            type="line"
-            data={occupancyData}
+            title="Financial Performance" 
+            description="Revenue, expenses and profit over time"
+            type="multi-line"
+            data={revenueData}
             dataKeys={[
+              { key: "revenue", name: "Revenue", color: "#8b5cf6" },
+              { key: "expenses", name: "Expenses", color: "#f97316" },
+              { key: "profit", name: "Profit", color: "#10b981" }
+            ]}
+          />
+        </div>
+        
+        {/* Property Performance Comparison */}
+        <div className="h-full">
+          <PerformanceMetricsChart 
+            title="Property Performance" 
+            description="Comparing revenue and occupancy across properties"
+            type="bar"
+            data={propertyPerformanceData}
+            dataKeys={[
+              { key: "revenue", name: "Revenue (€)", color: "#8b5cf6" },
               { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
             ]}
           />
-          
-          {/* Task Completion Rates */}
-          <PerformanceMetricsChart 
-            title="Task Completion Rates" 
-            description="Housekeeping vs maintenance completion rates"
-            type="multi-line"
-            data={taskCompletionData}
-            dataKeys={[
-              { key: "housekeeping", name: "Housekeeping (%)", color: "#10b981" },
-              { key: "maintenance", name: "Maintenance (%)", color: "#f59e0b" }
-            ]}
-          />
-        </>
-      )}
+        </div>
+        
+        {/* Only show these charts if showAllCharts is true */}
+        {showAllCharts && (
+          <>
+            {/* Occupancy Trends */}
+            <div className="h-full">
+              <PerformanceMetricsChart 
+                title="Occupancy Trends" 
+                description="Monthly occupancy percentage"
+                type="line"
+                data={occupancyData}
+                dataKeys={[
+                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                ]}
+              />
+            </div>
+            
+            {/* Task Completion Rates */}
+            <div className="h-full">
+              <PerformanceMetricsChart 
+                title="Task Completion Rates" 
+                description="Housekeeping vs maintenance completion rates"
+                type="multi-line"
+                data={taskCompletionData}
+                dataKeys={[
+                  { key: "housekeeping", name: "Housekeeping (%)", color: "#10b981" },
+                  { key: "maintenance", name: "Maintenance (%)", color: "#f59e0b" }
+                ]}
+              />
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 };
