@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, ChevronRight, ChevronLeft, ChevronDown } from "lucide-react";
 import { format, addDays } from 'date-fns';
-import { useNavigate } from 'react-router-dom';
 import { Task } from '@/types/taskTypes';
 import { MaintenanceTask } from '@/types/maintenanceTypes';
 import { useSwipe } from "@/hooks/use-swipe";
@@ -30,7 +29,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   maintenanceTasks
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const navigate = useNavigate();
   const { showSwipeHint, isMobile: isMobileDevice, resetSwipeHint } = useSwipeHint();
 
   // Combine housekeeping and maintenance tasks
@@ -84,11 +82,8 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   };
 
   const handleTaskClick = (task: CombinedTask) => {
-    if (task.taskType === "housekeeping") {
-      navigate(`/housekeeping?taskId=${task.id}`);
-    } else {
-      navigate(`/maintenance?taskId=${task.id}`);
-    }
+    // No-op function as we now handle this in the AgendaTask component
+    console.log("Task clicked:", task.title);
   };
 
   // Animation variants for day transitions
