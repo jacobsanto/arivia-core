@@ -67,3 +67,12 @@ export const isSessionStorageAvailable = (): boolean => {
     return false;
   }
 };
+
+// Export a named object for easier imports
+export const securityUtils = {
+  isSecureContext,
+  areCookiesEnabled,
+  isLocalStorageAvailable,
+  supportsModernSecurity,
+  isSessionStorageAvailable
+};

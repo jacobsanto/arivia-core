@@ -1,19 +1,17 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Settings } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
+import SystemSettingsTabs from "@/components/settings/SystemSettingsTabs";
 
 const AdminSettings = () => {
-  const {
-    user
-  } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   
@@ -67,21 +65,7 @@ const AdminSettings = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Configuration</CardTitle>
-              <CardDescription>
-                Manage global system settings and preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                System settings configuration will be implemented soon.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+        <SystemSettingsTabs />
       </div>
     </div>
   );
