@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowRight, CalendarClock, CalendarDays } from "lucide-react";
+import { Calendar, ArrowRight, CalendarClock, Menu, CheckSquare } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import DailyAgenda from "./DailyAgenda";
 import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
 import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SwipeableCard } from "@/components/ui/swipeable-card";
 
 interface MobileDashboardProps {
   dashboardData: any;
@@ -23,88 +24,95 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
   // Get upcoming tasks, limited to 3 for mobile view
   const upcomingTasks = dashboardData.upcomingTasks?.slice(0, 3) || [];
   
+  const handleQuickAction = (route: string) => {
+    navigate(route);
+  };
+  
   return (
-    <div className="space-y-4">
-      {/* Stats Cards */}
+    <div className="space-y-3">
+      {/* Stats Cards - more compact */}
       <DashboardMetrics data={dashboardData} />
       
       {/* Tabs for Today's Agenda and Quick Actions */}
       <Tabs defaultValue="today" className="w-full" onValueChange={setSelectedTab}>
         <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="today" className="flex items-center gap-2">
-            <CalendarClock className="h-4 w-4" />
+          <TabsTrigger value="today" className="flex items-center gap-1">
+            <CalendarClock className="h-3.5 w-3.5" />
             <span>Today</span>
           </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <span>Actions</span>
+          <TabsTrigger value="actions" className="flex items-center gap-1">
+            <Menu className="h-3.5 w-3.5" />
+            <span>Quick Actions</span>
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="today" className="mt-4">
+        <TabsContent value="today" className="mt-3">
           <DailyAgenda 
             housekeepingTasks={initialHousekeepingTasks}
             maintenanceTasks={initialMaintenanceTasks}
           />
         </TabsContent>
         
-        <TabsContent value="actions" className="mt-4">
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-              onClick={() => navigate('/housekeeping')}
-            >
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-blue-600" />
-              </div>
-              <span className="text-sm font-condensed">View Tasks</span>
-            </Button>
+        <TabsContent value="actions" className="mt-3">
+          <div className="grid grid-cols-2 gap-2">
+            <ActionButton
+              icon={<CheckSquare className="h-5 w-5 text-blue-600" />}
+              label="Tasks"
+              bgColor="bg-blue-100"
+              onClick={() => handleQuickAction('/housekeeping')}
+            />
             
-            <Button 
-              variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-              onClick={() => navigate('/maintenance')}
-            >
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-amber-600" />
-              </div>
-              <span className="text-sm font-condensed">Maintenance</span>
-            </Button>
+            <ActionButton
+              icon={<Calendar className="h-5 w-5 text-amber-600" />}
+              label="Maintenance"
+              bgColor="bg-amber-100"
+              onClick={() => handleQuickAction('/maintenance')}
+            />
             
-            <Button 
-              variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-              onClick={() => navigate('/inventory')}
-            >
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-green-600" />
-              </div>
-              <span className="text-sm font-condensed">Inventory</span>
-            </Button>
+            <ActionButton
+              icon={<Calendar className="h-5 w-5 text-green-600" />}
+              label="Inventory"
+              bgColor="bg-green-100"
+              onClick={() => handleQuickAction('/inventory')}
+            />
             
-            <Button 
-              variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
-              onClick={() => navigate('/reports')}
-            >
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-purple-600" />
-              </div>
-              <span className="text-sm font-condensed">Reports</span>
-            </Button>
+            <ActionButton
+              icon={<Calendar className="h-5 w-5 text-purple-600" />}
+              label="Reports"
+              bgColor="bg-purple-100"
+              onClick={() => handleQuickAction('/reports')}
+            />
           </div>
         </TabsContent>
       </Tabs>
       
-      <Separator />
-      
-      {/* Offline Indicator and Sync Button */}
-      <div className="bg-muted p-4 rounded-md text-center space-y-2">
-        <p className="text-sm font-medium">All data synced</p>
-        <p className="text-xs text-muted-foreground font-condensed">You're good to go!</p>
+      {/* Offline Indicator - simplified */}
+      <div className="bg-muted p-2 rounded-md text-center">
+        <p className="text-xs font-medium">All data synced</p>
       </div>
     </div>
+  );
+};
+
+interface ActionButtonProps {
+  icon: React.ReactNode;
+  label: string;
+  bgColor: string;
+  onClick: () => void;
+}
+
+const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, bgColor, onClick }) => {
+  return (
+    <SwipeableCard
+      className="h-20 flex flex-col items-center justify-center gap-1 p-0 hover:bg-muted/50 active:bg-muted cursor-pointer"
+      onClick={onClick}
+      swipeEnabled={false}
+    >
+      <div className={`w-9 h-9 rounded-full ${bgColor} flex items-center justify-center`}>
+        {icon}
+      </div>
+      <span className="text-sm font-medium">{label}</span>
+    </SwipeableCard>
   );
 };
 

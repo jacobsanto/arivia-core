@@ -34,7 +34,7 @@ const Dashboard = () => {
       <Helmet>
         <title>Dashboard - Arivia Villas</title>
       </Helmet>
-      <div className="space-y-6">
+      <div className={`${isMobile ? 'space-y-3' : 'space-y-6'}`}>
         <DashboardHeader 
           selectedProperty={selectedProperty}
           onPropertyChange={handlePropertyChange}

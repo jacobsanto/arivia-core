@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface MetricCardProps {
   title: string;
@@ -9,18 +10,22 @@ interface MetricCardProps {
   footer?: React.ReactNode;
 }
 
-export const MetricCard = ({ title, value, description, footer }: MetricCardProps) => (
-  <Card>
-    <CardHeader className="flex flex-row items-center justify-between pb-2">
-      <CardTitle className="text-sm font-medium">{title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <div className="text-xl md:text-2xl font-bold tracking-tight">{value}</div>
-      <p className="text-xs text-muted-foreground">{description}</p>
-      {footer && <div className="mt-2">{footer}</div>}
-    </CardContent>
-  </Card>
-);
+export const MetricCard = ({ title, value, description, footer }: MetricCardProps) => {
+  const isMobile = useIsMobile();
+  
+  return (
+    <Card>
+      <CardHeader className={`flex flex-row items-center justify-between ${isMobile ? 'py-2 px-3' : 'pb-2'}`}>
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+      </CardHeader>
+      <CardContent className={isMobile ? 'py-2 px-3' : ''}>
+        <div className={`${isMobile ? 'text-lg' : 'text-xl md:text-2xl'} font-bold tracking-tight`}>{value}</div>
+        <p className="text-xs text-muted-foreground">{description}</p>
+        {footer && <div className={`${isMobile ? 'mt-1 text-2xs' : 'mt-2'}`}>{footer}</div>}
+      </CardContent>
+    </Card>
+  );
+};
 
 interface DashboardMetricsProps {
   data: {
@@ -43,8 +48,10 @@ interface DashboardMetricsProps {
 }
 
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+    <div className={`grid gap-${isMobile ? '2' : '6'} md:grid-cols-2 lg:grid-cols-3`}>
       <MetricCard
         title="Properties"
         value={data.properties.total.toString()}
