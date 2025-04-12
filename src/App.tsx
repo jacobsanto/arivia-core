@@ -10,8 +10,13 @@ import MainLayout from "@/components/layout/MainLayout";
 // Pages
 import Dashboard from "@/pages/Dashboard";
 import UserProfile from "@/pages/UserProfile";
-import Maintenance from "@/pages/Maintenance";  // Updated import
-import Housekeeping from "@/pages/Housekeeping"; // Updated import
+import Maintenance from "@/pages/Maintenance";
+import Housekeeping from "@/pages/Housekeeping";
+import Properties from "@/pages/Properties";
+import Inventory from "@/pages/Inventory";
+import TeamChat from "@/pages/TeamChat";
+import Analytics from "@/pages/Analytics";
+import Reports from "@/pages/Reports";
 
 // New Admin Pages
 import AdminUsers from "@/pages/AdminUsers";
@@ -26,8 +31,13 @@ const App = () => {
           <Route path="/" element={<MainLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="profile" element={<UserProfile />} />
-            <Route path="housekeeping" element={<Housekeeping />} /> {/* Updated component name */}
-            <Route path="maintenance" element={<Maintenance />} /> {/* Updated component name */}
+            <Route path="housekeeping" element={<Housekeeping />} />
+            <Route path="maintenance" element={<Maintenance />} />
+            <Route path="properties" element={<Properties />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="team-chat" element={<TeamChat />} />
+            <Route path="analytics" element={<Analytics />} />
+            <Route path="reports" element={<Reports />} />
             
             {/* Admin routes */}
             <Route path="admin/users" element={<AdminUsers />} />
