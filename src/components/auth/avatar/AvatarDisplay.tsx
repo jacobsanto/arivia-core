@@ -1,8 +1,6 @@
-
 import React from "react";
 import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
 interface AvatarDisplayProps {
   user: User;
   size?: "sm" | "md" | "lg";
@@ -20,22 +18,14 @@ const sizeClasses = {
 export const getInitials = (name: string) => {
   return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
 };
-
 const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   user,
   size = "md",
   className = ""
 }) => {
-  return (
-    <Avatar className={`${sizeClasses[size]} ${className}`}>
-      <AvatarImage 
-        src={user.avatar || "/placeholder.svg"} 
-        alt={user.name || "User"} 
-        className="object-cover object-center" 
-      />
+  return <Avatar className={`${sizeClasses[size]} ${className}`}>
+      <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name || "User"} className="object-center object-cover" />
       <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
-    </Avatar>
-  );
+    </Avatar>;
 };
-
 export default AvatarDisplay;
