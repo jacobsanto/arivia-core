@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
@@ -33,7 +32,6 @@ export const MetricCard = ({
 }: MetricCardProps) => {
   const isMobile = useIsMobile();
   
-  // Card styling based on variant
   const getCardStyle = () => {
     switch(variant) {
       case 'accent':
@@ -111,7 +109,6 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const cardsPerPage = isMobile ? 2 : 3;
   
-  // Prepare all metrics cards
   const allCards = [
     {
       title: "Properties",
@@ -153,7 +150,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: 12,
         isPositive: data.tasks.completed > data.tasks.pending
       },
-      variant: data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success' as const
+      variant: (data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success') as const
     },
     {
       title: "Maintenance",
@@ -174,11 +171,10 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
         value: data.maintenance.critical > 0 ? 5 : 2,
         isPositive: data.maintenance.critical === 0
       },
-      variant: data.maintenance.critical > 0 ? 'warning' : 'success' as const
+      variant: (data.maintenance.critical > 0 ? 'warning' : 'success') as const
     }
   ];
   
-  // Pagination for mobile view
   const visibleCards = isMobile 
     ? allCards.slice(currentPage * cardsPerPage, (currentPage * cardsPerPage) + cardsPerPage)
     : allCards;
