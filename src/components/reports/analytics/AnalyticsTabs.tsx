@@ -4,11 +4,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardOverview } from './DashboardOverview';
 import { FinancialReports } from './FinancialReports';
 import { OccupancyAnalysis } from './OccupancyAnalysis';
-import { Activity, BarChart3, DollarSign, Users } from "lucide-react";
+import { Activity, BarChart3, DollarSign, Users, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { MonitoringDashboard } from '@/components/analytics/MonitoringDashboard';
 import { AnalyticsFilters } from './AnalyticsFilters';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { FromAnalyticsTab } from '@/components/analytics/reports/FromAnalyticsTab';
 
 export const AnalyticsTabs = () => {
   const [activeTab, setActiveTab] = React.useState("overview");
@@ -21,7 +22,7 @@ export const AnalyticsTabs = () => {
       </Card>
       
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full max-w-2xl mx-auto mb-2">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full max-w-3xl mx-auto mb-2">
           <TabsTrigger value="overview" className="flex items-center gap-1.5">
             <BarChart3 className="h-4 w-4" />
             <span className="hidden sm:inline">Overview</span>
@@ -41,6 +42,11 @@ export const AnalyticsTabs = () => {
             <Activity className="h-4 w-4" />
             <span className="hidden sm:inline">Activity</span>
             <span className="sm:hidden">Activity</span>
+          </TabsTrigger>
+          <TabsTrigger value="createreport" className="flex items-center gap-1.5">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">New Report</span>
+            <span className="sm:hidden">Report</span>
           </TabsTrigger>
         </TabsList>
         
@@ -70,6 +76,10 @@ export const AnalyticsTabs = () => {
               <MonitoringDashboard />
             </CardContent>
           </Card>
+        </TabsContent>
+        
+        <TabsContent value="createreport" className="space-y-6 mt-0">
+          <FromAnalyticsTab />
         </TabsContent>
       </Tabs>
     </div>

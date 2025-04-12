@@ -5,6 +5,7 @@ import TaskReporting from "@/components/tasks/TaskReporting";
 import ScheduledReports from "@/components/analytics/ScheduledReports";
 import CustomReportBuilder from "@/components/analytics/CustomReportBuilder";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { FromAnalyticsTab } from '@/components/analytics/reports/FromAnalyticsTab';
 
 interface ReportingContentProps {
   reportsCount: number;
@@ -34,6 +35,9 @@ export const ReportingContent: React.FC<ReportingContentProps> = ({
           <TabsTrigger value="custom-reports" className="truncate">
             Custom Reports
           </TabsTrigger>
+          <TabsTrigger value="analytics-reports" className="truncate">
+            From Analytics
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="task-reports" className="space-y-4" tabsRoot={tabsRef}>
@@ -46,6 +50,10 @@ export const ReportingContent: React.FC<ReportingContentProps> = ({
         
         <TabsContent value="custom-reports" className="space-y-4" tabsRoot={tabsRef}>
           <CustomReportBuilder />
+        </TabsContent>
+        
+        <TabsContent value="analytics-reports" className="space-y-4" tabsRoot={tabsRef}>
+          <FromAnalyticsTab />
         </TabsContent>
       </Tabs>
     </SwipeableTabsProvider>
