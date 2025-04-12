@@ -96,7 +96,7 @@ const SidebarLink = ({
     isActive
   }) => cn("flex items-center px-4 py-2 rounded-md font-medium transition-colors", isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
       <span className="mr-3">{icon}</span>
-      <span>{label}</span>
+      <span className="font-normal text-base">{label}</span>
     </NavLink>;
 };
 export default Sidebar;
