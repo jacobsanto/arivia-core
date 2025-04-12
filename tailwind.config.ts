@@ -30,6 +30,8 @@ export default {
 				bold: '700',
 			},
 			fontSize: {
+				// Add extra small text size for mobile compact UI
+				'2xs': ['0.625rem', { lineHeight: '0.75rem', letterSpacing: '-0.01em' }],
 				// Mobile-first sizing with tighter line heights
 				xs: ['0.75rem', { lineHeight: '1rem', letterSpacing: '-0.01em' }],
 				sm: ['0.875rem', { lineHeight: '1.2rem', letterSpacing: '-0.01em' }],

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowRight, CalendarClock, CalendarDays } from "lucide-react";
+import { Calendar, ArrowRight, CalendarClock, CalendarDays, Tool, Package, PieChart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -11,6 +11,7 @@ import DailyAgenda from "./DailyAgenda";
 import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
 import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSwipe } from "@/hooks/use-swipe";
 
 interface MobileDashboardProps {
   dashboardData: any;
@@ -23,13 +24,27 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
   // Get upcoming tasks, limited to 3 for mobile view
   const upcomingTasks = dashboardData.upcomingTasks?.slice(0, 3) || [];
   
+  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
+    onSwipeLeft: () => {
+      if (selectedTab === "today") setSelectedTab("actions");
+    },
+    onSwipeRight: () => {
+      if (selectedTab === "actions") setSelectedTab("today");
+    }
+  });
+
   return (
-    <div className="space-y-4">
+    <div 
+      className="space-y-4"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Stats Cards */}
       <DashboardMetrics data={dashboardData} />
       
       {/* Tabs for Today's Agenda and Quick Actions */}
-      <Tabs defaultValue="today" className="w-full" onValueChange={setSelectedTab}>
+      <Tabs defaultValue="today" className="w-full" value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="today" className="flex items-center gap-2">
             <CalendarClock className="h-4 w-4" />
@@ -52,46 +67,46 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
           <div className="grid grid-cols-2 gap-3">
             <Button 
               variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
               onClick={() => navigate('/housekeeping')}
             >
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-blue-600" />
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-blue-600" />
               </div>
-              <span className="text-sm font-condensed">View Tasks</span>
+              <span className="text-xs">View Tasks</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
               onClick={() => navigate('/maintenance')}
             >
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-amber-600" />
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                <Tool className="h-4 w-4 text-amber-600" />
               </div>
-              <span className="text-sm font-condensed">Maintenance</span>
+              <span className="text-xs">Maintenance</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
               onClick={() => navigate('/inventory')}
             >
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-green-600" />
+              <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                <Package className="h-4 w-4 text-green-600" />
               </div>
-              <span className="text-sm font-condensed">Inventory</span>
+              <span className="text-xs">Inventory</span>
             </Button>
             
             <Button 
               variant="outline" 
-              className="border-dashed border-2 h-24 flex flex-col items-center justify-center gap-1"
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
               onClick={() => navigate('/reports')}
             >
-              <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-purple-600" />
+              <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                <PieChart className="h-4 w-4 text-purple-600" />
               </div>
-              <span className="text-sm font-condensed">Reports</span>
+              <span className="text-xs">Reports</span>
             </Button>
           </div>
         </TabsContent>
@@ -100,9 +115,9 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       <Separator />
       
       {/* Offline Indicator and Sync Button */}
-      <div className="bg-muted p-4 rounded-md text-center space-y-2">
+      <div className="bg-muted p-3 rounded-md text-center space-y-1">
         <p className="text-sm font-medium">All data synced</p>
-        <p className="text-xs text-muted-foreground font-condensed">You're good to go!</p>
+        <p className="text-xs text-muted-foreground">You're good to go!</p>
       </div>
     </div>
   );

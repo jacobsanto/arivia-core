@@ -177,6 +177,12 @@
   .data-label {
     @apply font-medium text-xs text-muted-foreground;
   }
+  
+  /* Extra small text for compact mobile UI */
+  .text-2xs {
+    font-size: 0.625rem;
+    line-height: 0.75rem;
+  }
 }
 
 /* Custom animations */
