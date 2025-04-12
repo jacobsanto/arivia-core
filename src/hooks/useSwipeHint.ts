@@ -23,12 +23,22 @@ export const useSwipeHint = () => {
       const hasSeenSwipeTip = localStorage.getItem('seen_swipe_tip');
       if (!hasSeenSwipeTip) {
         toast("Swipe Tip", {
-          description: "Swipe left or right to navigate between tabs."
+          description: "Swipe left or right to navigate between tabs.",
+          duration: 5000,
+          icon: "👆"
         });
         localStorage.setItem('seen_swipe_tip', 'true');
       }
     }
   }, [isMobile]);
 
-  return { showSwipeHint, isMobile };
+  const resetSwipeHint = () => {
+    setShowSwipeHint(true);
+    const timer = setTimeout(() => {
+      setShowSwipeHint(false);
+    }, 3000);
+    return () => clearTimeout(timer);
+  };
+
+  return { showSwipeHint, isMobile, resetSwipeHint };
 };

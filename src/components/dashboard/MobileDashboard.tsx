@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
 import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSwipe } from "@/hooks/use-swipe";
+import { SwipeIndicator } from "@/components/ui/swipe-indicator";
+import { toast } from "sonner";
 
 interface MobileDashboardProps {
   dashboardData: any;
@@ -20,22 +22,50 @@ interface MobileDashboardProps {
 const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<string>("today");
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   
   // Get upcoming tasks, limited to 3 for mobile view
   const upcomingTasks = dashboardData.upcomingTasks?.slice(0, 3) || [];
   
+  // Configure swipe gestures
   const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
     onSwipeLeft: () => {
-      if (selectedTab === "today") setSelectedTab("actions");
+      if (selectedTab === "today") {
+        setSelectedTab("actions");
+      }
     },
     onSwipeRight: () => {
-      if (selectedTab === "actions") setSelectedTab("today");
+      if (selectedTab === "actions") {
+        setSelectedTab("today");
+      }
     }
   });
+  
+  // Hide swipe hint after a few seconds
+  useEffect(() => {
+    if (showSwipeHint) {
+      const timer = setTimeout(() => {
+        setShowSwipeHint(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showSwipeHint]);
+  
+  // Show swipe toast message for first-time users
+  useEffect(() => {
+    const hasSeenSwipeTip = localStorage.getItem('seen_swipe_tip');
+    if (!hasSeenSwipeTip) {
+      toast("Swipe Tip", {
+        description: "Swipe left or right to navigate between tabs",
+        duration: 5000,
+      });
+      localStorage.setItem('seen_swipe_tip', 'true');
+    }
+  }, []);
 
   return (
     <div 
-      className="space-y-4"
+      className="space-y-4 relative"
       onTouchStart={onTouchStart}
       onTouchMove={onTouchMove}
       onTouchEnd={onTouchEnd}
@@ -55,6 +85,28 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
             <span>Actions</span>
           </TabsTrigger>
         </TabsList>
+        
+        {/* Show swipe indicators with improved visibility */}
+        <div className="relative">
+          {selectedTab === "today" && (
+            <SwipeIndicator 
+              direction="left" 
+              visible={showSwipeHint}
+              className="top-[50%] -translate-y-1/2 right-0"
+              size="md"
+              variant="solid" 
+            />
+          )}
+          {selectedTab === "actions" && (
+            <SwipeIndicator 
+              direction="right" 
+              visible={showSwipeHint}
+              className="top-[50%] -translate-y-1/2 left-0"
+              size="md"
+              variant="solid" 
+            />
+          )}
+        </div>
         
         <TabsContent value="today" className="mt-4">
           <DailyAgenda 

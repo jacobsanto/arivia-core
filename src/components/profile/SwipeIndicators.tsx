@@ -19,14 +19,18 @@ const SwipeIndicators: React.FC<SwipeIndicatorsProps> = ({
         <SwipeIndicator 
           direction="right" 
           visible={showSwipeHint}
-          className="top-1/2 -translate-y-1/2" 
+          className="top-1/2 -translate-y-1/2 left-1"
+          variant="solid"
+          size="md"
         />
       )}
       {hasNextTab && (
         <SwipeIndicator 
           direction="left" 
           visible={showSwipeHint}
-          className="top-1/2 -translate-y-1/2" 
+          className="top-1/2 -translate-y-1/2 right-1" 
+          variant="solid"
+          size="md"
         />
       )}
     </>
