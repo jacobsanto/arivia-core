@@ -54,7 +54,7 @@ export const AnalyticsTabs = () => {
             <CardTitle>Activity Monitoring</CardTitle>
             <CardDescription>System, user and operational activities for all villas</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             <MonitoringDashboard />
           </CardContent>
         </Card>

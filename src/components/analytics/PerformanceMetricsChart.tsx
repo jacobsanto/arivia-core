@@ -129,8 +129,8 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
         <CardTitle>{title}</CardTitle>
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
-      <CardContent>
-        <div className="h-64 w-full">
+      <CardContent className="p-4">
+        <div className="aspect-[16/9] w-full">
           <ChartContainer config={config}>
             <ResponsiveContainer width="100%" height="100%">
               {renderChart()}

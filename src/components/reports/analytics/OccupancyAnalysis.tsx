@@ -65,7 +65,7 @@ export const OccupancyAnalysis: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <Tabs defaultValue="overview" className="p-6 pt-2">
+          <Tabs defaultValue="overview" className="p-4">
             <TabsList className="mb-4">
               <TabsTrigger value="overview" className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
@@ -117,62 +117,72 @@ export const OccupancyAnalysis: React.FC = () => {
                 />
               </div>
               
-              <PerformanceMetricsChart 
-                title="Monthly Occupancy Rate" 
-                description="Occupancy percentage throughout the year"
-                type="line"
-                data={monthlyOccupancyData}
-                dataKeys={[
-                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
-                ]}
-              />
+              <div>
+                <PerformanceMetricsChart 
+                  title="Monthly Occupancy Rate" 
+                  description="Occupancy percentage throughout the year"
+                  type="line"
+                  data={monthlyOccupancyData}
+                  dataKeys={[
+                    { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                  ]}
+                />
+              </div>
               
-              <PerformanceMetricsChart 
-                title="Monthly Bookings" 
-                description="Number of bookings per month"
-                type="bar"
-                data={monthlyOccupancyData}
-                dataKeys={[
-                  { key: "bookings", name: "Bookings", color: "#8b5cf6" }
-                ]}
-              />
+              <div>
+                <PerformanceMetricsChart 
+                  title="Monthly Bookings" 
+                  description="Number of bookings per month"
+                  type="bar"
+                  data={monthlyOccupancyData}
+                  dataKeys={[
+                    { key: "bookings", name: "Bookings", color: "#8b5cf6" }
+                  ]}
+                />
+              </div>
             </TabsContent>
             
             <TabsContent value="properties" className="space-y-6">
-              <PerformanceMetricsChart 
-                title="Occupancy by Property" 
-                description="Average occupancy percentage for each property"
-                type="bar"
-                data={propertyOccupancyData}
-                dataKeys={[
-                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
-                ]}
-              />
+              <div>
+                <PerformanceMetricsChart 
+                  title="Occupancy by Property" 
+                  description="Average occupancy percentage for each property"
+                  type="bar"
+                  data={propertyOccupancyData}
+                  dataKeys={[
+                    { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                  ]}
+                />
+              </div>
             </TabsContent>
             
             <TabsContent value="seasonal" className="space-y-6">
-              <PerformanceMetricsChart 
-                title="Seasonal Analysis" 
-                description="Occupancy and average rate by season"
-                type="multi-line"
-                data={seasonalData}
-                dataKeys={[
-                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" },
-                  { key: "avgRate", name: "Avg. Rate (€)", color: "#f97316" }
-                ]}
-              />
+              <div>
+                <PerformanceMetricsChart 
+                  title="Seasonal Analysis" 
+                  description="Occupancy and average rate by season"
+                  type="multi-line"
+                  data={seasonalData}
+                  dataKeys={[
+                    { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" },
+                    { key: "avgRate", name: "Avg. Rate (€)", color: "#f97316" }
+                  ]}
+                />
+              </div>
             </TabsContent>
             
             <TabsContent value="stay-length" className="space-y-6">
-              <PerformanceMetricsChart 
-                title="Average Stay Length" 
-                description="Average stay duration in days by property"
-                type="bar"
-                data={propertyOccupancyData}
-                dataKeys={[
-                  { key: "avgStay", name: "Avg. Stay (Days)", color: "#ec4899" }
-                ]}
-              />
+              <div>
+                <PerformanceMetricsChart 
+                  title="Average Stay Length" 
+                  description="Average stay duration in days by property"
+                  type="bar"
+                  data={propertyOccupancyData}
+                  dataKeys={[
+                    { key: "avgStay", name: "Avg. Stay (Days)", color: "#ec4899" }
+                  ]}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>

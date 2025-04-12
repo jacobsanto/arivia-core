@@ -14,7 +14,7 @@ export const DashboardOverview: React.FC = () => {
           <CardTitle>Executive Dashboard</CardTitle>
           <CardDescription>A comprehensive overview of key performance metrics across all operations</CardDescription>
         </CardHeader>
-        <CardContent className="pt-2">
+        <CardContent className="p-4 pb-6">
           <AnalyticsDashboard showAllCharts={!isMobile} showMonitoring={true} />
         </CardContent>
       </Card>

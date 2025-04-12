@@ -110,7 +110,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             <CardHeader className="pb-2">
               <CardTitle className="text-lg">Activity & System Monitoring</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4">
               <MonitoringDashboard compact={isMobile} />
             </CardContent>
           </Card>
@@ -120,7 +120,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {/* Charts Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Financial Performance Chart */}
-        <div className="h-full">
+        <div>
           <PerformanceMetricsChart 
             title="Financial Performance" 
             description="Revenue, expenses and profit over time"
@@ -135,7 +135,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         </div>
         
         {/* Property Performance Comparison */}
-        <div className="h-full">
+        <div>
           <PerformanceMetricsChart 
             title="Property Performance" 
             description="Comparing revenue and occupancy across properties"
@@ -152,7 +152,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
         {showAllCharts && (
           <>
             {/* Occupancy Trends */}
-            <div className="h-full">
+            <div>
               <PerformanceMetricsChart 
                 title="Occupancy Trends" 
                 description="Monthly occupancy percentage"
@@ -165,7 +165,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
             </div>
             
             {/* Task Completion Rates */}
-            <div className="h-full">
+            <div>
               <PerformanceMetricsChart 
                 title="Task Completion Rates" 
                 description="Housekeeping vs maintenance completion rates"
