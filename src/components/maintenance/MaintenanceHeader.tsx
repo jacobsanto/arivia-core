@@ -2,6 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, Wrench, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MaintenanceHeaderProps {
   onCreateTask: () => void;
@@ -21,15 +22,33 @@ const MaintenanceHeader = ({ onCreateTask, onViewReports }: MaintenanceHeaderPro
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
         {onViewReports && (
-          <Button variant="outline" onClick={onViewReports}>
-            <FileText className="mr-2 h-4 w-4" />
-            <span className="font-medium">View Reports</span>
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="outline" onClick={onViewReports}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  <span className="font-medium">View Reports</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>View maintenance statistics and analytics</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
-        <Button onClick={onCreateTask}>
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="font-medium">Create Maintenance Task</span>
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button onClick={onCreateTask}>
+                <Plus className="mr-2 h-4 w-4" />
+                <span className="font-medium">Create Maintenance Task</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Create a new maintenance task</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );

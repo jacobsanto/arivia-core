@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useMaintenanceTasks } from "@/hooks/useMaintenanceTasks";
 import MaintenanceHeader from "@/components/maintenance/MaintenanceHeader";
@@ -13,6 +12,8 @@ import MaintenanceReporting from "@/components/maintenance/reporting/Maintenance
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DateRangeFilter } from "@/types/maintenanceTypes";
+import { useReports } from "@/hooks/useReports";
+import { Loader2 } from "lucide-react";
 
 const Maintenance = () => {
   const {
@@ -46,6 +47,9 @@ const Maintenance = () => {
 
   const [viewMode, setViewMode] = useState<"list" | "stats" | "history">("list");
   const [isReportingOpen, setIsReportingOpen] = useState(false);
+  const [isReportingLoading, setIsReportingLoading] = useState(false);
+
+  const { isLoading: reportsLoading } = useReports('maintenance');
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -57,6 +61,10 @@ const Maintenance = () => {
 
   const handleViewReports = () => {
     setIsReportingOpen(true);
+    setIsReportingLoading(true);
+    setTimeout(() => {
+      setIsReportingLoading(false);
+    }, 1000);
   };
 
   return (
@@ -104,7 +112,6 @@ const Maintenance = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Maintenance Detail Modal */}
       {selectedTask && (
         <MaintenanceDetail
           task={selectedTask}
@@ -116,7 +123,6 @@ const Maintenance = () => {
         />
       )}
 
-      {/* Maintenance Report Modal */}
       {selectedTask && isReportOpen && (
         <MaintenanceReport
           task={selectedTask}
@@ -126,7 +132,6 @@ const Maintenance = () => {
         />
       )}
 
-      {/* Create Maintenance Task Dialog */}
       <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -139,11 +144,15 @@ const Maintenance = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Maintenance Reporting Dialog */}
       <Dialog open={isReportingOpen} onOpenChange={setIsReportingOpen}>
         <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Maintenance Reports</DialogTitle>
+          <DialogHeader className="flex flex-row items-center justify-between">
+            <DialogTitle className="flex items-center">
+              Maintenance Reports
+              {isReportingLoading && (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              )}
+            </DialogTitle>
           </DialogHeader>
           <MaintenanceReporting />
         </DialogContent>
