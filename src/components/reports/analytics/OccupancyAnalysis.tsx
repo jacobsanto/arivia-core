@@ -1,182 +1,182 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarIcon, Clock, BarChart, Loader2 } from "lucide-react";
-import { toastService } from "@/services/toast/toast.service";
-import { ReportPreview } from "@/components/reports/ReportPreview";
-import { OccupancyChart } from "./OccupancyChart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  monthlyOccupancyData, 
-  averageStayData, 
-  seasonalTrendsData,
-  formatOccupancyReportData 
-} from "./occupancyData";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PerformanceMetricsChart } from '@/components/analytics/PerformanceMetricsChart';
+import { MetricSummary } from '@/components/analytics/MetricSummary';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Calendar, Users, Home, Clock } from "lucide-react";
+
+// Sample data
+const monthlyOccupancyData = [
+  { name: 'Jan', occupancy: 75, bookings: 24 },
+  { name: 'Feb', occupancy: 82, bookings: 28 },
+  { name: 'Mar', occupancy: 68, bookings: 22 },
+  { name: 'Apr', occupancy: 79, bookings: 26 },
+  { name: 'May', occupancy: 85, bookings: 30 },
+  { name: 'Jun', occupancy: 95, bookings: 32 },
+  { name: 'Jul', occupancy: 98, bookings: 35 },
+  { name: 'Aug', occupancy: 97, bookings: 34 },
+  { name: 'Sep', occupancy: 88, bookings: 30 },
+  { name: 'Oct', occupancy: 81, bookings: 28 },
+  { name: 'Nov', occupancy: 76, bookings: 25 },
+  { name: 'Dec', occupancy: 90, bookings: 31 }
+];
+
+const propertyOccupancyData = [
+  { name: 'Villa Caldera', occupancy: 87, avgStay: 5.2 },
+  { name: 'Villa Sunset', occupancy: 82, avgStay: 4.8 },
+  { name: 'Villa Oceana', occupancy: 91, avgStay: 6.5 },
+  { name: 'Villa Paradiso', occupancy: 78, avgStay: 4.3 },
+  { name: 'Villa Azure', occupancy: 86, avgStay: 5.7 }
+];
+
+const seasonalData = [
+  { name: 'Winter', occupancy: 76, bookings: 65, avgRate: 320 },
+  { name: 'Spring', occupancy: 82, bookings: 78, avgRate: 380 },
+  { name: 'Summer', occupancy: 96, bookings: 105, avgRate: 520 },
+  { name: 'Fall', occupancy: 85, bookings: 87, avgRate: 420 }
+];
 
 export const OccupancyAnalysis: React.FC = () => {
-  const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [activeReport, setActiveReport] = useState<string | null>(null);
-  const [reportData, setReportData] = useState<any[]>([]);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [reportTitle, setReportTitle] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState('2025');
+  const isMobile = useIsMobile();
   
-  const handleReportClick = (reportName: string) => {
-    setIsGenerating(true);
-    setActiveReport(reportName);
-    
-    // Simulate report generation
-    setTimeout(() => {
-      let data: any[] = [];
-      let title = reportName;
-      
-      // Get the appropriate data based on the selected report
-      switch (reportName) {
-        case "Monthly Occupancy Rates":
-          data = formatOccupancyReportData(monthlyOccupancyData, selectedProperty);
-          break;
-        case "Average Length of Stay":
-          data = formatOccupancyReportData(averageStayData, selectedProperty);
-          break;
-        case "Seasonal Booking Trends":
-          data = formatOccupancyReportData(seasonalTrendsData, selectedProperty);
-          break;
-        default:
-          data = [];
-      }
-      
-      setReportData(data);
-      setReportTitle(title);
-      setShowPreview(true);
-      setIsGenerating(false);
-      toastService.success(`${reportName} Generated`, {
-        description: `The report has been generated for ${selectedProperty === "all" ? "all properties" : selectedProperty}.`
-      });
-      setActiveReport(null);
-    }, 1500);
-  };
-  
-  // Close the report preview
-  const handleClosePreview = () => {
-    setShowPreview(false);
-    setReportData([]);
-  };
-
-  // Handle property selection change
-  const handlePropertyChange = (value: string) => {
-    setSelectedProperty(value);
-    
-    // If there's an active report, regenerate it with the new property filter
-    if (showPreview && reportTitle) {
-      handleReportClick(reportTitle);
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Occupancy Analysis</CardTitle>
-          <CardDescription>Analyze booking patterns and trends</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="w-full sm:w-64 space-y-2">
-              <label className="text-sm font-medium">Select Property</label>
-              <Select 
-                value={selectedProperty} 
-                onValueChange={handlePropertyChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select property" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
-                  <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
-                  <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
-                  <SelectItem value="Villa Paradiso">Villa Paradiso</SelectItem>
-                  <SelectItem value="Villa Azure">Villa Azure</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle>Occupancy Analysis</CardTitle>
+              <CardDescription>Detailed insights into property occupancy patterns</CardDescription>
             </div>
-            <div className="flex-1 space-y-2">
-              <label className="text-sm font-medium">Available Reports</label>
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Monthly Occupancy Rates")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Monthly Occupancy Rates" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                  )}
-                  Monthly Occupancy Rates
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Average Length of Stay")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Average Length of Stay" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Clock className="mr-2 h-4 w-4" />
-                  )}
-                  Average Length of Stay
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Seasonal Booking Trends")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Seasonal Booking Trends" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <BarChart className="mr-2 h-4 w-4" />
-                  )}
-                  Seasonal Booking Trends
-                </Button>
-              </div>
-            </div>
+            
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Tabs defaultValue="overview" className="p-6 pt-2">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="properties" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                <span>By Property</span>
+              </TabsTrigger>
+              <TabsTrigger value="seasonal" className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>Seasonal</span>
+              </TabsTrigger>
+              <TabsTrigger value="stay-length" className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>Stay Length</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-6">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+                <MetricSummary 
+                  title="Average Occupancy"
+                  value="84.5%"
+                  change={{ value: 3.2, isPositive: true }}
+                  variant="accent"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Total Bookings"
+                  value="345"
+                  change={{ value: 8, isPositive: true }}
+                  variant="success"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Peak Season"
+                  value="Summer"
+                  description="96% occupancy"
+                  variant="info"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Avg. Stay Length"
+                  value="5.3 days"
+                  change={{ value: 0.4, isPositive: true }}
+                  variant="warning"
+                  size={isMobile ? "sm" : "md"}
+                />
+              </div>
+              
+              <PerformanceMetricsChart 
+                title="Monthly Occupancy Rate" 
+                description="Occupancy percentage throughout the year"
+                type="line"
+                data={monthlyOccupancyData}
+                dataKeys={[
+                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                ]}
+              />
+              
+              <PerformanceMetricsChart 
+                title="Monthly Bookings" 
+                description="Number of bookings per month"
+                type="bar"
+                data={monthlyOccupancyData}
+                dataKeys={[
+                  { key: "bookings", name: "Bookings", color: "#8b5cf6" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="properties" className="space-y-6">
+              <PerformanceMetricsChart 
+                title="Occupancy by Property" 
+                description="Average occupancy percentage for each property"
+                type="bar"
+                data={propertyOccupancyData}
+                dataKeys={[
+                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="seasonal" className="space-y-6">
+              <PerformanceMetricsChart 
+                title="Seasonal Analysis" 
+                description="Occupancy and average rate by season"
+                type="multi-line"
+                data={seasonalData}
+                dataKeys={[
+                  { key: "occupancy", name: "Occupancy (%)", color: "#0ea5e9" },
+                  { key: "avgRate", name: "Avg. Rate (€)", color: "#f97316" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="stay-length" className="space-y-6">
+              <PerformanceMetricsChart 
+                title="Average Stay Length" 
+                description="Average stay duration in days by property"
+                type="bar"
+                data={propertyOccupancyData}
+                dataKeys={[
+                  { key: "avgStay", name: "Avg. Stay (Days)", color: "#ec4899" }
+                ]}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-      
-      {showPreview && (
-        <div className="space-y-4">
-          {/* Render the appropriate chart based on the active report */}
-          <OccupancyChart 
-            data={reportData}
-            type={
-              reportTitle === "Monthly Occupancy Rates" ? "monthly" :
-              reportTitle === "Average Length of Stay" ? "stay" : "seasonal"
-            }
-            property={selectedProperty}
-          />
-          
-          {/* Report data table */}
-          <ReportPreview
-            title={reportTitle}
-            description={`${reportTitle} for ${selectedProperty === "all" ? "All Properties" : selectedProperty}`}
-            data={reportData}
-            onExport={() => toastService.success("Report exported successfully")}
-            onPrint={() => toastService.success("Report sent to printer")}
-          />
-        </div>
-      )}
     </div>
   );
 };

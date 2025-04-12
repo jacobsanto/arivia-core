@@ -1,168 +1,190 @@
 
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, Loader2 } from "lucide-react";
-import { toastService } from "@/services/toast/toast.service";
-import { ReportPreview } from "@/components/reports/ReportPreview";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { 
-  revenueByPropertyData, 
-  expenseAnalysisData, 
-  profitLossData,
-  formatFinancialReportData 
-} from "./financialData";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { PerformanceMetricsChart } from '@/components/analytics/PerformanceMetricsChart';
+import { MetricSummary } from '@/components/analytics/MetricSummary';
+import { useIsMobile } from "@/hooks/use-mobile";
+import { DollarSign, TrendingUp, BarChart3, PieChart } from "lucide-react";
+
+// Sample data
+const revenueData = [
+  { name: 'Jan', revenue: 4000, expenses: 2400, profit: 1600 },
+  { name: 'Feb', revenue: 3000, expenses: 1398, profit: 1602 },
+  { name: 'Mar', revenue: 2000, expenses: 9800, profit: -7800 },
+  { name: 'Apr', revenue: 2780, expenses: 3908, profit: -1128 },
+  { name: 'May', revenue: 1890, expenses: 4800, profit: -2910 },
+  { name: 'Jun', revenue: 2390, expenses: 3800, profit: -1410 },
+  { name: 'Jul', revenue: 3490, expenses: 4300, profit: -810 },
+  { name: 'Aug', revenue: 5000, expenses: 3800, profit: 1200 },
+  { name: 'Sep', revenue: 6000, expenses: 4000, profit: 2000 },
+  { name: 'Oct', revenue: 7000, expenses: 4300, profit: 2700 },
+  { name: 'Nov', revenue: 7500, expenses: 4400, profit: 3100 },
+  { name: 'Dec', revenue: 8000, expenses: 5000, profit: 3000 }
+];
+
+const profitabilityByPropertyData = [
+  { name: 'Villa Caldera', revenue: 45000, expenses: 23000, profit: 22000 },
+  { name: 'Villa Sunset', revenue: 38000, expenses: 19000, profit: 19000 },
+  { name: 'Villa Oceana', revenue: 52000, expenses: 28000, profit: 24000 },
+  { name: 'Villa Paradiso', revenue: 37000, expenses: 25000, profit: 12000 },
+  { name: 'Villa Azure', revenue: 42000, expenses: 20000, profit: 22000 }
+];
+
+const expenseCategories = [
+  { name: 'Maintenance', value: 35 },
+  { name: 'Staff', value: 25 },
+  { name: 'Utilities', value: 15 },
+  { name: 'Supplies', value: 10 },
+  { name: 'Marketing', value: 8 },
+  { name: 'Other', value: 7 }
+];
 
 export const FinancialReports: React.FC = () => {
-  const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [isGenerating, setIsGenerating] = useState<boolean>(false);
-  const [activeReport, setActiveReport] = useState<string | null>(null);
-  const [reportData, setReportData] = useState<any[]>([]);
-  const [showPreview, setShowPreview] = useState<boolean>(false);
-  const [reportTitle, setReportTitle] = useState<string>("");
+  const [selectedYear, setSelectedYear] = useState('2025');
+  const isMobile = useIsMobile();
   
-  const handleReportClick = (reportName: string) => {
-    setIsGenerating(true);
-    setActiveReport(reportName);
-    
-    // Simulate report generation
-    setTimeout(() => {
-      let data: any[] = [];
-      let title = reportName;
-      
-      // Get the appropriate data based on the selected report
-      switch (reportName) {
-        case "Revenue by Property":
-          data = formatFinancialReportData(revenueByPropertyData, selectedProperty);
-          break;
-        case "Expense Analysis":
-          data = formatFinancialReportData(expenseAnalysisData, selectedProperty);
-          break;
-        case "Profit & Loss Statement":
-          data = formatFinancialReportData(profitLossData, selectedProperty);
-          break;
-        default:
-          data = [];
-      }
-      
-      setReportData(data);
-      setReportTitle(title);
-      setShowPreview(true);
-      setIsGenerating(false);
-      toastService.success(`${reportName} Generated`, {
-        description: `The report has been generated for ${selectedProperty === "all" ? "all properties" : selectedProperty}.`
-      });
-      setActiveReport(null);
-    }, 1500);
-  };
-  
-  // Close the report preview
-  const handleClosePreview = () => {
-    setShowPreview(false);
-    setReportData([]);
-  };
-
-  // Handle property selection change
-  const handlePropertyChange = (value: string) => {
-    setSelectedProperty(value);
-    
-    // If there's an active report, regenerate it with the new property filter
-    if (showPreview && reportTitle) {
-      handleReportClick(reportTitle);
-    }
-  };
-
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Financial Reports</CardTitle>
-          <CardDescription>Track revenue, expenses, and profitability</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="w-full sm:w-64 space-y-2">
-              <label className="text-sm font-medium">Select Property</label>
-              <Select 
-                value={selectedProperty} 
-                onValueChange={handlePropertyChange}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select property" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Properties</SelectItem>
-                  <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
-                  <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
-                  <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
-                  <SelectItem value="Villa Paradiso">Villa Paradiso</SelectItem>
-                  <SelectItem value="Villa Azure">Villa Azure</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle>Financial Reports</CardTitle>
+              <CardDescription>Comprehensive financial data and performance metrics</CardDescription>
             </div>
-            <div className="flex-1 space-y-2">
-              <label className="text-sm font-medium">Available Reports</label>
-              <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Revenue by Property")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Revenue by Property" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  Revenue by Property
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Expense Analysis")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Expense Analysis" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  Expense Analysis
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => handleReportClick("Profit & Loss Statement")}
-                  disabled={isGenerating}
-                >
-                  {activeReport === "Profit & Loss Statement" ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  Profit & Loss Statement
-                </Button>
-              </div>
-            </div>
+            
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Tabs defaultValue="overview" className="p-6 pt-2">
+            <TabsList className="mb-4">
+              <TabsTrigger value="overview" className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                <span>Overview</span>
+              </TabsTrigger>
+              <TabsTrigger value="revenue" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                <span>Revenue</span>
+              </TabsTrigger>
+              <TabsTrigger value="expenses" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                <span>Expenses</span>
+              </TabsTrigger>
+              <TabsTrigger value="profitability" className="flex items-center gap-2">
+                <PieChart className="h-4 w-4" />
+                <span>Profitability</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="space-y-6">
+              <div className={`grid gap-4 ${isMobile ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-4'}`}>
+                <MetricSummary 
+                  title="Total Revenue"
+                  value="€384,550"
+                  change={{ value: 12, isPositive: true }}
+                  variant="accent"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Total Expenses"
+                  value="€184,200"
+                  change={{ value: 5, isPositive: false }}
+                  variant="warning"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Net Profit"
+                  value="€200,350"
+                  change={{ value: 18, isPositive: true }}
+                  variant="success"
+                  size={isMobile ? "sm" : "md"}
+                />
+                <MetricSummary 
+                  title="Profit Margin"
+                  value="52.1%"
+                  change={{ value: 3.5, isPositive: true }}
+                  variant="info"
+                  size={isMobile ? "sm" : "md"}
+                />
+              </div>
+              
+              <PerformanceMetricsChart 
+                title="Annual Financial Overview" 
+                description="Monthly revenue, expenses and profit"
+                type="multi-line"
+                data={revenueData}
+                dataKeys={[
+                  { key: "revenue", name: "Revenue", color: "#8b5cf6" },
+                  { key: "expenses", name: "Expenses", color: "#f97316" },
+                  { key: "profit", name: "Profit", color: "#10b981" }
+                ]}
+              />
+              
+              <PerformanceMetricsChart 
+                title="Property Profitability" 
+                description="Revenue, expenses and profit by property"
+                type="bar"
+                data={profitabilityByPropertyData}
+                dataKeys={[
+                  { key: "revenue", name: "Revenue", color: "#8b5cf6" },
+                  { key: "expenses", name: "Expenses", color: "#f97316" },
+                  { key: "profit", name: "Profit", color: "#10b981" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="revenue" className="space-y-6">
+              {/* Revenue-specific content can be added here */}
+              <PerformanceMetricsChart 
+                title="Revenue Trends" 
+                description="Monthly revenue breakdown"
+                type="line"
+                data={revenueData}
+                dataKeys={[
+                  { key: "revenue", name: "Revenue", color: "#8b5cf6" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="expenses" className="space-y-6">
+              {/* Expenses-specific content can be added here */}
+              <PerformanceMetricsChart 
+                title="Expense Categories" 
+                description="Breakdown of expense types"
+                type="bar"
+                data={expenseCategories}
+                dataKeys={[
+                  { key: "value", name: "Percentage (%)", color: "#f97316" }
+                ]}
+              />
+            </TabsContent>
+            
+            <TabsContent value="profitability" className="space-y-6">
+              {/* Profitability-specific content can be added here */}
+              <PerformanceMetricsChart 
+                title="Property Comparison" 
+                description="Profit margin by property"
+                type="bar"
+                data={profitabilityByPropertyData}
+                dataKeys={[
+                  { key: "profit", name: "Profit (€)", color: "#10b981" }
+                ]}
+              />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
-
-      {showPreview && (
-        <ReportPreview
-          title={reportTitle}
-          description={`${reportTitle} for ${selectedProperty === "all" ? "All Properties" : selectedProperty}`}
-          data={reportData}
-          onExport={() => toastService.success("Report exported successfully")}
-          onPrint={() => toastService.success("Report sent to printer")}
-        />
-      )}
     </div>
   );
 };
