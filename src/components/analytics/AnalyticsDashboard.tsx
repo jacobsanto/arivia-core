@@ -4,6 +4,9 @@ import { PerformanceMetricsChart } from './PerformanceMetricsChart';
 import { MetricSummary } from './MetricSummary';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Building, Users, CalendarClock, Wrench } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { MonitoringDashboard } from './MonitoringDashboard';
 
 // Sample data for demonstration
 const revenueData = [
@@ -53,9 +56,13 @@ const taskCompletionData = [
 
 interface AnalyticsDashboardProps {
   showAllCharts?: boolean;
+  showMonitoring?: boolean;
 }
 
-export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ showAllCharts = true }) => {
+export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ 
+  showAllCharts = true,
+  showMonitoring = false
+}) => {
   const isMobile = useIsMobile();
   
   return (
@@ -95,6 +102,21 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ showAllC
           size={isMobile ? "sm" : "md"}
         />
       </div>
+      
+      {/* Activity Monitoring Section (New in Phase 2) */}
+      {showMonitoring && (
+        <>
+          <Card className="border-accent/50">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg">Activity & System Monitoring</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MonitoringDashboard compact={isMobile} />
+            </CardContent>
+          </Card>
+          <Separator className="my-2" />
+        </>
+      )}
       
       {/* Financial Performance Chart */}
       <PerformanceMetricsChart 

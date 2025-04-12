@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { useNavigate } from 'react-router-dom';
 import { ExternalLink } from "lucide-react";
+import { ActivityMonitor } from '@/components/analytics/ActivityMonitor';
 
 const MobileAnalyticsDashboard = () => {
   const navigate = useNavigate();
@@ -17,6 +18,9 @@ const MobileAnalyticsDashboard = () => {
     <div className="space-y-4">
       {/* Compact Analytics Dashboard for Mobile */}
       <AnalyticsDashboard showAllCharts={false} />
+      
+      {/* Recent Activity Section */}
+      <ActivityMonitor limit={3} />
       
       {/* View More Button */}
       <Button 

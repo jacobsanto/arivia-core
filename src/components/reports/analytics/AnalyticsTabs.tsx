@@ -1,58 +1,64 @@
 
-import React, { useRef } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent, SwipeableTabsProvider } from "@/components/ui/tabs";
+import React from 'react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DashboardOverview } from './DashboardOverview';
 import { FinancialReports } from './FinancialReports';
-import TaskReporting from "@/components/tasks/TaskReporting";
 import { OccupancyAnalysis } from './OccupancyAnalysis';
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Activity, BarChart3, DollarSign, Users } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { MonitoringDashboard } from '@/components/analytics/MonitoringDashboard';
 
-export const AnalyticsTabs: React.FC = () => {
-  const isMobile = useIsMobile();
-  const tabsRef = useRef(null);
-  
+export const AnalyticsTabs = () => {
+  const [activeTab, setActiveTab] = React.useState("overview");
+
   return (
-    <SwipeableTabsProvider>
-      <Tabs ref={tabsRef} defaultValue="dashboards" className="space-y-4">
-        <TabsList className="w-full scroll-tabs mb-4">
-          <TabsTrigger value="dashboards">Dashboards</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="operational">Operational</TabsTrigger>
-          <TabsTrigger value="occupancy">Occupancy</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent 
-          value="dashboards" 
-          className="space-y-4"
-          tabsRoot={tabsRef}
-        >
-          <DashboardOverview />
-        </TabsContent>
-        
-        <TabsContent 
-          value="financial" 
-          className="space-y-4"
-          tabsRoot={tabsRef}
-        >
-          <FinancialReports />
-        </TabsContent>
-        
-        <TabsContent 
-          value="operational" 
-          className="space-y-4"
-          tabsRoot={tabsRef}
-        >
-          <TaskReporting />
-        </TabsContent>
-        
-        <TabsContent 
-          value="occupancy" 
-          className="space-y-4"
-          tabsRoot={tabsRef}
-        >
-          <OccupancyAnalysis />
-        </TabsContent>
-      </Tabs>
-    </SwipeableTabsProvider>
+    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <TabsList className="grid grid-cols-2 md:grid-cols-4 w-full max-w-2xl mx-auto">
+        <TabsTrigger value="overview" className="flex items-center gap-1.5">
+          <BarChart3 className="h-4 w-4" />
+          <span className="hidden sm:inline">Overview</span>
+          <span className="sm:hidden">Overview</span>
+        </TabsTrigger>
+        <TabsTrigger value="financial" className="flex items-center gap-1.5">
+          <DollarSign className="h-4 w-4" />
+          <span className="hidden sm:inline">Financial</span>
+          <span className="sm:hidden">Financial</span>
+        </TabsTrigger>
+        <TabsTrigger value="occupancy" className="flex items-center gap-1.5">
+          <Users className="h-4 w-4" />
+          <span className="hidden sm:inline">Occupancy</span>
+          <span className="sm:hidden">Occupancy</span>
+        </TabsTrigger>
+        <TabsTrigger value="activity" className="flex items-center gap-1.5">
+          <Activity className="h-4 w-4" />
+          <span className="hidden sm:inline">Activity</span>
+          <span className="sm:hidden">Activity</span>
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="overview" className="space-y-4">
+        <DashboardOverview />
+      </TabsContent>
+      
+      <TabsContent value="financial" className="space-y-4">
+        <FinancialReports />
+      </TabsContent>
+      
+      <TabsContent value="occupancy" className="space-y-4">
+        <OccupancyAnalysis />
+      </TabsContent>
+      
+      <TabsContent value="activity" className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Monitoring</CardTitle>
+            <CardDescription>System, user and operational activities for all villas</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MonitoringDashboard />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 };
