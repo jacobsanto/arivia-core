@@ -1,16 +1,14 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CalendarClock, ChevronRight, ChevronLeft, CircleCheck } from "lucide-react";
+import { CalendarClock, ChevronRight, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format, addDays, isSameDay } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Task } from '@/types/taskTypes';
 import { MaintenanceTask } from '@/types/maintenanceTypes';
-import { SwipeableCard } from "@/components/ui/swipeable-card";
 
 interface DailyAgendaProps {
   housekeepingTasks: Task[];
@@ -92,11 +90,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     }
   };
 
-  const handleTaskComplete = (task: CombinedTask) => {
-    // This would update the task status in a real app
-    console.log(`Completed task: ${task.title}`);
-  };
-
   // Group tasks by morning, afternoon, evening
   const morningTasks = sortedTasks.filter(task => {
     const hour = new Date(task.dueDate).getHours();
@@ -115,98 +108,87 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
 
   return (
     <Card className="w-full">
-      <CardHeader className={`${isMobile ? 'p-3 pb-2' : 'pb-3'}`}>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className={`${isMobile ? 'text-sm' : 'text-base md:text-lg'} flex items-center gap-2`}>
-            <CalendarClock className="h-4 w-4" />
+          <CardTitle className="text-base md:text-lg flex items-center gap-2">
+            <CalendarClock className="h-5 w-5" />
             Daily Agenda
           </CardTitle>
           <div className="flex items-center space-x-1">
             <Button 
               variant="ghost" 
               size="icon"
-              className={isMobile ? 'h-7 w-7' : ''}
               onClick={() => navigateToDay('prev')}
             >
-              <ChevronLeft className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              <ChevronLeft className="h-4 w-4" />
               <span className="sr-only">Previous Day</span>
             </Button>
-            <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'}`}>
-              {format(selectedDate, isMobile ? 'EEE, MMM d' : 'EEEE, MMM d')}
+            <div className="font-medium text-sm">
+              {format(selectedDate, 'EEEE, MMM d')}
             </div>
             <Button 
               variant="ghost" 
               size="icon"
-              className={isMobile ? 'h-7 w-7' : ''}
               onClick={() => navigateToDay('next')}
             >
-              <ChevronRight className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              <ChevronRight className="h-4 w-4" />
               <span className="sr-only">Next Day</span>
             </Button>
           </div>
         </div>
       </CardHeader>
-      <CardContent className={isMobile ? 'p-3 pt-0' : ''}>
+      <CardContent>
         {sortedTasks.length === 0 ? (
-          <div className={`text-center py-${isMobile ? '3' : '6'} text-muted-foreground ${isMobile ? 'text-xs' : ''}`}>
+          <div className="text-center py-6 text-muted-foreground">
             No tasks scheduled for {format(selectedDate, 'MMMM d')}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {morningTasks.length > 0 && (
-              <div className="space-y-1.5">
-                <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground flex items-center`}>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   Morning
                   <div className="h-[1px] bg-border flex-1 ml-2"></div>
                 </h4>
-                <div className="space-y-1.5">
-                  {morningTasks.map(task => (
-                    <AgendaTask 
-                      key={`${task.taskType}-${task.id}`} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task)}
-                      onComplete={() => handleTaskComplete(task)}
-                    />
-                  ))}
-                </div>
+                {morningTasks.map(task => (
+                  <AgendaTask 
+                    key={`${task.taskType}-${task.id}`} 
+                    task={task} 
+                    onClick={() => handleTaskClick(task)} 
+                  />
+                ))}
               </div>
             )}
             
             {afternoonTasks.length > 0 && (
-              <div className="space-y-1.5">
-                <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground flex items-center`}>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   Afternoon
                   <div className="h-[1px] bg-border flex-1 ml-2"></div>
                 </h4>
-                <div className="space-y-1.5">
-                  {afternoonTasks.map(task => (
-                    <AgendaTask 
-                      key={`${task.taskType}-${task.id}`} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task)}
-                      onComplete={() => handleTaskComplete(task)}
-                    />
-                  ))}
-                </div>
+                {afternoonTasks.map(task => (
+                  <AgendaTask 
+                    key={`${task.taskType}-${task.id}`} 
+                    task={task} 
+                    onClick={() => handleTaskClick(task)} 
+                  />
+                ))}
               </div>
             )}
             
             {eveningTasks.length > 0 && (
-              <div className="space-y-1.5">
-                <h4 className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-muted-foreground flex items-center`}>
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-muted-foreground flex items-center">
                   Evening
                   <div className="h-[1px] bg-border flex-1 ml-2"></div>
                 </h4>
-                <div className="space-y-1.5">
-                  {eveningTasks.map(task => (
-                    <AgendaTask 
-                      key={`${task.taskType}-${task.id}`} 
-                      task={task} 
-                      onClick={() => handleTaskClick(task)}
-                      onComplete={() => handleTaskComplete(task)}
-                    />
-                  ))}
-                </div>
+                {eveningTasks.map(task => (
+                  <AgendaTask 
+                    key={`${task.taskType}-${task.id}`} 
+                    task={task} 
+                    onClick={() => handleTaskClick(task)} 
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -219,12 +201,10 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
 interface AgendaTaskProps {
   task: CombinedTask;
   onClick: () => void;
-  onComplete: () => void;
 }
 
-const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick, onComplete }) => {
+const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
   const taskTime = format(new Date(task.dueDate), 'h:mm a');
-  const isMobile = useIsMobile();
   
   const priorityStyles = {
     High: "bg-red-100 text-red-800",
@@ -247,37 +227,26 @@ const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick, onComplete }) =>
   };
 
   return (
-    <SwipeableCard 
-      className={`${isMobile ? 'p-1.5' : 'p-2'} rounded-md border shadow-sm`}
-      swipeLeftText="Delete"
-      swipeRightText="Complete"
-      onSwipeRight={onComplete}
-      swipeIndicators={true}
+    <div 
+      className="flex items-center p-2 rounded-md border hover:bg-secondary/50 cursor-pointer transition-colors"
+      onClick={onClick}
     >
-      <div 
-        className="flex items-center cursor-pointer"
-        onClick={onClick}
-      >
-        <div className={`min-w-[50px] ${isMobile ? 'text-xs' : 'text-sm'} text-muted-foreground`}>
-          {taskTime}
-        </div>
-        <div className="flex-1 ml-1.5 overflow-hidden">
-          <div className={`font-medium ${isMobile ? 'text-xs' : 'text-sm'} truncate`}>{task.title}</div>
-          <div className={`${isMobile ? 'text-2xs' : 'text-xs'} text-muted-foreground truncate`}>{task.property}</div>
-        </div>
-        <div className="flex gap-1 ml-1 flex-shrink-0">
-          {isMobile ? (
-            <Badge variant="outline" className={typeStyles[task.taskType]} style={{ fontSize: '0.65rem', padding: '0 0.3rem' }}>
-              {task.taskType === "housekeeping" ? "HK" : "MT"}
-            </Badge>
-          ) : (
-            <Badge variant="outline" className={typeStyles[task.taskType]}>
-              {task.taskType === "housekeeping" ? "Housekeeping" : "Maintenance"}
-            </Badge>
-          )}
-        </div>
+      <div className="min-w-[60px] text-sm text-muted-foreground">
+        {taskTime}
       </div>
-    </SwipeableCard>
+      <div className="flex-1 ml-2">
+        <div className="font-medium text-sm">{task.title}</div>
+        <div className="text-xs text-muted-foreground">{task.property}</div>
+      </div>
+      <div className="flex flex-wrap gap-1 ml-1">
+        <Badge variant="outline" className={typeStyles[task.taskType]}>
+          {task.taskType === "housekeeping" ? "Housekeeping" : "Maintenance"}
+        </Badge>
+        <Badge className={priorityStyles[task.priority as keyof typeof priorityStyles]}>
+          {task.priority}
+        </Badge>
+      </div>
+    </div>
   );
 };
 
