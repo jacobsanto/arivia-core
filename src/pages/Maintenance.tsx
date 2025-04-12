@@ -9,6 +9,7 @@ import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceC
 import MaintenanceFilters from "@/components/maintenance/MaintenanceFilters";
 import MaintenanceStats from "@/components/maintenance/MaintenanceStats";
 import MaintenanceHistory from "@/components/maintenance/MaintenanceHistory";
+import MaintenanceReporting from "@/components/maintenance/reporting/MaintenanceReporting";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { DateRangeFilter } from "@/types/maintenanceTypes";
@@ -44,6 +45,7 @@ const Maintenance = () => {
   } = useMaintenanceTasks();
 
   const [viewMode, setViewMode] = useState<"list" | "stats" | "history">("list");
+  const [isReportingOpen, setIsReportingOpen] = useState(false);
 
   const handleClearFilters = () => {
     setSearchQuery("");
@@ -53,9 +55,16 @@ const Maintenance = () => {
     setDateRange({ startDate: null, endDate: null });
   };
 
+  const handleViewReports = () => {
+    setIsReportingOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      <MaintenanceHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
+      <MaintenanceHeader 
+        onCreateTask={() => setIsCreateTaskOpen(true)} 
+        onViewReports={handleViewReports}
+      />
 
       <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as "list" | "stats" | "history")} className="w-full">
         <TabsList className="mb-4">
@@ -127,6 +136,16 @@ const Maintenance = () => {
             onSubmit={handleCreateTask} 
             onCancel={() => setIsCreateTaskOpen(false)} 
           />
+        </DialogContent>
+      </Dialog>
+
+      {/* Maintenance Reporting Dialog */}
+      <Dialog open={isReportingOpen} onOpenChange={setIsReportingOpen}>
+        <DialogContent className="sm:max-w-[900px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Maintenance Reports</DialogTitle>
+          </DialogHeader>
+          <MaintenanceReporting />
         </DialogContent>
       </Dialog>
     </div>
