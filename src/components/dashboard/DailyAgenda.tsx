@@ -1,33 +1,28 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { CalendarClock, ChevronRight, ChevronLeft, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import { CalendarClock, ChevronRight, ChevronLeft, ChevronDown } from "lucide-react";
+import { format, addDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { Task } from '@/types/taskTypes';
 import { MaintenanceTask } from '@/types/maintenanceTypes';
 import { useSwipe } from "@/hooks/use-swipe";
 import { motion, AnimatePresence } from "framer-motion";
 import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
+import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { 
+  CombinedTask,
+  combineTasks, 
+  filterTasksForSelectedDate, 
+  sortTasksByTime,
+  groupTasksByTimeOfDay
+} from './agenda/agendaUtils';
+import TaskGroup from './agenda/TaskGroup';
 
 interface DailyAgendaProps {
   housekeepingTasks: Task[];
   maintenanceTasks: MaintenanceTask[];
-}
-
-interface CombinedTask {
-  id: number;
-  title: string;
-  type: string;
-  dueDate: string;
-  priority: string;
-  property: string;
-  taskType: "housekeeping" | "maintenance";
-  status: string;
 }
 
 export const DailyAgenda: React.FC<DailyAgendaProps> = ({
@@ -35,70 +30,28 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   maintenanceTasks
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullStartY, setPullStartY] = useState(0);
-  const [pullMoveY, setPullMoveY] = useState(0);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { showSwipeHint, isMobile: isMobileDevice, resetSwipeHint } = useSwipeHint();
 
   // Combine housekeeping and maintenance tasks
-  const combinedTasks: CombinedTask[] = [
-    ...housekeepingTasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      type: task.type,
-      dueDate: task.dueDate,
-      priority: task.priority,
-      property: task.property,
-      status: task.status,
-      taskType: "housekeeping" as const
-    })),
-    ...maintenanceTasks.map(task => ({
-      id: task.id,
-      title: task.title,
-      type: "Maintenance",
-      dueDate: task.dueDate,
-      priority: task.priority,
-      property: task.property,
-      status: task.status,
-      taskType: "maintenance" as const
-    }))
-  ];
+  const combinedTasks: CombinedTask[] = combineTasks(housekeepingTasks, maintenanceTasks);
 
   // Filter tasks for the selected date
-  const tasksForSelectedDate = combinedTasks.filter(task => {
-    try {
-      const taskDate = new Date(task.dueDate);
-      return isSameDay(taskDate, selectedDate);
-    } catch (e) {
-      console.error("Invalid date format for task:", task.title);
-      return false;
-    }
-  });
+  const tasksForSelectedDate = filterTasksForSelectedDate(combinedTasks, selectedDate);
 
   // Sort tasks by time
-  const sortedTasks = [...tasksForSelectedDate].sort((a, b) => {
-    const dateA = new Date(a.dueDate).getTime();
-    const dateB = new Date(b.dueDate).getTime();
-    return dateA - dateB;
-  });
+  const sortedTasks = sortTasksByTime(tasksForSelectedDate);
 
   // Group tasks by morning, afternoon, evening
-  const morningTasks = sortedTasks.filter(task => {
-    const hour = new Date(task.dueDate).getHours();
-    return hour >= 5 && hour < 12;
-  });
+  const { morningTasks, afternoonTasks, eveningTasks } = groupTasksByTimeOfDay(sortedTasks);
 
-  const afternoonTasks = sortedTasks.filter(task => {
-    const hour = new Date(task.dueDate).getHours();
-    return hour >= 12 && hour < 18;
-  });
-
-  const eveningTasks = sortedTasks.filter(task => {
-    const hour = new Date(task.dueDate).getHours();
-    return hour >= 18 || hour < 5;
+  // Handle pull-to-refresh functionality
+  const { pullMoveY, isRefreshing, contentRef, handlers } = usePullToRefresh({
+    onRefresh: () => {
+      console.log("Refreshing tasks data...");
+      // Here you would typically fetch fresh data
+      // For this example, we're just using the mock refresh implementation from the hook
+    }
   });
 
   // Swipe to change days
@@ -107,57 +60,20 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     onSwipeRight: () => navigateToDay('prev'),
   });
   
-  // Track pull-to-refresh
+  // Combined touch handlers
   const onTouchStart = (e: React.TouchEvent) => {
-    if (isMobile && contentRef.current) {
-      // Only enable pull-to-refresh when at the top of the content
-      if (contentRef.current.scrollTop <= 0) {
-        setPullStartY(e.touches[0].clientY);
-        setPullMoveY(0);
-      }
-    }
+    handlers.onTouchStart(e);
     swipeTouchStart(e);
   };
   
   const onTouchMove = (e: React.TouchEvent) => {
-    if (isMobile && pullStartY > 0) {
-      const currentY = e.touches[0].clientY;
-      const diff = currentY - pullStartY;
-      
-      // Only allow pulling down, not up
-      if (diff > 0) {
-        // Resist the pull with a dampening factor
-        const dampening = 0.4;
-        setPullMoveY(diff * dampening);
-        
-        // Prevent default to disable scrolling while pulling
-        if (diff > 30) {
-          e.preventDefault();
-        }
-      }
-    }
+    handlers.onTouchMove(e);
     swipeTouchMove(e);
   };
   
   const onTouchEnd = (e: React.TouchEvent) => {
-    // If pulled enough, trigger refresh
-    if (pullMoveY > 60) {
-      refreshData();
-    }
-    
-    // Reset pull values
-    setPullStartY(0);
-    setPullMoveY(0);
+    handlers.onTouchEnd();
     swipeTouchEnd(e);
-  };
-  
-  const refreshData = () => {
-    setIsRefreshing(true);
-    
-    // Simulate a refresh - replace with actual data fetching
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 1500);
   };
 
   const navigateToDay = (direction: 'next' | 'prev') => {
@@ -278,53 +194,23 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {morningTasks.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-medium text-muted-foreground flex items-center my-1">
-                        Morning
-                        <div className="h-[1px] bg-border flex-1 ml-2"></div>
-                      </h4>
-                      {morningTasks.map(task => (
-                        <AgendaTask 
-                          key={`${task.taskType}-${task.id}`} 
-                          task={task} 
-                          onClick={() => handleTaskClick(task)} 
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <TaskGroup
+                    title="Morning"
+                    tasks={morningTasks}
+                    onTaskClick={handleTaskClick}
+                  />
                   
-                  {afternoonTasks.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-medium text-muted-foreground flex items-center my-1">
-                        Afternoon
-                        <div className="h-[1px] bg-border flex-1 ml-2"></div>
-                      </h4>
-                      {afternoonTasks.map(task => (
-                        <AgendaTask 
-                          key={`${task.taskType}-${task.id}`} 
-                          task={task} 
-                          onClick={() => handleTaskClick(task)} 
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <TaskGroup
+                    title="Afternoon"
+                    tasks={afternoonTasks}
+                    onTaskClick={handleTaskClick}
+                  />
                   
-                  {eveningTasks.length > 0 && (
-                    <div className="space-y-2">
-                      <h4 className="text-xs font-medium text-muted-foreground flex items-center my-1">
-                        Evening
-                        <div className="h-[1px] bg-border flex-1 ml-2"></div>
-                      </h4>
-                      {eveningTasks.map(task => (
-                        <AgendaTask 
-                          key={`${task.taskType}-${task.id}`} 
-                          task={task} 
-                          onClick={() => handleTaskClick(task)} 
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <TaskGroup
+                    title="Evening"
+                    tasks={eveningTasks}
+                    onTaskClick={handleTaskClick}
+                  />
                 </div>
               )}
             </motion.div>
@@ -341,64 +227,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
         />
       )}
     </Card>
-  );
-};
-
-interface AgendaTaskProps {
-  task: CombinedTask;
-  onClick: () => void;
-}
-
-const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
-  const taskTime = format(parseISO(task.dueDate), 'h:mm a');
-  
-  // Prioritize which badge to show on mobile - only show the most important one
-  const showPriorityBadge = task.priority === "High" || task.priority === "high";
-  
-  const priorityStyles = {
-    High: "bg-red-100 text-red-800",
-    Medium: "bg-amber-100 text-amber-800",
-    Low: "bg-blue-100 text-blue-800",
-    high: "bg-red-100 text-red-800",
-    medium: "bg-amber-100 text-amber-800",
-    low: "bg-blue-100 text-blue-800"
-  };
-
-  const statusStyles = {
-    Pending: "bg-blue-100 text-blue-800",
-    "In Progress": "bg-purple-100 text-purple-800",
-    Completed: "bg-green-100 text-green-800",
-  };
-
-  const typeStyles = {
-    housekeeping: "bg-purple-100 text-purple-800 border-purple-200",
-    maintenance: "bg-emerald-100 text-emerald-800 border-emerald-200"
-  };
-
-  return (
-    <div 
-      className="flex items-center p-2 rounded-md border hover:bg-secondary/50 active:bg-secondary cursor-pointer transition-colors"
-      onClick={onClick}
-    >
-      <div className="min-w-[45px] text-2xs md:text-xs text-muted-foreground">
-        {taskTime}
-      </div>
-      <div className="flex-1 ml-2 mr-1">
-        <div className="font-medium text-sm line-clamp-1">{task.title}</div>
-        <div className="text-2xs md:text-xs text-muted-foreground line-clamp-1">{task.property}</div>
-      </div>
-      <div className="ml-auto">
-        {showPriorityBadge ? (
-          <Badge variant="outline" className={priorityStyles[task.priority as keyof typeof priorityStyles]}>
-            {task.priority}
-          </Badge>
-        ) : (
-          <Badge variant="outline" className={typeStyles[task.taskType]}>
-            {task.taskType === "housekeeping" ? "HK" : "MT"}
-          </Badge>
-        )}
-      </div>
-    </div>
   );
 };
 
