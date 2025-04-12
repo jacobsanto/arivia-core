@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowRight, CalendarClock, CalendarDays, Tool, Package, PieChart } from "lucide-react";
+import { Calendar, ArrowRight, CalendarClock, CalendarDays, Wrench, Package, PieChart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -82,7 +82,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
               onClick={() => navigate('/maintenance')}
             >
               <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                <Tool className="h-4 w-4 text-amber-600" />
+                <Wrench className="h-4 w-4 text-amber-600" />
               </div>
               <span className="text-xs">Maintenance</span>
             </Button>
