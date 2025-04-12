@@ -45,6 +45,15 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
     maintenance: "bg-emerald-100 text-emerald-800 border-emerald-200"
   };
 
+  // Extract task name without villa name
+  const getTaskNameWithoutVilla = () => {
+    const villaName = task.property;
+    if (task.title.includes(villaName)) {
+      return task.title.replace(`${villaName} `, '').replace(`${villaName}`, '');
+    }
+    return task.title;
+  };
+
   return (
     <div 
       className="flex items-center p-2 rounded-md border hover:bg-secondary/50 active:bg-secondary cursor-pointer transition-colors"
@@ -54,7 +63,7 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
         {taskTime}
       </div>
       <div className="flex-1 ml-2 mr-1">
-        <div className="font-medium text-sm line-clamp-1">{task.title}</div>
+        <div className="font-medium text-sm line-clamp-1">{getTaskNameWithoutVilla()}</div>
         <div className="text-2xs md:text-xs text-muted-foreground line-clamp-1">{task.property}</div>
       </div>
       <div className="ml-auto">
