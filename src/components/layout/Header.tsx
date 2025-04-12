@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Bell, MessageSquare, LogOut, RefreshCw, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,57 +9,49 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
 import { Link } from "react-router-dom";
-
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
 }
-
-const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
-  const { user, logout, refreshProfile } = useUser();
+const Header: React.FC<HeaderProps> = ({
+  onMobileMenuToggle
+}) => {
+  const {
+    user,
+    logout,
+    refreshProfile
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  
   useEffect(() => {
     if (!user) return;
-    
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
-        refreshProfile().then((updated) => {
+        refreshProfile().then(updated => {
           if (updated) {
             console.log("Profile automatically refreshed");
           }
         });
       }
     }, 5 * 60 * 1000); // 5 minutes
-    
+
     refreshProfile();
-    
     return () => clearInterval(intervalId);
   }, [user, refreshProfile]);
-  
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-  
-  return (
-    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
+  return <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
-          {isMobile && (
-            <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          {isMobile && <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <Menu className="h-5 w-5" />
               <span className="sr-only">Toggle menu</span>
-            </Button>
-          )}
+            </Button>}
           
           <Link to="/" className="flex items-center">
-            <img 
-              src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" 
-              alt="Arivia Villas" 
-              className="h-8 md:h-10 invert brightness-0 filter" 
-            />
+            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-14 md:h-14 invert brightness-0 filter" />
           </Link>
         </div>
 
@@ -112,11 +103,9 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="flex items-center space-x-1 md:space-x-2 border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
-                {user && (
-                  <div className="h-6 w-6 rounded-full overflow-hidden mr-1">
+                {user && <div className="h-6 w-6 rounded-full overflow-hidden mr-1">
                     <AvatarUpload user={user} size="sm" editable={false} />
-                  </div>
-                )}
+                  </div>}
                 <span className="hidden md:inline">{user?.name || "Guest"}</span>
                 {user && <Badge variant="outline" className="ml-0 md:ml-2 text-xs border-sidebar-foreground text-sidebar-foreground">
                   {ROLE_DETAILS[user.role].title}
@@ -141,16 +130,13 @@ const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           </DropdownMenu>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
-
 const NotificationItem = ({
   title,
   message,
@@ -162,14 +148,12 @@ const NotificationItem = ({
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
     </div>;
 };
-
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
-
 const MessageItem = ({
   name,
   message,
@@ -189,5 +173,4 @@ const MessageItem = ({
       </div>
     </div>;
 };
-
 export default Header;
