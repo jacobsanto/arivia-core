@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from 'date-fns';
@@ -119,7 +120,9 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
           beforePhotos: [],
           afterPhotos: [],
           beforeVideos: [],
-          afterVideos: []
+          afterVideos: [],
+          createdAt: new Date().toISOString(), // Adding the missing createdAt property
+          type: "Maintenance" // Adding the missing type property
         };
         setSelectedMaintenanceTask(maintenanceTask);
       }
