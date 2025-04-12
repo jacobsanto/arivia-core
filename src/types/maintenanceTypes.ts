@@ -12,6 +12,11 @@ export interface MaintenanceReport {
   notes: string;
 }
 
+export interface DateRangeFilter {
+  startDate: Date | null;
+  endDate: Date | null;
+}
+
 export interface MaintenanceTask {
   id: number;
   title: string;
@@ -22,6 +27,7 @@ export interface MaintenanceTask {
   assignee: string;
   description: string;
   location: string;
+  specialInstructions?: string; // Added missing property
   requiredTools: string[];
   instructions: MaintenanceInstruction[];
   beforePhotos: string[];
