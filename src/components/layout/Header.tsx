@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({
             </Button>}
           
           <Link to="/" className="flex items-center">
-            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-10 md:h-12 invert brightness-0 filter" />
+            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-10 md:h-10 invert brightness-0 filter" />
           </Link>
         </div>
 
