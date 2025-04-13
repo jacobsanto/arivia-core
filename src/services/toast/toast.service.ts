@@ -114,18 +114,19 @@ class ToastService {
       }
     } else {
       // Using shadcn toast
-      // Get the toast dismiss function from shadcn - which requires an argument
       const { dismiss } = shadcnToast();
       
       if (this.loadingToasts.has(id)) {
         const toastId = this.loadingToasts.get(id);
-        // Shadcn dismiss function requires the toast id
+        // Shadcn dismiss function has a different signature - it expects a toastId
         if (toastId) {
+          // For shadcn toast, we need to call dismiss with the toastId
           dismiss(toastId.toString());
         }
         this.loadingToasts.delete(id);
       } else {
-        // Direct dismiss - ensure we pass the id as expected
+        // For shadcn toast, dismiss expects a toastId
+        // We need to pass the ID properly
         dismiss(id);
       }
     }
