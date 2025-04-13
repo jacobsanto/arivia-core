@@ -1,12 +1,13 @@
 
 import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
+import { MetricCardFooterData } from "./MetricCard";
 
 // Define the metric card type to match MetricCardProps
 export type MetricCard = {
   title: string;
-  value: string | number; // Make sure this matches MetricCardProps
-  description?: string; // This is now optional to match MetricCardProps
-  footer?: React.ReactNode;
+  value: string | number;
+  description?: string;
+  footer?: MetricCardFooterData;
   trend?: {
     value: number;
     isPositive: boolean;

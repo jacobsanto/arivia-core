@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
@@ -5,14 +6,20 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 export interface MetricCardFooterData {
-  text: string;
+  text?: string;
+  occupied?: number;
+  vacant?: number;
+  completed?: number;
+  pending?: number;
+  critical?: number;
+  standard?: number;
   [key: string]: any; // Allow for additional data properties
 }
 
 export interface MetricCardProps {
   title: string;
-  value: string | number; // Updated to accept both string and number
-  description?: string; // Made optional to match MetricCard type
+  value: string | number;
+  description?: string; // Optional to match MetricCard type
   footer?: MetricCardFooterData;
   swipeable?: boolean;
   trend?: {
@@ -20,13 +27,13 @@ export interface MetricCardProps {
     isPositive: boolean;
   };
   icon?: React.ReactNode;
-  variant?: 'default' | 'accent' | 'success' | 'warning';
+  variant?: 'default' | 'accent' | 'success' | 'warning' | 'destructive' | 'info';
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value, 
-  description = '', // Provide a default empty string for optional description
+  description = '', // Provide default empty string
   footer, 
   swipeable = false,
   trend,
@@ -43,6 +50,10 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         return "border-l-4 border-l-green-500";
       case 'warning':
         return "border-l-4 border-l-amber-500";
+      case 'destructive':
+        return "border-l-4 border-l-red-500";
+      case 'info':
+        return "border-l-4 border-l-blue-500";
       default:
         return "";
     }

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { getDashboardData } from "@/utils/dashboardDataUtils";
 import { subDays } from 'date-fns';
@@ -17,8 +18,7 @@ export const useDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch dashboard data based on selected property only
-      // Removing the dateRange parameter since getDashboardData only expects one parameter
+      // Fetch dashboard data based on selected property
       const data = getDashboardData(selectedProperty);
       setDashboardData(data);
       setLastRefreshed(new Date());
@@ -30,7 +30,7 @@ export const useDashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProperty, dateRange]); // Keep the dateRange dependency even though we're not using it directly
+  }, [selectedProperty]); // Remove dateRange dependency since it's not used directly
   
   useEffect(() => {
     fetchDashboardData();
