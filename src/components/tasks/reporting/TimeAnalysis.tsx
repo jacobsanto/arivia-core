@@ -1,29 +1,20 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { performanceByDayData } from "./reportingData";
-
 export const TimeAnalysis = () => {
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Cleaning Performance by Day</h3>
+        <CardContent className="pt-6 py-[12px] px-0 mx-0">
+          <h3 className="text-lg font-medium mb-4 text-center">Cleaning Performance by Day</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={performanceByDayData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
+              <BarChart data={performanceByDayData} margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5
+            }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis yAxisId="left" orientation="left" />
@@ -58,6 +49,5 @@ export const TimeAnalysis = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 };
