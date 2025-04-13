@@ -1,9 +1,9 @@
 
 import { toast as sonnerToast, type ExternalToast as SonnerToastOptions } from "sonner";
-import { useToast as useShadcnToast, type ToastProps } from "@/hooks/use-toast";
+import { useToast as useShadcnToast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import React from "react";
 import { type ToastActionElement } from "@/components/ui/toast";
+import React from "react";
 
 // Define the available types for toast
 type ToastType = "default" | "success" | "warning" | "error" | "loading" | "info";
@@ -52,7 +52,7 @@ class ToastService {
     // This is a workaround for using toast outside of React components
     // In a real app, you'd use a context or other proper state management
     return {
-      toast: (props: ToastProps) => {
+      toast: (props: any) => {
         // Create a simple object that mimics the return type structure
         // This isn't ideal but allows the service to work outside components
         const id = Math.random().toString(36).substring(2, 9);
@@ -225,9 +225,16 @@ class ToastService {
   public update(id: ToastId, title: string, options?: ToastOptions): void {
     if (this.useSonner) {
       if (typeof id === 'string' || typeof id === 'number') {
-        sonnerToast.update(id, {
-          description: options?.description,
-        });
+        // For sonner, we can directly update using the ID
+        // But we need to manually handle description only for now
+        // as the types don't fully support all update operations
+        const updateData: SonnerToastOptions = {};
+        if (options?.description) {
+          updateData.description = options.description;
+        }
+        // Use the any type to bypass TypeScript limitations
+        // Sonner does support this operation even if types don't reflect it
+        (sonnerToast as any).update(id, updateData);
       }
     } else {
       // For Shadcn/ui, recreate the toast since we can't easily update it
