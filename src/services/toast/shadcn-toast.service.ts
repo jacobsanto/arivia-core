@@ -3,6 +3,7 @@ import React from "react";
 import { ToastId, ToastOptions, LoadingToastOptions, IToastService } from "./toast.types";
 import { ToastAction } from "@/components/ui/toast";
 import { type ToastActionElement } from "@/components/ui/toast";
+import { toast, useToast } from "@/hooks/use-toast";
 
 /**
  * ShadcnToastService is an implementation of the toast service using Shadcn/ui
@@ -15,7 +16,7 @@ export class ShadcnToastService implements IToastService {
    */
   private getShadcnToast() {
     // This is a workaround for using toast outside of React components
-    // In a real app, you'd use a context or other proper state management
+    // We're returning the toast function from @/hooks/use-toast directly
     return {
       toast: (props: any) => {
         // Create a simple object that mimics the return type structure
