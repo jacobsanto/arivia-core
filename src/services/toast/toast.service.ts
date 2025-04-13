@@ -1,6 +1,8 @@
 
 import { toast as sonnerToast } from "sonner";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import React from "react";
 
 // Define the available types for toast
 type ToastType = "default" | "success" | "warning" | "error" | "loading" | "info";
@@ -54,10 +56,7 @@ class ToastService {
       return toast({
         title,
         description: options?.description,
-        action: options?.action ? {
-          altText: options.action.label,
-          onClick: options.action.onClick,
-        } : undefined,
+        action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
     }
@@ -81,10 +80,7 @@ class ToastService {
         title,
         description: options?.description,
         variant: "default", // Shadcn doesn't have success variant
-        action: options?.action ? {
-          altText: options.action.label,
-          onClick: options.action.onClick,
-        } : undefined,
+        action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
     }
@@ -108,10 +104,7 @@ class ToastService {
       return toast({
         title,
         description: options?.description,
-        action: options?.action ? {
-          altText: options.action.label,
-          onClick: options.action.onClick,
-        } : undefined,
+        action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
     }
@@ -135,10 +128,7 @@ class ToastService {
         title,
         description: options?.description,
         variant: "destructive",
-        action: options?.action ? {
-          altText: options.action.label,
-          onClick: options.action.onClick,
-        } : undefined,
+        action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
     }
@@ -164,6 +154,7 @@ class ToastService {
         title,
         description: options?.description,
         duration: options?.duration || Infinity, // Loading toasts should stay until dismissed
+        action: options?.action ? this.createToastAction(options.action) : undefined,
       });
     }
   }
@@ -186,10 +177,7 @@ class ToastService {
       return toast({
         title,
         description: options?.description,
-        action: options?.action ? {
-          altText: options.action.label,
-          onClick: options.action.onClick,
-        } : undefined,
+        action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
     }
@@ -201,14 +189,15 @@ class ToastService {
    * @param title The new title
    * @param options The new options
    */
-  public update(id: string, title: string, options?: ToastOptions) {
+  public update(id: string | number, title: string, options?: ToastOptions) {
     if (this.useSonner) {
       sonnerToast.update(id, {
         description: options?.description,
       });
     } else {
       // Shadcn doesn't have a direct update method
-      this.dismiss(id);
+      // For Shadcn, dismiss the old toast and create a new one
+      toast.dismiss(id.toString());
       toast({
         title,
         description: options?.description,
@@ -221,7 +210,7 @@ class ToastService {
    * Dismisses a specific toast or all toasts
    * @param id The ID of the toast to dismiss, or undefined to dismiss all
    */
-  public dismiss(id?: string) {
+  public dismiss(id?: string | number) {
     if (this.useSonner) {
       if (id) {
         sonnerToast.dismiss(id);
@@ -229,9 +218,26 @@ class ToastService {
         sonnerToast.dismiss();
       }
     } else {
-      // For Shadcn/ui, toast.dismiss() already accepts an optional id
-      toast.dismiss(id);
+      // For Shadcn/ui
+      if (id) {
+        toast.dismiss(id.toString());
+      } else {
+        toast.dismiss();
+      }
     }
+  }
+
+  /**
+   * Creates a ToastAction component for shadcn/ui toasts
+   * @param action The action configuration
+   * @returns A ToastAction component
+   */
+  private createToastAction(action: { label: string; onClick: () => void }) {
+    return (
+      <ToastAction altText={action.label} onClick={action.onClick}>
+        {action.label}
+      </ToastAction>
+    );
   }
 }
 

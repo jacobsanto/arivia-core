@@ -26,7 +26,7 @@ export const getRefreshStatus = () => {
  */
 export const refreshDashboardData = async (callback: () => void) => {
   const refreshStartTime = new Date();
-  const loadingToast = toastService.loading("Refreshing dashboard", {
+  const loadingToastId = toastService.loading("Refreshing dashboard", {
     description: "Fetching latest data from all sources..."
   });
   
@@ -67,7 +67,9 @@ export const refreshDashboardData = async (callback: () => void) => {
     callback();
     
     // Dismiss loading toast
-    toastService.dismiss(loadingToast);
+    if (loadingToastId) {
+      toastService.dismiss(loadingToastId);
+    }
     
     // Show appropriate toast based on results
     if (hasErrors) {
@@ -87,7 +89,9 @@ export const refreshDashboardData = async (callback: () => void) => {
     }
   } catch (error) {
     console.error("Error refreshing dashboard:", error);
-    toastService.dismiss(loadingToast);
+    if (loadingToastId) {
+      toastService.dismiss(loadingToastId);
+    }
     toastService.error("Refresh failed", {
       description: "There was an unexpected error refreshing your dashboard data"
     });
