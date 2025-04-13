@@ -25,7 +25,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("daily");
   
-  // Ensure dashboardData is not null with default values
+  // Make sure we have valid dashboard data
   const safeData = dashboardData || {
     properties: { total: 0, occupied: 0, vacant: 0 },
     tasks: { total: 0, completed: 0, pending: 0 },

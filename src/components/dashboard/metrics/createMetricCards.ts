@@ -1,100 +1,110 @@
 
-import { MetricCardProps } from "./MetricCard";
-import React from "react";
+import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 
-export interface DashboardMetricData {
-  properties: {
-    total: number;
-    occupied: number;
-    vacant: number;
+// Define the metric card type
+export type MetricCard = {
+  title: string;
+  value: string | number;
+  description?: string;
+  footer?: React.ReactNode;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+    icon?: React.ReactNode;
   };
-  tasks: {
-    total: number;
-    completed: number;
-    pending: number;
-  };
-  maintenance: {
-    total: number;
-    critical: number;
-    standard: number;
-  };
-}
+  variant?: "default" | "success" | "destructive" | "warning" | "info";
+};
 
-export const createMetricCards = (data: DashboardMetricData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
-  // Calculate variants based on data
-  const tasksVariant: 'warning' | 'success' = data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success';
-  const maintenanceVariant: 'warning' | 'success' = data.maintenance.critical > 0 ? 'warning' : 'success';
+// Create metric cards from data
+export const createMetricCards = (data: any, isMobile: boolean): MetricCard[] => {
+  // Ensure all required data exists
+  const properties = data.properties || { total: 0, occupied: 0, vacant: 0 };
+  const tasks = data.tasks || { total: 0, completed: 0, pending: 0 };
+  const maintenance = data.maintenance || { total: 0, critical: 0, standard: 0 };
+
+  // Calculate occupancy rate
+  const occupancyRate = properties.total > 0 
+    ? Math.round((properties.occupied / properties.total) * 100)
+    : 0;
   
-  // Create footer content as string representations instead of JSX
-  const propertiesFooterMobile = {
-    text: `${data.properties.occupied} Occ | ${data.properties.vacant} Vac`,
-    occupied: data.properties.occupied,
-    vacant: data.properties.vacant
-  };
-  
-  const propertiesFooterDesktop = {
-    text: `${data.properties.occupied} Occupied | ${data.properties.vacant} Vacant`,
-    occupied: data.properties.occupied,
-    vacant: data.properties.vacant
-  };
-  
-  const tasksFooterMobile = {
-    text: `${data.tasks.completed} Done | ${data.tasks.pending} Pend`,
-    completed: data.tasks.completed,
-    pending: data.tasks.pending
-  };
-  
-  const tasksFooterDesktop = {
-    text: `${data.tasks.completed} Completed | ${data.tasks.pending} Pending`,
-    completed: data.tasks.completed,
-    pending: data.tasks.pending
-  };
-  
-  const maintenanceFooterMobile = {
-    text: `${data.maintenance.critical} Crit | ${data.maintenance.standard} Std`,
-    critical: data.maintenance.critical,
-    standard: data.maintenance.standard
-  };
-  
-  const maintenanceFooterDesktop = {
-    text: `${data.maintenance.critical} Critical | ${data.maintenance.standard} Standard`,
-    critical: data.maintenance.critical,
-    standard: data.maintenance.standard
-  };
-  
-  return [
-    {
-      title: "Properties",
-      value: data.properties.total.toString(),
-      description: "Properties Managed",
-      footer: isMobile ? propertiesFooterMobile : propertiesFooterDesktop,
-      trend: {
-        value: 8,
-        isPositive: true
-      },
-      variant: 'accent' as const
-    },
-    {
-      title: "Tasks",
-      value: data.tasks.total.toString(),
-      description: "Active Tasks",
-      footer: isMobile ? tasksFooterMobile : tasksFooterDesktop,
-      trend: {
-        value: 12,
-        isPositive: data.tasks.completed > data.tasks.pending
-      },
-      variant: tasksVariant
-    },
-    {
-      title: "Maintenance",
-      value: data.maintenance.total.toString(),
-      description: "Maintenance Issues",
-      footer: isMobile ? maintenanceFooterMobile : maintenanceFooterDesktop,
-      trend: {
-        value: data.maintenance.critical > 0 ? 5 : 2,
-        isPositive: data.maintenance.critical === 0
-      },
-      variant: maintenanceVariant
-    }
-  ];
+  // Calculate task completion rate
+  const taskCompletionRate = tasks.total > 0
+    ? Math.round((tasks.completed / tasks.total) * 100) 
+    : 0;
+
+  // Create metric cards based on mobile or desktop
+  return isMobile
+    ? [
+        // Mobile view - fewer cards to fit screen
+        {
+          title: "Properties",
+          value: properties.total,
+          description: `${properties.occupied} Occupied · ${properties.vacant} Vacant`,
+          trend: {
+            value: occupancyRate,
+            isPositive: occupancyRate >= 50,
+            icon: occupancyRate >= 50 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+          },
+          variant: occupancyRate >= 75 ? "success" : occupancyRate >= 50 ? "default" : "warning"
+        },
+        {
+          title: "Tasks",
+          value: tasks.total,
+          description: `${tasks.completed} Completed · ${tasks.pending} Pending`,
+          trend: {
+            value: taskCompletionRate,
+            isPositive: taskCompletionRate >= 75,
+            icon: taskCompletionRate >= 75 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+          },
+          variant: taskCompletionRate >= 75 ? "success" : taskCompletionRate >= 50 ? "default" : "warning"
+        }
+      ]
+    : [
+        // Desktop view - more detailed cards
+        {
+          title: "Total Properties",
+          value: properties.total,
+          description: "Total properties in the system",
+        },
+        {
+          title: "Occupied Properties",
+          value: properties.occupied,
+          description: `${occupancyRate}% occupancy rate`,
+          trend: {
+            value: occupancyRate,
+            isPositive: occupancyRate >= 50,
+            icon: occupancyRate >= 50 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+          },
+          variant: occupancyRate >= 75 ? "success" : occupancyRate >= 50 ? "default" : "warning"
+        },
+        {
+          title: "Vacant Properties",
+          value: properties.vacant,
+          description: "Available for booking",
+          variant: "info"
+        },
+        {
+          title: "Task Completion",
+          value: `${taskCompletionRate}%`,
+          description: `${tasks.completed} of ${tasks.total} tasks completed`,
+          trend: {
+            value: taskCompletionRate,
+            isPositive: taskCompletionRate >= 75,
+            icon: taskCompletionRate >= 75 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
+          },
+          variant: taskCompletionRate >= 75 ? "success" : taskCompletionRate >= 50 ? "default" : "warning"
+        },
+        {
+          title: "Pending Tasks",
+          value: tasks.pending,
+          description: "Require attention",
+          variant: tasks.pending > 10 ? "warning" : "default"
+        },
+        {
+          title: "Critical Maintenance",
+          value: maintenance.critical,
+          description: "High priority maintenance tasks",
+          variant: maintenance.critical > 0 ? "destructive" : "success"
+        }
+      ];
 };
