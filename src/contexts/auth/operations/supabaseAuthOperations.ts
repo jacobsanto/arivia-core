@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/auth";
 import { toast } from "sonner";
@@ -40,17 +41,23 @@ export const logout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
     
-    // Clear user data from localStorage but keep other settings
+    // Clear ALL relevant auth data from localStorage
     localStorage.removeItem("user");
     localStorage.removeItem("session");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("lastAuthTime");
     
-    // Redirect to login page
-    window.location.href = "/auth/login";
+    // Use window.location.href for a full page reload and redirect
+    // This ensures all React state is cleared and a fresh login page is shown
+    window.location.href = "/login";
   } catch (error) {
     console.error("Logout error:", error);
     toast.error("Failed to log out", {
       description: "Please try again"
     });
+    
+    // Even if there's an error, try to redirect to login
+    window.location.href = "/login";
   }
 };
 

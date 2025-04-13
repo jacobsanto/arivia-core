@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useUserState } from "./hooks";
@@ -14,7 +13,7 @@ import {
   removeUser,
   syncUserWithProfile,
   updateUserProfile,
-  signup // Import the signup function
+  signup
 } from "./auth/operations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -38,14 +37,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await login(email, password, setUser, setLastAuthTime, setIsLoading);
   };
 
-  // Add the signup handler
   const handleSignup = async (email: string, password: string, fullName: string) => {
     await signup(email, password, fullName, setUser, setLastAuthTime, setIsLoading);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
     setUser(null);
+    setLastAuthTime(0);
+    await logout();
   };
 
   const handleHasPermission = (roles: UserRole[]) => {
@@ -101,7 +100,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       session,
       isLoading, 
       login: handleLogin,
-      signup: handleSignup, // Add the signup method
+      signup: handleSignup,
       logout: handleLogout, 
       hasPermission: handleHasPermission, 
       hasFeatureAccess: handleHasFeatureAccess,

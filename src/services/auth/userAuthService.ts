@@ -131,14 +131,20 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 };
 
 export const logoutUser = (): void => {
+  // Clear ALL authentication data
   localStorage.removeItem("user");
   localStorage.removeItem("lastAuthTime");
   localStorage.removeItem("authToken");
+  localStorage.removeItem("session");
+  
   // Don't clear other data like custom users or offline data
   
   toastService.info("Logged Out", {
     description: "You have been successfully logged out."
   });
+  
+  // Force redirect to login page with page reload
+  window.location.href = "/login";
 };
 
 export const getUserFromStorage = (): { user: User | null; lastAuthTime: number } => {
