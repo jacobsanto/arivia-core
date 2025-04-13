@@ -30,7 +30,9 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<AppLayout />}>
-              <Route index element={<Dashboard />} />
+              {/* Redirect root to dashboard for consistent navigation */}
+              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="housekeeping" element={<Housekeeping />} />
               <Route path="maintenance" element={<Maintenance />} />
@@ -46,7 +48,7 @@ function App() {
               <Route path="admin/settings" element={<AdminSettings />} />
               
               {/* Redirect unknown paths to dashboard */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Routes>
         </Router>

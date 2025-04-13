@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -6,20 +7,21 @@ import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
+
 const Sidebar = () => {
-  const {
-    user,
-    logout
-  } = useUser();
-  const {
-    canAccess
-  } = usePermissions();
+  const { user, logout } = useUser();
+  const { canAccess } = usePermissions();
+
   const handleLogout = () => {
     logout();
   };
+
   if (!user) return null;
+  
   const isSuperAdmin = user.role === "superadmin";
-  return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
+
+  return (
+    <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       <div className="flex items-center justify-center py-6">
         {/* Logo removed from here - now only in Header */}
       </div>
@@ -37,7 +39,7 @@ const Sidebar = () => {
       </div>
       
       <nav className="mt-6 flex-1 space-y-1">
-        <SidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
+        <SidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" />
         
         {canAccess("viewProperties") && <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />}
         
@@ -53,14 +55,16 @@ const Sidebar = () => {
         
         {canAccess("viewReports") && <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />}
         
-        {isSuperAdmin && <div className="pt-4 border-t border-sidebar-border mt-4">
+        {isSuperAdmin && (
+          <div className="pt-4 border-t border-sidebar-border mt-4">
             <h3 className="px-4 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">
               Admin Controls
             </h3>
             <SidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" />
             <SidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" />
             <SidebarLink to="/admin/settings" icon={<Settings size={20} />} label="System Settings" />
-          </div>}
+          </div>
+        )}
       </nav>
       
       <div className="pt-4 border-t border-sidebar-border mt-6 space-y-1">
@@ -71,14 +75,17 @@ const Sidebar = () => {
           <span>Logout</span>
         </Button>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 interface SidebarLinkProps {
   to: string;
   icon: React.ReactNode;
   label: string;
   disabled?: boolean;
 }
+
 const SidebarLink = ({
   to,
   icon,
@@ -86,17 +93,31 @@ const SidebarLink = ({
   disabled = false
 }: SidebarLinkProps) => {
   if (disabled) {
-    return <div className="flex items-center px-4 py-2 rounded-md font-medium text-sidebar-muted opacity-50 cursor-not-allowed">
+    return (
+      <div className="flex items-center px-4 py-2 rounded-md font-medium text-sidebar-muted opacity-50 cursor-not-allowed">
         <span className="mr-3">{icon}</span>
         <span>{label}</span>
         <Lock size={14} className="ml-auto" />
-      </div>;
+      </div>
+    );
   }
-  return <NavLink to={to} className={({
-    isActive
-  }) => cn("flex items-center px-4 py-2 rounded-md font-medium transition-colors", isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground")}>
+
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center px-4 py-2 rounded-md font-medium transition-colors",
+          isActive
+            ? "bg-sidebar-accent text-sidebar-accent-foreground"
+            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        )
+      }
+    >
       <span className="mr-3">{icon}</span>
       <span className="font-normal text-base">{label}</span>
-    </NavLink>;
+    </NavLink>
+  );
 };
+
 export default Sidebar;

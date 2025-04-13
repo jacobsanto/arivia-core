@@ -11,6 +11,8 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(
   <UserProvider>
-    <App />
+    <ToastProvider>
+      <App />
+    </ToastProvider>
   </UserProvider>
 );
