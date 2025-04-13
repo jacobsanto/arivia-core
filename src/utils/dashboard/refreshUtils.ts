@@ -1,5 +1,5 @@
 
-import { toastService } from '@/services/toast/toast.service';
+import { toastService } from '@/services/toast';
 
 // Track when data was last refreshed
 let lastRefreshTimestamp = new Date();

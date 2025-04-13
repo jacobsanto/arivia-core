@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { FileDown, Printer, CalendarRange, Send, Save } from "lucide-react";
-import { toastService } from "@/services/toast/toast.service";
+import { toastService } from "@/services/toast";
 import { exportToCSV, preparePrint } from "@/utils/reportExportUtils";
 
 interface WeeklyReviewActionsProps {

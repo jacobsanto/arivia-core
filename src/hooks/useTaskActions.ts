@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { toastService } from "@/services/toast/toast.service";
+import { toastService } from "@/services/toast";
 import { Task } from "../types/taskTypes";
 
 export const useTaskActions = (
@@ -65,7 +64,6 @@ export const useTaskActions = (
 
   const handleRejectTask = () => {
     if (selectedTask) {
-      // In a real app, you would show a dialog to collect rejection reason
       const rejectionReason = prompt("Please provide a reason for rejection:");
       
       if (rejectionReason) {
@@ -108,7 +106,6 @@ export const useTaskActions = (
 
       setSelectedTask(updatedTask);
       
-      // Update in the main tasks array as well
       setTasks(tasks.map(task => 
         task.id === selectedTask.id ? updatedTask : task
       ));
@@ -130,13 +127,10 @@ export const useTaskActions = (
   const handlePhotoUpload = (file: File) => {
     if (!selectedTask) return;
     
-    // In a real app, we would upload the file to a server and get a URL
-    // Here we're just creating a temporary URL
     const photoUrl = URL.createObjectURL(file);
     
     const updatedPhotos = selectedTask.photos ? [...selectedTask.photos, photoUrl] : [photoUrl];
     
-    // Update selected task
     const updatedTask = {
       ...selectedTask,
       photos: updatedPhotos
@@ -144,7 +138,6 @@ export const useTaskActions = (
     
     setSelectedTask(updatedTask);
     
-    // Update in the main tasks array as well
     setTasks(tasks.map(task => 
       task.id === selectedTask.id ? updatedTask : task
     ));

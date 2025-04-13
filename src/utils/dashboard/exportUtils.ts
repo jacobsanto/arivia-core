@@ -1,7 +1,7 @@
 
 import { format as dateFormat } from 'date-fns';
 import { exportToCSV, preparePrint } from '../reportExportUtils';
-import { toastService } from '@/services/toast/toast.service';
+import { toastService } from '@/services/toast';
 import { ExportFormat, ExportSection } from '@/components/dashboard/ExportConfigDialog';
 import { prepareDashboardExportData } from './dataPreparationUtils';
 
