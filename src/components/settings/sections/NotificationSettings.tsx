@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -7,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+
 const notificationSchema = z.object({
   emailNotifications: z.boolean(),
   pushNotifications: z.boolean(),
@@ -19,9 +21,11 @@ const notificationSchema = z.object({
   notifySystemUpdates: z.array(z.string()),
   dailyDigest: z.boolean(),
   weeklyReport: z.boolean(),
-  notificationSounds: z.boolean()
+  notificationSounds: z.boolean(),
 });
+
 type NotificationFormValues = z.infer<typeof notificationSchema>;
+
 const NotificationSettings: React.FC = () => {
   const form = useForm<NotificationFormValues>({
     resolver: zodResolver(notificationSchema),
@@ -37,35 +41,39 @@ const NotificationSettings: React.FC = () => {
       notifySystemUpdates: ["email"],
       dailyDigest: true,
       weeklyReport: true,
-      notificationSounds: true
-    }
+      notificationSounds: true,
+    },
   });
+
   function onSubmit(data: NotificationFormValues) {
     toast.success("Notification settings updated", {
       description: "Your notification preferences have been saved."
     });
     console.log("Notification settings saved:", data);
   }
-  const notificationTypes = [{
-    id: "email",
-    label: "Email"
-  }, {
-    id: "push",
-    label: "Push"
-  }, {
-    id: "in-app",
-    label: "In-App"
-  }];
-  return <Form {...form}>
+
+  const notificationTypes = [
+    { id: "email", label: "Email" },
+    { id: "push", label: "Push" },
+    { id: "in-app", label: "In-App" },
+  ];
+
+  return (
+    <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <SettingsCard title="Notification Settings" description="Configure how and when you receive notifications">
+        <SettingsCard 
+          title="Notification Settings" 
+          description="Configure how and when you receive notifications"
+        >
           <div className="space-y-6">
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Notification Channels</h3>
               
-              <FormField control={form.control} name="emailNotifications" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormField
+                control={form.control}
+                name="emailNotifications"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Email Notifications</FormLabel>
                       <FormDescription>
@@ -73,13 +81,20 @@ const NotificationSettings: React.FC = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="pushNotifications" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormField
+                control={form.control}
+                name="pushNotifications"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Push Notifications</FormLabel>
                       <FormDescription>
@@ -87,13 +102,20 @@ const NotificationSettings: React.FC = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="inAppNotifications" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormField
+                control={form.control}
+                name="inAppNotifications"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">In-App Notifications</FormLabel>
                       <FormDescription>
@@ -101,9 +123,14 @@ const NotificationSettings: React.FC = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
             </div>
             
             <div className="space-y-4">
@@ -112,109 +139,201 @@ const NotificationSettings: React.FC = () => {
                 Select how you want to receive each type of notification
               </p>
               
-              <FormField control={form.control} name="notifyNewBooking" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifyNewBooking"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">New Bookings</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm" className="bg-gray-200 hover:bg-gray-100">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="notifyTaskAssigned" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifyTaskAssigned"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">Tasks Assigned</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="notifyTaskCompleted" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifyTaskCompleted"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">Tasks Completed</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="notifyInventoryLow" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifyInventoryLow"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">Low Inventory</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="notifyMaintenanceIssue" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifyMaintenanceIssue"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">Maintenance Issues</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="notifySystemUpdates" render={({
-              field
-            }) => <FormItem className="space-y-2">
+              <FormField
+                control={form.control}
+                name="notifySystemUpdates"
+                render={({ field }) => (
+                  <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
                       <FormLabel className="text-base font-normal">System Updates</FormLabel>
                       <FormControl>
-                        <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
-                          {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
+                        <ToggleGroup 
+                          type="multiple" 
+                          value={field.value} 
+                          onValueChange={field.onChange}
+                        >
+                          {notificationTypes.map((type) => (
+                            <ToggleGroupItem 
+                              key={type.id} 
+                              value={type.id}
+                              aria-label={`Toggle ${type.label}`}
+                              size="sm"
+                            >
                               {type.label}
-                            </ToggleGroupItem>)}
+                            </ToggleGroupItem>
+                          ))}
                         </ToggleGroup>
                       </FormControl>
                     </div>
                     <FormMessage />
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
             </div>
             
             <div className="space-y-4">
               <h3 className="text-lg font-medium">Summary Reports</h3>
               
-              <FormField control={form.control} name="dailyDigest" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormField
+                control={form.control}
+                name="dailyDigest"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Daily Digest</FormLabel>
                       <FormDescription>
@@ -222,13 +341,20 @@ const NotificationSettings: React.FC = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
               
-              <FormField control={form.control} name="weeklyReport" render={({
-              field
-            }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+              <FormField
+                control={form.control}
+                name="weeklyReport"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">Weekly Report</FormLabel>
                       <FormDescription>
@@ -236,14 +362,21 @@ const NotificationSettings: React.FC = () => {
                       </FormDescription>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                  </FormItem>} />
+                  </FormItem>
+                )}
+              />
             </div>
             
-            <FormField control={form.control} name="notificationSounds" render={({
-            field
-          }) => <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+            <FormField
+              control={form.control}
+              name="notificationSounds"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                   <div className="space-y-0.5">
                     <FormLabel className="text-base">Notification Sounds</FormLabel>
                     <FormDescription>
@@ -251,12 +384,19 @@ const NotificationSettings: React.FC = () => {
                     </FormDescription>
                   </div>
                   <FormControl>
-                    <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </FormControl>
-                </FormItem>} />
+                </FormItem>
+              )}
+            />
           </div>
         </SettingsCard>
       </form>
-    </Form>;
+    </Form>
+  );
 };
+
 export default NotificationSettings;
