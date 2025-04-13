@@ -7,14 +7,14 @@ import NavItem from "./NavItem";
 import { 
   Home, 
   ClipboardCheck, 
-  Wrench as Tool, // Changed from Tool to Wrench
+  Wrench, 
   Package, 
   BarChart, 
   Settings, 
   Users, 
   MessageSquare,
-  FileText,
-  Check
+  Check,
+  HomeIcon
 } from "lucide-react";
 
 const Sidebar: React.FC = () => {
@@ -33,10 +33,12 @@ const Sidebar: React.FC = () => {
       
       <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
         <NavItem to="/" icon={<Home size={20} />}>Dashboard</NavItem>
+        <NavItem to="/properties" icon={<HomeIcon size={20} />}>Properties</NavItem>
         <NavItem to="/housekeeping" icon={<ClipboardCheck size={20} />}>Housekeeping</NavItem>
-        <NavItem to="/maintenance" icon={<Tool size={20} />}>Maintenance</NavItem>
+        <NavItem to="/maintenance" icon={<Wrench size={20} />}>Maintenance</NavItem>
         <NavItem to="/inventory" icon={<Package size={20} />}>Inventory</NavItem>
-        <NavItem to="/reporting" icon={<BarChart size={20} />}>Reports</NavItem>
+        <NavItem to="/reports" icon={<BarChart size={20} />}>Reports</NavItem>
+        <NavItem to="/analytics" icon={<BarChart size={20} />}>Analytics</NavItem>
         <NavItem to="/team-chat" icon={<MessageSquare size={20} />}>Team Chat</NavItem>
         
         {/* Only show Checklist Templates to superadmin */}
@@ -46,7 +48,7 @@ const Sidebar: React.FC = () => {
 
         <div className="mt-6 pt-6 border-t border-white/10">
           <NavItem to="/settings" icon={<Settings size={20} />}>Settings</NavItem>
-          <NavItem to="/user-profile" icon={<Users size={20} />}>Profile</NavItem>
+          <NavItem to="/profile" icon={<Users size={20} />}>Profile</NavItem>
         </div>
       </nav>
       
