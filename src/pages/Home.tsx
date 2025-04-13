@@ -2,6 +2,7 @@
 import React from "react";
 import { useDashboard } from "@/hooks/useDashboard";
 import DashboardContent from "@/components/dashboard/DashboardContent";
+import { Helmet } from "react-helmet-async";
 
 const Home = () => {
   const { dashboardData, isLoading } = useDashboard();
@@ -17,7 +18,14 @@ const Home = () => {
     );
   }
 
-  return <DashboardContent dashboardData={dashboardData} />;
+  return (
+    <>
+      <Helmet>
+        <title>Dashboard - Arivia Villas</title>
+      </Helmet>
+      <DashboardContent dashboardData={dashboardData} />
+    </>
+  );
 };
 
 export default Home;
