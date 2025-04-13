@@ -32,16 +32,20 @@ export class ShadcnToastService implements IToastService {
   }
 
   /**
-   * Creates a ToastAction component for shadcn/ui toasts
+   * Creates a ToastAction object for shadcn/ui toasts
    * @param action The action configuration
-   * @returns A ToastAction component
+   * @returns A ToastAction element descriptor
    */
   private createToastAction(action: { label: string; onClick: () => void }): ToastActionElement {
-    return (
-      <ToastAction altText={action.label} onClick={action.onClick}>
-        {action.label}
-      </ToastAction>
-    );
+    // Instead of using JSX directly, we'll create the element descriptor manually
+    return {
+      type: ToastAction,
+      props: {
+        altText: action.label,
+        onClick: action.onClick,
+        children: action.label
+      }
+    } as unknown as ToastActionElement;
   }
 
   /**
