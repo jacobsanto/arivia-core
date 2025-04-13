@@ -114,14 +114,16 @@ class ToastService {
       }
     } else {
       // Using shadcn toast
+      // Get the toast dismiss function from shadcn
       const { dismiss } = shadcnToast();
+      
       if (this.loadingToasts.has(id)) {
         const toastId = this.loadingToasts.get(id);
-        // Shadcn dismiss expects a string parameter
+        // Shadcn dismiss function requires the toast id
         if (toastId) dismiss(toastId.toString());
         this.loadingToasts.delete(id);
       } else {
-        // Direct dismiss - ensure we pass the id as a string
+        // Direct dismiss - ensure we pass the id
         dismiss(id);
       }
     }
