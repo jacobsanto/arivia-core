@@ -114,7 +114,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-0 px-[6px] rounded-none mx-[5px] my-[4px]">
+      <CardContent className="p-4 pt-0 rounded-none px-0 mx-0 my-0">
         {renderChart()}
       </CardContent>
       <CardFooter className="flex justify-end pt-0 pb-4">
