@@ -1,54 +1,36 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer
-} from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { completionData, barColors } from "./reportingData";
 import { Badge } from "@/components/ui/badge";
-
 export const PropertyReporting = () => {
   const isMobile = useIsMobile();
-  
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Task Completion by Property</h3>
+        <CardContent className="pt-6 py-[8px] px-[10px] mx-[3px]">
+          <h3 className="text-lg font-medium mb-4 text-center">Task Completion by Property</h3>
           <div className="h-80 chart-responsive">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={completionData}
-                margin={isMobile ? { top: 5, right: 10, left: 0, bottom: 60 } : { top: 5, right: 30, left: 20, bottom: 5 }}
-              >
+              <BarChart data={completionData} margin={isMobile ? {
+              top: 5,
+              right: 10,
+              left: 0,
+              bottom: 60
+            } : {
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5
+            }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name" 
-                  fontSize={12} 
-                  angle={isMobile ? -45 : 0} 
-                  textAnchor={isMobile ? "end" : "middle"} 
-                  height={60}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis 
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                  width={isMobile ? 30 : 40}
-                />
+                <XAxis dataKey="name" fontSize={12} angle={isMobile ? -45 : 0} textAnchor={isMobile ? "end" : "middle"} height={60} tick={{
+                fontSize: isMobile ? 10 : 12
+              }} />
+                <YAxis tick={{
+                fontSize: isMobile ? 10 : 12
+              }} width={isMobile ? 30 : 40} />
                 <Tooltip />
                 <Bar dataKey="completed" name="Total Completed" fill={barColors.completed} />
                 <Bar dataKey="rejected" name="Rejected" fill={barColors.rejected} />
@@ -59,9 +41,9 @@ export const PropertyReporting = () => {
         </CardContent>
       </Card>
       
-      {isMobile ? (
-        // Mobile card-based layout
-        <div className="space-y-3">
+      {isMobile ?
+    // Mobile card-based layout
+    <div className="space-y-3">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
@@ -140,10 +122,9 @@ export const PropertyReporting = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
-      ) : (
-        // Desktop table layout
-        <div className="mobile-scroll">
+        </div> :
+    // Desktop table layout
+    <div className="mobile-scroll">
           <Card>
             <CardContent className="pt-6">
               <h3 className="text-lg font-medium mb-4">Property Cleaning Data</h3>
@@ -183,8 +164,6 @@ export const PropertyReporting = () => {
               </Table>
             </CardContent>
           </Card>
-        </div>
-      )}
-    </div>
-  );
+        </div>}
+    </div>;
 };
