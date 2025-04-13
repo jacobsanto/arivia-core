@@ -27,6 +27,7 @@ const ChecklistTemplateForm = ({
     resolver: zodResolver(checklistTemplateSchema),
     defaultValues: template
       ? {
+          id: template.id, // Include the id when editing
           name: template.name,
           description: template.description,
           category: template.category,
@@ -40,9 +41,17 @@ const ChecklistTemplateForm = ({
         },
   });
 
+  const handleFormSubmit = (data: ChecklistTemplateFormValues) => {
+    // If editing, ensure the id is passed along
+    if (template) {
+      data.id = template.id;
+    }
+    onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Basic Information Section */}
         <ChecklistBasicInfo control={form.control} />
         

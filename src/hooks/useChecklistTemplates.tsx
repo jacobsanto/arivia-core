@@ -6,9 +6,6 @@ import { toastService } from "@/services/toast";
 
 export const useChecklistTemplates = () => {
   const [templates, setTemplates] = useState<ChecklistTemplate[]>(initialChecklistTemplates);
-  const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
-  const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
-  const [isEditTemplateOpen, setIsEditTemplateOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -43,15 +40,15 @@ export const useChecklistTemplates = () => {
     };
     
     setTemplates([...templates, newTemplate]);
-    setIsCreateTemplateOpen(false);
     toastService.success(`Checklist template "${data.name}" created successfully!`);
   };
 
   const handleEditTemplate = (data: ChecklistTemplateFormValues) => {
-    if (!selectedTemplate) return;
+    const templateToEdit = templates.find(t => t.id === data.id);
+    if (!templateToEdit) return;
     
     const updatedTemplate = {
-      ...selectedTemplate,
+      ...templateToEdit,
       name: data.name,
       description: data.description,
       category: data.category,
@@ -63,25 +60,15 @@ export const useChecklistTemplates = () => {
     };
     
     setTemplates(templates.map(t => 
-      t.id === selectedTemplate.id ? updatedTemplate : t
+      t.id === templateToEdit.id ? updatedTemplate : t
     ));
     
-    setSelectedTemplate(null);
-    setIsEditTemplateOpen(false);
     toastService.success(`Checklist template "${data.name}" updated successfully!`);
   };
 
   const handleDeleteTemplate = (templateId: number) => {
     setTemplates(templates.filter(t => t.id !== templateId));
     toastService.success("Checklist template deleted successfully!");
-  };
-
-  const selectTemplateForEdit = (templateId: number) => {
-    const template = templates.find(t => t.id === templateId);
-    if (template) {
-      setSelectedTemplate(template);
-      setIsEditTemplateOpen(true);
-    }
   };
 
   const getTemplateById = (id: number) => {
@@ -91,11 +78,6 @@ export const useChecklistTemplates = () => {
   return {
     templates,
     filteredTemplates,
-    selectedTemplate,
-    isCreateTemplateOpen,
-    setIsCreateTemplateOpen,
-    isEditTemplateOpen,
-    setIsEditTemplateOpen,
     categoryFilter,
     setCategoryFilter,
     searchQuery,
@@ -103,7 +85,6 @@ export const useChecklistTemplates = () => {
     handleCreateTemplate,
     handleEditTemplate,
     handleDeleteTemplate,
-    selectTemplateForEdit,
     getTemplatesByCategory,
     getTemplateById
   };

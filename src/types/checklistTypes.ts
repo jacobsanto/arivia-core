@@ -19,6 +19,7 @@ export interface ChecklistTemplate {
 }
 
 export const checklistTemplateSchema = z.object({
+  id: z.number().optional(), // Added optional id field for editing
   name: z.string().min(3, "Template name must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   category: z.string().min(1, "Category is required"),

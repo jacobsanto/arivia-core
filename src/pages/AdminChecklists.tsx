@@ -1,15 +1,14 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
-import { ChecklistTemplate } from "@/types/checklistTypes";
+import { useTemplateDialogs } from "@/hooks/useTemplateDialogs";
 
-// Import the new components
+// Import the components
 import ChecklistPageHeader from "@/components/admin/checklists/ChecklistPageHeader";
 import ChecklistTemplateGrid from "@/components/admin/checklists/ChecklistTemplateGrid";
 import ChecklistTemplateFilters from "@/components/admin/checklists/ChecklistTemplateFilters";
@@ -24,11 +23,6 @@ const AdminChecklists = () => {
 
   const {
     filteredTemplates,
-    isCreateTemplateOpen,
-    setIsCreateTemplateOpen,
-    isEditTemplateOpen,
-    setIsEditTemplateOpen,
-    selectedTemplate,
     categoryFilter,
     setCategoryFilter,
     searchQuery,
@@ -36,15 +30,25 @@ const AdminChecklists = () => {
     handleCreateTemplate,
     handleEditTemplate,
     handleDeleteTemplate,
-    selectTemplateForEdit,
     getTemplateById
   } = useChecklistTemplates();
 
-  // State for template operations
-  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isUseTemplateOpen, setIsUseTemplateOpen] = useState(false);
-  const [selectedTemplateForUse, setSelectedTemplateForUse] = useState<ChecklistTemplate | null>(null);
+  // Use the new custom hook for dialog management
+  const {
+    isCreateTemplateOpen,
+    setIsCreateTemplateOpen,
+    isEditTemplateOpen,
+    setIsEditTemplateOpen,
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    isUseTemplateOpen,
+    setIsUseTemplateOpen,
+    selectedTemplate,
+    templateToDelete,
+    setTemplateToDelete,
+    selectedTemplateForUse,
+    setSelectedTemplateForUse
+  } = useTemplateDialogs();
 
   // Add swipe gesture to navigate back
   const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
@@ -59,10 +63,8 @@ const AdminChecklists = () => {
   if (user?.role !== "superadmin" && user?.role !== "administrator") {
     // Redirect non-admins away
     React.useEffect(() => {
-      toast.error("Access denied", {
-        description: "You need admin privileges to access this area"
-      });
       navigate("/");
+      return undefined;
     }, [navigate]);
     return null;
   }
@@ -101,6 +103,13 @@ const AdminChecklists = () => {
     }
   };
 
+  const handleEditClick = (templateId: number) => {
+    const template = getTemplateById(templateId);
+    if (template) {
+      setIsEditTemplateOpen(true);
+    }
+  };
+
   // Add swipe gesture props
   const gestureProps = isMobile ? {
     onTouchStart,
@@ -130,7 +139,7 @@ const AdminChecklists = () => {
           {/* Grid of templates */}
           <ChecklistTemplateGrid
             templates={filteredTemplates}
-            onEdit={selectTemplateForEdit}
+            onEdit={handleEditClick}
             onDelete={handleDeleteClick}
             onDuplicate={handleDuplicateTemplate}
             onUse={handleUseTemplate}
