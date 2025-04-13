@@ -367,8 +367,8 @@ const TechnicianReport = ({
 }) => {
   return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6 py-[11px] px-0 mx-0 my-0">
-          <h3 className="text-lg font-medium mb-4 text-center">Technician Performance</h3>
+        <CardContent className="pt-0 mx-[3px] py-px px-0 my-[23px]">
+          <h3 className="text-lg font-medium mb-4 mx-0 px-[17px] my-[2px] py-[7px] text-center">Technician Performance</h3>
           {isLoading ? <div className="h-80 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div> : <div className="h-80">
