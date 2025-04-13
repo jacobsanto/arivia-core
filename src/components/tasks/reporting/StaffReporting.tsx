@@ -1,61 +1,34 @@
-
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
-} from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { staffData } from "./reportingData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
-
 export const StaffReporting = () => {
   const isMobile = useIsMobile();
-  
-  return (
-    <div className="space-y-4">
+  return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Staff Performance</h3>
+        <CardContent className="pt-6 mx-[5px] px-px my-px py-[5px]">
+          <h3 className="text-lg font-medium mb-4 text-center">Staff Performance</h3>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={staffData}
-                margin={{ 
-                  top: 5, 
-                  right: isMobile ? 10 : 30, 
-                  left: isMobile ? 0 : 20, 
-                  bottom: isMobile ? 40 : 5 
-                }}
-              >
+              <BarChart data={staffData} margin={{
+              top: 5,
+              right: isMobile ? 10 : 30,
+              left: isMobile ? 0 : 20,
+              bottom: isMobile ? 40 : 5
+            }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="name"
-                  angle={isMobile ? -45 : 0}
-                  textAnchor={isMobile ? "end" : "middle"}
-                  height={isMobile ? 60 : 30}
-                  tick={{ fontSize: isMobile ? 10 : 12 }}
-                />
-                <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
+                <XAxis dataKey="name" angle={isMobile ? -45 : 0} textAnchor={isMobile ? "end" : "middle"} height={isMobile ? 60 : 30} tick={{
+                fontSize: isMobile ? 10 : 12
+              }} />
+                <YAxis tick={{
+                fontSize: isMobile ? 10 : 12
+              }} />
                 <Tooltip />
                 <Bar dataKey="completed" name="Tasks Completed" fill="#3b82f6">
-                  {staffData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.rating >= 4.8 ? '#4ade80' : '#3b82f6'} />
-                  ))}
+                  {staffData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.rating >= 4.8 ? '#4ade80' : '#3b82f6'} />)}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
@@ -63,26 +36,17 @@ export const StaffReporting = () => {
         </CardContent>
       </Card>
       
-      {isMobile ? (
-        // Mobile card view
-        <Card>
+      {isMobile ?
+    // Mobile card view
+    <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Staff Performance Details</h3>
             <div className="space-y-3">
-              {staffData.map((staff) => (
-                <Card key={staff.name} className="bg-slate-50 border-slate-200">
+              {staffData.map(staff => <Card key={staff.name} className="bg-slate-50 border-slate-200">
                   <CardContent className="p-4">
                     <div className="flex justify-between items-start">
                       <h4 className="font-medium">{staff.name}</h4>
-                      <Badge 
-                        className={
-                          staff.rating >= 4.8 
-                            ? "bg-green-100 text-green-800 hover:bg-green-200" 
-                            : staff.rating >= 4.6 
-                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-                            : "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                        }
-                      >
+                      <Badge className={staff.rating >= 4.8 ? "bg-green-100 text-green-800 hover:bg-green-200" : staff.rating >= 4.6 ? "bg-blue-100 text-blue-800 hover:bg-blue-200" : "bg-amber-100 text-amber-800 hover:bg-amber-200"}>
                         {staff.rating}/5.0
                       </Badge>
                     </div>
@@ -99,23 +63,17 @@ export const StaffReporting = () => {
                       <div className="col-span-2">
                         <div className="text-xs text-muted-foreground">Feedback</div>
                         <div className="font-medium">
-                          {staff.rating >= 4.8 
-                            ? "Excellent attention to detail" 
-                            : staff.rating >= 4.6 
-                            ? "Good overall performance"
-                            : "Needs improvement in thoroughness"}
+                          {staff.rating >= 4.8 ? "Excellent attention to detail" : staff.rating >= 4.6 ? "Good overall performance" : "Needs improvement in thoroughness"}
                         </div>
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              ))}
+                </Card>)}
             </div>
           </CardContent>
-        </Card>
-      ) : (
-        // Desktop table view
-        <Card>
+        </Card> :
+    // Desktop table view
+    <Card>
           <CardContent className="pt-6">
             <h3 className="text-lg font-medium mb-4">Staff Performance Details</h3>
             <div className="overflow-x-auto">
@@ -130,8 +88,7 @@ export const StaffReporting = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {staffData.map((staff) => (
-                    <TableRow key={staff.name}>
+                  {staffData.map(staff => <TableRow key={staff.name}>
                       <TableCell>{staff.name}</TableCell>
                       <TableCell>{staff.completed}</TableCell>
                       <TableCell>{staff.avgTime} min</TableCell>
@@ -141,20 +98,13 @@ export const StaffReporting = () => {
                         </span>
                       </TableCell>
                       <TableCell>
-                        {staff.rating >= 4.8 
-                          ? "Excellent attention to detail" 
-                          : staff.rating >= 4.6 
-                          ? "Good overall performance"
-                          : "Needs improvement in thoroughness"}
+                        {staff.rating >= 4.8 ? "Excellent attention to detail" : staff.rating >= 4.6 ? "Good overall performance" : "Needs improvement in thoroughness"}
                       </TableCell>
-                    </TableRow>
-                  ))}
+                    </TableRow>)}
                 </TableBody>
               </Table>
             </div>
           </CardContent>
-        </Card>
-      )}
-    </div>
-  );
+        </Card>}
+    </div>;
 };
