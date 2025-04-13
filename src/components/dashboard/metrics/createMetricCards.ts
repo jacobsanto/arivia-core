@@ -45,7 +45,7 @@ export const createMetricCards = (data: any, isMobile: boolean): MetricCard[] =>
             isPositive: occupancyRate >= 50,
             icon: occupancyRate >= 50 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
           },
-          variant: occupancyRate >= 75 ? "success" : occupancyRate >= 50 ? "default" : "warning"
+          variant: occupancyRate >= 75 ? "success" : (occupancyRate >= 50 ? "default" : "warning")
         },
         {
           title: "Tasks",
@@ -56,7 +56,7 @@ export const createMetricCards = (data: any, isMobile: boolean): MetricCard[] =>
             isPositive: taskCompletionRate >= 75,
             icon: taskCompletionRate >= 75 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
           },
-          variant: taskCompletionRate >= 75 ? "success" : taskCompletionRate >= 50 ? "default" : "warning"
+          variant: taskCompletionRate >= 75 ? "success" : (taskCompletionRate >= 50 ? "default" : "warning")
         }
       ]
     : [
@@ -75,7 +75,7 @@ export const createMetricCards = (data: any, isMobile: boolean): MetricCard[] =>
             isPositive: occupancyRate >= 50,
             icon: occupancyRate >= 50 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
           },
-          variant: occupancyRate >= 75 ? "success" : occupancyRate >= 50 ? "default" : "warning"
+          variant: occupancyRate >= 75 ? "success" : (occupancyRate >= 50 ? "default" : "warning")
         },
         {
           title: "Vacant Properties",
@@ -92,7 +92,7 @@ export const createMetricCards = (data: any, isMobile: boolean): MetricCard[] =>
             isPositive: taskCompletionRate >= 75,
             icon: taskCompletionRate >= 75 ? <ArrowUpIcon className="h-4 w-4" /> : <ArrowDownIcon className="h-4 w-4" />
           },
-          variant: taskCompletionRate >= 75 ? "success" : taskCompletionRate >= 50 ? "default" : "warning"
+          variant: taskCompletionRate >= 75 ? "success" : (taskCompletionRate >= 50 ? "default" : "warning")
         },
         {
           title: "Pending Tasks",
