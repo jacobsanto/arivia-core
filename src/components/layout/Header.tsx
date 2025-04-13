@@ -8,11 +8,9 @@ import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
-
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
 }
-
 const Header: React.FC<HeaderProps> = ({
   onMobileMenuToggle
 }) => {
@@ -23,7 +21,6 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-
   useEffect(() => {
     if (!user) return;
     const intervalId = setInterval(() => {
@@ -39,23 +36,18 @@ const Header: React.FC<HeaderProps> = ({
     refreshProfile();
     return () => clearInterval(intervalId);
   }, [user, refreshProfile]);
-
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
-
   return <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
-          {isMobile && <Button variant="ghost" size="icon" onClick={onMobileMenuToggle} className="mr-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>}
+          {isMobile}
           
           <Link to="/" className="flex items-center">
-            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-10 md:h-10 invert brightness-0 filter" />
+            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-12 md:h-10 invert brightness-0 filter" />
           </Link>
         </div>
 
@@ -107,11 +99,9 @@ const Header: React.FC<HeaderProps> = ({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
-                {user && user.role === 'superadmin' && (
-                  <Badge variant="outline" className="text-xs border-sidebar-foreground text-sidebar-foreground">
+                {user && user.role === 'superadmin' && <Badge variant="outline" className="text-xs border-sidebar-foreground text-sidebar-foreground">
                     {ROLE_DETAILS[user.role].title}
-                  </Badge>
-                )}
+                  </Badge>}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -134,13 +124,11 @@ const Header: React.FC<HeaderProps> = ({
       </div>
     </header>;
 };
-
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
-
 const NotificationItem = ({
   title,
   message,
@@ -152,14 +140,12 @@ const NotificationItem = ({
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
     </div>;
 };
-
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
-
 const MessageItem = ({
   name,
   message,
@@ -179,5 +165,4 @@ const MessageItem = ({
       </div>
     </div>;
 };
-
 export default Header;
