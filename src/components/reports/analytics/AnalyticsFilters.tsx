@@ -84,7 +84,7 @@ export const AnalyticsFilters: React.FC = () => {
         </Badge>
 
         <div className="flex gap-2 ml-auto">
-          <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-xs h-7 text-nowrap text-justify px-0 mx-0 font-thin">
+          <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-xs h-7 text-nowrap text-justify mx-0 font-thin bg-zinc-50 rounded px-[7px]">
             Reset Filters
           </Button>
         </div>
