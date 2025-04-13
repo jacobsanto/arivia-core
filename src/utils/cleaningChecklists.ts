@@ -62,98 +62,69 @@ export const generateCleaningSchedule = (
   const scheduledCleanings: string[] = [];
   const cleaningTypes: string[] = [];
   
-  // For stays up to 3 nights: Only one standard cleaning at checkout
+  // Always add check-in and check-out standard cleanings
+  scheduledCleanings.push(checkInDate.toISOString());
+  cleaningTypes.push("Standard");
+
+  scheduledCleanings.push(checkOutDate.toISOString());
+  cleaningTypes.push("Standard");
+  
+  // Add intermediate cleanings based on length of stay
   if (dayDiff <= 3) {
-    scheduledCleanings.push(checkOutDate.toISOString());
-    cleaningTypes.push("Standard");
-  } 
-  // For stays up to 5 nights: One full cleaning + one linen change
-  else if (dayDiff <= 5) {
-    // Add checkout cleaning
-    scheduledCleanings.push(checkOutDate.toISOString());
-    cleaningTypes.push("Standard");
-    
-    // Add one full cleaning in the middle of the stay
+    // No additional cleaning
+  } else if (dayDiff <= 5) {
+    // One full cleaning + one linen change
     const midStay = new Date(checkInDate);
     midStay.setDate(midStay.getDate() + Math.floor(dayDiff / 2));
     scheduledCleanings.push(midStay.toISOString());
     cleaningTypes.push("Full");
     
-    // Add one linen change a day after full cleaning
     const linenChange = new Date(midStay);
     linenChange.setDate(linenChange.getDate() + 1);
     scheduledCleanings.push(linenChange.toISOString());
     cleaningTypes.push("Linen & Towel Change");
-  } 
-  // For stays up to 7 nights: Two full cleanings + one linen change
-  else if (dayDiff <= 7) {
-    // Add checkout cleaning
-    scheduledCleanings.push(checkOutDate.toISOString());
-    cleaningTypes.push("Standard");
-    
-    // Add first full cleaning about 1/3 into the stay
+  } else if (dayDiff <= 7) {
+    // Two full cleanings + two linen changes
     const firstCleaning = new Date(checkInDate);
     firstCleaning.setDate(firstCleaning.getDate() + Math.floor(dayDiff / 3));
     scheduledCleanings.push(firstCleaning.toISOString());
     cleaningTypes.push("Full");
     
-    // Add one linen change in the middle
-    const linenChange = new Date(checkInDate);
-    linenChange.setDate(linenChange.getDate() + Math.floor(dayDiff / 2));
-    scheduledCleanings.push(linenChange.toISOString());
+    const firstLinenChange = new Date(firstCleaning);
+    firstLinenChange.setDate(firstLinenChange.getDate() + 1);
+    scheduledCleanings.push(firstLinenChange.toISOString());
     cleaningTypes.push("Linen & Towel Change");
     
-    // Add second full cleaning about 2/3 into the stay
     const secondCleaning = new Date(checkInDate);
     secondCleaning.setDate(secondCleaning.getDate() + Math.floor(dayDiff * 2 / 3));
     scheduledCleanings.push(secondCleaning.toISOString());
     cleaningTypes.push("Full");
-  } 
-  // For longer stays (7+ nights): At least two full cleanings, one standard, and custom schedule
-  else {
-    // Add checkout cleaning
-    scheduledCleanings.push(checkOutDate.toISOString());
-    cleaningTypes.push("Standard");
     
-    // Add standard full cleanings every 3 days
+    const secondLinenChange = new Date(secondCleaning);
+    secondLinenChange.setDate(secondLinenChange.getDate() + 1);
+    scheduledCleanings.push(secondLinenChange.toISOString());
+    cleaningTypes.push("Linen & Towel Change");
+  } else {
+    // For longer stays, we'd normally customize with the guest
+    // But we'll provide a default week-based schedule
     let currentDate = new Date(checkInDate);
-    currentDate.setDate(currentDate.getDate() + 3); // First full cleaning after 3 days
-    
     while (currentDate < checkOutDate) {
-      if ((checkOutDate.getTime() - currentDate.getTime()) > (3 * 24 * 60 * 60 * 1000)) {
-        // Only add if we're more than 3 days from checkout
+      currentDate.setDate(currentDate.getDate() + 2); // Every two days
+      if (currentDate < checkOutDate) {
         scheduledCleanings.push(new Date(currentDate).toISOString());
         cleaningTypes.push("Full");
       }
       
-      // Move to next interval
-      currentDate.setDate(currentDate.getDate() + 3);
-    }
-    
-    // Add linen change in the middle of the stay
-    const linenChange = new Date(checkInDate);
-    linenChange.setDate(linenChange.getDate() + Math.floor(dayDiff / 2));
-    scheduledCleanings.push(linenChange.toISOString());
-    cleaningTypes.push("Linen & Towel Change");
-    
-    // Add another full cleaning a week into the stay if we have a long stay
-    if (dayDiff > 10) {
-      const extraCleaning = new Date(checkInDate);
-      extraCleaning.setDate(extraCleaning.getDate() + 7);
-      scheduledCleanings.push(extraCleaning.toISOString());
-      cleaningTypes.push("Full");
+      currentDate.setDate(currentDate.getDate() + 1); // Next day for linen change
+      if (currentDate < checkOutDate) {
+        scheduledCleanings.push(new Date(currentDate).toISOString());
+        cleaningTypes.push("Linen & Towel Change");
+      }
+      
+      // Skip a day
+      currentDate.setDate(currentDate.getDate() + 1);
     }
   }
   
-  // Sort the cleanings by date
-  const sortedDates = scheduledCleanings.map((dateStr, i) => ({ 
-    date: new Date(dateStr), 
-    type: cleaningTypes[i] 
-  }))
-  .sort((a, b) => a.date.getTime() - b.date.getTime());
-  
-  return { 
-    scheduledCleanings: sortedDates.map(item => item.date.toISOString()), 
-    cleaningTypes: sortedDates.map(item => item.type)
-  };
+  return { scheduledCleanings, cleaningTypes };
 };
