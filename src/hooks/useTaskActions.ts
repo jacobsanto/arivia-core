@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { toastService } from "@/services/toast/toast.service";
 import { Task } from "../types/taskTypes";
 
 export const useTaskActions = (
@@ -37,7 +37,7 @@ export const useTaskActions = (
         approvalStatus: "Pending"
       });
       
-      toast.success(`Task "${selectedTask.title}" marked as complete and awaiting approval!`);
+      toastService.success(`Task "${selectedTask.title}" marked as complete and awaiting approval!`);
     }
   };
 
@@ -59,7 +59,7 @@ export const useTaskActions = (
         approvalStatus: "Approved"
       });
       
-      toast.success(`Task "${selectedTask.title}" has been approved!`);
+      toastService.success(`Task "${selectedTask.title}" has been approved!`);
     }
   };
 
@@ -87,7 +87,7 @@ export const useTaskActions = (
           rejectionReason: rejectionReason
         });
         
-        toast.error(`Task "${selectedTask.title}" has been rejected.`);
+        toastService.error(`Task "${selectedTask.title}" has been rejected.`);
       }
     }
   };
@@ -124,7 +124,7 @@ export const useTaskActions = (
     data.photos = [];
     
     setTasks([...tasks, data]);
-    toast.success(`Housekeeping task "${data.title}" created successfully!`);
+    toastService.success(`Housekeeping task "${data.title}" created successfully!`);
   };
 
   const handlePhotoUpload = (file: File) => {
@@ -149,7 +149,7 @@ export const useTaskActions = (
       task.id === selectedTask.id ? updatedTask : task
     ));
     
-    toast.success(`Photo verification uploaded for task!`);
+    toastService.success(`Photo verification uploaded for task!`);
   };
 
   return {

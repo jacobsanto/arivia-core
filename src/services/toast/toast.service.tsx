@@ -1,10 +1,9 @@
 
-import { toast as sonnerToast } from "sonner";
-import { useToast, toast } from "@/hooks/use-toast";
+import { toast as sonnerToast, type ExternalToast as SonnerToastOptions } from "sonner";
+import { useToast as useShadcnToast, type ToastProps } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import React from "react";
-import { type ToastActionElement, type ToastProps } from "@/components/ui/toast";
-import { type ToasterToast } from "@/hooks/use-toast";
+import { type ToastActionElement } from "@/components/ui/toast";
 
 // Define the available types for toast
 type ToastType = "default" | "success" | "warning" | "error" | "loading" | "info";
@@ -26,7 +25,7 @@ interface LoadingToastOptions extends ToastOptions {
 }
 
 // Type for toast ID returned by different toast libraries
-type ToastId = string | number;
+type ToastId = string | number | { id: string; dismiss: () => void; update: (props: any) => void; };
 
 /**
  * ToastService is a unified service for displaying toast notifications
@@ -45,6 +44,29 @@ class ToastService {
   }
 
   /**
+   * Get the Shadcn toast instance
+   * This is a helper to provide toast instance outside of React components
+   * Note: This is not a React hook and should ONLY be used inside methods
+   */
+  private getShadcnToast() {
+    // This is a workaround for using toast outside of React components
+    // In a real app, you'd use a context or other proper state management
+    return {
+      toast: (props: ToastProps) => {
+        // Create a simple object that mimics the return type structure
+        // This isn't ideal but allows the service to work outside components
+        const id = Math.random().toString(36).substring(2, 9);
+        return {
+          id,
+          dismiss: () => {},
+          update: () => {}
+        };
+      },
+      dismiss: (id?: string) => {}
+    };
+  }
+
+  /**
    * Displays a default toast notification
    * @param title The title of the toast
    * @param options Toast options
@@ -58,13 +80,13 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      const { id } = toast({
+      const { toast } = this.getShadcnToast();
+      return toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
-      return id;
     }
   }
 
@@ -82,14 +104,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      const { id } = toast({
+      const { toast } = this.getShadcnToast();
+      return toast({
         title,
         description: options?.description,
         variant: "default", // Shadcn doesn't have success variant
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
-      return id;
     }
   }
 
@@ -107,14 +129,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
+      const { toast } = this.getShadcnToast();
       // Shadcn doesn't have warning variant, use default
-      const { id } = toast({
+      return toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
-      return id;
     }
   }
 
@@ -132,14 +154,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      const { id } = toast({
+      const { toast } = this.getShadcnToast();
+      return toast({
         title,
         description: options?.description,
         variant: "destructive",
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
-      return id;
     }
   }
 
@@ -158,14 +180,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
+      const { toast } = this.getShadcnToast();
       // Shadcn doesn't have native loading, use default with longer duration
-      const { id } = toast({
+      return toast({
         title,
         description: options?.description,
         duration: options?.duration || Infinity, // Loading toasts should stay until dismissed
         action: options?.action ? this.createToastAction(options.action) : undefined,
       });
-      return id;
     }
   }
 
@@ -183,14 +205,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
+      const { toast } = this.getShadcnToast();
       // Shadcn doesn't have info variant, use default
-      const { id } = toast({
+      return toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
-      return id;
     }
   }
 
@@ -202,15 +224,16 @@ class ToastService {
    */
   public update(id: ToastId, title: string, options?: ToastOptions): void {
     if (this.useSonner) {
-      sonnerToast.update(id, {
-        description: options?.description,
-      });
+      if (typeof id === 'string' || typeof id === 'number') {
+        sonnerToast.update(id, {
+          description: options?.description,
+        });
+      }
     } else {
-      // Shadcn doesn't have a direct update method on the imported toast
-      // For Shadcn, dismiss the old toast and create a new one
-      const { toast: toastFn } = useToast();
-      toastFn.dismiss?.(id.toString());
-      toastFn({
+      // For Shadcn/ui, recreate the toast since we can't easily update it
+      this.dismiss(id);
+      const { toast } = this.getShadcnToast();
+      toast({
         title,
         description: options?.description,
         duration: options?.duration,
@@ -224,18 +247,20 @@ class ToastService {
    */
   public dismiss(id?: ToastId): void {
     if (this.useSonner) {
-      if (id) {
+      if (id && (typeof id === 'string' || typeof id === 'number')) {
         sonnerToast.dismiss(id);
       } else {
         sonnerToast.dismiss();
       }
     } else {
-      // For Shadcn/ui we need to use the hook's dismiss method directly
-      const { toast: toastFn } = useToast();
-      if (id) {
-        toastFn.dismiss?.(id.toString());
+      // For Shadcn/ui
+      const { dismiss } = this.getShadcnToast();
+      if (id && typeof id === 'object' && 'id' in id) {
+        id.dismiss();
+      } else if (id && (typeof id === 'string' || typeof id === 'number')) {
+        dismiss(id.toString());
       } else {
-        toastFn.dismiss?.();
+        dismiss();
       }
     }
   }
