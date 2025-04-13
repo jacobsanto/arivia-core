@@ -109,7 +109,7 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({
               {propertyFilter === 'all' ? 'System and user activities across all villas' : `System and user activities for ${propertyFilter}`}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="text-s my-0 mx-[30px] px-[30px]">
+          <Badge variant="outline" className="text-xs my-0 mx-[30px] px-[30px]">
             Last 24hrs
           </Badge>
         </div>
