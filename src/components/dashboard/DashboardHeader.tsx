@@ -5,12 +5,19 @@ import PropertyFilter from "@/components/dashboard/PropertyFilter";
 import { DateRangeSelector, type DateRange } from "@/components/reports/DateRangeSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
-import { Bell, FileDown, RefreshCw, ClipboardCheck } from "lucide-react";
+import { Bell, FileDown, RefreshCw, ClipboardCheck, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { toastService } from "@/services/toast/toast.service";
-import { exportDashboardData, refreshDashboardData, generateWeeklyReview } from "@/utils/dashboardExportUtils";
+import { 
+  exportDashboardData, 
+  refreshDashboardData, 
+  generateWeeklyReview,
+  getRefreshStatus 
+} from "@/utils/dashboardExportUtils";
 import WeeklyReviewDialog from "./WeeklyReviewDialog";
+import { ExportConfigDialog, ExportFormat, ExportSection } from "./ExportConfigDialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
@@ -33,16 +40,34 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const { user } = useUser();
   const isSuperAdmin = user?.role === "superadmin";
   const [showWeeklyReview, setShowWeeklyReview] = useState(false);
+  const [showExportConfig, setShowExportConfig] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const today = new Date();
   const formattedDate = format(today, 'EEEE, MMMM d, yyyy');
+  const { lastRefresh } = getRefreshStatus();
+  const lastRefreshTime = format(lastRefresh, 'HH:mm:ss');
 
-  const handleGenerateReports = () => {
-    exportDashboardData(dashboardData, selectedProperty, 'csv');
+  const handleExport = async (format: ExportFormat, sections: ExportSection[]) => {
+    setIsExporting(true);
+    try {
+      await exportDashboardData(dashboardData, selectedProperty, format, sections);
+    } finally {
+      setIsExporting(false);
+      setShowExportConfig(false);
+    }
   };
 
-  const handleRefreshData = () => {
-    refreshDashboardData(refreshDashboardContent);
+  const handleRefreshData = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      await refreshDashboardData(refreshDashboardContent);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
   
   const handleWeeklyReview = () => {
@@ -57,30 +82,63 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">{formattedDate}</p>
+            <p className="text-muted-foreground">
+              {formattedDate}{' '}
+              <span className="text-xs">
+                (Last updated: {lastRefreshTime})
+              </span>
+            </p>
           </div>
           
           {isSuperAdmin && !isMobile && (
             <div className="flex items-center gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2"
-                onClick={handleGenerateReports}
-              >
-                <FileDown className="h-4 w-4" />
-                <span>Export Reports</span>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={() => setShowExportConfig(true)}
+                      disabled={isExporting}
+                    >
+                      {isExporting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <FileDown className="h-4 w-4" />
+                      )}
+                      <span>Export Reports</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Export dashboard data in various formats</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="flex items-center gap-2"
-                onClick={handleRefreshData}
-              >
-                <RefreshCw className="h-4 w-4" />
-                <span>Refresh</span>
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex items-center gap-2"
+                      onClick={handleRefreshData}
+                      disabled={isRefreshing}
+                    >
+                      {isRefreshing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Refresh</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Refresh all dashboard data</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               
               <Button 
                 size="sm" 
@@ -121,14 +179,35 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         </div>
         
         {isMobile && isSuperAdmin && (
-          <Button 
-            variant="outline" 
-            onClick={handleGenerateReports}
-            className="w-full flex items-center justify-center gap-2"
-          >
-            <FileDown className="h-4 w-4" />
-            <span>Export Reports</span>
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowExportConfig(true)}
+              disabled={isExporting}
+              className="flex-1 flex items-center justify-center gap-2"
+            >
+              {isExporting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <FileDown className="h-4 w-4" />
+              )}
+              <span>Export</span>
+            </Button>
+            
+            <Button 
+              variant="outline"
+              onClick={handleRefreshData}
+              disabled={isRefreshing}
+              className="flex-1 flex items-center justify-center gap-2"
+            >
+              {isRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              <span>Refresh</span>
+            </Button>
+          </div>
         )}
       </div>
 
@@ -138,6 +217,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         onOpenChange={setShowWeeklyReview}
         propertyFilter={selectedProperty}
         dashboardData={dashboardData}
+      />
+      
+      {/* Export Configuration Dialog */}
+      <ExportConfigDialog
+        open={showExportConfig}
+        onOpenChange={setShowExportConfig}
+        onExport={handleExport}
+        isExporting={isExporting}
+        propertyFilter={selectedProperty}
       />
     </div>
   );

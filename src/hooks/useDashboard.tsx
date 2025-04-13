@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDashboardData } from "@/utils/dashboardDataUtils";
 import { subDays } from 'date-fns';
+import { toastService } from "@/services/toast/toast.service";
 
 export const useDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
@@ -12,13 +13,23 @@ export const useDashboard = () => {
   });
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
   
-  const fetchDashboardData = useCallback(() => {
+  const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
-    // Fetch dashboard data based on selected property and date range
-    const data = getDashboardData(selectedProperty, dateRange);
-    setDashboardData(data);
-    setIsLoading(false);
+    try {
+      // Fetch dashboard data based on selected property and date range
+      const data = getDashboardData(selectedProperty, dateRange);
+      setDashboardData(data);
+      setLastRefreshed(new Date());
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toastService.error("Failed to load dashboard data", {
+        description: "Please try refreshing the page"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   }, [selectedProperty, dateRange]);
   
   useEffect(() => {
@@ -33,15 +44,16 @@ export const useDashboard = () => {
     setDateRange(newDateRange);
   };
   
-  const refreshDashboard = () => {
-    fetchDashboardData();
-  };
+  const refreshDashboard = useCallback(() => {
+    return fetchDashboardData();
+  }, [fetchDashboardData]);
   
   return {
     selectedProperty,
     dateRange,
     dashboardData,
     isLoading,
+    lastRefreshed,
     handlePropertyChange,
     handleDateRangeChange,
     refreshDashboard
