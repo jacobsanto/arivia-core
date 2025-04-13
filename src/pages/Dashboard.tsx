@@ -13,7 +13,8 @@ const Dashboard = () => {
     dateRange,
     dashboardData,
     handlePropertyChange,
-    handleDateRangeChange
+    handleDateRangeChange,
+    refreshDashboard
   } = useDashboard();
   const isMobile = useIsMobile();
 
@@ -40,6 +41,8 @@ const Dashboard = () => {
           onPropertyChange={handlePropertyChange}
           dateRange={dateRange}
           onDateRangeChange={handleDateRangeChange}
+          refreshDashboardContent={refreshDashboard}
+          dashboardData={dashboardData}
         />
         
         {isMobile ? (

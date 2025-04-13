@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import PropertyFilter from "@/components/dashboard/PropertyFilter";
 import { DateRangeSelector, type DateRange } from "@/components/reports/DateRangeSelector";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,21 +8,26 @@ import { useUser } from "@/contexts/UserContext";
 import { Bell, FileDown, RefreshCw, ClipboardCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
+import { toastService } from "@/services/toast/toast.service";
+import { exportDashboardData, refreshDashboardData, generateWeeklyReview } from "@/utils/dashboardExportUtils";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
   onPropertyChange: (property: string) => void;
   dateRange: DateRange;
   onDateRangeChange: (dateRange: DateRange) => void;
+  refreshDashboardContent: () => void;
+  dashboardData: any;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   selectedProperty,
   onPropertyChange,
   dateRange,
-  onDateRangeChange
+  onDateRangeChange,
+  refreshDashboardContent,
+  dashboardData
 }) => {
-  const { toast } = useToast();
   const isMobile = useIsMobile();
   const { user } = useUser();
   const isSuperAdmin = user?.role === "superadmin";
@@ -32,17 +36,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const formattedDate = format(today, 'EEEE, MMMM d, yyyy');
 
   const handleGenerateReports = () => {
-    toast({
-      title: "Reports Generated",
-      description: "Monthly reports have been emailed to your inbox."
-    });
+    exportDashboardData(dashboardData, selectedProperty, 'csv');
   };
 
   const handleRefreshData = () => {
-    toast({
-      title: "Dashboard Refreshed",
-      description: "Latest data has been fetched from all sources."
-    });
+    refreshDashboardData(refreshDashboardContent);
+  };
+  
+  const handleWeeklyReview = () => {
+    generateWeeklyReview(dashboardData, selectedProperty);
   };
 
   return (
@@ -76,7 +78,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                 <span>Refresh</span>
               </Button>
               
-              <Button size="sm" className="flex items-center gap-2">
+              <Button 
+                size="sm" 
+                className="flex items-center gap-2"
+                onClick={handleWeeklyReview}
+              >
                 <ClipboardCheck className="h-4 w-4" />
                 <span>Weekly Review</span>
               </Button>
