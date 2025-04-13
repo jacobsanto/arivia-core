@@ -1,6 +1,6 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus } from "lucide-react";
@@ -57,7 +57,11 @@ const ChecklistTemplateForm = ({
         },
   });
 
-  const { fields, append, remove } = form.control._formValues.items;
+  // Use useFieldArray hook to manage the dynamic items array
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "items",
+  });
 
   return (
     <Form {...form}>
@@ -138,8 +142,8 @@ const ChecklistTemplateForm = ({
 
           <Card>
             <CardContent className="pt-4">
-              {fields.map((item, index) => (
-                <div key={index} className="flex items-center gap-2 mb-2">
+              {fields.map((field, index) => (
+                <div key={field.id} className="flex items-center gap-2 mb-2">
                   <FormField
                     control={form.control}
                     name={`items.${index}.title`}
