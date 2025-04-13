@@ -1,5 +1,5 @@
 
-import { format } from 'date-fns';
+import { format as dateFormat } from 'date-fns';
 import { exportToCSV, preparePrint } from './reportExportUtils';
 import { toastService } from '@/services/toast/toast.service';
 
@@ -9,7 +9,7 @@ import { toastService } from '@/services/toast/toast.service';
 export const exportDashboardData = (
   dashboardData: any, 
   propertyFilter: string,
-  format: 'csv' | 'pdf' | 'excel' = 'csv'
+  exportFormat: 'csv' | 'pdf' | 'excel' = 'csv'
 ) => {
   if (!dashboardData) {
     console.error("No dashboard data to export");
@@ -21,7 +21,7 @@ export const exportDashboardData = (
 
   try {
     // Format the data for export
-    const dateStamp = format(new Date(), 'yyyy-MM-dd');
+    const dateStamp = dateFormat(new Date(), 'yyyy-MM-dd');
     const propertyName = propertyFilter === 'all' ? 'All_Properties' : propertyFilter.replace(/\s+/g, '_');
     const filename = `Arivia_Dashboard_${propertyName}_${dateStamp}`;
     
@@ -29,7 +29,7 @@ export const exportDashboardData = (
     const exportData = prepareDashboardExportData(dashboardData);
     
     // Export based on format
-    switch (format) {
+    switch (exportFormat) {
       case 'csv':
         exportToCSV(exportData, filename);
         toastService.success("Dashboard exported", {
