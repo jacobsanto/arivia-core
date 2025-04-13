@@ -19,6 +19,7 @@ const RoleManagement: React.FC = () => {
   
   const {
     users,
+    isLoading,
     userToDelete,
     setUserToDelete,
     isDeleting,
@@ -58,6 +59,7 @@ const RoleManagement: React.FC = () => {
           <TabsContent value="roles" className="mt-4">
             <UserRolesList 
               users={users}
+              isLoading={isLoading}
               currentUser={user}
               onEditPermissions={handleEditPermissions}
               onDeleteClick={setUserToDelete}

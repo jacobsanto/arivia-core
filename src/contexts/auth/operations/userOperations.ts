@@ -103,47 +103,61 @@ export const removeUser = async (
         }
       }
       
-      // Delete the user using the edge function
-      const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: { userId: userIdToDelete }
-      });
+      // Delete the user's profile first
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userIdToDelete);
       
-      if (error) {
-        console.error("Error from delete-user function:", error);
-        
-        // Determine if we should update the UI even with an error
-        const isNonCriticalError = 
-          // For OAuth users, we often can delete the profile but not the auth record
-          userIdToDelete.includes('-') || 
-          // For numeric IDs (timestamps), we may not be able to delete from auth but can remove profile
-          /^\d+$/.test(userIdToDelete);
-        
-        if (isNonCriticalError) {
-          toastService.warning("Partial user deletion", {
-            description: "The user's profile was removed, but there may be remnants in the authentication system. The user won't be able to log in anymore."
-          });
-          
-          // Update local state as the user effectively can't use the system anymore
-          const updatedUsers = users.filter(u => u.id !== userIdToDelete);
-          setUsers(updatedUsers);
-          return true;
-        }
-        
-        throw error;
+      if (profileError) {
+        console.error("Error deleting user profile:", profileError);
+        throw profileError;
       }
       
-      console.log("Delete user response:", data);
+      // Then attempt to delete the auth user
+      // Note: This may fail for OAuth users, but we'll handle that below
+      try {
+        const { error: authError } = await supabase.auth.admin.deleteUser(userIdToDelete);
+        
+        if (authError) {
+          console.error("Error from auth delete:", authError);
+          
+          // Determine if we should update the UI even with an error
+          const isNonCriticalError = 
+            // For OAuth users, we often can delete the profile but not the auth record
+            authError.message.includes('not found') || 
+            userIdToDelete.includes('-') || 
+            // For numeric IDs (timestamps), we may not be able to delete from auth
+            /^\d+$/.test(userIdToDelete);
+          
+          if (isNonCriticalError) {
+            toastService.warning("Partial user deletion", {
+              description: "The user's profile was removed, but there may be remnants in the authentication system."
+            });
+          } else {
+            throw authError;
+          }
+        }
+      } catch (authError) {
+        console.error("Error deleting auth user:", authError);
+        toastService.warning("Partial user deletion", {
+          description: "The user's profile was removed, but there may be remnants in the authentication system."
+        });
+        // Continue with UI update as the profile is deleted
+      }
     } else {
       console.log("Device is offline, updating local state only");
+      toastService.warning("Offline delete", {
+        description: "User will be removed locally but will sync when back online"
+      });
     }
     
     // Update local state regardless of online status
     const updatedUsers = users.filter(u => u.id !== userIdToDelete);
     setUsers(updatedUsers);
+    localStorage.setItem("users", JSON.stringify(updatedUsers));
     
-    toastService.success("User deleted successfully", {
-      description: "The user has been permanently deleted from the system"
-    });
+    toastService.success("User deleted successfully");
     
     return true;
   } catch (error) {

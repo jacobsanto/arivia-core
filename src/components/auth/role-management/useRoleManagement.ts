@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock user list with proper avatar URLs
+// We'll keep the mock data as fallback
 const MOCK_USER_LIST: User[] = [{
   id: "1",
   email: "admin@ariviavillas.com",
@@ -53,19 +53,8 @@ const MOCK_USER_LIST: User[] = [{
 export const useRoleManagement = () => {
   const { user, deleteUser } = useUser();
   
-  const [users, setUsers] = useState<User[]>(() => {
-    // Try to load users from localStorage first
-    const storedUsers = localStorage.getItem("users");
-    if (storedUsers) {
-      // Make sure all users have the avatar property
-      const parsedUsers = JSON.parse(storedUsers);
-      return parsedUsers.map((u: User) => ({
-        ...u,
-        avatar: u.avatar || "/placeholder.svg"
-      }));
-    }
-    return MOCK_USER_LIST;
-  });
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
@@ -74,10 +63,83 @@ export const useRoleManagement = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
 
-  // Save users to localStorage when they change
+  // Fetch users from Supabase
   useEffect(() => {
-    localStorage.setItem("users", JSON.stringify(users));
-  }, [users]);
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        
+        if (navigator.onLine) {
+          // Fetch profiles from Supabase
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .order('name', { ascending: true });
+          
+          if (error) {
+            throw error;
+          }
+          
+          if (data) {
+            // Convert to User type
+            const mappedUsers: User[] = data.map((profile: any) => ({
+              id: profile.id,
+              email: profile.email,
+              name: profile.name || profile.email.split('@')[0],
+              role: profile.role as UserRole,
+              secondaryRoles: profile.secondary_roles ? profile.secondary_roles as UserRole[] : undefined,
+              avatar: profile.avatar || "/placeholder.svg",
+              customPermissions: profile.custom_permissions
+            }));
+            
+            setUsers(mappedUsers);
+            
+            // Update localStorage for offline use
+            localStorage.setItem("users", JSON.stringify(mappedUsers));
+          }
+        } else {
+          // Offline mode - use localStorage
+          const storedUsers = localStorage.getItem("users");
+          if (storedUsers) {
+            setUsers(JSON.parse(storedUsers));
+          } else {
+            // Fallback to mock data if no stored users
+            setUsers(MOCK_USER_LIST);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to load users", {
+          description: "Using cached or mock data instead"
+        });
+        
+        // Use mock data as fallback
+        const storedUsers = localStorage.getItem("users");
+        setUsers(storedUsers ? JSON.parse(storedUsers) : MOCK_USER_LIST);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUsers();
+    
+    // Set up real-time subscription for profile changes
+    const profilesSubscription = supabase
+      .channel('public:profiles')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'profiles' 
+      }, (payload) => {
+        console.log('Profile change detected:', payload);
+        fetchUsers(); // Reload users when profiles change
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(profilesSubscription);
+    };
+  }, []);
 
   const handleEditRole = (userId: string) => {
     setEditingUserId(userId);
@@ -88,7 +150,7 @@ export const useRoleManagement = () => {
     }
   };
   
-  const handleSaveRole = (userId: string) => {
+  const handleSaveRole = async (userId: string) => {
     // Validate selection for Super Admin
     if (selectedRole === "superadmin" && selectedSecondaryRoles.length === 0) {
       toast.error("Super Admin requires at least one secondary role", {
@@ -97,17 +159,49 @@ export const useRoleManagement = () => {
       return;
     }
 
-    // Regular users cannot have secondary roles
-    const updatedSecondaryRoles = selectedRole === "superadmin" ? selectedSecondaryRoles : undefined;
-    setUsers(users.map(u => u.id === userId ? {
-      ...u,
-      role: selectedRole,
-      secondaryRoles: updatedSecondaryRoles
-    } : u));
-    setEditingUserId(null);
-    toast.success("User role updated successfully", {
-      description: `Role updated successfully`
-    });
+    try {
+      // Regular users cannot have secondary roles
+      const updatedSecondaryRoles = selectedRole === "superadmin" ? selectedSecondaryRoles : undefined;
+      
+      // Update in Supabase if online
+      if (navigator.onLine) {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ 
+            role: selectedRole,
+            secondary_roles: updatedSecondaryRoles
+          })
+          .eq('id', userId);
+          
+        if (error) {
+          throw error;
+        }
+      }
+      
+      // Update local state
+      setUsers(users.map(u => u.id === userId ? {
+        ...u,
+        role: selectedRole,
+        secondaryRoles: updatedSecondaryRoles
+      } : u));
+      
+      // Update localStorage for offline access
+      localStorage.setItem("users", JSON.stringify(
+        users.map(u => u.id === userId ? {
+          ...u,
+          role: selectedRole,
+          secondaryRoles: updatedSecondaryRoles
+        } : u)
+      ));
+      
+      setEditingUserId(null);
+      toast.success("User role updated successfully");
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Failed to update user role", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
   };
   
   const handleCancelEdit = () => {
@@ -147,6 +241,7 @@ export const useRoleManagement = () => {
 
   return {
     users,
+    isLoading,
     editingUserId,
     selectedRole,
     selectedSecondaryRoles,
