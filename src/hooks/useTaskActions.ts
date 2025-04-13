@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toastService } from "@/services/toast";
 import { Task } from "../types/taskTypes";
@@ -115,7 +116,7 @@ export const useTaskActions = (
 
   const handleCreateTask = (data: any) => {
     // Extract cleaning-specific data
-    const { cleaningDetails, checklist, ...taskData } = data;
+    const { cleaningDetails, ...taskData } = data;
     
     // Create the base task
     const newTask = {
@@ -126,8 +127,8 @@ export const useTaskActions = (
       approvalStatus: null,
       rejectionReason: null,
       photos: [],
-      // Use provided checklist if available, otherwise generate one based on cleaning type
-      checklist: checklist || getCleaningChecklist(data.cleaningType || "Standard"),
+      // Use provided checklist or generate one based on cleaning type
+      checklist: data.checklist || getCleaningChecklist(data.cleaningType || "Standard"),
     };
     
     // Add cleaning details if provided

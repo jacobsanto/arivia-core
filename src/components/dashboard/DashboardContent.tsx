@@ -25,19 +25,10 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("daily");
   
-  // Make sure we have valid dashboard data
-  const safeData = dashboardData || {
-    properties: { total: 0, occupied: 0, vacant: 0 },
-    tasks: { total: 0, completed: 0, pending: 0 },
-    maintenance: { total: 0, critical: 0, standard: 0 },
-    bookings: [],
-    upcomingTasks: []
-  };
-  
   return (
     <div className="space-y-6 px-2 md:px-4">
       {/* Stats Cards */}
-      <DashboardMetrics data={safeData} />
+      <DashboardMetrics data={dashboardData} />
       
       {/* Separator */}
       <Separator className="my-6" />

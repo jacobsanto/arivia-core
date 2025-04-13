@@ -1,65 +1,116 @@
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
-import { FilePlus } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { useReports } from '@/hooks/useReports';
+import { Button } from '@/components/ui/button';
+import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatAnalyticsDataForReport } from '@/services/reports/analyticsToReportConverter';
+import { ReportPreview } from '@/components/reports/ReportPreview';
 
-// Wrap the actual component with a provider
-export const FromAnalyticsTab = () => {
-  return (
-    <AnalyticsProvider>
-      <FromAnalyticsTabContent />
-    </AnalyticsProvider>
-  );
-};
+export const FromAnalyticsTab: React.FC = () => {
+  const [selectedChart, setSelectedChart] = useState('financial');
+  const [reportData, setReportData] = useState<any[]>([]);
+  const { selectedProperty, dateRange } = useAnalytics();
+  const { generateReport } = useReports('custom');
+  
+  // Sample data for demonstration
+  const financialData = [
+    { name: 'Jan', revenue: 4000, expenses: 2400, profit: 1600 },
+    { name: 'Feb', revenue: 3000, expenses: 1398, profit: 1602 },
+    { name: 'Mar', revenue: 2000, expenses: 9800, profit: -7800 },
+    { name: 'Apr', revenue: 2780, expenses: 3908, profit: -1128 },
+    // ... more data
+  ];
 
-const FromAnalyticsTabContent = () => {
-  const { selectedProperty } = useAnalytics();
+  const occupancyData = [
+    { name: 'Jan', occupancy: 75 },
+    { name: 'Feb', occupancy: 82 },
+    { name: 'Mar', occupancy: 68 },
+    { name: 'Apr', occupancy: 79 },
+    // ... more data
+  ];
+
+  useEffect(() => {
+    // Format data based on selected chart
+    if (selectedChart === 'financial') {
+      setReportData(formatAnalyticsDataForReport(financialData, 'financial'));
+    } else if (selectedChart === 'occupancy') {
+      setReportData(formatAnalyticsDataForReport(occupancyData, 'occupancy'));
+    }
+  }, [selectedChart]);
   
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Create Report from Analytics</CardTitle>
-          <CardDescription>
-            Transform analytics data into shareable, scheduled reports
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="p-4 border-dashed border-2 hover:border-primary/50 cursor-pointer transition-colors">
-              <div className="flex flex-col items-center justify-center h-full py-6 text-center space-y-3">
-                <FilePlus className="h-10 w-10 text-muted-foreground" />
-                <h3 className="font-medium">Financial Report</h3>
-                <p className="text-sm text-muted-foreground">Create reports from financial analytics</p>
-                <Button size="sm" className="mt-2">Create Report</Button>
+    <Card>
+      <CardHeader>
+        <CardTitle>Create Report from Analytics</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <Tabs defaultValue="preview" className="w-full">
+          <TabsList className="mb-4">
+            <TabsTrigger value="preview">Chart Preview</TabsTrigger>
+            <TabsTrigger value="data">Data Preview</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="preview" className="space-y-6">
+            <div className="border rounded-md p-4 bg-muted/50">
+              <div className="mb-4">
+                <div className="text-sm font-medium">Select chart type:</div>
+                <div className="flex gap-2 mt-2">
+                  <Button 
+                    variant={selectedChart === 'financial' ? 'default' : 'outline'}
+                    onClick={() => setSelectedChart('financial')}
+                    size="sm"
+                  >
+                    Financial
+                  </Button>
+                  <Button 
+                    variant={selectedChart === 'occupancy' ? 'default' : 'outline'}
+                    onClick={() => setSelectedChart('occupancy')}
+                    size="sm"
+                  >
+                    Occupancy
+                  </Button>
+                </div>
               </div>
-            </Card>
-            <Card className="p-4 border-dashed border-2 hover:border-primary/50 cursor-pointer transition-colors">
-              <div className="flex flex-col items-center justify-center h-full py-6 text-center space-y-3">
-                <FilePlus className="h-10 w-10 text-muted-foreground" />
-                <h3 className="font-medium">Occupancy Report</h3>
-                <p className="text-sm text-muted-foreground">Generate reports on property occupancy</p>
-                <Button size="sm" className="mt-2">Create Report</Button>
+              
+              <div className="bg-background rounded-md">
+                <AnalyticsDashboard 
+                  showAllCharts={false} 
+                  showMonitoring={false}
+                  propertyFilter={selectedProperty} 
+                />
               </div>
-            </Card>
-            <Card className="p-4 border-dashed border-2 hover:border-primary/50 cursor-pointer transition-colors">
-              <div className="flex flex-col items-center justify-center h-full py-6 text-center space-y-3">
-                <FilePlus className="h-10 w-10 text-muted-foreground" />
-                <h3 className="font-medium">Performance Report</h3>
-                <p className="text-sm text-muted-foreground">Staff and task performance metrics</p>
-                <Button size="sm" className="mt-2">Create Report</Button>
-              </div>
-            </Card>
-          </div>
-          <p className="text-sm text-muted-foreground text-center">
-            Select a report type to create a new report from analytics data.
-            {selectedProperty !== 'all' && ` Current filter: ${selectedProperty}`}
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="data">
+            {reportData.length > 0 && (
+              <ReportPreview
+                title={`${selectedChart === 'financial' ? 'Financial Performance' : 'Occupancy Trends'}`}
+                description={`Data for ${selectedProperty === 'all' ? 'all properties' : selectedProperty}`}
+                data={reportData}
+              />
+            )}
+          </TabsContent>
+        </Tabs>
+        
+        <div className="flex justify-end">
+          <Button onClick={() => {
+            generateReport({
+              name: `${selectedChart === 'financial' ? 'Financial Performance' : 'Occupancy Trends'} Report`,
+              type: 'custom',
+              filters: {
+                chartType: selectedChart,
+                property: selectedProperty
+              }
+            });
+          }}>
+            Create Report
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

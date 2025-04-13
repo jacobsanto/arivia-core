@@ -1,16 +1,13 @@
 
 import React, { useState } from "react";
+import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import MobileSidebar from "./MobileSidebar";
 import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
-
-const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
+const AppLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
 
@@ -27,7 +24,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
         <Header onMobileMenuToggle={toggleMobileMenu} />
         <main className={`flex-1 overflow-y-auto overflow-x-hidden p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
           <div className="max-w-full">
-            {children}
+            <Outlet />
           </div>
         </main>
         

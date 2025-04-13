@@ -18,8 +18,8 @@ export const useDashboard = () => {
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // Fetch dashboard data based on selected property
-      const data = getDashboardData(selectedProperty);
+      // Fetch dashboard data based on selected property and date range
+      const data = getDashboardData(selectedProperty, dateRange);
       setDashboardData(data);
       setLastRefreshed(new Date());
     } catch (error) {
@@ -27,18 +27,10 @@ export const useDashboard = () => {
       toastService.error("Failed to load dashboard data", {
         description: "Please try refreshing the page"
       });
-      // Set default data structure even on error to prevent null reference issues
-      setDashboardData({
-        properties: { total: 0, occupied: 0, vacant: 0 },
-        tasks: { total: 0, completed: 0, pending: 0 },
-        maintenance: { total: 0, critical: 0, standard: 0 },
-        bookings: [],
-        upcomingTasks: []
-      });
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProperty]);
+  }, [selectedProperty, dateRange]);
   
   useEffect(() => {
     fetchDashboardData();

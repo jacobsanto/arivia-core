@@ -5,14 +5,12 @@ import { NavLink } from "react-router-dom";
 interface NavItemProps {
   to: string;
   icon: React.ReactNode;
-  children?: React.ReactNode;  // Changed from 'label' to 'children'
-  label?: string; // Keep label as optional for backward compatibility
+  label: string;
 }
 
 const NavItem = ({
   to,
   icon,
-  children,
   label
 }: NavItemProps) => {
   return (
@@ -25,7 +23,7 @@ const NavItem = ({
       }
     >
       {icon}
-      <span className="hidden text-xs mt-1">{children || label}</span>
+      <span className="hidden text-xs mt-1">{label}</span>
     </NavLink>
   );
 };

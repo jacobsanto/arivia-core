@@ -6,20 +6,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ArrowUp, ArrowDown } from "lucide-react";
 
 export interface MetricCardFooterData {
-  text?: string;
-  occupied?: number;
-  vacant?: number;
-  completed?: number;
-  pending?: number;
-  critical?: number;
-  standard?: number;
+  text: string;
   [key: string]: any; // Allow for additional data properties
 }
 
 export interface MetricCardProps {
   title: string;
-  value: string | number;
-  description?: string; // Optional to match MetricCard type
+  value: string;
+  description: string;
   footer?: MetricCardFooterData;
   swipeable?: boolean;
   trend?: {
@@ -27,13 +21,13 @@ export interface MetricCardProps {
     isPositive: boolean;
   };
   icon?: React.ReactNode;
-  variant?: 'default' | 'accent' | 'success' | 'warning' | 'destructive' | 'info';
+  variant?: 'default' | 'accent' | 'success' | 'warning';
 }
 
 export const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value, 
-  description = '', // Provide default empty string
+  description, 
   footer, 
   swipeable = false,
   trend,
@@ -50,15 +44,12 @@ export const MetricCard: React.FC<MetricCardProps> = ({
         return "border-l-4 border-l-green-500";
       case 'warning':
         return "border-l-4 border-l-amber-500";
-      case 'destructive':
-        return "border-l-4 border-l-red-500";
-      case 'info':
-        return "border-l-4 border-l-blue-500";
       default:
         return "";
     }
   };
 
+  // Render the footer content based on the data structure
   const renderFooter = () => {
     if (!footer) return null;
 

@@ -1,3 +1,4 @@
+
 import { MaintenanceReport, MaintenanceTask } from "../types/maintenanceTypes";
 import { toast } from "sonner";
 
@@ -42,8 +43,6 @@ export const createMaintenanceTask = (data: any) => {
     ? data.requiredTools.split(',').map((item: string) => item.trim()).filter((item: string) => item)
     : [];
 
-  const checklist = data.checklist || [];
-  
   const now = new Date();
 
   toast.success(`Maintenance task "${data.title}" created successfully!`);
@@ -56,6 +55,5 @@ export const createMaintenanceTask = (data: any) => {
     afterVideos: [],
     createdAt: now.toISOString(),
     instructions: [],
-    checklist,
   };
 };
