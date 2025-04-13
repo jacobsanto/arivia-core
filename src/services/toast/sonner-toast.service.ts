@@ -1,5 +1,5 @@
 
-import { toast as sonnerToast, type ExternalToast as SonnerToastOptions } from "sonner";
+import { toast as sonnerToast } from "sonner";
 import { ToastId, ToastOptions, LoadingToastOptions, IToastService } from "./toast.types";
 
 /**
@@ -99,13 +99,8 @@ export class SonnerToastService implements IToastService {
   public update(id: ToastId, title: string, options?: ToastOptions): void {
     if (typeof id === 'string' || typeof id === 'number') {
       // For sonner, we can directly update using the ID
-      // But we need to handle description only for now
-      const updateData: SonnerToastOptions = {};
-      if (options?.description) {
-        updateData.description = options.description;
-      }
-      // Use type assertion to bypass TypeScript limitations
-      (sonnerToast as any).update(id, updateData);
+      sonnerToast.dismiss(id);
+      this.show(title, options);
     }
   }
 
@@ -116,6 +111,8 @@ export class SonnerToastService implements IToastService {
   public dismiss(id?: ToastId): void {
     if (id && (typeof id === 'string' || typeof id === 'number')) {
       sonnerToast.dismiss(id);
+    } else if (id && typeof id === 'object' && 'id' in id) {
+      sonnerToast.dismiss(id.id);
     } else {
       sonnerToast.dismiss();
     }
