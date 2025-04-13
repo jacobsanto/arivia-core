@@ -1,11 +1,10 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useUser } from './contexts/UserContext';
 import AppLayout from './components/layout/AppLayout';
 
 // Lazy load pages to improve performance
-const Home = React.lazy(() => import('./pages/Home'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Tasks = React.lazy(() => import('./pages/Tasks'));
 const Housekeeping = React.lazy(() => import('./pages/Housekeeping'));
 const Maintenance = React.lazy(() => import('./pages/Maintenance'));
@@ -54,7 +53,7 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <AppLayout>
-                  <Home />
+                  <Dashboard />
                 </AppLayout>
               </ProtectedRoute>
             } 
