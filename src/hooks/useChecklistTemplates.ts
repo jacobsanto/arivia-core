@@ -32,7 +32,7 @@ export const useChecklistTemplates = () => {
         title: template.title,
         description: template.description,
         taskType: template.task_type,
-        items: template.items as ChecklistItem[],
+        items: template.items as unknown as ChecklistItem[],
         createdBy: template.created_by,
         createdAt: template.created_at,
         updatedAt: template.updated_at,
@@ -51,15 +51,13 @@ export const useChecklistTemplates = () => {
   // Create a new template
   const createTemplate = async (values: ChecklistTemplateFormValues) => {
     try {
-      const { data, error } = await supabase.from("checklist_templates").insert([
-        {
+      const { data, error } = await supabase.from("checklist_templates").insert({
           title: values.title,
           description: values.description || null,
           task_type: values.taskType,
           items: values.items,
           is_active: values.isActive
-        }
-      ]).select();
+      }).select();
 
       if (error) {
         throw error;

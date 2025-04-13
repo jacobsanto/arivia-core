@@ -1,6 +1,7 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import { Home } from './pages/Home';
+import Home from './pages/Home';
 import Tasks from './pages/Tasks';
 import Maintenance from './pages/Maintenance';
 import Inventory from './pages/Inventory';
@@ -11,11 +12,11 @@ import Signup from './pages/Signup';
 import AppLayout from './components/layout/AppLayout';
 import { useUser } from './contexts/UserContext';
 import { Navigate } from 'react-router-dom';
-import { ToastContainer } from 'sonner';
+import { Toaster } from 'sonner';
 import Housekeeping from './pages/Housekeeping';
 import ChecklistTemplates from "@/pages/ChecklistTemplates";
 
-const ProtectedRoute = ({ children, requiredRoles }: { children: React.ReactNode; requiredRoles?: string[] }) => {
+const ProtectedRoute = ({ children, requiredRoles }) => {
   const { user, isLoading } = useUser();
 
   if (isLoading) {
@@ -104,7 +105,7 @@ const App = () => {
           <Route path="*" element={<div>Page not found</div>} />
         </Routes>
       </Suspense>
-      <ToastContainer />
+      <Toaster />
     </Router>
   );
 };
