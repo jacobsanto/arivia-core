@@ -1,6 +1,8 @@
+
 import { useState } from "react";
 import { toastService } from "@/services/toast";
 import { Task } from "../types/taskTypes";
+import { getCleaningChecklist } from "@/utils/cleaningChecklists";
 
 export const useTaskActions = (
   tasks: Task[],
@@ -113,15 +115,59 @@ export const useTaskActions = (
   };
 
   const handleCreateTask = (data: any) => {
-    data.type = "Housekeeping";
-    data.id = Math.max(...tasks.map(t => t.id)) + 1;
-    data.status = "Pending";
-    data.approvalStatus = null;
-    data.rejectionReason = null;
-    data.photos = [];
+    // Extract cleaning-specific data
+    const { cleaningDetails, ...taskData } = data;
     
-    setTasks([...tasks, data]);
+    // Create the base task
+    const newTask = {
+      ...taskData,
+      type: "Housekeeping",
+      id: Math.max(...tasks.map(t => t.id), 0) + 1,
+      status: "Pending",
+      approvalStatus: null,
+      rejectionReason: null,
+      photos: [],
+      // Use provided checklist or generate one based on cleaning type
+      checklist: data.checklist || getCleaningChecklist(data.cleaningType || "Standard"),
+    };
+    
+    // Add cleaning details if provided
+    if (cleaningDetails) {
+      newTask.cleaningDetails = cleaningDetails;
+    }
+    
+    setTasks([...tasks, newTask]);
     toastService.success(`Housekeeping task "${data.title}" created successfully!`);
+    
+    // If this is a multi-cleaning schedule, create the additional tasks
+    if (cleaningDetails && cleaningDetails.scheduledCleanings && cleaningDetails.scheduledCleanings.length > 1) {
+      // Skip first and last cleanings (check-in and check-out) as the main task covers one of them
+      for (let i = 1; i < cleaningDetails.scheduledCleanings.length - 1; i++) {
+        const cleaningDate = new Date(cleaningDetails.scheduledCleanings[i]);
+        const cleaningType = i % 2 === 1 ? "Linen & Towel Change" : "Full";
+        
+        const additionalTask = {
+          ...taskData,
+          title: `${cleaningType} - ${data.property}`,
+          type: "Housekeeping",
+          id: Math.max(...tasks.map(t => t.id), 0) + 1 + i,
+          status: "Pending",
+          approvalStatus: null,
+          rejectionReason: null,
+          photos: [],
+          dueDate: cleaningDate,
+          checklist: getCleaningChecklist(cleaningType),
+          cleaningDetails: {
+            ...cleaningDetails,
+            cleaningType
+          }
+        };
+        
+        setTasks(prevTasks => [...prevTasks, additionalTask]);
+      }
+      
+      toastService.success(`${cleaningDetails.scheduledCleanings.length - 1} additional cleaning tasks were created for the stay duration.`);
+    }
   };
 
   const handlePhotoUpload = (file: File) => {

@@ -6,7 +6,8 @@ export const filterTasks = (
   searchQuery: string,
   activeTab: string,
   propertyFilter: string,
-  typeFilter: string
+  typeFilter: string,
+  cleaningTypeFilter: string = "all"
 ): Task[] => {
   return tasks.filter((task) => {
     const matchesSearch =
@@ -22,8 +23,14 @@ export const filterTasks = (
 
     const matchesProperty = propertyFilter === "all" || task.property === propertyFilter;
 
-    const matchesType = task.type === "Housekeeping";
+    const matchesType = typeFilter === "all" || task.type === typeFilter;
+    
+    // New filter for cleaning types
+    const matchesCleaningType = 
+      cleaningTypeFilter === "all" || 
+      !task.cleaningDetails || 
+      task.cleaningDetails.cleaningType === cleaningTypeFilter;
 
-    return matchesSearch && matchesTab && matchesProperty && matchesType;
+    return matchesSearch && matchesTab && matchesProperty && matchesType && matchesCleaningType;
   });
 };
