@@ -7,17 +7,17 @@ import { createMetricCards } from "./metrics/createMetricCards";
 
 interface DashboardMetricsProps {
   data: {
-    properties: {
+    properties?: {
       total: number;
       occupied: number;
       vacant: number;
     };
-    tasks: {
+    tasks?: {
       total: number;
       completed: number;
       pending: number;
     };
-    maintenance: {
+    maintenance?: {
       total: number;
       critical: number;
       standard: number;
@@ -27,7 +27,15 @@ interface DashboardMetricsProps {
 
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
   const isMobile = useIsMobile();
-  const metricCards = createMetricCards(data, isMobile);
+  
+  // Ensure data has all required properties before processing
+  const completeData = {
+    properties: data.properties || { total: 0, occupied: 0, vacant: 0 },
+    tasks: data.tasks || { total: 0, completed: 0, pending: 0 },
+    maintenance: data.maintenance || { total: 0, critical: 0, standard: 0 }
+  };
+  
+  const metricCards = createMetricCards(completeData, isMobile);
   
   return (
     <MetricCardContainer

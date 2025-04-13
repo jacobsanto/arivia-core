@@ -1,19 +1,11 @@
 
 import React from "react";
 import DashboardContent from "@/components/dashboard/DashboardContent";
+import { getDashboardData } from "@/utils/dashboardDataUtils";
 
 const Home = () => {
-  // Providing an empty dashboardData object to satisfy the props requirement
-  const dashboardData = {
-    tasks: [],
-    properties: [],
-    metrics: {
-      totalTasks: 0,
-      completedTasks: 0,
-      pendingTasks: 0,
-      overdueCount: 0
-    }
-  };
+  // Provide a complete dashboard data object with all required properties
+  const dashboardData = getDashboardData("all");
 
   return <DashboardContent dashboardData={dashboardData} />;
 };
