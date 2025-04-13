@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Activity, Clock, Signal, History } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, Clock, Signal, History, FileDown } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { PropertyFilter } from '@/contexts/AnalyticsContext';
+import { exportToCSV } from '@/utils/reportExportUtils';
+import { toastService } from "@/services/toast/toast.service";
 
 // Sample activity data for demonstration with properly typed status values
 const activityData = [
@@ -31,6 +34,38 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, pro
   
   // Apply the limit after filtering
   const limitedActivity = filteredActivity.slice(0, limit);
+  
+  const handleExportData = () => {
+    // Format the data for export
+    const exportData = filteredActivity.map(item => ({
+      User: item.user,
+      Activity: getActivityText(item.type),
+      Property: item.property,
+      Time: item.time,
+      Status: item.status
+    }));
+    
+    // Export to CSV
+    exportToCSV(exportData, 'activity_report');
+    toastService.success("Activity data exported");
+  };
+  
+  const getActivityText = (type: string) => {
+    switch (type) {
+      case "login":
+        return "Logged into system";
+      case "task_completion":
+        return "Completed a task";
+      case "inventory_update":
+        return "Updated inventory";
+      case "booking_change":
+        return "Booking modified";
+      case "maintenance_request":
+        return "Requested maintenance";
+      default:
+        return "Performed an action";
+    }
+  };
   
   return (
     <Card>
@@ -63,6 +98,17 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, pro
           )}
         </div>
       </CardContent>
+      <CardFooter className="flex justify-end border-t pt-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportData}
+          className="flex items-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Export Activity
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

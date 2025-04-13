@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CircleCheck, AlertCircle, RefreshCcw, Monitor } from "lucide-react";
+import { CircleCheck, AlertCircle, RefreshCcw, Monitor, FileDown } from "lucide-react";
 import { toastService } from "@/services/toast/toast.service";
 import { SaveAsReportButton } from '@/components/reports/analytics/SaveAsReportButton';
+import { exportToCSV } from '@/utils/reportExportUtils';
 
 interface SystemStatus {
   name: string;
@@ -68,6 +69,20 @@ export const SystemMonitor: React.FC = () => {
     }, 1500);
   };
 
+  const handleExportData = () => {
+    // Format the data for export
+    const exportData = statusData.map(item => ({
+      Service: item.name,
+      Status: item.status,
+      'Last Check': item.lastCheck,
+      Message: item.message || 'No issues detected'
+    }));
+    
+    // Export to CSV
+    exportToCSV(exportData, 'system_status_report');
+    toastService.success("System status exported");
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -114,13 +129,21 @@ export const SystemMonitor: React.FC = () => {
             </div>
           ))}
         </div>
-        
-        <div className="mt-4 text-right">
-          <Button variant="outline" size="sm" onClick={saveAsReport}>
-            Save as Report
-          </Button>
-        </div>
       </CardContent>
+      <CardFooter className="flex justify-between border-t pt-4">
+        <Button variant="outline" size="sm" onClick={saveAsReport}>
+          Save as Report
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportData}
+          className="flex items-center gap-2"
+        >
+          <FileDown className="h-4 w-4" />
+          Export Status
+        </Button>
+      </CardFooter>
     </Card>
   );
 };
