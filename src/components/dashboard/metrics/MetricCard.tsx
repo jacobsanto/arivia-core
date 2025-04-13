@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
@@ -13,7 +12,7 @@ export interface MetricCardFooterData {
 export interface MetricCardProps {
   title: string;
   value: string | number; // Updated to accept both string and number
-  description: string;
+  description?: string; // Made optional to match MetricCard type
   footer?: MetricCardFooterData;
   swipeable?: boolean;
   trend?: {
@@ -27,7 +26,7 @@ export interface MetricCardProps {
 export const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value, 
-  description, 
+  description = '', // Provide a default empty string for optional description
   footer, 
   swipeable = false,
   trend,
@@ -49,7 +48,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     }
   };
 
-  // Render the footer content based on the data structure
   const renderFooter = () => {
     if (!footer) return null;
 
@@ -140,4 +138,3 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   
   return <Card className={`h-full ${getCardStyle()}`}>{cardContent}</Card>;
 };
-

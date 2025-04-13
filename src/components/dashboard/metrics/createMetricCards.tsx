@@ -5,7 +5,7 @@ import { ArrowUpIcon, ArrowDownIcon } from "lucide-react";
 export type MetricCard = {
   title: string;
   value: string | number; // Make sure this matches MetricCardProps
-  description?: string;
+  description?: string; // This is now optional to match MetricCardProps
   footer?: React.ReactNode;
   trend?: {
     value: number;
