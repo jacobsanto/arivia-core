@@ -85,12 +85,14 @@ class ToastService {
       this.loadingToasts.set(id, toastId);
     } else {
       // For shadcn, we use the standard toast but remember the ID
-      const toast = this.show(title, { 
+      const result = this.show(title, { 
         ...options, 
         variant: 'default',
         duration: options?.duration || 100000  // Long duration for loading toasts
       });
-      this.loadingToasts.set(id, toast?.id || '');
+      // Check if result has an id property before accessing it
+      const resultId = typeof result === 'object' && result !== null && 'id' in result ? result.id : '';
+      this.loadingToasts.set(id, resultId);
     }
     
     return id;
