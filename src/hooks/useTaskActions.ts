@@ -1,8 +1,8 @@
-
 import { useState } from "react";
 import { toastService } from "@/services/toast";
 import { Task } from "../types/taskTypes";
 import { getCleaningChecklist } from "@/utils/cleaningChecklists";
+import { ChecklistTemplate } from "@/types/checklistTypes";
 
 export const useTaskActions = (
   tasks: Task[],
@@ -10,6 +10,8 @@ export const useTaskActions = (
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>
 ) => {
+  const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
+
   const handleOpenTask = (task: Task) => {
     setSelectedTask(task);
   };
@@ -116,7 +118,15 @@ export const useTaskActions = (
 
   const handleCreateTask = (data: any) => {
     // Extract cleaning-specific data
-    const { cleaningDetails, ...taskData } = data;
+    const { cleaningDetails, templateId, ...taskData } = data;
+    
+    // Use template checklist if provided, otherwise use default or generate based on cleaning type
+    let checklist;
+    if (selectedTemplate) {
+      checklist = selectedTemplate.items.map(item => ({ ...item, completed: false }));
+    } else {
+      checklist = data.checklist || getCleaningChecklist(data.cleaningType || "Standard");
+    }
     
     // Create the base task
     const newTask = {
@@ -127,8 +137,7 @@ export const useTaskActions = (
       approvalStatus: null,
       rejectionReason: null,
       photos: [],
-      // Use provided checklist or generate one based on cleaning type
-      checklist: data.checklist || getCleaningChecklist(data.cleaningType || "Standard"),
+      checklist,
     };
     
     // Add cleaning details if provided
@@ -138,6 +147,9 @@ export const useTaskActions = (
     
     setTasks([...tasks, newTask]);
     toastService.success(`Housekeeping task "${data.title}" created successfully!`);
+    
+    // Reset selected template
+    setSelectedTemplate(null);
     
     // If this is a multi-cleaning schedule, create the additional tasks
     if (cleaningDetails && cleaningDetails.scheduledCleanings && cleaningDetails.scheduledCleanings.length > 1) {
@@ -170,6 +182,11 @@ export const useTaskActions = (
     }
   };
 
+  const handleSelectTemplate = (template: ChecklistTemplate) => {
+    setSelectedTemplate(template);
+    toastService.success(`Template "${template.name}" selected for use.`);
+  };
+
   const handlePhotoUpload = (file: File) => {
     if (!selectedTask) return;
     
@@ -192,6 +209,7 @@ export const useTaskActions = (
   };
 
   return {
+    selectedTemplate,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
@@ -200,5 +218,6 @@ export const useTaskActions = (
     handleToggleChecklistItem,
     handleCreateTask,
     handlePhotoUpload,
+    handleSelectTemplate
   };
 };

@@ -4,6 +4,7 @@ import { Task } from "../types/taskTypes";
 import { initialTasks } from "../data/taskData";
 import { filterTasks } from "../utils/taskFilters";
 import { useTaskActions } from "./useTaskActions";
+import { ChecklistTemplate } from "@/types/checklistTypes";
 
 export type { Task, ChecklistItem } from "../types/taskTypes";
 
@@ -22,6 +23,7 @@ export const useTasks = () => {
 
   // Get task action handlers
   const {
+    selectedTemplate,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
@@ -30,6 +32,7 @@ export const useTasks = () => {
     handleToggleChecklistItem,
     handleCreateTask,
     handlePhotoUpload,
+    handleSelectTemplate
   } = useTaskActions(tasks, setTasks, selectedTask, setSelectedTask);
 
   return {
@@ -49,6 +52,7 @@ export const useTasks = () => {
     setPropertyFilter,
     typeFilter,
     setTypeFilter,
+    selectedTemplate,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
@@ -57,5 +61,6 @@ export const useTasks = () => {
     handleToggleChecklistItem,
     handleCreateTask,
     handlePhotoUpload,
+    handleSelectTemplate
   };
 };

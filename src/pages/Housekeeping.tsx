@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
@@ -11,6 +12,7 @@ import TaskFilters from "@/components/tasks/TaskFilters";
 import { useTasks } from "@/hooks/useTasks";
 import { useIsMobile } from "@/hooks/use-mobile";
 import TaskReporting from "@/components/tasks/TaskReporting";
+
 const Housekeeping = () => {
   const {
     filteredTasks,
@@ -27,6 +29,7 @@ const Housekeeping = () => {
     setTypeFilter,
     isReportingOpen,
     setIsReportingOpen,
+    selectedTemplate,
     handleOpenTask,
     handleCloseTask,
     handleCompleteTask,
@@ -34,24 +37,58 @@ const Housekeeping = () => {
     handleRejectTask,
     handleToggleChecklistItem,
     handleCreateTask,
-    handlePhotoUpload
+    handlePhotoUpload,
+    handleSelectTemplate
   } = useTasks();
+  
   const isMobile = useIsMobile();
-  return <div className="space-y-6">
+  
+  return (
+    <div className="space-y-6">
       <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} onViewReports={() => setIsReportingOpen(true)} />
 
-      
+      <TaskFilters 
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onPropertyFilter={setPropertyFilter}
+        onTypeFilter={setTypeFilter}
+      />
 
-      <TaskFilters searchQuery={searchQuery} onSearchChange={setSearchQuery} activeTab={activeTab} onTabChange={setActiveTab} onPropertyFilter={setPropertyFilter} onTypeFilter={setTypeFilter} />
-
-      <TaskList tasks={filteredTasks} onOpenTask={handleOpenTask} />
+      <TaskList
+        tasks={filteredTasks}
+        onOpenTask={handleOpenTask}
+      />
 
       {/* Task Detail Modal - Sheet on mobile, Dialog on desktop */}
-      {selectedTask && isMobile ? <Sheet open={!!selectedTask} onOpenChange={() => selectedTask && handleCloseTask()}>
+      {selectedTask && isMobile ? (
+        <Sheet open={!!selectedTask} onOpenChange={() => selectedTask && handleCloseTask()}>
           <SheetContent className="overflow-y-auto h-[85vh] pt-6" side="bottom">
-            <TaskDetail task={selectedTask} onClose={handleCloseTask} onComplete={handleCompleteTask} onApprove={handleApproveTask} onReject={handleRejectTask} onToggleChecklistItem={handleToggleChecklistItem} onPhotoUpload={handlePhotoUpload} />
+            <TaskDetail
+              task={selectedTask}
+              onClose={handleCloseTask}
+              onComplete={handleCompleteTask}
+              onApprove={handleApproveTask}
+              onReject={handleRejectTask}
+              onToggleChecklistItem={handleToggleChecklistItem}
+              onPhotoUpload={handlePhotoUpload}
+            />
           </SheetContent>
-        </Sheet> : selectedTask && <TaskDetail task={selectedTask} onClose={handleCloseTask} onComplete={handleCompleteTask} onApprove={handleApproveTask} onReject={handleRejectTask} onToggleChecklistItem={handleToggleChecklistItem} onPhotoUpload={handlePhotoUpload} />}
+        </Sheet>
+      ) : (
+        selectedTask && (
+          <TaskDetail
+            task={selectedTask}
+            onClose={handleCloseTask}
+            onComplete={handleCompleteTask}
+            onApprove={handleApproveTask}
+            onReject={handleRejectTask}
+            onToggleChecklistItem={handleToggleChecklistItem}
+            onPhotoUpload={handlePhotoUpload}
+          />
+        )
+      )}
 
       {/* Create Task Dialog */}
       <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
@@ -59,7 +96,12 @@ const Housekeeping = () => {
           <DialogHeader>
             <DialogTitle>Create New Housekeeping Task</DialogTitle>
           </DialogHeader>
-          <TaskCreationForm onSubmit={handleCreateTask} onCancel={() => setIsCreateTaskOpen(false)} />
+          <TaskCreationForm 
+            onSubmit={handleCreateTask} 
+            onCancel={() => setIsCreateTaskOpen(false)} 
+            selectedTemplate={selectedTemplate}
+            onSelectTemplate={handleSelectTemplate}
+          />
         </DialogContent>
       </Dialog>
 
@@ -72,6 +114,8 @@ const Housekeeping = () => {
           <TaskReporting />
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 };
+
 export default Housekeeping;

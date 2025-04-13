@@ -2,7 +2,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Lock, Users, Shield, Settings } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Lock, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -19,6 +19,7 @@ const Sidebar = () => {
   if (!user) return null;
   
   const isSuperAdmin = user.role === "superadmin";
+  const isAdmin = user.role === "administrator";
 
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
@@ -55,13 +56,14 @@ const Sidebar = () => {
         
         {canAccess("viewReports") && <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />}
         
-        {isSuperAdmin && (
+        {(isSuperAdmin || isAdmin) && (
           <div className="pt-4 border-t border-sidebar-border mt-4">
             <h3 className="px-4 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">
               Admin Controls
             </h3>
             <SidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" />
             <SidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" />
+            <SidebarLink to="/admin/checklists" icon={<CheckSquare size={20} />} label="Checklists" />
             <SidebarLink to="/admin/settings" icon={<Settings size={20} />} label="System Settings" />
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,8 +29,9 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { getCleaningChecklist, generateCleaningSchedule } from "@/utils/cleaningChecklists";
+import TaskTemplateSelector from "./TaskTemplateSelector";
+import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
 
 const taskFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -70,9 +70,16 @@ const staffOptions = [
 interface TaskCreationFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  selectedTemplate?: any;
+  onSelectTemplate?: (template: any) => void;
 }
 
-const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
+const TaskCreationForm = ({ 
+  onSubmit, 
+  onCancel, 
+  selectedTemplate,
+  onSelectTemplate 
+}: TaskCreationFormProps) => {
   const [isStayRelated, setIsStayRelated] = useState(false);
   const [cleaningType, setCleaningType] = useState<string>("Standard");
   const [scheduledCleanings, setScheduledCleanings] = useState<string[]>([]);
@@ -98,7 +105,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
   const watchCheckIn = form.watch("guestCheckIn");
   const watchCheckOut = form.watch("guestCheckOut");
 
-  // Update scheduled cleanings when check-in/out dates change
   useEffect(() => {
     if (isStayRelated && watchCheckIn && watchCheckOut) {
       const { scheduledCleanings, cleaningTypes } = generateCleaningSchedule(watchCheckIn, watchCheckOut);
@@ -108,7 +114,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
   }, [isStayRelated, watchCheckIn, watchCheckOut]);
 
   const handleSubmit = (data: TaskFormValues) => {
-    // Calculate stay duration if check-in/out dates are provided
     let stayDuration;
     if (data.guestCheckIn && data.guestCheckOut) {
       stayDuration = Math.ceil(
@@ -116,13 +121,9 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
       );
     }
 
-    // Generate checklist based on cleaning type
-    const checklist = getCleaningChecklist(cleaningType);
-
-    // Prepare the task data
     const taskData = {
       ...data,
-      checklist,
+      templateId: selectedTemplate?.id,
       cleaningDetails: isStayRelated ? {
         cleaningType,
         stayDuration,
@@ -276,6 +277,13 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
           />
         </div>
 
+        {onSelectTemplate && (
+          <TaskTemplateSelector 
+            selectedTemplate={selectedTemplate} 
+            onSelectTemplate={onSelectTemplate} 
+          />
+        )}
+
         <FormField
           control={form.control}
           name="isStayRelated"
@@ -376,7 +384,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
                           selected={field.value}
                           onSelect={(date) => {
                             if (watchCheckIn && date && date < watchCheckIn) {
-                              // Don't allow check-out before check-in
                               return;
                             }
                             field.onChange(date);
