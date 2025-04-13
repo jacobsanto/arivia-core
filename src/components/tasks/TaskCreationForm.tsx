@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -32,6 +31,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { getCleaningChecklist, generateCleaningSchedule } from "@/utils/cleaningChecklists";
+import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
+import { CheckIcon, ClipboardList } from "lucide-react";
+import ChecklistTemplatePreview from "@/components/checklists/ChecklistTemplatePreview";
 
 const taskFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -77,6 +79,13 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
   const [cleaningType, setCleaningType] = useState<string>("Standard");
   const [scheduledCleanings, setScheduledCleanings] = useState<string[]>([]);
   const [cleaningTypes, setCleaningTypes] = useState<string[]>([]);
+  
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [isTemplatePreviewOpen, setIsTemplatePreviewOpen] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<any>(null);
+
+  const { templates, getTemplatesByType } = useChecklistTemplates();
+  const housekeepingTemplates = getTemplatesByType("Housekeeping");
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -98,7 +107,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
   const watchCheckIn = form.watch("guestCheckIn");
   const watchCheckOut = form.watch("guestCheckOut");
 
-  // Update scheduled cleanings when check-in/out dates change
   useEffect(() => {
     if (isStayRelated && watchCheckIn && watchCheckOut) {
       const { scheduledCleanings, cleaningTypes } = generateCleaningSchedule(watchCheckIn, watchCheckOut);
@@ -107,8 +115,26 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
     }
   }, [isStayRelated, watchCheckIn, watchCheckOut]);
 
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      if (template.taskType === "Housekeeping" && template.title.toLowerCase().includes("linen")) {
+        setCleaningType("Linen & Towel Change");
+      } else if (template.taskType === "Housekeeping" && template.title.toLowerCase().includes("full")) {
+        setCleaningType("Full");
+      } else {
+        setCleaningType("Standard");
+      }
+    }
+  };
+
+  const handlePreviewTemplate = (template: any) => {
+    setPreviewTemplate(template);
+    setIsTemplatePreviewOpen(true);
+  };
+
   const handleSubmit = (data: TaskFormValues) => {
-    // Calculate stay duration if check-in/out dates are provided
     let stayDuration;
     if (data.guestCheckIn && data.guestCheckOut) {
       stayDuration = Math.ceil(
@@ -116,10 +142,18 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
       );
     }
 
-    // Generate checklist based on cleaning type
-    const checklist = getCleaningChecklist(cleaningType);
+    let checklist;
+    if (selectedTemplateId) {
+      const template = templates.find(t => t.id === selectedTemplateId);
+      if (template) {
+        checklist = template.items;
+      } else {
+        checklist = getCleaningChecklist(cleaningType);
+      }
+    } else {
+      checklist = getCleaningChecklist(cleaningType);
+    }
 
-    // Prepare the task data
     const taskData = {
       ...data,
       checklist,
@@ -376,7 +410,6 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
                           selected={field.value}
                           onSelect={(date) => {
                             if (watchCheckIn && date && date < watchCheckIn) {
-                              // Don't allow check-out before check-in
                               return;
                             }
                             field.onChange(date);
@@ -442,6 +475,65 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
           </div>
         )}
 
+        <div className="space-y-4 border rounded-md p-4">
+          <h3 className="text-md font-medium">Checklist Template</h3>
+          
+          {housekeepingTemplates.length > 0 ? (
+            <div className="grid grid-cols-1 gap-2">
+              {housekeepingTemplates.map(template => (
+                <div key={template.id} className="flex items-center justify-between border rounded-md p-3">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id={`template-${template.id}`}
+                      name="template"
+                      className="mr-2"
+                      checked={selectedTemplateId === template.id}
+                      onChange={() => handleTemplateSelect(template.id)}
+                    />
+                    <label htmlFor={`template-${template.id}`} className="text-sm font-medium">
+                      {template.title}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({template.items.length} items)
+                      </span>
+                    </label>
+                  </div>
+                  <Button 
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handlePreviewTemplate(template)}
+                  >
+                    <ClipboardList className="h-4 w-4 mr-1" />
+                    Preview
+                  </Button>
+                </div>
+              ))}
+              
+              <div className="flex items-center mt-2">
+                <input
+                  type="radio"
+                  id="no-template"
+                  name="template"
+                  className="mr-2"
+                  checked={selectedTemplateId === null}
+                  onChange={() => setSelectedTemplateId(null)}
+                />
+                <label htmlFor="no-template" className="text-sm font-medium">
+                  Use standard checklist based on cleaning type
+                </label>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center p-4 border border-dashed rounded-md">
+              <p className="text-muted-foreground text-sm">
+                No housekeeping templates available.
+                Using standard checklist based on cleaning type.
+              </p>
+            </div>
+          )}
+        </div>
+
         <FormField
           control={form.control}
           name="description"
@@ -466,6 +558,19 @@ const TaskCreationForm = ({ onSubmit, onCancel }: TaskCreationFormProps) => {
           </Button>
           <Button type="submit">Create Housekeeping Task</Button>
         </div>
+
+        <ChecklistTemplatePreview
+          template={previewTemplate}
+          isOpen={isTemplatePreviewOpen}
+          onClose={() => setIsTemplatePreviewOpen(false)}
+          onUseTemplate={() => {
+            if (previewTemplate) {
+              handleTemplateSelect(previewTemplate.id);
+              setIsTemplatePreviewOpen(false);
+            }
+          }}
+          allowSelection={true}
+        />
       </form>
     </Form>
   );
