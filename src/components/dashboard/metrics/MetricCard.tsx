@@ -12,7 +12,7 @@ export interface MetricCardFooterData {
 
 export interface MetricCardProps {
   title: string;
-  value: string;
+  value: string | number; // Updated to accept both string and number
   description: string;
   footer?: MetricCardFooterData;
   swipeable?: boolean;
@@ -140,3 +140,4 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   
   return <Card className={`h-full ${getCardStyle()}`}>{cardContent}</Card>;
 };
+
