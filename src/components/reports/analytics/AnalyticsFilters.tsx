@@ -78,7 +78,7 @@ export const AnalyticsFilters: React.FC = () => {
             <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setSelectedProperty('all')} />
           </Badge>}
         
-        <Badge variant="outline" className="bg-muted/50 text-nowrap">
+        <Badge variant="outline" className="text-nowrap rounded-none bg-zinc-50">
           <Calendar className="mr-1 h-3 w-3" />
           {timeRangeFilter === 'custom' && dateRange.from && dateRange.to ? `${format(dateRange.from, 'MM/dd/yy')} - ${format(dateRange.to, 'MM/dd/yy')}` : timeRangeOptions.find(option => option.value === timeRangeFilter)?.label}
         </Badge>
