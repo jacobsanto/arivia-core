@@ -16,7 +16,7 @@ import { Toaster } from 'sonner';
 import Housekeeping from './pages/Housekeeping';
 import ChecklistTemplates from "@/pages/ChecklistTemplates";
 
-const ProtectedRoute = ({ children, requiredRoles }) => {
+const ProtectedRoute = ({ children, requiredRoles = [] }) => {
   const { user, isLoading } = useUser();
 
   if (isLoading) {
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, requiredRoles }) => {
     return <Navigate to="/login" />;
   }
 
-  if (requiredRoles && !requiredRoles.includes(user.role)) {
+  if (requiredRoles && requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
     // Redirect or show an unauthorized message if the user doesn't have the required role
     return <div>Unauthorized</div>;
   }

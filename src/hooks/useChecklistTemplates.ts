@@ -51,11 +51,12 @@ export const useChecklistTemplates = () => {
   // Create a new template
   const createTemplate = async (values: ChecklistTemplateFormValues) => {
     try {
+      // Convert items array to a JSON string to satisfy the database type
       const { data, error } = await supabase.from("checklist_templates").insert({
           title: values.title,
           description: values.description || null,
           task_type: values.taskType,
-          items: values.items,
+          items: JSON.stringify(values.items), // Convert to JSON string
           is_active: values.isActive
       }).select();
 
@@ -81,7 +82,7 @@ export const useChecklistTemplates = () => {
       if (values.title !== undefined) updateData.title = values.title;
       if (values.description !== undefined) updateData.description = values.description || null;
       if (values.taskType !== undefined) updateData.task_type = values.taskType;
-      if (values.items !== undefined) updateData.items = values.items;
+      if (values.items !== undefined) updateData.items = JSON.stringify(values.items); // Convert to JSON string
       if (values.isActive !== undefined) updateData.is_active = values.isActive;
 
       const { error } = await supabase

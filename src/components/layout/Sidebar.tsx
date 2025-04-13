@@ -7,7 +7,7 @@ import NavItem from "./NavItem";
 import { 
   Home, 
   ClipboardCheck, 
-  Tool, 
+  Wrench as Tool, // Changed from Tool to Wrench
   Package, 
   BarChart, 
   Settings, 
