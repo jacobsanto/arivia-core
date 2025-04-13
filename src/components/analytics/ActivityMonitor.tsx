@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,31 +9,64 @@ import { exportToCSV } from '@/utils/reportExportUtils';
 import { toastService } from "@/services/toast/toast.service";
 
 // Sample activity data for demonstration with properly typed status values
-const activityData = [
-  { id: 1, type: "login", user: "Maria Karapataki", time: "Today, 08:23 AM", status: "success" as const, property: "Villa Caldera" },
-  { id: 2, type: "task_completion", user: "Nikos Papadopoulos", time: "Today, 09:45 AM", status: "success" as const, property: "Villa Sunset" },
-  { id: 3, type: "inventory_update", user: "Elena Andreou", time: "Today, 10:12 AM", status: "warning" as const, property: "Villa Oceana" },
-  { id: 4, type: "booking_change", user: "System", time: "Today, 11:30 AM", status: "info" as const, property: "Villa Paradiso" },
-  { id: 5, type: "maintenance_request", user: "George Demetriou", time: "Today, 01:15 PM", status: "error" as const, property: "Villa Azure" },
-  { id: 6, type: "login", user: "Alex Ioannou", time: "Today, 02:40 PM", status: "success" as const, property: "Villa Caldera" },
-];
-
+const activityData = [{
+  id: 1,
+  type: "login",
+  user: "Maria Karapataki",
+  time: "Today, 08:23 AM",
+  status: "success" as const,
+  property: "Villa Caldera"
+}, {
+  id: 2,
+  type: "task_completion",
+  user: "Nikos Papadopoulos",
+  time: "Today, 09:45 AM",
+  status: "success" as const,
+  property: "Villa Sunset"
+}, {
+  id: 3,
+  type: "inventory_update",
+  user: "Elena Andreou",
+  time: "Today, 10:12 AM",
+  status: "warning" as const,
+  property: "Villa Oceana"
+}, {
+  id: 4,
+  type: "booking_change",
+  user: "System",
+  time: "Today, 11:30 AM",
+  status: "info" as const,
+  property: "Villa Paradiso"
+}, {
+  id: 5,
+  type: "maintenance_request",
+  user: "George Demetriou",
+  time: "Today, 01:15 PM",
+  status: "error" as const,
+  property: "Villa Azure"
+}, {
+  id: 6,
+  type: "login",
+  user: "Alex Ioannou",
+  time: "Today, 02:40 PM",
+  status: "success" as const,
+  property: "Villa Caldera"
+}];
 interface ActivityMonitorProps {
   limit?: number;
   propertyFilter?: PropertyFilter;
 }
-
-export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, propertyFilter = 'all' }) => {
+export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({
+  limit = 5,
+  propertyFilter = 'all'
+}) => {
   const isMobile = useIsMobile();
-  
+
   // Filter activities by property if a specific property is selected
-  const filteredActivity = propertyFilter === 'all' 
-    ? activityData 
-    : activityData.filter(activity => activity.property === propertyFilter);
-  
+  const filteredActivity = propertyFilter === 'all' ? activityData : activityData.filter(activity => activity.property === propertyFilter);
+
   // Apply the limit after filtering
   const limitedActivity = filteredActivity.slice(0, limit);
-  
   const handleExportData = () => {
     // Format the data for export
     const exportData = filteredActivity.map(item => ({
@@ -44,12 +76,11 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, pro
       Time: item.time,
       Status: item.status
     }));
-    
+
     // Export to CSV
     exportToCSV(exportData, 'activity_report');
     toastService.success("Activity data exported");
   };
-  
   const getActivityText = (type: string) => {
     switch (type) {
       case "login":
@@ -66,9 +97,7 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, pro
         return "Performed an action";
     }
   };
-  
-  return (
-    <Card>
+  return <Card>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div>
@@ -77,42 +106,27 @@ export const ActivityMonitor: React.FC<ActivityMonitorProps> = ({ limit = 5, pro
               Recent Activity
             </CardTitle>
             <CardDescription>
-              {propertyFilter === 'all' 
-                ? 'System and user activities across all villas' 
-                : `System and user activities for ${propertyFilter}`}
+              {propertyFilter === 'all' ? 'System and user activities across all villas' : `System and user activities for ${propertyFilter}`}
             </CardDescription>
           </div>
-          <Badge variant="outline" className="text-xs">
+          <Badge variant="outline" className="text-s my-0 mx-[30px] px-[30px]">
             Last 24hrs
           </Badge>
         </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {limitedActivity.length > 0 ? (
-            limitedActivity.map((activity) => (
-              <ActivityItem key={activity.id} activity={activity} />
-            ))
-          ) : (
-            <p className="text-muted-foreground text-center py-4">No recent activity for this property</p>
-          )}
+          {limitedActivity.length > 0 ? limitedActivity.map(activity => <ActivityItem key={activity.id} activity={activity} />) : <p className="text-muted-foreground text-center py-4">No recent activity for this property</p>}
         </div>
       </CardContent>
       <CardFooter className="flex justify-end border-t pt-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportData}
-          className="flex items-center gap-2"
-        >
+        <Button variant="outline" size="sm" onClick={handleExportData} className="flex items-center gap-2">
           <FileDown className="h-4 w-4" />
           Export Activity
         </Button>
       </CardFooter>
-    </Card>
-  );
+    </Card>;
 };
-
 interface ActivityItemProps {
   activity: {
     id: number;
@@ -123,8 +137,9 @@ interface ActivityItemProps {
     property: string;
   };
 }
-
-const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
+const ActivityItem: React.FC<ActivityItemProps> = ({
+  activity
+}) => {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case "login":
@@ -139,7 +154,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
         return <Activity className="h-4 w-4 text-red-500" />;
     }
   };
-
   const getBadgeVariant = (status: string) => {
     switch (status) {
       case "success":
@@ -154,7 +168,6 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
         return "outline";
     }
   };
-  
   const getActivityText = (type: string) => {
     switch (type) {
       case "login":
@@ -171,9 +184,7 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
         return "Performed an action";
     }
   };
-
-  return (
-    <div className="flex items-start gap-3 py-2 border-b border-border last:border-0 last:pb-0">
+  return <div className="flex items-start gap-3 py-2 border-b border-border last:border-0 last:pb-0">
       <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
         {getActivityIcon(activity.type)}
       </div>
@@ -192,6 +203,5 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => {
       <Badge variant={getBadgeVariant(activity.status)} className="text-[10px] h-5">
         {activity.status}
       </Badge>
-    </div>
-  );
+    </div>;
 };
