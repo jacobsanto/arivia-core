@@ -164,7 +164,7 @@ const NotificationSettings: React.FC = () => {
               field
             }) => <FormItem className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <FormLabel className="text-base font-small">Low Inventory</FormLabel>
+                      <FormLabel className="text-base font-xs">Low Inventory</FormLabel>
                       <FormControl>
                         <ToggleGroup type="multiple" value={field.value} onValueChange={field.onChange}>
                           {notificationTypes.map(type => <ToggleGroupItem key={type.id} value={type.id} aria-label={`Toggle ${type.label}`} size="sm">
