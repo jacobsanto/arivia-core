@@ -475,7 +475,7 @@ const MaintenanceTypeReport = ({
 }) => {
   return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6 py-[12px] px-0 mx-0 my-0">
+        <CardContent className="pt-6 py-[5px] mx-[3px] my-[3px] px-0">
           <h3 className="text-lg font-medium mb-4 text-center">Maintenance by Type</h3>
           {isLoading ? <div className="h-80 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
