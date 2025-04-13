@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import PropertyFilter from "@/components/dashboard/PropertyFilter";
 import { DateRangeSelector, type DateRange } from "@/components/reports/DateRangeSelector";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { toastService } from "@/services/toast/toast.service";
 import { exportDashboardData, refreshDashboardData, generateWeeklyReview } from "@/utils/dashboardExportUtils";
+import WeeklyReviewDialog from "./WeeklyReviewDialog";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
@@ -31,6 +32,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const isMobile = useIsMobile();
   const { user } = useUser();
   const isSuperAdmin = user?.role === "superadmin";
+  const [showWeeklyReview, setShowWeeklyReview] = useState(false);
   
   const today = new Date();
   const formattedDate = format(today, 'EEEE, MMMM d, yyyy');
@@ -44,7 +46,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   };
   
   const handleWeeklyReview = () => {
-    generateWeeklyReview(dashboardData, selectedProperty);
+    if (generateWeeklyReview(dashboardData, selectedProperty)) {
+      setShowWeeklyReview(true);
+    }
   };
 
   return (
@@ -127,6 +131,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           </Button>
         )}
       </div>
+
+      {/* Weekly Review Dialog */}
+      <WeeklyReviewDialog
+        open={showWeeklyReview}
+        onOpenChange={setShowWeeklyReview}
+        propertyFilter={selectedProperty}
+        dashboardData={dashboardData}
+      />
     </div>
   );
 };
