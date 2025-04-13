@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { FileText, BarChart, Plus, PieChart, Calendar, ChevronRight } from "lucide-react";
+import { FileText, BarChart, Plus, PieChart, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import MobileReportsList from './mobile/MobileReportsList';
 import MobileAnalyticsDashboard from './mobile/MobileAnalyticsDashboard';
@@ -106,7 +105,6 @@ const MobileReports: React.FC<MobileReportsProps> = ({
                       <Calendar className="h-3 w-3 mr-1" /> Every Monday
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
                 <div className="py-3 px-4 flex items-center justify-between">
                   <div>
@@ -115,7 +113,6 @@ const MobileReports: React.FC<MobileReportsProps> = ({
                       <Calendar className="h-3 w-3 mr-1" /> 1st of month
                     </div>
                   </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
             </CardContent>
