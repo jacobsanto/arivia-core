@@ -32,7 +32,7 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenMenu }) => {
         
         <button 
           onClick={onOpenMenu} 
-          className="flex flex-col items-center justify-center py-2 text-muted-foreground"
+          className="flex flex-col items-center justify-center py-2 text-muted-foreground hover:bg-secondary/50 transition-colors"
         >
           <Menu size={20} />
           <span className="text-xs mt-1">Menu</span>
@@ -53,7 +53,7 @@ const NavItem = ({ to, icon, label }: NavItemProps) => {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex flex-col items-center justify-center py-2 ${
+        `flex flex-col items-center justify-center py-2 hover:bg-secondary/50 transition-colors ${
           isActive ? "text-primary" : "text-muted-foreground"
         }`
       }
