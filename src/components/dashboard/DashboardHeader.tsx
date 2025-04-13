@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
@@ -15,7 +16,7 @@ import FilterBadges from "./header/FilterBadges";
 import ActionButtons from "./header/ActionButtons";
 import MobileActionButtons from "./header/MobileActionButtons";
 import DashboardFilters from "./header/DashboardFilters";
-import WeeklyReviewDialog from "./WeeklyReviewDialog";
+import { WeeklyReviewDialog } from "./weekly-review";
 import { ExportConfigDialog, ExportFormat, ExportSection } from "./ExportConfigDialog";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 
