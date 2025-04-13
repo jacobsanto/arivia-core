@@ -1,7 +1,8 @@
 
 import React, { Suspense } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { useUser } from './contexts/UserContext';
+import AppLayout from './components/layout/AppLayout';
 
 // Lazy load pages to improve performance
 const Home = React.lazy(() => import('./pages/Home'));
@@ -9,8 +10,8 @@ const Tasks = React.lazy(() => import('./pages/Tasks'));
 const Housekeeping = React.lazy(() => import('./pages/Housekeeping'));
 const Maintenance = React.lazy(() => import('./pages/Maintenance'));
 const Inventory = React.lazy(() => import('./pages/Inventory'));
-const Reports = React.lazy(() => import('./pages/Reporting')); // Changed from Reporting to Reports for clarity
-const Analytics = React.lazy(() => import('./pages/Analytics')); // Added Analytics page
+const Reports = React.lazy(() => import('./pages/Reporting')); 
+const Analytics = React.lazy(() => import('./pages/Analytics')); 
 const Settings = React.lazy(() => import('./pages/Settings'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
