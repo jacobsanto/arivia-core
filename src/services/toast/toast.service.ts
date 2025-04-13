@@ -118,15 +118,13 @@ class ToastService {
       
       if (this.loadingToasts.has(id)) {
         const toastId = this.loadingToasts.get(id);
-        // Shadcn dismiss function has a different signature - it expects a toastId
+        // For shadcn toast - we need to pass the ID string correctly
         if (toastId) {
-          // For shadcn toast, we need to call dismiss with the toastId
           dismiss(toastId.toString());
         }
         this.loadingToasts.delete(id);
       } else {
-        // For shadcn toast, dismiss expects a toastId
-        // We need to pass the ID properly
+        // For shadcn toast - always pass the id string 
         dismiss(id);
       }
     }
