@@ -5,7 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 
 // Layouts
-import MainLayout from "@/components/layout/MainLayout";
+import AppLayout from "@/components/layout/AppLayout";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
@@ -29,7 +29,7 @@ function App() {
       <ToastProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<MainLayout />}>
+            <Route path="/" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
               <Route path="profile" element={<UserProfile />} />
               <Route path="housekeeping" element={<Housekeeping />} />

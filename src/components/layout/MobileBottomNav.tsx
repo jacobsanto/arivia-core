@@ -1,7 +1,7 @@
 
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, BedDouble, Package, MessageSquare, Menu } from "lucide-react";
+import { LayoutDashboard, BedDouble, Package, MessageSquare, Menu, Wrench } from "lucide-react";
 import { usePermissions } from "@/hooks/usePermissions";
 
 interface MobileBottomNavProps {
@@ -18,6 +18,10 @@ const MobileBottomNav: React.FC<MobileBottomNavProps> = ({ onOpenMenu }) => {
         
         {canAccess("viewAllTasks") && (
           <NavItem to="/housekeeping" icon={<BedDouble size={20} />} label="Tasks" />
+        )}
+        
+        {canAccess("viewMaintenanceTasks") && (
+          <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
         )}
         
         {canAccess("viewInventory") && (

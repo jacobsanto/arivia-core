@@ -18,7 +18,7 @@ const MobileAnalyticsDashboard = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-16">
       {/* Filters Section */}
       <Card className="p-3">
         <AnalyticsFilters />

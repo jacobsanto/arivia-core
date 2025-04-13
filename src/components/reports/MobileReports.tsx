@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -30,7 +31,7 @@ const MobileReports: React.FC<MobileReportsProps> = ({
   };
   
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pb-16">
       <div className="flex flex-col space-y-2">
         <h1 className="text-2xl font-bold tracking-tight flex items-center">
           {activeView === 'reporting' ? (
