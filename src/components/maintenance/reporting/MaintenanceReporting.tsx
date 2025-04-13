@@ -231,11 +231,11 @@ const PropertyMaintenanceReport = ({
 }) => {
   return <div className="space-y-4">
       <Card>
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Maintenance Tasks by Property</h3>
+        <CardContent className="pt-6 py-0 px-0 mx-0 my-0 rounded-sm">
+          <h3 className="text-lg font-medium mb-4 text-center">Maintenance Tasks by Property</h3>
           {isLoading ? <div className="h-80 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div> : <div className="h-80">
+            </div> : <div className="h-80 py-[150px] my-[19px] mx-0 px-0">
               <ChartContainer config={{
             completed: {
               label: "Total Completed",
