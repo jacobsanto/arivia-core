@@ -1,196 +1,219 @@
 
 import { toast as sonnerToast } from "sonner";
-import { toast as shadcnToast } from "@/hooks/use-toast";
-import { ToastActionElement } from "@/components/ui/toast";
+import { useToast } from "@/components/ui/use-toast";
+import { Toast } from "@/components/ui/use-toast";
 
-type ToastVariant = "default" | "destructive" | "success" | "warning" | "info";
-type ToastPosition = "top-right" | "top-center" | "top-left" | "bottom-right" | "bottom-center" | "bottom-left";
+// This utility handles both Sonner (for newer components) and Shadcn (for older components) toasts
+// to ensure consistent behavior across the application
 
-interface ToastOptions {
+type ToastType = "default" | "success" | "error" | "warning" | "info" | "loading";
+
+type ToastOptions = {
   description?: string;
-  action?: ToastActionElement;
   duration?: number;
-  position?: ToastPosition;
-  variant?: ToastVariant;
-}
+  action?: {
+    label: string;
+    onClick: () => void;
+  };
+  onDismiss?: () => void;
+  onAutoClose?: () => void;
+};
 
 /**
- * Unified Toast Service
- * 
- * This service standardizes toast notifications across the application by
- * providing a consistent interface that works with both Sonner and Shadcn toasts.
- * 
- * The default implementation uses Sonner for simplicity and better animations,
- * but falls back to Shadcn toasts if needed.
+ * Creates a unified toast service that works with both Sonner and Shadcn toast systems
  */
 class ToastService {
-  // Default to Sonner as primary toast provider
-  private useSonner = true;
-  
-  // Storage for loading toast IDs to allow dismissal
-  private loadingToasts = new Map<string, string|number>();
+  private shadcnToast?: ReturnType<typeof useToast>;
 
   /**
-   * Show a toast notification
+   * Set the Shadcn toast hook reference
    */
-  show(title: string, options?: ToastOptions) {
-    if (this.useSonner) {
-      return this.showSonnerToast(title, options);
-    } else {
-      return this.showShadcnToast(title, options);
+  setShadcnToast(toast: ReturnType<typeof useToast>) {
+    this.shadcnToast = toast;
+  }
+
+  /**
+   * Generic method to show a toast with specified type
+   */
+  showToast(message: string, type: ToastType = "default", options: ToastOptions = {}) {
+    const { description, duration, action, onDismiss, onAutoClose } = options;
+
+    // Use Sonner for modern components
+    switch (type) {
+      case "success":
+        return sonnerToast.success(message, { description, duration, action, onDismiss, onAutoClose });
+      case "error":
+        return sonnerToast.error(message, { description, duration, action, onDismiss, onAutoClose });
+      case "warning":
+        return sonnerToast.warning(message, { description, duration, action, onDismiss, onAutoClose });
+      case "info":
+        return sonnerToast.info(message, { description, duration, action, onDismiss, onAutoClose });
+      case "loading":
+        return sonnerToast.loading(message, { description });
+      default:
+        return sonnerToast(message, { description, duration, action, onDismiss, onAutoClose });
     }
   }
 
   /**
-   * Show a success toast notification
+   * Show default toast
    */
-  success(title: string, options?: Omit<ToastOptions, 'variant'>) {
-    return this.show(title, { ...options, variant: 'success' });
-  }
+  default(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast(message, options);
 
-  /**
-   * Show an error toast notification
-   */
-  error(title: string, options?: Omit<ToastOptions, 'variant'>) {
-    return this.show(title, { ...options, variant: 'destructive' });
-  }
-
-  /**
-   * Show a warning toast notification
-   */
-  warning(title: string, options?: Omit<ToastOptions, 'variant'>) {
-    return this.show(title, { ...options, variant: 'warning' });
-  }
-
-  /**
-   * Show an info toast notification
-   */
-  info(title: string, options?: Omit<ToastOptions, 'variant'>) {
-    return this.show(title, { ...options, variant: 'info' });
-  }
-
-  /**
-   * Show a loading toast notification
-   * Returns an ID that can be used to dismiss the toast
-   */
-  loading(title: string, options?: Omit<ToastOptions, 'variant'>) {
-    const id = Math.random().toString(36).substring(2, 9);
-    
-    if (this.useSonner) {
-      const toastId = sonnerToast.loading(title, { 
-        description: options?.description,
-        duration: options?.duration || 100000,  // Long duration for loading toasts
-        position: options?.position
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
       });
-      this.loadingToasts.set(id, toastId);
-    } else {
-      // For shadcn, we use the standard toast but remember the ID
-      const result = this.show(title, { 
-        ...options, 
-        variant: 'default',
-        duration: options?.duration || 100000  // Long duration for loading toasts
-      });
-      // Check if result has an id property before accessing it
-      const resultId = typeof result === 'object' && result !== null && 'id' in result ? result.id : '';
-      this.loadingToasts.set(id, resultId);
     }
-    
+
     return id;
   }
 
   /**
-   * Dismiss a toast by ID
+   * Show success toast
    */
-  dismiss(id: string) {
-    if (this.useSonner) {
-      if (this.loadingToasts.has(id)) {
-        // Dismiss the specific loading toast
-        const toastId = this.loadingToasts.get(id);
-        if (toastId) sonnerToast.dismiss(toastId);
-        this.loadingToasts.delete(id);
-      } else {
-        // If it's not a stored loading toast, try to dismiss directly
-        sonnerToast.dismiss(id);
-      }
-    } else {
-      // Using shadcn toast
-      const { dismiss } = shadcnToast();
-      
-      if (this.loadingToasts.has(id)) {
-        const toastId = this.loadingToasts.get(id);
-        // For shadcn toast - we need to pass the ID string correctly
-        if (toastId) {
-          dismiss(toastId.toString());
-        }
-        this.loadingToasts.delete(id);
-      } else {
-        // For shadcn toast - always pass the id string 
-        dismiss(id);
-      }
+  success(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast.success(message, options);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
+        variant: "success",
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Show error toast
+   */
+  error(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast.error(message, options);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
+        variant: "destructive",
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Show warning toast
+   */
+  warning(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast.warning(message, options);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
+        variant: "destructive",
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Show info toast
+   */
+  info(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast.info(message, options);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Show loading toast
+   */
+  loading(message: string, options: ToastOptions = {}) {
+    // For Sonner
+    const id = sonnerToast.loading(message, options);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration || 100000, // Long duration for loading toasts
+      });
+    }
+
+    return id;
+  }
+
+  /**
+   * Dismiss toast by ID
+   */
+  dismiss(toastId: string | number) {
+    // For Sonner
+    sonnerToast.dismiss(toastId);
+
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.dismiss(toastId as string);
     }
   }
 
   /**
-   * Set the toast provider to use
+   * Custom toast with specified variant
    */
-  setProvider(provider: 'sonner' | 'shadcn') {
-    this.useSonner = provider === 'sonner';
-  }
+  custom(message: string, options: ToastOptions & { variant?: string } = {}) {
+    // For Sonner
+    const id = sonnerToast(message, options);
 
-  /**
-   * Get the currently active toast provider
-   */
-  getProvider(): 'sonner' | 'shadcn' {
-    return this.useSonner ? 'sonner' : 'shadcn';
-  }
-
-  /**
-   * Show a toast using Sonner
-   */
-  private showSonnerToast(title: string, options?: ToastOptions) {
-    const { description, duration, position, variant } = options || {};
-    
-    switch (variant) {
-      case 'success':
-        return sonnerToast.success(title, { description, duration, position });
-      case 'destructive':
-        return sonnerToast.error(title, { description, duration, position });
-      case 'warning':
-        return sonnerToast.warning(title, { description, duration, position });  
-      case 'info':
-        // Note: Sonner doesn't have a direct info method, so we use a custom one
-        return sonnerToast(title, { 
-          description, 
-          duration, 
-          position,
-          // For info style, we can add a custom style if needed
-          className: "bg-blue-50 border-blue-200"
-        });
-      default:
-        return sonnerToast(title, { description, duration, position });
+    // For Shadcn (if available)
+    if (this.shadcnToast) {
+      this.shadcnToast.toast({
+        title: message,
+        description: options.description,
+        duration: options.duration,
+      });
     }
+
+    return id;
   }
 
   /**
-   * Show a toast using Shadcn toast
+   * Promise toast that resolves/rejects based on promise outcome
    */
-  private showShadcnToast(title: string, options?: ToastOptions) {
-    const { description, action, variant } = options || {};
-    
-    // Map our variants to shadcn's limited variants
-    let shadcnVariant: "default" | "destructive" = "default";
-    if (variant === "destructive") {
-      shadcnVariant = "destructive";
-    }
-    
-    return shadcnToast({
-      title,
-      description,
-      action, // Make sure action is properly typed as ToastActionElement
-      variant: shadcnVariant,
-    });
+  promise<T>(promise: Promise<T>, messages: {
+    loading: string;
+    success: string;
+    error: string;
+  }, options: ToastOptions = {}) {
+    return sonnerToast.promise(promise, messages, options);
   }
 }
 
-// Export a singleton instance
 export const toastService = new ToastService();

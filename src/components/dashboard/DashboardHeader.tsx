@@ -1,15 +1,13 @@
-
 import React, { useState } from 'react';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
 import { format } from 'date-fns';
-import { getRefreshStatus } from "@/utils/dashboardExportUtils";
-
 import { 
   exportDashboardData, 
   refreshDashboardData, 
-  generateWeeklyReview
-} from "@/utils/dashboardExportUtils";
+  generateWeeklyReview,
+  getRefreshStatus
+} from "@/utils/dashboard";
 
 // Import refactored components
 import DashboardHeading from "./header/DashboardHeading";
