@@ -234,7 +234,7 @@ class ToastService {
    */
   private createToastAction(action: { label: string; onClick: () => void }) {
     return (
-      <ToastAction altText={action.label} onClick={action.onClick}>
+      <ToastAction onClick={action.onClick}>
         {action.label}
       </ToastAction>
     );
