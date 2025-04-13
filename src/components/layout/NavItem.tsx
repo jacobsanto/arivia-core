@@ -23,7 +23,7 @@ const NavItem = ({
       }
     >
       {icon}
-      <span className="hidden text-xs mt-1">{label}</span>
+      <span className="text-xs mt-1">{label}</span>
     </NavLink>
   );
 };

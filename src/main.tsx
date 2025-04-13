@@ -5,10 +5,12 @@ import './index.css'
 import { UserProvider } from './contexts/UserContext'
 import { ToastProvider } from './contexts/ToastContext'
 
-createRoot(document.getElementById("root")!).render(
+// Make sure we have a root element
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Failed to find the root element");
+
+createRoot(rootElement).render(
   <UserProvider>
-    <ToastProvider>
-      <App />
-    </ToastProvider>
+    <App />
   </UserProvider>
 );
