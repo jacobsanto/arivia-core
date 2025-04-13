@@ -1,7 +1,8 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { Toaster } from "sonner";
 import { HelmetProvider } from "react-helmet-async";
+import { ToastProvider } from "@/contexts/ToastContext";
 
 // Layouts
 import MainLayout from "@/components/layout/MainLayout";
@@ -17,15 +18,15 @@ import TeamChat from "@/pages/TeamChat";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 
-// New Admin Pages
+// Admin Pages
 import AdminUsers from "@/pages/AdminUsers";
 import AdminPermissions from "@/pages/AdminPermissions";
 import AdminSettings from "@/pages/AdminSettings";
 
 function App() {
   return (
-    <>
-      <HelmetProvider>
+    <HelmetProvider>
+      <ToastProvider>
         <Router>
           <Routes>
             <Route path="/" element={<MainLayout />}>
@@ -49,9 +50,8 @@ function App() {
             </Route>
           </Routes>
         </Router>
-        <Toaster richColors position="top-right" />
-      </HelmetProvider>
-    </>
+      </ToastProvider>
+    </HelmetProvider>
   );
 }
 
