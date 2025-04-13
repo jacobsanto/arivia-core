@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
 import { Button } from "@/components/ui/button";
-import { Calendar, ArrowRight, CalendarClock, CalendarDays, Wrench, Package, PieChart } from "lucide-react";
+import { Calendar, ArrowRight, CalendarClock, CalendarDays, Wrench, Package, PieChart, BedDouble, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSwipe } from "@/hooks/use-swipe";
 import { SwipeIndicator } from "@/components/ui/swipe-indicator";
 import { toast } from "sonner";
+import TaskCreationDialogs from "./TaskCreationDialogs";
+import { useTasks } from "@/hooks/useTasks";
+import { useMaintenanceTasks } from "@/hooks/useMaintenanceTasks";
 
 interface MobileDashboardProps {
   dashboardData: any;
@@ -23,6 +26,14 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<string>("today");
   const [showSwipeHint, setShowSwipeHint] = useState(true);
+  
+  // Task creation dialog states
+  const [isCleaningDialogOpen, setIsCleaningDialogOpen] = useState(false);
+  const [isMaintenanceDialogOpen, setIsMaintenanceDialogOpen] = useState(false);
+  
+  // Get task handlers from hooks
+  const { handleCreateTask: handleCleaningTaskCreate } = useTasks();
+  const { handleCreateTask: handleMaintenanceTaskCreate } = useMaintenanceTasks();
   
   // Get upcoming tasks, limited to 3 for mobile view
   const upcomingTasks = dashboardData.upcomingTasks?.slice(0, 3) || [];
@@ -73,6 +84,16 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       {/* Stats Cards */}
       <DashboardMetrics data={dashboardData} />
       
+      {/* Task Creation Dialogs */}
+      <TaskCreationDialogs 
+        isCleaningDialogOpen={isCleaningDialogOpen}
+        setIsCleaningDialogOpen={setIsCleaningDialogOpen}
+        isMaintenanceDialogOpen={isMaintenanceDialogOpen}
+        setIsMaintenanceDialogOpen={setIsMaintenanceDialogOpen}
+        onCleaningTaskCreate={handleCleaningTaskCreate}
+        onMaintenanceTaskCreate={handleMaintenanceTaskCreate}
+      />
+      
       {/* Tabs for Today's Agenda and Quick Actions */}
       <Tabs defaultValue="today" className="w-full" value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="w-full grid grid-cols-2">
@@ -117,6 +138,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
         
         <TabsContent value="actions" className="mt-4">
           <div className="grid grid-cols-2 gap-3">
+            {/* Quick access buttons */}
             <Button 
               variant="outline" 
               className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
@@ -137,6 +159,29 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
                 <Wrench className="h-4 w-4 text-amber-600" />
               </div>
               <span className="text-xs">Maintenance</span>
+            </Button>
+            
+            {/* New task creation buttons */}
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
+              onClick={() => setIsCleaningDialogOpen(true)}
+            >
+              <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <BedDouble className="h-4 w-4 text-blue-600" />
+              </div>
+              <span className="text-xs">New Cleaning Task</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1"
+              onClick={() => setIsMaintenanceDialogOpen(true)}
+            >
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                <Wrench className="h-4 w-4 text-amber-600" />
+              </div>
+              <span className="text-xs">New Maintenance Task</span>
             </Button>
             
             <Button 
