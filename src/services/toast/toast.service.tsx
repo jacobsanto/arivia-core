@@ -1,8 +1,10 @@
 
 import { toast as sonnerToast } from "sonner";
-import { toast } from "@/hooks/use-toast";
+import { useToast, toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import React from "react";
+import { type ToastActionElement, type ToastProps } from "@/components/ui/toast";
+import { type ToasterToast } from "@/hooks/use-toast";
 
 // Define the available types for toast
 type ToastType = "default" | "success" | "warning" | "error" | "loading" | "info";
@@ -24,7 +26,7 @@ interface LoadingToastOptions extends ToastOptions {
 }
 
 // Type for toast ID returned by different toast libraries
-type ToastId = string | number | { id: string; dismiss: () => void; update: (props: any) => void; };
+type ToastId = string | number;
 
 /**
  * ToastService is a unified service for displaying toast notifications
@@ -56,12 +58,13 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
+      return id;
     }
   }
 
@@ -79,13 +82,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         variant: "default", // Shadcn doesn't have success variant
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
+      return id;
     }
   }
 
@@ -104,12 +108,13 @@ class ToastService {
       });
     } else {
       // Shadcn doesn't have warning variant, use default
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
+      return id;
     }
   }
 
@@ -127,13 +132,14 @@ class ToastService {
         position: options?.position as any,
       });
     } else {
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         variant: "destructive",
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
+      return id;
     }
   }
 
@@ -153,12 +159,13 @@ class ToastService {
       });
     } else {
       // Shadcn doesn't have native loading, use default with longer duration
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         duration: options?.duration || Infinity, // Loading toasts should stay until dismissed
         action: options?.action ? this.createToastAction(options.action) : undefined,
       });
+      return id;
     }
   }
 
@@ -177,12 +184,13 @@ class ToastService {
       });
     } else {
       // Shadcn doesn't have info variant, use default
-      return toast({
+      const { id } = toast({
         title,
         description: options?.description,
         action: options?.action ? this.createToastAction(options.action) : undefined,
         duration: options?.duration,
       });
+      return id;
     }
   }
 
@@ -198,10 +206,11 @@ class ToastService {
         description: options?.description,
       });
     } else {
-      // Shadcn doesn't have a direct update method
+      // Shadcn doesn't have a direct update method on the imported toast
       // For Shadcn, dismiss the old toast and create a new one
-      toast.dismiss(id.toString());
-      toast({
+      const { toast: toastFn } = useToast();
+      toastFn.dismiss?.(id.toString());
+      toastFn({
         title,
         description: options?.description,
         duration: options?.duration,
@@ -221,11 +230,12 @@ class ToastService {
         sonnerToast.dismiss();
       }
     } else {
-      // For Shadcn/ui
+      // For Shadcn/ui we need to use the hook's dismiss method directly
+      const { toast: toastFn } = useToast();
       if (id) {
-        toast.dismiss(id.toString());
+        toastFn.dismiss?.(id.toString());
       } else {
-        toast.dismiss();
+        toastFn.dismiss?.();
       }
     }
   }
@@ -235,9 +245,9 @@ class ToastService {
    * @param action The action configuration
    * @returns A ToastAction component
    */
-  private createToastAction(action: { label: string; onClick: () => void }) {
+  private createToastAction(action: { label: string; onClick: () => void }): ToastActionElement {
     return (
-      <ToastAction onClick={action.onClick}>
+      <ToastAction altText={action.label} onClick={action.onClick}>
         {action.label}
       </ToastAction>
     );

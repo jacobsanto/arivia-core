@@ -46,9 +46,7 @@ export const exportDashboardData = async (
       case 'csv':
         exportToCSV(exportData, filename);
         // Dismiss loading toast and show success
-        if (loadingToastId) {
-          toastService.dismiss(typeof loadingToastId === 'string' ? loadingToastId : loadingToastId.toString());
-        }
+        toastService.dismiss(loadingToastId);
         toastService.success("Dashboard exported as CSV", {
           description: `Data has been exported as ${filename}.csv`
         });
@@ -56,9 +54,7 @@ export const exportDashboardData = async (
       case 'excel':
         // In a real app, would use a proper Excel export library
         exportToCSV(exportData, filename); // Using CSV as Excel substitute for now
-        if (loadingToastId) {
-          toastService.dismiss(typeof loadingToastId === 'string' ? loadingToastId : loadingToastId.toString());
-        }
+        toastService.dismiss(loadingToastId);
         toastService.success("Dashboard exported as Excel", {
           description: `Data has been exported as ${filename}.csv`
         });
@@ -67,9 +63,7 @@ export const exportDashboardData = async (
         // In a real implementation, we'd generate a PDF
         // For now we'll use the print functionality as a stand-in
         preparePrint(exportData, `Arivia Dashboard - ${propertyFilter}`);
-        if (loadingToastId) {
-          toastService.dismiss(typeof loadingToastId === 'string' ? loadingToastId : loadingToastId.toString());
-        }
+        toastService.dismiss(loadingToastId);
         toastService.success("Dashboard report prepared as PDF", {
           description: "Your report is ready to print or save as PDF"
         });
