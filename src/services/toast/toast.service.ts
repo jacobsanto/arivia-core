@@ -26,6 +26,9 @@ interface ToastOptions {
 class ToastService {
   // Default to Sonner as primary toast provider
   private useSonner = true;
+  
+  // Storage for loading toast IDs to allow dismissal
+  private loadingToasts = new Map<string, string|number>();
 
   /**
    * Show a toast notification
@@ -64,6 +67,60 @@ class ToastService {
    */
   info(title: string, options?: Omit<ToastOptions, 'variant'>) {
     return this.show(title, { ...options, variant: 'info' });
+  }
+
+  /**
+   * Show a loading toast notification
+   * Returns an ID that can be used to dismiss the toast
+   */
+  loading(title: string, options?: Omit<ToastOptions, 'variant'>) {
+    const id = Math.random().toString(36).substring(2, 9);
+    
+    if (this.useSonner) {
+      const toastId = sonnerToast.loading(title, { 
+        description: options?.description,
+        duration: options?.duration || 100000,  // Long duration for loading toasts
+        position: options?.position
+      });
+      this.loadingToasts.set(id, toastId);
+    } else {
+      // For shadcn, we use the standard toast but remember the ID
+      const toast = this.show(title, { 
+        ...options, 
+        variant: 'default',
+        duration: options?.duration || 100000  // Long duration for loading toasts
+      });
+      this.loadingToasts.set(id, toast?.id || '');
+    }
+    
+    return id;
+  }
+
+  /**
+   * Dismiss a toast by ID
+   */
+  dismiss(id: string) {
+    if (this.useSonner) {
+      if (this.loadingToasts.has(id)) {
+        // Dismiss the specific loading toast
+        const toastId = this.loadingToasts.get(id);
+        if (toastId) sonnerToast.dismiss(toastId);
+        this.loadingToasts.delete(id);
+      } else {
+        // If it's not a stored loading toast, try to dismiss directly
+        sonnerToast.dismiss(id);
+      }
+    } else {
+      // Using shadcn toast
+      const { dismiss } = shadcnToast();
+      if (this.loadingToasts.has(id)) {
+        const toastId = this.loadingToasts.get(id);
+        if (toastId) dismiss(toastId.toString());
+        this.loadingToasts.delete(id);
+      } else {
+        dismiss(id);
+      }
+    }
   }
 
   /**
