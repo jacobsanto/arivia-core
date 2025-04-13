@@ -27,10 +27,18 @@ export const useDashboard = () => {
       toastService.error("Failed to load dashboard data", {
         description: "Please try refreshing the page"
       });
+      // Set default data structure even on error to prevent null reference issues
+      setDashboardData({
+        properties: { total: 0, occupied: 0, vacant: 0 },
+        tasks: { total: 0, completed: 0, pending: 0 },
+        maintenance: { total: 0, critical: 0, standard: 0 },
+        bookings: [],
+        upcomingTasks: []
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProperty]); // Remove dateRange dependency since it's not used directly
+  }, [selectedProperty]);
   
   useEffect(() => {
     fetchDashboardData();

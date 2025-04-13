@@ -23,7 +23,9 @@ const Home = () => {
       <Helmet>
         <title>Dashboard - Arivia Villas</title>
       </Helmet>
-      <DashboardContent dashboardData={dashboardData} />
+      <div className="space-y-6">
+        <DashboardContent dashboardData={dashboardData} />
+      </div>
     </>
   );
 };

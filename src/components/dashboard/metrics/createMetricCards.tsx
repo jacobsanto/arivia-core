@@ -13,7 +13,7 @@ export type MetricCard = {
     isPositive: boolean;
     icon?: React.ReactNode;
   };
-  variant?: "default" | "success" | "destructive" | "warning" | "info";
+  variant?: "default" | "accent" | "success" | "destructive" | "warning" | "info";
 };
 
 // Create metric cards from data
