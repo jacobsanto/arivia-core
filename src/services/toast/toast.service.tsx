@@ -23,6 +23,9 @@ interface LoadingToastOptions extends ToastOptions {
   id?: string;
 }
 
+// Type for toast ID returned by different toast libraries
+type ToastId = string | number | { id: string; dismiss: () => void; update: (props: any) => void; };
+
 /**
  * ToastService is a unified service for displaying toast notifications
  * It supports both Sonner and Shadcn/ui toast implementations
@@ -44,7 +47,7 @@ class ToastService {
    * @param title The title of the toast
    * @param options Toast options
    */
-  public show(title: string, options?: ToastOptions) {
+  public show(title: string, options?: ToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast(title, {
         description: options?.description,
@@ -67,7 +70,7 @@ class ToastService {
    * @param title The title of the toast
    * @param options Toast options
    */
-  public success(title: string, options?: ToastOptions) {
+  public success(title: string, options?: ToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast.success(title, {
         description: options?.description,
@@ -91,7 +94,7 @@ class ToastService {
    * @param title The title of the toast
    * @param options Toast options
    */
-  public warning(title: string, options?: ToastOptions) {
+  public warning(title: string, options?: ToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast.warning(title, {
         description: options?.description,
@@ -115,7 +118,7 @@ class ToastService {
    * @param title The title of the toast
    * @param options Toast options
    */
-  public error(title: string, options?: ToastOptions) {
+  public error(title: string, options?: ToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast.error(title, {
         description: options?.description,
@@ -140,7 +143,7 @@ class ToastService {
    * @param options Toast options
    * @returns The toast ID that can be used to dismiss or update the toast
    */
-  public loading(title: string, options?: LoadingToastOptions) {
+  public loading(title: string, options?: LoadingToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast.loading(title, {
         description: options?.description,
@@ -164,7 +167,7 @@ class ToastService {
    * @param title The title of the toast
    * @param options Toast options
    */
-  public info(title: string, options?: ToastOptions) {
+  public info(title: string, options?: ToastOptions): ToastId {
     if (this.useSonner) {
       return sonnerToast.info(title, {
         description: options?.description,
@@ -189,7 +192,7 @@ class ToastService {
    * @param title The new title
    * @param options The new options
    */
-  public update(id: string | number, title: string, options?: ToastOptions) {
+  public update(id: ToastId, title: string, options?: ToastOptions): void {
     if (this.useSonner) {
       sonnerToast.update(id, {
         description: options?.description,
@@ -210,7 +213,7 @@ class ToastService {
    * Dismisses a specific toast or all toasts
    * @param id The ID of the toast to dismiss, or undefined to dismiss all
    */
-  public dismiss(id?: string | number) {
+  public dismiss(id?: ToastId): void {
     if (this.useSonner) {
       if (id) {
         sonnerToast.dismiss(id);
