@@ -235,7 +235,7 @@ const PropertyMaintenanceReport = ({
           <h3 className="text-lg font-medium mb-4 text-center">Maintenance Tasks by Property</h3>
           {isLoading ? <div className="h-80 flex items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div> : <div className="h-80 py-[150px] my-[19px] mx-0 px-0">
+            </div> : <div className="h-0 py-[100px] my-[19px] mx-0 px-0">
               <ChartContainer config={{
             completed: {
               label: "Total Completed",
