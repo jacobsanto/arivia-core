@@ -1,28 +1,35 @@
 
+import { useState, useEffect, useMemo } from "react";
 
-import * as React from "react"
-
-const MOBILE_BREAKPOINT = 768
+const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+  // Initialize with undefined to prevent hydration mismatch
+  const [width, setWidth] = useState<number | undefined>(undefined);
+  
+  useEffect(() => {
+    // Handler to call on window resize
+    function handleResize() {
+      // Set window width to state
+      setWidth(window.innerWidth);
     }
     
-    // Use addEventListener as matchMedia.addListener is deprecated
-    mql.addEventListener("change", onChange)
+    // Add event listener
+    window.addEventListener("resize", handleResize);
     
-    // Set initial value
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    // Initial setup
+    handleResize();
     
-    // Cleanup listener on component unmount
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
+    // Remove event listener on cleanup
+    return () => window.removeEventListener("resize", handleResize);
+  }, []); // Empty array ensures this only runs on mount and unmount
+  
+  // Memoize the result to avoid unnecessary re-renders
+  const isMobile = useMemo(() => {
+    // Only calculate if width is defined
+    if (width === undefined) return false;
+    return width < MOBILE_BREAKPOINT;
+  }, [width]);
 
-  return isMobile !== undefined ? isMobile : false
+  return isMobile;
 }
-

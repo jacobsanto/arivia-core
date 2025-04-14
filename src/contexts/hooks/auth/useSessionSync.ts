@@ -13,19 +13,22 @@ export const useSessionSync = (
 ) => {
   // Initialize auth state
   const initializeSession = useCallback(async () => {
-    console.log("Initializing session...");
     try {
+      // First check local storage for faster initial render
+      const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
+      if (storedUser) {
+        setUser(storedUser);
+        setLastAuthTime(storedAuthTime);
+      }
+      
+      // Then check with Supabase
       const { data } = await supabase.auth.getSession();
       
       if (data.session) {
-        // User authenticated with Supabase
-        console.log("Found existing session:", data.session.user.id);
-        
         // Set the full session with the complete Supabase User object
         setSession(data.session);
         
         // Convert to our User format - basic info only
-        // Detailed profile data will be fetched separately
         const userData: User = {
           id: data.session.user.id,
           email: data.session.user.email || '',
@@ -36,93 +39,68 @@ export const useSessionSync = (
         
         setUser(userData);
         setLastAuthTime(Date.now());
-        console.log("User state initialized:", userData);
         
-        // Do NOT fetch profile data immediately - this causes race conditions
-        // We'll rely on the auth state change event to fetch profile data
-      } else {
-        console.log("No existing session found");
-        // Fall back to local storage for development
-        const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
-        if (storedUser) {
-          console.log("Found user in local storage:", storedUser.id);
-          setUser(storedUser);
-          setLastAuthTime(storedAuthTime);
-        }
+        // Fetch additional profile data if needed
+        setTimeout(() => {
+          fetchProfileData(data.session.user.id).catch(console.error);
+        }, 100);
       }
     } catch (error) {
       console.error("Error during session initialization:", error);
-      // Fall back to local storage in case of error
-      const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
-      if (storedUser) {
-        console.log("Using fallback from local storage due to error");
-        setUser(storedUser);
-        setLastAuthTime(storedAuthTime);
-      }
     } finally {
+      // Mark loading as complete regardless of outcome
       setIsLoading(false);
     }
   }, [setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
 
   useEffect(() => {
-    console.log("Setting up auth state listener...");
+    // Set loading state first
     setIsLoading(true);
 
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, supaSession) => {
+      (event, session) => {
         console.log("Auth state change:", event);
         
         // Handle session change
-        if (supaSession) {
-          console.log("Session user:", supaSession.user.id);
-          
+        if (session) {
           // Set the complete session object
-          setSession(supaSession);
+          setSession(session);
           
-          // Convert Supabase user to our User format - basic info only
+          // Convert Supabase user to our User format
           const userData: User = {
-            id: supaSession.user.id,
-            email: supaSession.user.email || '',
-            name: supaSession.user.user_metadata?.name || supaSession.user.email?.split('@')[0] || 'User',
-            role: supaSession.user.user_metadata?.role as UserRole || 'property_manager',
-            avatar: supaSession.user.user_metadata?.avatar || "/placeholder.svg"
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+            role: session.user.user_metadata?.role as UserRole || 'property_manager',
+            avatar: session.user.user_metadata?.avatar || "/placeholder.svg"
           };
           
           setUser(userData);
           setLastAuthTime(Date.now());
-          console.log("User state updated:", userData);
           
           // For development, update mock storage too
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
-          // Fetch profile data with a slight delay to avoid auth deadlock
-          // Only fetch if the event is SIGNED_IN or TOKEN_REFRESHED
+          // Fetch profile data with a delay to avoid auth deadlock
           if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             setTimeout(() => {
-              fetchProfileData(supaSession.user.id).catch(err => {
-                console.error("Error fetching profile data:", err);
-              });
-            }, 500);
+              fetchProfileData(session.user.id);
+            }, 100);
           }
-        } else {
-          console.log("No session in auth state change");
-          if (event === 'SIGNED_OUT') {
-            console.log("User signed out, clearing state");
-            setUser(null);
-            setSession(null);
-          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setSession(null);
         }
       }
     );
     
-    // THEN check for existing session
+    // Initialize session
     initializeSession();
     
     return () => {
-      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession, setIsLoading]);
+  }, [initializeSession, setIsLoading, setLastAuthTime, setSession, setUser, fetchProfileData]);
 };

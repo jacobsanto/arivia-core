@@ -1,49 +1,28 @@
 
-import React, { useState } from "react";
-import { Outlet } from "react-router-dom";
-import Header from "./Header";
-import Sidebar from "./Sidebar";
-import MobileSidebar from "./MobileSidebar";
-import { useIsMobile } from "@/hooks/use-mobile";
+import React from "react";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
+import { Loader2 } from "lucide-react";
 
 const MainLayout = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const isMobile = useIsMobile();
-  const { user } = useUser();
+  const { user, isLoading } = useUser();
+  const location = useLocation();
   
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(prev => !prev);
-  };
-  
-  // If no user is logged in, just render the outlet (login/signup pages will handle redirects)
-  if (!user) {
-    return <Outlet />;
+  // Show loading state while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
   }
   
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header onMobileMenuToggle={toggleMobileMenu} />
-      
-      <div className="flex flex-1">
-        {/* Desktop sidebar */}
-        <Sidebar />
-        
-        {/* Mobile sidebar */}
-        <MobileSidebar 
-          isOpen={mobileMenuOpen} 
-          onClose={() => setMobileMenuOpen(false)} 
-        />
-        
-        {/* Main content */}
-        <main className="flex-1 bg-background p-6 overflow-auto">
-          <div className="container mx-auto max-w-7xl">
-            <Outlet />
-          </div>
-        </main>
-      </div>
-    </div>
-  );
+  // If authenticated and trying to access auth pages, redirect to dashboard
+  if (user && location.pathname === '/login') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Outlet />;
 };
 
 export default MainLayout;
