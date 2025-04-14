@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
@@ -6,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
 import { LoginInfoPanel } from "@/components/auth/LoginInfoPanel";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
@@ -99,4 +97,3 @@ const Login = () => {
 };
 
 export default Login;
-
