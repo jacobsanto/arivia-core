@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { User } from "@/types/auth";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import MobileUserCard from "../MobileUserCard";
+import MobileUserCard from "../mobile-user-card";
 import UserTableRow from "./UserTableRow";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -40,7 +40,6 @@ const UserRolesList: React.FC<UserRolesListProps> = ({
     return onEditPermissions(user);
   };
 
-  // Loading skeletons
   if (isLoading) {
     if (isMobile) {
       return (
@@ -88,7 +87,6 @@ const UserRolesList: React.FC<UserRolesListProps> = ({
     );
   }
   
-  // Mobile view - Card-based layout
   if (isMobile) {
     return (
       <div className="space-y-2 px-[3px]">
@@ -111,7 +109,6 @@ const UserRolesList: React.FC<UserRolesListProps> = ({
     );
   }
   
-  // Desktop view - Table-based layout
   return (
     <Table>
       <TableHeader>
