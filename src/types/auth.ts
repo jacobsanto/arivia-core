@@ -13,12 +13,12 @@ export interface User {
   };
 }
 
-// Fixing the Session interface - no longer extending SupabaseSession to avoid conflicts
+// Updated Session interface to match Supabase's Session requirements
 export interface Session {
   access_token: string;
   token_type: string;
   expires_in: number;
-  refresh_token?: string;
+  refresh_token: string; // Changed from optional to required
   user: {
     id: string;
     email: string;

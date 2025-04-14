@@ -25,7 +25,7 @@ export const useSessionSync = (
           access_token: data.session.access_token,
           token_type: data.session.token_type,
           expires_in: data.session.expires_in,
-          refresh_token: data.session.refresh_token,
+          refresh_token: data.session.refresh_token, // This is now required
           user: {
             id: data.session.user.id,
             email: data.session.user.email || '',
@@ -96,7 +96,7 @@ export const useSessionSync = (
             access_token: supaSession.access_token,
             token_type: supaSession.token_type,
             expires_in: supaSession.expires_in,
-            refresh_token: supaSession.refresh_token,
+            refresh_token: supaSession.refresh_token, // This is now required
             user: {
               id: supaSession.user.id,
               email: supaSession.user.email || '',
