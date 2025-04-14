@@ -25,7 +25,8 @@ export const useUserDeletion = () => {
       if (result) {
         console.log("User deleted successfully");
         toast.success("User deleted successfully");
-        // The UI will be updated via the real-time subscription in useUserData
+        
+        // No need to update the users array here - will happen via realtime subscription
         setUserToDelete(null);
         return true;
       } else {

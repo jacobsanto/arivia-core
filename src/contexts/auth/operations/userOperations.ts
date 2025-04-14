@@ -29,24 +29,34 @@ export const updateAvatar = async (
       }
       
       console.log("Profile updated successfully in Supabase");
-    }
-    
-    // Update local state
-    const updatedUsers = users.map(u => 
-      u.id === userId ? { ...u, avatar: avatarUrl } : u
-    );
-    
-    setUsers(updatedUsers);
-    
-    // If the current user's avatar was updated
-    if (currentUser?.id === userId) {
-      setUser({ ...currentUser, avatar: avatarUrl });
       
-      // Update localStorage for offline support
-      localStorage.setItem("user", JSON.stringify({ ...currentUser, avatar: avatarUrl }));
+      // No need to update local state here as the real-time subscription will handle it
+      // But we'll update the current user immediately for a better UX
+      if (currentUser?.id === userId) {
+        setUser({ ...currentUser, avatar: avatarUrl });
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, avatar: avatarUrl }));
+      }
+      
+      return true;
+    } else {
+      // Offline mode - update local state only
+      // Update local state
+      const updatedUsers = users.map(u => 
+        u.id === userId ? { ...u, avatar: avatarUrl } : u
+      );
+      
+      setUsers(updatedUsers);
+      
+      // If the current user's avatar was updated
+      if (currentUser?.id === userId) {
+        setUser({ ...currentUser, avatar: avatarUrl });
+        
+        // Update localStorage for offline support
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, avatar: avatarUrl }));
+      }
+      
+      return true;
     }
-    
-    return true;
   } catch (error) {
     console.error("Error updating avatar:", error);
     toastService.error("Failed to update avatar", {
@@ -97,10 +107,9 @@ export const removeUser = async (
         
         console.log("Delete user function response:", data);
         
-        // Note: We no longer need to update the local state here
-        // as the realtime subscription will handle updating the users list
+        // Note: We no longer update the local state here as it will be handled by the 
+        // realtime subscription in useUserData.ts
         
-        toastService.success("User deleted successfully");
         return true;
       } catch (functionError) {
         console.error("Error calling delete-user function:", functionError);

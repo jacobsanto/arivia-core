@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
@@ -11,9 +11,6 @@ export const useSessionSync = (
   setIsLoading: (isLoading: boolean) => void,
   fetchProfileData: (userId: string) => Promise<boolean>
 ) => {
-  // Reference for profile fetch timeout
-  const profileFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   // Initialize auth state
   const initializeSession = useCallback(async () => {
     console.log("Initializing session...");
@@ -40,7 +37,8 @@ export const useSessionSync = (
       
       setSession(customSession);
       
-      // Convert to our User format
+      // Convert to our User format - basic info only
+      // Detailed profile data will be fetched separately
       const userData: User = {
         id: data.session.user.id,
         email: data.session.user.email || '',
@@ -52,8 +50,12 @@ export const useSessionSync = (
       setUser(userData);
       setLastAuthTime(Date.now());
       
-      // We no longer fetch profile data here to avoid redundancy
-      // The profile data will be fetched by the auth state change handler
+      // Fetch profile data with a slight delay to avoid blocking the UI
+      setTimeout(() => {
+        fetchProfileData(userData.id).catch(err => {
+          console.error("Error fetching initial profile data:", err);
+        });
+      }, 100);
     } else {
       // Fall back to local storage for development
       const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
@@ -64,7 +66,7 @@ export const useSessionSync = (
     }
     
     setIsLoading(false);
-  }, [setUser, setSession, setLastAuthTime, setIsLoading]);
+  }, [setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
 
   useEffect(() => {
     console.log("Setting up auth state listener...");
@@ -95,7 +97,7 @@ export const useSessionSync = (
           
           setSession(customSession);
           
-          // Convert Supabase user to our User format
+          // Convert Supabase user to our User format - basic info only
           const userData: User = {
             id: supaSession.user.id,
             email: supaSession.user.email || '',
@@ -111,20 +113,12 @@ export const useSessionSync = (
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
-          // Clear any existing timeout to avoid multiple fetches
-          if (profileFetchTimeoutRef.current) {
-            clearTimeout(profileFetchTimeoutRef.current);
-          }
-          
-          // Fetch profile data separately via setTimeout to avoid auth deadlock
-          // and to ensure we don't have duplicate fetches
-          profileFetchTimeoutRef.current = setTimeout(() => {
-            console.log("Fetching profile data for user:", supaSession.user.id);
+          // Fetch profile data with a slight delay to avoid auth deadlock
+          setTimeout(() => {
             fetchProfileData(supaSession.user.id).catch(err => {
               console.error("Error fetching profile data:", err);
             });
-            profileFetchTimeoutRef.current = null;
-          }, 200); // Increased delay for stability
+          }, 100);
         } else {
           setUser(null);
           setSession(null);
@@ -137,10 +131,6 @@ export const useSessionSync = (
     
     return () => {
       subscription.unsubscribe();
-      // Clear any pending profile fetch timeouts
-      if (profileFetchTimeoutRef.current) {
-        clearTimeout(profileFetchTimeoutRef.current);
-      }
     };
   }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession]);
 };

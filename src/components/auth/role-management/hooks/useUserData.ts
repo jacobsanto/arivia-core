@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const useUserData = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const subscriptionRef = useRef<any>(null);
 
-  // Fetch users from Supabase only once on component mount
+  // Fetch users from Supabase and set up realtime subscription
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -71,11 +72,12 @@ export const useUserData = () => {
       }
     };
     
+    // Fetch users initially
     fetchUsers();
     
     // Set up real-time subscription for profile changes
-    const profilesChannel = supabase
-      .channel('public:profiles')
+    const channel = supabase
+      .channel('public:profiles-changes')
       .on('postgres_changes', { 
         event: '*', 
         schema: 'public', 
@@ -85,11 +87,15 @@ export const useUserData = () => {
         
         // Handle different types of changes
         if (payload.eventType === 'INSERT') {
+          // Only add if not already in the list (avoid duplicates)
           const newProfile = payload.new;
-          // Add the new user to the list
-          setUsers(prevUsers => [
-            ...prevUsers,
-            {
+          setUsers(prevUsers => {
+            if (prevUsers.some(user => user.id === newProfile.id)) {
+              return prevUsers; // Already exists, no change
+            }
+            
+            // Add new user
+            const newUser: User = {
               id: newProfile.id,
               email: newProfile.email,
               name: newProfile.name || newProfile.email.split('@')[0],
@@ -97,14 +103,21 @@ export const useUserData = () => {
               secondaryRoles: newProfile.secondary_roles,
               avatar: newProfile.avatar || "/placeholder.svg",
               customPermissions: newProfile.custom_permissions
-            }
-          ]);
+            };
+            
+            const updatedUsers = [...prevUsers, newUser];
+            
+            // Update localStorage
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            
+            return updatedUsers;
+          });
         } 
         else if (payload.eventType === 'UPDATE') {
           const updatedProfile = payload.new;
           // Update the existing user
-          setUsers(prevUsers => 
-            prevUsers.map(user => 
+          setUsers(prevUsers => {
+            const updatedUsers = prevUsers.map(user => 
               user.id === updatedProfile.id 
                 ? {
                     ...user,
@@ -116,29 +129,39 @@ export const useUserData = () => {
                     customPermissions: updatedProfile.custom_permissions
                   }
                 : user
-            )
-          );
+            );
+            
+            // Update localStorage
+            localStorage.setItem("users", JSON.stringify(updatedUsers));
+            
+            return updatedUsers;
+          });
         }
         else if (payload.eventType === 'DELETE') {
           // Remove the deleted user
-          setUsers(prevUsers => 
-            prevUsers.filter(user => user.id !== payload.old.id)
-          );
+          setUsers(prevUsers => {
+            const filteredUsers = prevUsers.filter(user => user.id !== payload.old.id);
+            
+            // Update localStorage
+            localStorage.setItem("users", JSON.stringify(filteredUsers));
+            
+            return filteredUsers;
+          });
         }
-        
-        // Update localStorage with the latest user list
-        setUsers(prevState => {
-          localStorage.setItem("users", JSON.stringify(prevState));
-          return prevState;
-        });
       })
       .subscribe((status) => {
         console.log(`Profile subscription status: ${status}`);
       });
     
+    // Store subscription for cleanup
+    subscriptionRef.current = channel;
+    
     return () => {
       console.log("Cleaning up profile subscription");
-      supabase.removeChannel(profilesChannel);
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   }, []);
 
