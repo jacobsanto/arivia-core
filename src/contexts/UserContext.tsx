@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useUserState } from "./hooks";
@@ -33,8 +34,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUserProfile
   } = useUserState();
 
-  const handleLogin = async (email: string, password: string) => {
-    await login(email, password, setUser, setLastAuthTime, setIsLoading);
+  const handleLogin = async (email: string, password: string): Promise<void> => {
+    return await login(email, password, setUser, setLastAuthTime, setIsLoading);
   };
 
   const handleSignup = async (email: string, password: string, fullName: string) => {

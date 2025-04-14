@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types/auth";
 import { toast } from "sonner";
@@ -9,7 +8,7 @@ export const login = async (
   setUser: (user: User | null) => void,
   setLastAuthTime: (time: number) => void,
   setIsLoading: (isLoading: boolean) => void
-): Promise<{ success: boolean; message?: string }> => {
+): Promise<void> => {
   try {
     console.log(`Login operation started for: ${email} (${Date.now()})`);
     setIsLoading(true);
@@ -46,15 +45,10 @@ export const login = async (
       setLastAuthTime(authTime);
       localStorage.setItem("user", JSON.stringify(userData)); // Store user in localStorage for offline support
       console.log("Auth time updated:", authTime);
-      
-      return { success: true };
     } else {
       // Handle the case where authentication was successful but no user data returned
       console.error("Authentication successful but no user data returned");
-      return {
-        success: false,
-        message: "Authentication successful but failed to retrieve user data."
-      };
+      throw new Error("Authentication successful but failed to retrieve user data.");
     }
 
   } catch (error) {
@@ -76,10 +70,7 @@ export const login = async (
       description: errorMessage
     });
     
-    return {
-      success: false,
-      message: errorMessage
-    };
+    throw new Error(errorMessage);
   } finally {
     setIsLoading(false);
     console.log(`Login operation finished for: ${email} (${Date.now()})`);

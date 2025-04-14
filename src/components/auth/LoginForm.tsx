@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,15 +45,14 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
 
     try {
       console.log(`Submitting login for: ${loginData.email} (${Date.now()})`);
-      const result = await login(loginData.email, loginData.password);
       
-      if (result && result.success) {
-        toast.success("Login successful");
-        console.log("Login successful, navigating to dashboard");
-        navigate("/dashboard");
-      } else {
-        throw new Error(result?.message || "An unexpected error occurred during login");
-      }
+      await login(loginData.email, loginData.password);
+      
+      // If login doesn't throw an error, we can assume it was successful
+      toast.success("Login successful");
+      console.log("Login successful, navigating to dashboard");
+      navigate("/dashboard");
+      
     } catch (error) {
       console.error("Login form error:", error);
       
