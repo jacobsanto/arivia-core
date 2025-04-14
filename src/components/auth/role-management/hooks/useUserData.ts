@@ -8,7 +8,7 @@ export const useUserData = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch users from Supabase
+  // Fetch users from Supabase only once on component mount
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -27,7 +27,7 @@ export const useUserData = () => {
           }
           
           if (data) {
-            console.log(`Fetched ${data.length} users successfully`, data);
+            console.log(`Fetched ${data.length} users successfully`);
             // Convert to User type
             const mappedUsers: User[] = data.map((profile: any) => ({
               id: profile.id,
@@ -46,7 +46,7 @@ export const useUserData = () => {
             console.log("Updated localStorage with fetched users");
           }
         } else {
-          console.log("Device is offline, using localStorage or mock data");
+          console.log("Device is offline, using localStorage data");
           // Offline mode - use localStorage
           const storedUsers = localStorage.getItem("users");
           if (storedUsers) {
@@ -126,13 +126,11 @@ export const useUserData = () => {
           );
         }
         
-        // Update localStorage
-        localStorage.setItem("users", JSON.stringify(
-          setUsers(prevState => {
-            localStorage.setItem("users", JSON.stringify(prevState));
-            return prevState;
-          })
-        ));
+        // Update localStorage with the latest user list
+        setUsers(prevState => {
+          localStorage.setItem("users", JSON.stringify(prevState));
+          return prevState;
+        });
       })
       .subscribe((status) => {
         console.log(`Profile subscription status: ${status}`);

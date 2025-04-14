@@ -18,7 +18,7 @@ interface UserDeleteDialogProps {
   userToDelete: User | null;
   isDeleting: boolean;
   onCancel: () => void;
-  onConfirm: () => Promise<void>;
+  onConfirm: () => Promise<void | boolean>;
 }
 
 const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
@@ -27,8 +27,12 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
   onCancel,
   onConfirm
 }) => {
+  const handleConfirm = async () => {
+    await onConfirm();
+  };
+  
   return (
-    <Dialog open={!!userToDelete} onOpenChange={open => !open && onCancel()}>
+    <Dialog open={!!userToDelete} onOpenChange={open => !open && !isDeleting && onCancel()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Delete User Account</DialogTitle>
@@ -62,7 +66,7 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
           </Button>
           <Button 
             variant="destructive" 
-            onClick={onConfirm} 
+            onClick={handleConfirm} 
             disabled={isDeleting}
             className="flex items-center gap-2"
           >

@@ -61,7 +61,12 @@ const RoleManagement: React.FC = () => {
               users={users}
               isLoading={isLoading}
               currentUser={user}
-              onEditPermissions={handleEditPermissions}
+              onEditPermissions={(user) => {
+                const selectedUserData = handleEditPermissions(user);
+                setSelectedUser(selectedUserData);
+                setActiveTab("permissions");
+                return selectedUserData;
+              }}
               onDeleteClick={setUserToDelete}
               setActiveTab={setActiveTab}
               setSelectedUser={setSelectedUser}

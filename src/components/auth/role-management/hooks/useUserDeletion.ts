@@ -9,19 +9,25 @@ export const useUserDeletion = () => {
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  const handleDeleteConfirm = async (users: User[], setUsers: (users: User[]) => void) => {
-    if (!userToDelete) return;
+  const handleDeleteConfirm = async () => {
+    if (!userToDelete) {
+      console.log("No user selected for deletion");
+      return false;
+    }
     
     try {
       setIsDeleting(true);
       console.log("Starting delete operation for user:", userToDelete.id);
       
+      // Call the deleteUser function from the context
       const result = await deleteUser(userToDelete.id);
       
       if (result) {
-        console.log("User deleted successfully, updating UI");
-        // UI will be updated via the real-time subscription in useUserData
+        console.log("User deleted successfully");
+        toast.success("User deleted successfully");
+        // The UI will be updated via the real-time subscription in useUserData
         setUserToDelete(null);
+        return true;
       } else {
         throw new Error("Delete operation failed");
       }
@@ -30,6 +36,7 @@ export const useUserDeletion = () => {
       toast.error("Failed to delete user", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
+      return false;
     } finally {
       setIsDeleting(false);
     }

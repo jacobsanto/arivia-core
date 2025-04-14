@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User } from "@/types/auth";
@@ -82,26 +83,6 @@ export const removeUser = async (
     if (navigator.onLine) {
       console.log("Attempting to delete user:", userIdToDelete);
       
-      // Delete user's avatar from storage if exists
-      const user = users.find(u => u.id === userIdToDelete);
-      if (user?.avatar && !user.avatar.includes('placeholder.svg')) {
-        try {
-          // Extract the correct file path from the avatar URL
-          const urlParts = user.avatar.split('/');
-          const fileName = urlParts[urlParts.length - 1].split('?')[0]; // Remove query params
-          const filePath = `${userIdToDelete}/${fileName}`;
-          
-          console.log("Deleting avatar file:", filePath);
-          
-          await supabase.storage
-            .from('avatars')
-            .remove([filePath]);
-        } catch (storageError) {
-          console.error("Error deleting user avatar:", storageError);
-          // Continue with user deletion even if avatar deletion fails
-        }
-      }
-      
       // Call the edge function to delete the user safely with admin privileges
       try {
         console.log("Calling delete-user edge function with userId:", userIdToDelete);
@@ -116,12 +97,11 @@ export const removeUser = async (
         
         console.log("Delete user function response:", data);
         
-        // Update local state after successful deletion
-        const updatedUsers = users.filter(u => u.id !== userIdToDelete);
-        setUsers(updatedUsers);
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        // Note: We no longer need to update the local state here
+        // as the realtime subscription will handle updating the users list
         
         toastService.success("User deleted successfully");
+        return true;
       } catch (functionError) {
         console.error("Error calling delete-user function:", functionError);
         throw functionError;
@@ -136,9 +116,8 @@ export const removeUser = async (
       const updatedUsers = users.filter(u => u.id !== userIdToDelete);
       setUsers(updatedUsers);
       localStorage.setItem("users", JSON.stringify(updatedUsers));
+      return true;
     }
-    
-    return true;
   } catch (error) {
     console.error("Error deleting user:", error);
     toastService.error("Failed to delete user", {

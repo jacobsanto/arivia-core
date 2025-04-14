@@ -55,22 +55,9 @@ serve(async (req) => {
     
     console.log(`Request to delete user: ${userId}`)
     
-    // First delete profile (Row Level Security may prevent this otherwise)
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId)
-      
-    if (profileError) {
-      console.error("Error deleting profile:", profileError)
-      // We'll continue with auth user deletion even if profile deletion fails
-      // The user might have been deleted already or never had a profile
-    } else {
-      console.log(`Profile deleted successfully for user: ${userId}`)
-    }
-    
     // Delete user's storage folder if it exists
     try {
+      console.log(`Checking for user's files in storage...`)
       const { data: storageData, error: storageError } = await supabase.storage
         .from('avatars')
         .list(`${userId}/`)
@@ -79,6 +66,7 @@ serve(async (req) => {
         console.log(`Found ${storageData.length} files in user's storage folder`)
         
         const filesToDelete = storageData.map(file => `${userId}/${file.name}`)
+        console.log('Files to delete:', filesToDelete)
         
         const { error: deleteError } = await supabase.storage
           .from('avatars')
@@ -89,13 +77,35 @@ serve(async (req) => {
         } else {
           console.log(`Deleted ${filesToDelete.length} files for user`)
         }
+      } else if (storageError) {
+        console.log("Error or no files found when checking storage:", storageError)
+      } else {
+        console.log("No files found in user's storage folder")
       }
     } catch (storageError) {
       console.error("Error handling user storage:", storageError)
       // Continue with user deletion even if storage cleanup fails
     }
     
+    // First delete profile (Row Level Security may prevent this otherwise)
+    console.log(`Deleting profile for user: ${userId}`)
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId)
+      
+    if (profileError) {
+      console.error("Error deleting profile:", profileError)
+      // Don't return early - we'll still try to delete the auth user
+    } else {
+      console.log(`Profile deleted successfully for user: ${userId}`)
+    }
+    
+    // Wait a short moment to allow the delete to propagate
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
     // Attempt to delete the user from auth.users
+    console.log(`Deleting auth user: ${userId}`)
     const { error: authError } = await supabase.auth.admin.deleteUser(userId)
     
     if (authError) {
@@ -120,6 +130,7 @@ serve(async (req) => {
     }
     
     // All operations completed successfully
+    console.log(`User ${userId} successfully deleted`)
     return new Response(
       JSON.stringify({ 
         message: "User successfully deleted",
