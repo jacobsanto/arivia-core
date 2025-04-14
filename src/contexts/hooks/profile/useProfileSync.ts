@@ -39,7 +39,7 @@ export const useProfileSync = (
             (typeof profile.custom_permissions === 'object' ? 
               profile.custom_permissions as Record<string, boolean> : 
               {}) : 
-            undefined;
+            {};
           
           console.log("Loaded custom permissions from profile:", customPermissions);
           

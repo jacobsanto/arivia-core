@@ -28,12 +28,14 @@ export const updatePermissions = async (
     toastService.error("Permission denied", {
       description: "Only Super Admins can modify user permissions"
     });
-    return;
+    return false;
   }
   
   try {
-    // First, update the database if online
+    // First, update the database if online - this is now our primary action
     if (navigator.onLine) {
+      console.log("Saving permissions to database:", permissions);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -88,10 +90,13 @@ export const updatePermissions = async (
     toastService.success("Permissions updated", {
       description: "User permissions have been updated successfully"
     });
+    
+    return true;
   } catch (error) {
     console.error("Error updating permissions:", error);
     toastService.error("Failed to update permissions", {
       description: error instanceof Error ? error.message : "An unknown error occurred"
     });
+    return false;
   }
 };
