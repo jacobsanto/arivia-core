@@ -61,7 +61,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleGetOfflineLoginStatus = () => {
-    return getOfflineLoginStatus(user, lastAuthTime, isOffline);
+    const status = getOfflineLoginStatus(user, lastAuthTime, isOffline);
+    return {
+      isOfflineLoggedIn: status,
+      timeRemaining: 0  // Since the original function doesn't calculate time remaining, we'll default to 0
+    };
   };
   
   const handleUpdateUserAvatar = async (userId: string, avatarUrl: string) => {

@@ -97,7 +97,6 @@ const UserRolesList: React.FC<UserRolesListProps> = ({
             key={user.id} 
             user={user} 
             currentUser={currentUser} 
-            onEditRole={() => {}} // Handled within the MobileUserCard now
             onEditPermissions={() => handleEditPermissions(user)} 
             onDeleteClick={onDeleteClick} 
             isExpanded={expandedUsers.includes(user.id)} 
