@@ -4,11 +4,33 @@ import { Button } from "@/components/ui/button";
 import { registerSuperAdmin } from "@/services/auth/adminRegistration";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const superAdminSchema = z.object({
+  email: z.string().email("Valid email is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  name: z.string().min(2, "Name must be at least 2 characters")
+});
+
+type SuperAdminFormValues = z.infer<typeof superAdminSchema>;
 
 const CreateSuperAdmin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [superAdminExists, setSuperAdminExists] = useState(false);
   
+  const form = useForm<SuperAdminFormValues>({
+    resolver: zodResolver(superAdminSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      name: ""
+    }
+  });
+
   // Check if super admin exists
   useEffect(() => {
     const checkForSuperAdmin = async () => {
@@ -30,19 +52,22 @@ const CreateSuperAdmin: React.FC = () => {
     checkForSuperAdmin();
   }, []);
 
-  const handleCreateSuperAdmin = async () => {
+  const onSubmit = async (data: SuperAdminFormValues) => {
     setLoading(true);
     try {
-      await registerSuperAdmin();
-      // Check again if super admin exists after registration attempt
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('role', 'superadmin')
-        .maybeSingle();
-      
-      if (data) {
-        setSuperAdminExists(true);
+      const success = await registerSuperAdmin(data.email, data.password, data.name);
+      if (success) {
+        // Check again if super admin exists after registration attempt
+        const { data: adminData } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'superadmin')
+          .maybeSingle();
+        
+        if (adminData) {
+          setSuperAdminExists(true);
+          form.reset();
+        }
       }
     } finally {
       setLoading(false);
@@ -63,13 +88,59 @@ const CreateSuperAdmin: React.FC = () => {
             Super Admin account has been created successfully.
           </div>
         ) : (
-          <Button 
-            onClick={handleCreateSuperAdmin} 
-            disabled={loading || superAdminExists}
-            className="w-full"
-          >
-            {loading ? "Creating Super Admin..." : "Create Super Admin"}
-          </Button>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Doe" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="admin@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="********" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button 
+                type="submit"
+                disabled={loading || superAdminExists}
+                className="w-full"
+              >
+                {loading ? "Creating Super Admin..." : "Create Super Admin"}
+              </Button>
+            </form>
+          </Form>
         )}
       </CardContent>
     </Card>
