@@ -1,6 +1,6 @@
 
 import { useRef, useCallback } from "react";
-import { User, UserRole, UserStateSetter } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 

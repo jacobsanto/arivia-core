@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+
+import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, UserStateSetter } from "@/types/auth";
-import { StateSetter } from "@/types/auth";
+import { Session, User, UserStateSetter, UserRole, StateSetter } from "@/types/auth";
+import { getUserFromStorage } from "@/services/auth/userAuthService";
 
 export const useSessionSync = (
   setUser: UserStateSetter,

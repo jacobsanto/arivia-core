@@ -1,6 +1,6 @@
 
-import { useRef, useEffect, useCallback } from "react";
-import { User, UserStateSetter } from "@/types/auth";
+import { useRef, useEffect } from "react";
+import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
