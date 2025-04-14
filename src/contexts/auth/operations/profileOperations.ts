@@ -95,6 +95,9 @@ export const updateUserProfile = async (
       return false;
     }
 
+    console.log("Updating profile for user:", userId);
+    console.log("Profile data:", profileData);
+
     // Convert to snake_case for Supabase
     const dbProfileData: any = {
       ...profileData,
@@ -111,17 +114,23 @@ export const updateUserProfile = async (
       .eq('id', userId);
 
     if (error) {
+      console.error("Error updating profile:", error);
       throw error;
     }
+
+    console.log("Profile updated successfully in database");
 
     // If this is the current user, also update local state
     if (currentUser && currentUser.id === userId) {
       // After database update, sync the profile data to ensure we have all fields
       await syncUserWithProfile(userId, setUser, currentUser);
+    } else {
+      // For other users, we'll rely on real-time subscriptions to update the UI
+      console.log("Updated user is not current user, relying on real-time updates");
     }
 
     toastService.success("Profile updated", {
-      description: "Your profile has been updated successfully"
+      description: "The profile has been updated successfully"
     });
 
     return true;

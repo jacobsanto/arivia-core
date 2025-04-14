@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useUserState } from "./hooks";
@@ -56,7 +57,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleUpdateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
-    updatePermissions(user, users, setUsers, setUser, userId, permissions);
+    return updatePermissions(user, users, setUsers, setUser, userId, permissions);
   };
 
   const handleGetOfflineLoginStatus = () => {
@@ -85,6 +86,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: string;
       role: UserRole;
       secondaryRoles?: UserRole[];
+      customPermissions?: Record<string, boolean>;
     }>
   ) => {
     return await updateUserProfile(userId, profileData, setUser, user);

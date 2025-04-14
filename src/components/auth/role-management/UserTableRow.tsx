@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
+import { useUser } from "@/contexts/UserContext";
 
 interface UserTableRowProps {
   user: User;
@@ -22,11 +23,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
+  const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
     user.secondaryRoles || []
   );
+  const [isSaving, setIsSaving] = useState(false);
   
   const handleEditClick = () => {
     setIsEditing(true);
@@ -38,7 +41,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
     setSelectedSecondaryRoles(user.secondaryRoles || []);
   };
   
-  const handleSaveRole = () => {
+  const handleSaveRole = async () => {
     // Validate selection for Super Admin
     if (selectedRole === "superadmin" && selectedSecondaryRoles.length === 0) {
       toast.error("Super Admin requires at least one secondary role", {
@@ -47,9 +50,27 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       return;
     }
 
-    // TODO: Add actual save functionality by connecting with the hook methods
-    setIsEditing(false);
-    toast.success("User role updated successfully");
+    setIsSaving(true);
+    try {
+      // Call the updateProfile function from UserContext
+      // This will handle both the database update and local state updates
+      const success = await updateProfile(user.id, {
+        role: selectedRole,
+        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+      });
+      
+      if (success) {
+        setIsEditing(false);
+        toast.success("User role updated successfully");
+      }
+    } catch (error) {
+      toast.error("Failed to update role", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+      console.error("Error updating role:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
   
   const toggleSecondaryRole = (role: UserRole) => {
@@ -146,11 +167,11 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       <TableCell className="text-right">
         {isEditing ? (
           <div className="flex justify-end gap-2">
-            <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+            <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
               Cancel
             </Button>
-            <Button size="sm" onClick={handleSaveRole}>
-              Save
+            <Button size="sm" onClick={handleSaveRole} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         ) : (

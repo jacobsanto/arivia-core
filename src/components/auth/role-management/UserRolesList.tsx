@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { User } from "@/types/auth";
@@ -98,7 +97,7 @@ const UserRolesList: React.FC<UserRolesListProps> = ({
             key={user.id} 
             user={user} 
             currentUser={currentUser} 
-            onEditRole={() => {}} // Will be implemented at the table row level
+            onEditRole={() => {}} // Handled within the MobileUserCard now
             onEditPermissions={() => handleEditPermissions(user)} 
             onDeleteClick={onDeleteClick} 
             isExpanded={expandedUsers.includes(user.id)} 
