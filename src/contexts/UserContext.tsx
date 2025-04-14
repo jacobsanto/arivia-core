@@ -16,6 +16,7 @@ import {
   updateUserProfile,
   signup
 } from "./auth/operations";
+import { Session } from "@supabase/supabase-js"; // Import Supabase's Session type
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 

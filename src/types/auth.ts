@@ -1,4 +1,3 @@
-
 import { Session as SupabaseSession, User as SupabaseUser } from "@supabase/supabase-js";
 
 export interface User {
@@ -13,21 +12,13 @@ export interface User {
   };
 }
 
-// Updated Session interface to match Supabase's Session requirements
+// Updated Session interface to correctly match Supabase's Session type
 export interface Session {
   access_token: string;
   token_type: string;
   expires_in: number;
-  refresh_token: string; // Changed from optional to required
-  user: {
-    id: string;
-    email: string;
-    user_metadata: {
-      name?: string;
-      role?: string;
-      avatar?: string;
-    };
-  };
+  refresh_token: string;
+  user: SupabaseUser; // Use the full Supabase User type
 }
 
 export type UserRole = "superadmin" | "administrator" | "property_manager" | "concierge" | "housekeeping_staff" | "maintenance_staff" | "inventory_manager";

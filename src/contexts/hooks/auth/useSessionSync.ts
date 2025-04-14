@@ -20,24 +20,9 @@ export const useSessionSync = (
       if (data.session) {
         // User authenticated with Supabase
         console.log("Found existing session:", data.session.user.id);
-        // Convert to our custom Session type
-        const customSession: Session = {
-          access_token: data.session.access_token,
-          token_type: data.session.token_type,
-          expires_in: data.session.expires_in,
-          refresh_token: data.session.refresh_token, // This is now required
-          user: {
-            id: data.session.user.id,
-            email: data.session.user.email || '',
-            user_metadata: {
-              name: data.session.user.user_metadata?.name,
-              role: data.session.user.user_metadata?.role,
-              avatar: data.session.user.user_metadata?.avatar,
-            },
-          },
-        };
         
-        setSession(customSession);
+        // Set the full session with the complete Supabase User object
+        setSession(data.session);
         
         // Convert to our User format - basic info only
         // Detailed profile data will be fetched separately
@@ -91,24 +76,9 @@ export const useSessionSync = (
         // Handle session change
         if (supaSession) {
           console.log("Session user:", supaSession.user.id);
-          // Convert to our custom Session type
-          const customSession: Session = {
-            access_token: supaSession.access_token,
-            token_type: supaSession.token_type,
-            expires_in: supaSession.expires_in,
-            refresh_token: supaSession.refresh_token, // This is now required
-            user: {
-              id: supaSession.user.id,
-              email: supaSession.user.email || '',
-              user_metadata: {
-                name: supaSession.user.user_metadata?.name,
-                role: supaSession.user.user_metadata?.role,
-                avatar: supaSession.user.user_metadata?.avatar,
-              },
-            },
-          };
           
-          setSession(customSession);
+          // Set the complete session object
+          setSession(supaSession);
           
           // Convert Supabase user to our User format - basic info only
           const userData: User = {
