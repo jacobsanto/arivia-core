@@ -1,5 +1,5 @@
 
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
@@ -11,6 +11,9 @@ export const useSessionSync = (
   setIsLoading: (isLoading: boolean) => void,
   fetchProfileData: (userId: string) => Promise<boolean>
 ) => {
+  // Reference for profile fetch timeout
+  const profileFetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Initialize auth state
   const initializeSession = useCallback(async () => {
     console.log("Initializing session...");
@@ -49,8 +52,8 @@ export const useSessionSync = (
       setUser(userData);
       setLastAuthTime(Date.now());
       
-      // We'll fetch profile data via the auth state change handler instead
-      // to avoid duplicate fetches
+      // We no longer fetch profile data here to avoid redundancy
+      // The profile data will be fetched by the auth state change handler
     } else {
       // Fall back to local storage for development
       const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
@@ -61,11 +64,10 @@ export const useSessionSync = (
     }
     
     setIsLoading(false);
-  }, [setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
+  }, [setUser, setSession, setLastAuthTime, setIsLoading]);
 
   useEffect(() => {
     console.log("Setting up auth state listener...");
-    let profileFetchTimeout: NodeJS.Timeout | null = null;
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -110,19 +112,19 @@ export const useSessionSync = (
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
           // Clear any existing timeout to avoid multiple fetches
-          if (profileFetchTimeout) {
-            clearTimeout(profileFetchTimeout);
+          if (profileFetchTimeoutRef.current) {
+            clearTimeout(profileFetchTimeoutRef.current);
           }
           
           // Fetch profile data separately via setTimeout to avoid auth deadlock
           // and to ensure we don't have duplicate fetches
-          profileFetchTimeout = setTimeout(() => {
+          profileFetchTimeoutRef.current = setTimeout(() => {
             console.log("Fetching profile data for user:", supaSession.user.id);
             fetchProfileData(supaSession.user.id).catch(err => {
               console.error("Error fetching profile data:", err);
             });
-            profileFetchTimeout = null;
-          }, 100);
+            profileFetchTimeoutRef.current = null;
+          }, 200); // Increased delay for stability
         } else {
           setUser(null);
           setSession(null);
@@ -136,8 +138,8 @@ export const useSessionSync = (
     return () => {
       subscription.unsubscribe();
       // Clear any pending profile fetch timeouts
-      if (profileFetchTimeout) {
-        clearTimeout(profileFetchTimeout);
+      if (profileFetchTimeoutRef.current) {
+        clearTimeout(profileFetchTimeoutRef.current);
       }
     };
   }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession]);
