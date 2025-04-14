@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Session } from "@/types/auth";
+import { Session, UserStateSetter } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useAuthState = () => {

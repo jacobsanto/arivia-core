@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext } from "react";
-import { User, UserRole } from "@/types/auth";
+import { User, UserRole, Session, UserStateSetter } from "@/types/auth";
 import { useUserState } from "./hooks";
 import { UserContextType } from "./types/userContext.types";
 import { 
@@ -16,7 +16,6 @@ import {
   updateUserProfile,
   signup
 } from "./auth/operations";
-import { Session } from "@supabase/supabase-js"; // Import Supabase's Session type
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -58,7 +57,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleUpdateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
-    return updatePermissions(user, users, setUsers, setUser, userId, permissions);
+    return updatePermissions(user, users, setUsers, setUser as UserStateSetter, userId, permissions);
   };
 
   const handleGetOfflineLoginStatus = () => {
@@ -70,7 +69,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const handleUpdateUserAvatar = async (userId: string, avatarUrl: string) => {
-    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser, user);
+    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as UserStateSetter, user);
   };
   
   const handleDeleteUser = async (userId: string) => {
@@ -79,7 +78,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleSyncUserProfile = async () => {
     if (user) {
-      return await syncUserWithProfile(user.id, setUser, user);
+      return await syncUserWithProfile(user.id, setUser as UserStateSetter, user);
     }
     return false;
   };
@@ -94,7 +93,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       customPermissions?: Record<string, boolean>;
     }>
   ) => {
-    return await updateUserProfile(userId, profileData, setUser, user);
+    return await updateUserProfile(userId, profileData, setUser as UserStateSetter, user);
   };
   
   const handleRefreshProfile = async () => {

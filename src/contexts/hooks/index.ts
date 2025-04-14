@@ -2,9 +2,8 @@
 import { useAuthState } from "./auth/useAuthState";
 import { useUserData } from "./users/useUserData";
 import { useSessionSync } from "./auth/useSessionSync";
-import { useState } from "react";
 
-// Refactored hook to avoid duplicate subscriptions
+// Refactored hook to avoid duplicate subscriptions and ensure consistent typing
 export const useUserState = () => {
   // Get auth state (session, online status, etc)
   const authState = useAuthState();

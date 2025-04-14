@@ -1,6 +1,5 @@
 
-import { User, UserRole } from "@/types/auth";
-import { Session } from "@supabase/supabase-js";
+import { User, UserRole, Session } from "@/types/auth";
 
 export interface UserContextType {
   user: User | null;
