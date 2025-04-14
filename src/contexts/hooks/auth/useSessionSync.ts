@@ -21,7 +21,8 @@ export const useSessionSync = (
         setLastAuthTime(storedAuthTime);
       }
       
-      // Then check with Supabase
+      // Then check with Supabase - but don't overwrite user state yet
+      // to prevent UI flashing
       const { data } = await supabase.auth.getSession();
       
       if (data.session) {
@@ -37,10 +38,17 @@ export const useSessionSync = (
           avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
         };
         
-        setUser(userData);
+        // Only update user state if it doesn't match current state
+        setUser(prevUser => {
+          if (!prevUser || prevUser.id !== userData.id) {
+            return userData;
+          }
+          return prevUser;
+        });
+        
         setLastAuthTime(Date.now());
         
-        // Fetch additional profile data if needed
+        // Fetch additional profile data with delay to prevent auth deadlock
         setTimeout(() => {
           fetchProfileData(data.session.user.id).catch(console.error);
         }, 100);
@@ -57,11 +65,9 @@ export const useSessionSync = (
     // Set loading state first
     setIsLoading(true);
 
-    // Set up auth state listener
+    // Set up auth state listener first (before checking session)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("Auth state change:", event);
-        
         // Handle session change
         if (session) {
           // Set the complete session object
@@ -79,7 +85,7 @@ export const useSessionSync = (
           setUser(userData);
           setLastAuthTime(Date.now());
           
-          // For development, update mock storage too
+          // Store in localStorage for offline support
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
@@ -96,7 +102,7 @@ export const useSessionSync = (
       }
     );
     
-    // Initialize session
+    // Then initialize session
     initializeSession();
     
     return () => {

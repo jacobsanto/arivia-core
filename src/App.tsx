@@ -1,12 +1,11 @@
 
-import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 
-// Layouts
-import AppLayout from "@/components/layout/AppLayout";
-import MainLayout from "@/components/layout/MainLayout";
+// Unified Layout
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
@@ -33,13 +32,12 @@ function App() {
       <ToastProvider>
         <Router>
           <Routes>
-            {/* Public routes */}
-            <Route element={<MainLayout />}>
+            {/* All routes use the single unified layout */}
+            <Route element={<UnifiedLayout />}>
+              {/* Public route */}
               <Route path="/login" element={<Login />} />
-            </Route>
-            
-            {/* Protected routes - AppLayout handles auth checking */}
-            <Route element={<AppLayout />}>
+              
+              {/* Protected routes */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile" element={<UserProfile />} />
@@ -58,7 +56,7 @@ function App() {
               <Route path="/admin/checklists" element={<AdminChecklists />} />
             </Route>
             
-            {/* Auth redirect handler */}
+            {/* Auth redirect handler - outside of layout */}
             <Route path="/auth-redirect" element={<AuthRedirect />} />
             
             {/* Catch all route */}

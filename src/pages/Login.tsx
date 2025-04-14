@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
@@ -11,10 +12,12 @@ const Login = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 
+  // Use the mobile-optimized login for small screens
   if (isMobile) {
     return <MobileLogin />;
   }
 
+  // Desktop login layout
   return (
     <div className="min-h-screen flex">
       {/* Left panel - Login/Register Form */}

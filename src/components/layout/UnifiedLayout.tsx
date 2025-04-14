@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Outlet, Navigate, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
@@ -9,11 +9,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
 
-const AppLayout = () => {
+const UnifiedLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user, isLoading } = useUser();
   const location = useLocation();
+  
+  // Determine if we're on a public route (like login) that doesn't need authentication
+  const isPublicRoute = location.pathname === '/login';
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(prev => !prev);
@@ -28,15 +31,27 @@ const AppLayout = () => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
+  // Handle authentication routing
+  if (!user && !isPublicRoute) {
+    // Redirect to login if not authenticated and trying to access protected route
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  if (user && isPublicRoute) {
+    // Redirect to dashboard if already authenticated and trying to access public route
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // For the login page, render just the content without any layout
+  if (isPublicRoute) {
+    return <Outlet />;
+  }
+
+  // For authenticated routes, render the full app layout
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Desktop sidebar - hidden on mobile */}
-      <Sidebar />
+      {!isMobile && <Sidebar />}
       
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header onMobileMenuToggle={toggleMobileMenu} />
@@ -58,4 +73,4 @@ const AppLayout = () => {
   );
 };
 
-export default AppLayout;
+export default UnifiedLayout;
