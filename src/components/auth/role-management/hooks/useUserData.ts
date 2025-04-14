@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,18 +49,9 @@ const MOCK_USER_LIST: User[] = [{
   avatar: "/placeholder.svg"
 }];
 
-export const useRoleManagement = () => {
-  const { user, deleteUser } = useUser();
-  
+export const useUserData = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
-  const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
-  const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [expandedUsers, setExpandedUsers] = useState<string[]>([]);
 
   // Fetch users from Supabase
   useEffect(() => {
@@ -141,120 +131,9 @@ export const useRoleManagement = () => {
     };
   }, []);
 
-  const handleEditRole = (userId: string) => {
-    setEditingUserId(userId);
-    const userToEdit = users.find(u => u.id === userId);
-    if (userToEdit) {
-      setSelectedRole(userToEdit.role);
-      setSelectedSecondaryRoles(userToEdit.secondaryRoles || []);
-    }
-  };
-  
-  const handleSaveRole = async (userId: string) => {
-    // Validate selection for Super Admin
-    if (selectedRole === "superadmin" && selectedSecondaryRoles.length === 0) {
-      toast.error("Super Admin requires at least one secondary role", {
-        description: "Please select at least one additional role"
-      });
-      return;
-    }
-
-    try {
-      // Regular users cannot have secondary roles
-      const updatedSecondaryRoles = selectedRole === "superadmin" ? selectedSecondaryRoles : undefined;
-      
-      // Update in Supabase if online
-      if (navigator.onLine) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ 
-            role: selectedRole,
-            secondary_roles: updatedSecondaryRoles
-          })
-          .eq('id', userId);
-          
-        if (error) {
-          throw error;
-        }
-      }
-      
-      // Update local state
-      setUsers(users.map(u => u.id === userId ? {
-        ...u,
-        role: selectedRole,
-        secondaryRoles: updatedSecondaryRoles
-      } : u));
-      
-      // Update localStorage for offline access
-      localStorage.setItem("users", JSON.stringify(
-        users.map(u => u.id === userId ? {
-          ...u,
-          role: selectedRole,
-          secondaryRoles: updatedSecondaryRoles
-        } : u)
-      ));
-      
-      setEditingUserId(null);
-      toast.success("User role updated successfully");
-    } catch (error) {
-      console.error("Error updating role:", error);
-      toast.error("Failed to update user role", {
-        description: error instanceof Error ? error.message : "An unknown error occurred"
-      });
-    }
-  };
-  
-  const handleCancelEdit = () => {
-    setEditingUserId(null);
-    setSelectedSecondaryRoles([]);
-  };
-  
-  const toggleSecondaryRole = (role: UserRole) => {
-    setSelectedSecondaryRoles(prev => 
-      prev.includes(role) ? prev.filter(r => r !== role) : [...prev, role]
-    );
-  };
-  
-  const handleEditPermissions = (user: User) => {
-    return user;
-  };
-  
-  const handleDeleteConfirm = async () => {
-    if (!userToDelete) return;
-    try {
-      setIsDeleting(true);
-      const result = await deleteUser(userToDelete.id);
-      if (result) {
-        setUsers(users.filter(u => u.id !== userToDelete.id));
-        setUserToDelete(null);
-      }
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-  
-  const toggleExpandUser = (userId: string) => {
-    setExpandedUsers(prev => 
-      prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
-    );
-  };
-
   return {
     users,
     isLoading,
-    editingUserId,
-    selectedRole,
-    selectedSecondaryRoles,
-    userToDelete,
-    isDeleting,
-    expandedUsers,
-    setUserToDelete,
-    handleEditRole,
-    handleSaveRole,
-    handleCancelEdit,
-    toggleSecondaryRole,
-    handleEditPermissions,
-    handleDeleteConfirm,
-    toggleExpandUser
+    setUsers
   };
 };
