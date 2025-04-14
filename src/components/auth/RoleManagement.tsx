@@ -3,12 +3,14 @@ import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Shield, Lock } from "lucide-react";
+import { Shield, Lock, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import PermissionManagement from "./permission-management/PermissionManagement";
 import UserRolesList from "./role-management/UserRolesList";
 import UnauthorizedAccess from "./role-management/UnauthorizedAccess";
 import UserDeleteDialog from "./role-management/UserDeleteDialog";
+import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import { useRoleManagement } from "./role-management/useRoleManagement";
 
 // Main component for Role Management
@@ -16,14 +18,18 @@ const RoleManagement: React.FC = () => {
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState<string>("roles");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
   
   const {
     users,
     isLoading,
+    currentUser,
     userToDelete,
     setUserToDelete,
     isDeleting,
+    isDeletingAll,
     handleDeleteConfirm,
+    deleteAllUsers,
     handleEditPermissions
   } = useRoleManagement();
 
@@ -35,10 +41,22 @@ const RoleManagement: React.FC = () => {
   return (
     <Card>
       <CardHeader className="mx-[11px] px-[3px]">
-        <CardTitle className="flex items-center gap-2">
-          <Shield className="h-5 w-5" />
-          User & Permission Management
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            User & Permission Management
+          </CardTitle>
+          
+          <Button 
+            variant="destructive" 
+            size="sm" 
+            onClick={() => setIsDeleteAllDialogOpen(true)}
+            className="flex items-center gap-1"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete All Users
+          </Button>
+        </div>
         <CardDescription>
           Manage user roles and specific permissions
         </CardDescription>
@@ -106,6 +124,15 @@ const RoleManagement: React.FC = () => {
         isDeleting={isDeleting}
         onCancel={() => setUserToDelete(null)}
         onConfirm={handleDeleteConfirm}
+      />
+      
+      {/* Delete All Users Confirmation Dialog */}
+      <DeleteAllUsersDialog
+        isOpen={isDeleteAllDialogOpen}
+        isDeleting={isDeletingAll}
+        userCount={users.filter(u => u.id !== currentUser?.id).length}
+        onCancel={() => setIsDeleteAllDialogOpen(false)}
+        onConfirm={deleteAllUsers}
       />
     </Card>
   );

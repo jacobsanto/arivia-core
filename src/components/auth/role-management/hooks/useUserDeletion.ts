@@ -8,6 +8,7 @@ export const useUserDeletion = () => {
   const { deleteUser } = useUser();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   
   const handleDeleteConfirm = async () => {
     if (!userToDelete) {
@@ -43,10 +44,56 @@ export const useUserDeletion = () => {
     }
   };
   
+  const handleDeleteAllUsers = async (users: User[], currentUserId: string) => {
+    try {
+      setIsDeletingAll(true);
+      console.log("Starting deletion of all users except current user");
+      
+      const usersToDelete = users.filter(user => user.id !== currentUserId);
+      let successCount = 0;
+      let failCount = 0;
+      
+      for (const user of usersToDelete) {
+        try {
+          console.log(`Attempting to delete user: ${user.id} (${user.name})`);
+          const result = await deleteUser(user.id);
+          if (result) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+          // Small delay to prevent overwhelming the server
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } catch (error) {
+          console.error(`Error deleting user ${user.id}:`, error);
+          failCount++;
+        }
+      }
+      
+      if (failCount === 0) {
+        toast.success(`Successfully deleted all ${successCount} users`);
+        return true;
+      } else {
+        toast.warning(`Deleted ${successCount} users, but failed to delete ${failCount} users`);
+        return successCount > 0;
+      }
+    } catch (error) {
+      console.error("Error in handleDeleteAllUsers:", error);
+      toast.error("Failed to delete all users", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+      return false;
+    } finally {
+      setIsDeletingAll(false);
+    }
+  };
+  
   return {
     userToDelete,
     isDeleting,
+    isDeletingAll,
     setUserToDelete,
-    handleDeleteConfirm
+    handleDeleteConfirm,
+    handleDeleteAllUsers
   };
 };
