@@ -41,6 +41,8 @@ export const useProfileSync = (
               {}) : 
             undefined;
           
+          console.log("Loaded custom permissions from profile:", customPermissions);
+          
           const updatedUser: User = {
             ...currentUser,
             name: profile.name || currentUser.name,

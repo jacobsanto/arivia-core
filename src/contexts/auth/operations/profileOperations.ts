@@ -45,6 +45,8 @@ export const syncUserWithProfile = async (
           profile.custom_permissions as Record<string, boolean> : 
           {}) : 
         undefined;
+        
+      console.log("Loaded custom permissions during sync:", customPermissions);
 
       const updatedUser: User = {
         ...currentUser,
@@ -80,6 +82,7 @@ export const updateUserProfile = async (
     email: string;
     role: UserRole;
     secondaryRoles?: UserRole[];
+    customPermissions?: Record<string, boolean>;
   }>,
   setUser: (user: User | null) => void,
   currentUser: User | null
@@ -95,9 +98,11 @@ export const updateUserProfile = async (
     // Convert to snake_case for Supabase
     const dbProfileData: any = {
       ...profileData,
-      secondary_roles: profileData.secondaryRoles
+      secondary_roles: profileData.secondaryRoles,
+      custom_permissions: profileData.customPermissions
     };
     delete dbProfileData.secondaryRoles;
+    delete dbProfileData.customPermissions;
 
     // Update profile in Supabase
     const { error } = await supabase

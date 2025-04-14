@@ -5,6 +5,7 @@ import {
   checkFeatureAccess, 
   checkRolePermission
 } from "@/services/auth/permissionService";
+import { supabase } from "@/integrations/supabase/client";
 
 export const hasPermission = (user: User | null, roles: UserRole[]) => {
   return checkRolePermission(user, roles);
@@ -14,7 +15,7 @@ export const hasFeatureAccess = (user: User | null, featureKey: string) => {
   return checkFeatureAccess(user, featureKey);
 };
 
-export const updatePermissions = (
+export const updatePermissions = async (
   user: User | null, 
   users: User[], 
   setUsers: (users: User[]) => void, 
@@ -30,28 +31,67 @@ export const updatePermissions = (
     return;
   }
   
-  // Update permissions in the users array
-  const updatedUsers = users.map(u => {
-    if (u.id === userId) {
-      return {
-        ...u,
-        customPermissions: permissions
-      };
+  try {
+    // First, update the database if online
+    if (navigator.onLine) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          custom_permissions: permissions 
+        })
+        .eq('id', userId);
+      
+      if (error) {
+        console.error("Error saving permissions to database:", error);
+        throw error;
+      }
+      
+      console.log("Permissions saved to database successfully");
+    } else {
+      console.log("Offline mode - permissions will sync when online");
+      toastService.warning("You are offline", {
+        description: "Permission changes will sync when you're back online"
+      });
     }
-    return u;
-  });
-  
-  setUsers(updatedUsers);
-  
-  // If the current user's permissions were updated, update the state
-  if (user?.id === userId) {
-    setUser({
-      ...user,
-      customPermissions: permissions
+    
+    // Update permissions in the users array
+    const updatedUsers = users.map(u => {
+      if (u.id === userId) {
+        return {
+          ...u,
+          customPermissions: permissions
+        };
+      }
+      return u;
+    });
+    
+    setUsers(updatedUsers);
+    
+    // If the current user's permissions were updated, update the state
+    if (user?.id === userId) {
+      setUser({
+        ...user,
+        customPermissions: permissions
+      });
+      
+      // Update localStorage for offline support
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        localStorage.setItem("user", JSON.stringify({
+          ...parsedUser,
+          customPermissions: permissions
+        }));
+      }
+    }
+    
+    toastService.success("Permissions updated", {
+      description: "User permissions have been updated successfully"
+    });
+  } catch (error) {
+    console.error("Error updating permissions:", error);
+    toastService.error("Failed to update permissions", {
+      description: error instanceof Error ? error.message : "An unknown error occurred"
     });
   }
-  
-  toastService.success("Permissions updated", {
-    description: "User permissions have been updated successfully"
-  });
 };

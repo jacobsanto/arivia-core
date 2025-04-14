@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { User, getDefaultPermissionsForRole } from "@/types/auth";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface UsePermissionManagementProps {
   selectedUser: User | null;
@@ -68,8 +69,49 @@ export const usePermissionManagement = ({
         ...(selectedUser.customPermissions || {})
       };
       
+      console.log("Initial permissions for user:", initialPermissions);
+      console.log("User custom permissions:", selectedUser.customPermissions);
+      
       setPermissions(initialPermissions);
     }
+  }, [selectedUser]);
+  
+  // Subscribe to changes in the user's profile for real-time updates
+  useEffect(() => {
+    if (!selectedUser) return;
+    
+    const channel = supabase
+      .channel(`profile-${selectedUser.id}`)
+      .on('postgres_changes', { 
+        event: 'UPDATE', 
+        schema: 'public', 
+        table: 'profiles',
+        filter: `id=eq.${selectedUser.id}`
+      }, (payload) => {
+        console.log("Profile updated:", payload);
+        if (payload.new && payload.new.custom_permissions) {
+          // Reload permissions when profile is updated
+          const updatedCustomPermissions = payload.new.custom_permissions as Record<string, boolean>;
+          const defaultPermissions = getDefaultPermissionsForRole(
+            selectedUser.role, 
+            selectedUser.secondaryRoles
+          );
+          
+          setPermissions({
+            ...defaultPermissions,
+            ...updatedCustomPermissions
+          });
+          
+          toast.info("Permissions updated", {
+            description: "Another admin has updated this user's permissions"
+          });
+        }
+      })
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [selectedUser]);
   
   const handlePermissionToggle = (key: string) => {
@@ -79,16 +121,21 @@ export const usePermissionManagement = ({
     }));
   };
   
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedUser) return;
     
     setIsSaving(true);
     
-    // Artificial delay to show loading state
-    setTimeout(() => {
-      updateUserPermissions(selectedUser.id, permissions);
+    try {
+      await updateUserPermissions(selectedUser.id, permissions);
+    } catch (error) {
+      console.error("Error saving permissions:", error);
+      toast.error("Failed to save permissions", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    } finally {
       setIsSaving(false);
-    }, 500);
+    }
   };
   
   const handleResetToDefault = () => {
