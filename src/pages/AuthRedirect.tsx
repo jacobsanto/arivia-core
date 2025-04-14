@@ -1,13 +1,30 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
+import { Loader2 } from 'lucide-react';
 
 const AuthRedirect: React.FC = () => {
   const { user, isLoading } = useUser();
   const navigate = useNavigate();
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
   
   console.log("AuthRedirect: user:", user?.id, "isLoading:", isLoading);
+  
+  useEffect(() => {
+    // If we're stuck in a loading state for too long, force navigate to login
+    const timeout = setTimeout(() => {
+      if (isLoading && redirectAttempts < 2) {
+        console.log("Auth redirect timeout - still loading after delay");
+        setRedirectAttempts(prev => prev + 1);
+      } else if (redirectAttempts >= 2) {
+        console.log("Maximum redirect attempts reached, forcing navigation to login");
+        navigate('/login');
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [isLoading, navigate, redirectAttempts]);
   
   useEffect(() => {
     if (user && !isLoading) {
@@ -21,13 +38,19 @@ const AuthRedirect: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-16 w-16 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-muted-foreground">Checking authentication status...</p>
       </div>
     );
   }
   
-  return null;
+  // Fallback redirect if the useEffect doesn't trigger navigation
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <Navigate to="/login" replace />;
 };
 
 export default AuthRedirect;

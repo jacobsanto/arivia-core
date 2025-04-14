@@ -53,12 +53,8 @@ export const useSessionSync = (
         setLastAuthTime(Date.now());
         console.log("User state initialized:", userData);
         
-        // Fetch profile data with a slight delay to avoid blocking the UI
-        setTimeout(() => {
-          fetchProfileData(userData.id).catch(err => {
-            console.error("Error fetching initial profile data:", err);
-          });
-        }, 100);
+        // Do NOT fetch profile data immediately - this causes race conditions
+        // We'll rely on the auth state change event to fetch profile data
       } else {
         console.log("No existing session found");
         // Fall back to local storage for development
@@ -85,6 +81,7 @@ export const useSessionSync = (
 
   useEffect(() => {
     console.log("Setting up auth state listener...");
+    setIsLoading(true);
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -131,11 +128,14 @@ export const useSessionSync = (
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
           // Fetch profile data with a slight delay to avoid auth deadlock
-          setTimeout(() => {
-            fetchProfileData(supaSession.user.id).catch(err => {
-              console.error("Error fetching profile data:", err);
-            });
-          }, 100);
+          // Only fetch if the event is SIGNED_IN or TOKEN_REFRESHED
+          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            setTimeout(() => {
+              fetchProfileData(supaSession.user.id).catch(err => {
+                console.error("Error fetching profile data:", err);
+              });
+            }, 500);
+          }
         } else {
           console.log("No session in auth state change");
           if (event === 'SIGNED_OUT') {
@@ -154,5 +154,5 @@ export const useSessionSync = (
       console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
-  }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession]);
+  }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession, setIsLoading]);
 };

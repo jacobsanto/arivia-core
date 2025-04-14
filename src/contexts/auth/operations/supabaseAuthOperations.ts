@@ -9,9 +9,9 @@ export const login = async (
   setUser: (user: User | null) => void,
   setLastAuthTime: (time: number) => void,
   setIsLoading: (isLoading: boolean) => void
-) => {
+): Promise<{ success: boolean; message?: string }> => {
   try {
-    console.log("Login attempt for:", email);
+    console.log(`Login operation started for: ${email} (${Date.now()})`);
     setIsLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -39,29 +39,57 @@ export const login = async (
       // Important: Update user state immediately after successful auth
       setUser(userData);
       console.log("User state updated:", userData);
+      
+      // Update localStorage with last auth time for offline login capability
+      const authTime = Date.now();
+      localStorage.setItem("lastAuthTime", authTime.toString());
+      setLastAuthTime(authTime);
+      localStorage.setItem("user", JSON.stringify(userData)); // Store user in localStorage for offline support
+      console.log("Auth time updated:", authTime);
+      
+      return { success: true };
+    } else {
+      // Handle the case where authentication was successful but no user data returned
+      console.error("Authentication successful but no user data returned");
+      return {
+        success: false,
+        message: "Authentication successful but failed to retrieve user data."
+      };
     }
-
-    // Update localStorage with last auth time for offline login capability
-    const authTime = Date.now();
-    localStorage.setItem("lastAuthTime", authTime.toString());
-    setLastAuthTime(authTime);
-    console.log("Auth time updated:", authTime);
 
   } catch (error) {
     console.error("Login error:", error);
+    let errorMessage = error instanceof Error ? error.message : "Invalid credentials";
+    
+    // Better error messages
+    if (error instanceof Error) {
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password";
+      } else if (error.message.includes("Too many requests")) {
+        errorMessage = "Too many login attempts. Please try again later.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please confirm your email address before logging in.";
+      }
+    }
+    
     toast.error("Login failed", {
-      description: error instanceof Error ? error.message : "Invalid credentials"
+      description: errorMessage
     });
-    throw error;
+    
+    return {
+      success: false,
+      message: errorMessage
+    };
   } finally {
     setIsLoading(false);
+    console.log(`Login operation finished for: ${email} (${Date.now()})`);
   }
 };
 
 export const logout = async () => {
   try {
     console.log("Logging out user");
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: 'local' });
     toast.success("Logged out successfully");
     
     // Clear ALL relevant auth data from localStorage
@@ -123,8 +151,20 @@ export const signup = async (
     return data;
   } catch (error) {
     console.error("Signup error:", error);
+    let errorMessage = "An error occurred during signup";
+    
+    if (error instanceof Error) {
+      if (error.message.includes("already registered")) {
+        errorMessage = "This email is already registered. Please log in instead.";
+      } else if (error.message.includes("password")) {
+        errorMessage = "Password must be at least 6 characters long";
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
     toast.error("Signup failed", {
-      description: error instanceof Error ? error.message : "An error occurred during signup"
+      description: errorMessage
     });
     throw error;
   } finally {

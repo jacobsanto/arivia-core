@@ -10,7 +10,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
 const superAdminSchema = z.object({
   email: z.string().email("Valid email is required"),
@@ -24,6 +24,7 @@ const CreateSuperAdmin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [superAdminExists, setSuperAdminExists] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
   
   const form = useForm<SuperAdminFormValues>({
     resolver: zodResolver(superAdminSchema),
@@ -39,6 +40,7 @@ const CreateSuperAdmin: React.FC = () => {
     const checkForSuperAdmin = async () => {
       try {
         console.log("Checking for existing super admin...");
+        setCheckingAdmin(true);
         const { data, error } = await supabase
           .from('profiles')
           .select('id')
@@ -47,6 +49,9 @@ const CreateSuperAdmin: React.FC = () => {
         
         if (error) {
           console.error("Error checking for super admin:", error);
+          if (error.message.includes("Failed to fetch")) {
+            setError("Network error checking for Super Admin");
+          }
           return;
         }
         
@@ -58,6 +63,8 @@ const CreateSuperAdmin: React.FC = () => {
         }
       } catch (error) {
         console.error("Error checking for super admin:", error);
+      } finally {
+        setCheckingAdmin(false);
       }
     };
 
@@ -87,6 +94,11 @@ const CreateSuperAdmin: React.FC = () => {
     } catch (err) {
       console.error("Error creating super admin:", err);
       setError(err instanceof Error ? err.message : "Failed to create Super Admin");
+      
+      // Better error handling for network issues
+      if (err instanceof Error && err.message.includes("Failed to fetch")) {
+        setError("Network error. Please check your internet connection.");
+      }
     } finally {
       setLoading(false);
     }
@@ -101,14 +113,23 @@ const CreateSuperAdmin: React.FC = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {superAdminExists ? (
+        {checkingAdmin && (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+            <span>Checking for existing Super Admin...</span>
+          </div>
+        )}
+        
+        {!checkingAdmin && superAdminExists && (
           <Alert className="bg-green-50 text-green-800 border-green-200">
             <CheckCircle2 className="h-4 w-4" />
             <AlertDescription>
               Super Admin account has been created successfully.
             </AlertDescription>
           </Alert>
-        ) : (
+        )}
+        
+        {!checkingAdmin && !superAdminExists && (
           <Form {...form}>
             {error && (
               <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
@@ -138,7 +159,7 @@ const CreateSuperAdmin: React.FC = () => {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="admin@example.com" {...field} />
+                      <Input type="email" placeholder="admin@example.com" {...field} autoComplete="username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -152,7 +173,7 @@ const CreateSuperAdmin: React.FC = () => {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="********" {...field} />
+                      <Input type="password" placeholder="********" {...field} autoComplete="new-password" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -164,7 +185,12 @@ const CreateSuperAdmin: React.FC = () => {
                 disabled={loading || superAdminExists}
                 className="w-full"
               >
-                {loading ? "Creating Super Admin..." : "Create Super Admin"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Super Admin...
+                  </>
+                ) : "Create Super Admin"}
               </Button>
             </form>
           </Form>

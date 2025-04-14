@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -37,15 +37,48 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
     setIsLoading(true);
     setError(null);
 
+    // Client-side validation
+    if (!loginData.email || !loginData.password) {
+      setError("Email and password are required");
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      console.log("Submitting login for:", loginData.email);
-      await login(loginData.email, loginData.password);
-      toast.success("Login successful");
-      console.log("Login successful, navigating to dashboard");
-      navigate("/dashboard");
+      console.log(`Submitting login for: ${loginData.email} (${Date.now()})`);
+      const result = await login(loginData.email, loginData.password);
+      
+      if (result && result.success) {
+        toast.success("Login successful");
+        console.log("Login successful, navigating to dashboard");
+        navigate("/dashboard");
+      } else {
+        throw new Error(result?.message || "An unexpected error occurred during login");
+      }
     } catch (error) {
       console.error("Login form error:", error);
-      setError(error instanceof Error ? error.message : "An unexpected error occurred during login");
+      
+      // Handle different error types
+      let errorMessage = "An unexpected error occurred during login";
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Network error detection
+        if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
+          errorMessage = "Network error. Please check your internet connection.";
+        }
+        
+        // Authentication errors
+        if (error.message.includes("Invalid email") || 
+            error.message.includes("Invalid login") || 
+            error.message.includes("Invalid password") ||
+            error.message.includes("Invalid credentials")) {
+          errorMessage = "Invalid email or password";
+        }
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -72,6 +105,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
           required
           className={isMobile ? "h-10" : ""}
           disabled={isLoading}
+          autoComplete="username"
         />
       </div>
       <div className="space-y-2">
@@ -91,10 +125,16 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
           required
           className={isMobile ? "h-10" : ""}
           disabled={isLoading}
+          autoComplete="current-password"
         />
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? "Signing in..." : "Sign in"}
+        {isLoading ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Signing in...
+          </>
+        ) : "Sign in"}
       </Button>
       
       {/* Demo credentials - in a real app these would be removed */}

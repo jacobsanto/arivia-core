@@ -1,13 +1,15 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useUserData = () => {
   const [user, setUser] = useState<User | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const profileSubscriptionRef = useRef<any>(null);
   const usersSubscriptionRef = useRef<any>(null);
+  const profileFetchInProgress = useRef<boolean>(false);
   
   // Enable Supabase realtime for the profiles table
   useEffect(() => {
@@ -37,12 +39,19 @@ export const useUserData = () => {
   }, []);
   
   // Function to fetch profile data from Supabase
-  const fetchProfileData = async (userId: string): Promise<boolean> => {
+  const fetchProfileData = useCallback(async (userId: string): Promise<boolean> => {
     if (!navigator.onLine) {
       console.log("Offline - cannot fetch profile data");
       return false;
     }
+    
+    // Prevent multiple simultaneous fetches for the same user
+    if (profileFetchInProgress.current) {
+      console.log("Profile fetch already in progress, skipping duplicate request");
+      return false;
+    }
 
+    profileFetchInProgress.current = true;
     console.log("Fetching profile data for user:", userId);
     
     try {
@@ -50,10 +59,19 @@ export const useUserData = () => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error fetching profile data:", error);
+        // More specific error logging based on status
+        if (error.code === '406') {
+          console.error("Not Acceptable error - check content types");
+        } else if (error.code === 'PGRST116') {
+          console.error("Row not found in profiles table");
+          toast.error("User profile not found", { 
+            description: "Please contact admin to set up your account" 
+          });
+        }
         return false;
       }
 
@@ -94,11 +112,13 @@ export const useUserData = () => {
     } catch (error) {
       console.error("Error in fetchProfileData:", error);
       return false;
+    } finally {
+      profileFetchInProgress.current = false;
     }
-  };
+  }, [user]);
 
   // Function to refresh the current user's profile
-  const refreshUserProfile = async (): Promise<boolean> => {
+  const refreshUserProfile = useCallback(async (): Promise<boolean> => {
     if (!user) {
       console.log("No user to refresh profile for");
       return false;
@@ -118,7 +138,7 @@ export const useUserData = () => {
       console.error("Error refreshing user profile:", error);
       return false;
     }
-  };
+  }, [user, fetchProfileData]);
   
   // Set up subscription for current user profile updates
   useEffect(() => {
@@ -169,7 +189,7 @@ export const useUserData = () => {
         profileSubscriptionRef.current = null;
       }
     };
-  }, [user]);
+  }, [user, refreshUserProfile]);
   
   return {
     user,
