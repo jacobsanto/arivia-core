@@ -13,6 +13,7 @@ export const useSessionSync = (
 ) => {
   // Initialize auth state
   const initializeSession = useCallback(async () => {
+    console.log("Initializing session...");
     const { data } = await supabase.auth.getSession();
     
     if (data.session) {
@@ -48,8 +49,8 @@ export const useSessionSync = (
       setUser(userData);
       setLastAuthTime(Date.now());
       
-      // Get the latest profile data
-      fetchProfileData(data.session.user.id);
+      // We'll fetch profile data via the auth state change handler instead
+      // to avoid duplicate fetches
     } else {
       // Fall back to local storage for development
       const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
@@ -63,9 +64,14 @@ export const useSessionSync = (
   }, [setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
 
   useEffect(() => {
+    console.log("Setting up auth state listener...");
+    let profileFetchTimeout: NodeJS.Timeout | null = null;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, supaSession) => {
+        console.log("Auth state change:", event);
+        
         // Handle session change
         if (supaSession) {
           // Convert to our custom Session type
@@ -103,10 +109,20 @@ export const useSessionSync = (
           localStorage.setItem("user", JSON.stringify(userData));
           localStorage.setItem("lastAuthTime", Date.now().toString());
           
+          // Clear any existing timeout to avoid multiple fetches
+          if (profileFetchTimeout) {
+            clearTimeout(profileFetchTimeout);
+          }
+          
           // Fetch profile data separately via setTimeout to avoid auth deadlock
-          setTimeout(() => {
-            fetchProfileData(supaSession.user.id);
-          }, 0);
+          // and to ensure we don't have duplicate fetches
+          profileFetchTimeout = setTimeout(() => {
+            console.log("Fetching profile data for user:", supaSession.user.id);
+            fetchProfileData(supaSession.user.id).catch(err => {
+              console.error("Error fetching profile data:", err);
+            });
+            profileFetchTimeout = null;
+          }, 100);
         } else {
           setUser(null);
           setSession(null);
@@ -119,6 +135,10 @@ export const useSessionSync = (
     
     return () => {
       subscription.unsubscribe();
+      // Clear any pending profile fetch timeouts
+      if (profileFetchTimeout) {
+        clearTimeout(profileFetchTimeout);
+      }
     };
   }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession]);
 };

@@ -3,7 +3,7 @@ import { useAuthState } from "./auth/useAuthState";
 import { useUserData } from "./users/useUserData";
 import { useProfileSync } from "./profile/useProfileSync";
 import { useSessionSync } from "./auth/useSessionSync";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Re-export the new refactored hook as useUserState for backwards compatibility
@@ -20,6 +20,9 @@ export const useUserState = () => {
     userData.setUser
   );
   
+  // Reference to track subscription
+  const subscriptionRef = useRef<any>(null);
+  
   // Use session sync hook to tie everything together
   useSessionSync(
     userData.setUser,
@@ -31,7 +34,21 @@ export const useUserState = () => {
   
   // Subscribe to profile changes for the current user
   useEffect(() => {
-    if (!userData.user) return;
+    if (!userData.user) {
+      // Clean up any existing subscription when user is null
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
+      return;
+    }
+    
+    console.log("Setting up profile changes subscription for user:", userData.user.id);
+    
+    // Clean up any existing subscription before creating a new one
+    if (subscriptionRef.current) {
+      supabase.removeChannel(subscriptionRef.current);
+    }
     
     // Subscribe to changes in the current user's profile for real-time updates
     const channel = supabase
@@ -42,14 +59,25 @@ export const useUserState = () => {
         table: 'profiles',
         filter: `id=eq.${userData.user.id}`
       }, async (payload) => {
-        console.log("Current user profile updated:", payload);
-        // Fetch full profile to ensure we get all related data
-        await refreshUserProfile();
+        console.log("Current user profile updated from database:", payload);
+        // Use a small delay to prevent potential race conditions
+        setTimeout(async () => {
+          await refreshUserProfile();
+        }, 200);
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Profile subscription status: ${status}`);
+      });
+    
+    // Store the subscription reference for cleanup
+    subscriptionRef.current = channel;
       
     return () => {
-      supabase.removeChannel(channel);
+      console.log("Cleaning up profile changes subscription");
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current);
+        subscriptionRef.current = null;
+      }
     };
   }, [userData.user, refreshUserProfile]);
   

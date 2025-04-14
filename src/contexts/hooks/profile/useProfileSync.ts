@@ -18,6 +18,8 @@ export const useProfileSync = (
     }
 
     setIsLoading(true);
+    console.log("Fetching profile data for user:", userId);
+    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -30,6 +32,8 @@ export const useProfileSync = (
         return false;
       }
 
+      console.log("Profile data received:", data);
+      
       if (data && user) {
         // Update user with profile data - ensure proper type casting
         const updatedUser: User = {
@@ -51,12 +55,13 @@ export const useProfileSync = (
             : user.customPermissions
         };
         
+        console.log("Updating user state with:", updatedUser);
         setUser(updatedUser);
         
         // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
         
-        console.log("Profile data updated:", updatedUser);
+        console.log("Profile data updated successfully");
         return true;
       }
 
@@ -75,6 +80,8 @@ export const useProfileSync = (
       console.log("No user to refresh profile for");
       return false;
     }
+    
+    console.log("Refreshing user profile for:", user.id);
     
     try {
       const success = await fetchProfileData(user.id);
