@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -31,15 +31,24 @@ export const useProfileSync = (
       }
 
       if (data && user) {
-        // Update user with profile data
+        // Update user with profile data - ensure proper type casting
         const updatedUser: User = {
           ...user,
           name: data.name || user.name,
-          role: data.role || user.role,
+          // Properly cast role to UserRole type
+          role: data.role as UserRole || user.role,
           email: data.email || user.email,
           avatar: data.avatar || user.avatar,
-          secondaryRoles: data.secondary_roles || user.secondaryRoles,
-          customPermissions: data.custom_permissions || user.customPermissions
+          // Cast secondary_roles array elements to UserRole
+          secondaryRoles: data.secondary_roles 
+            ? data.secondary_roles.map((role: string) => role as UserRole) 
+            : user.secondaryRoles,
+          // Explicitly cast custom_permissions to the correct type
+          customPermissions: data.custom_permissions 
+            ? (typeof data.custom_permissions === 'object' 
+                ? data.custom_permissions as Record<string, boolean> 
+                : user.customPermissions) 
+            : user.customPermissions
         };
         
         setUser(updatedUser);
