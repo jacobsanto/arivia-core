@@ -108,17 +108,18 @@ export const updateUserProfile = async (
     delete dbProfileData.customPermissions;
 
     // Update profile in Supabase
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update(dbProfileData)
-      .eq('id', userId);
+      .eq('id', userId)
+      .select(); // Add this to get the updated data
 
     if (error) {
       console.error("Error updating profile:", error);
       throw error;
     }
 
-    console.log("Profile updated successfully in database");
+    console.log("Profile updated successfully in database:", data);
 
     // If this is the current user, also update local state
     if (currentUser && currentUser.id === userId) {

@@ -8,6 +8,7 @@ export const useRoleActions = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   
   const handleEditRole = (userId: string, user: User) => {
     setEditingUserId(userId);
@@ -24,40 +25,81 @@ export const useRoleActions = () => {
       return;
     }
 
+    setIsSaving(true);
+    
     try {
       // Regular users cannot have secondary roles
       const updatedSecondaryRoles = selectedRole === "superadmin" ? selectedSecondaryRoles : undefined;
       
       // Update in Supabase if online
       if (navigator.onLine) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('profiles')
           .update({ 
             role: selectedRole,
             secondary_roles: updatedSecondaryRoles
           })
-          .eq('id', userId);
+          .eq('id', userId)
+          .select() // Add this to get the updated record
+          .single(); // Get the updated record
           
         if (error) {
           throw error;
         }
-      }
-      
-      // Update local state
-      setUsers(users.map(u => u.id === userId ? {
-        ...u,
-        role: selectedRole,
-        secondaryRoles: updatedSecondaryRoles
-      } : u));
-      
-      // Update localStorage for offline access
-      localStorage.setItem("users", JSON.stringify(
-        users.map(u => u.id === userId ? {
-          ...u,
+        
+        console.log("Updated profile from Supabase:", data);
+        
+        // If we have data back, use it to update the local state
+        if (data) {
+          const updatedUser = {
+            ...users.find(u => u.id === userId)!,
+            role: data.role as UserRole,
+            secondaryRoles: data.secondary_roles as UserRole[] | undefined
+          };
+          
+          // Update users array
+          setUsers(users.map(u => u.id === userId ? updatedUser : u));
+          
+          // Update localStorage for offline access
+          localStorage.setItem("users", JSON.stringify(
+            users.map(u => u.id === userId ? updatedUser : u)
+          ));
+        } else {
+          // Fallback if no data is returned but no error either
+          const updatedUser = {
+            ...users.find(u => u.id === userId)!,
+            role: selectedRole,
+            secondaryRoles: updatedSecondaryRoles
+          };
+          
+          // Update users array
+          setUsers(users.map(u => u.id === userId ? updatedUser : u));
+          
+          // Update localStorage for offline access
+          localStorage.setItem("users", JSON.stringify(
+            users.map(u => u.id === userId ? updatedUser : u)
+          ));
+        }
+      } else {
+        // Offline mode - update local state only
+        const updatedUser = {
+          ...users.find(u => u.id === userId)!,
           role: selectedRole,
           secondaryRoles: updatedSecondaryRoles
-        } : u)
-      ));
+        };
+        
+        // Update users array
+        setUsers(users.map(u => u.id === userId ? updatedUser : u));
+        
+        // Update localStorage for offline access
+        localStorage.setItem("users", JSON.stringify(
+          users.map(u => u.id === userId ? updatedUser : u)
+        ));
+        
+        toast.warning("You're offline", {
+          description: "Changes will sync when you reconnect"
+        });
+      }
       
       setEditingUserId(null);
       toast.success("User role updated successfully");
@@ -66,6 +108,8 @@ export const useRoleActions = () => {
       toast.error("Failed to update user role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
+    } finally {
+      setIsSaving(false);
     }
   };
   
@@ -88,6 +132,7 @@ export const useRoleActions = () => {
     handleEditRole,
     handleSaveRole,
     handleCancelEdit,
-    toggleSecondaryRole
+    toggleSecondaryRole,
+    isSaving
   };
 };
