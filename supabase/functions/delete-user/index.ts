@@ -1,8 +1,4 @@
 
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.37.0"
 
@@ -25,20 +21,39 @@ serve(async (req) => {
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     
+    if (!supabaseServiceRoleKey) {
+      console.error("Service role key missing")
+      return new Response(
+        JSON.stringify({ error: "Server configuration error" }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
     // Create a Supabase client with the service role key
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+    
+    // Verify request headers and permissions
+    const authHeader = req.headers.get('authorization')
+    if (!authHeader) {
+      console.error("Missing authorization header")
+      return new Response(
+        JSON.stringify({ error: "Missing authorization header" }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
     
     // Get the request body
     const { userId } = await req.json()
     
     if (!userId) {
+      console.error("Missing userId in request body")
       return new Response(
         JSON.stringify({ error: "User ID is required" }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
     
-    console.log("Request to delete user:", userId)
+    console.log(`Request to delete user: ${userId}`)
     
     // First delete profile (Row Level Security may prevent this otherwise)
     const { error: profileError } = await supabase
@@ -48,11 +63,36 @@ serve(async (req) => {
       
     if (profileError) {
       console.error("Error deleting profile:", profileError)
-      
-      // Continue with auth user deletion even if profile deletion fails
-      // as the user might have been deleted already or never had a profile
+      // We'll continue with auth user deletion even if profile deletion fails
+      // The user might have been deleted already or never had a profile
     } else {
-      console.log("Profile deleted successfully for user:", userId)
+      console.log(`Profile deleted successfully for user: ${userId}`)
+    }
+    
+    // Delete user's storage folder if it exists
+    try {
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('avatars')
+        .list(`${userId}/`)
+      
+      if (!storageError && storageData && storageData.length > 0) {
+        console.log(`Found ${storageData.length} files in user's storage folder`)
+        
+        const filesToDelete = storageData.map(file => `${userId}/${file.name}`)
+        
+        const { error: deleteError } = await supabase.storage
+          .from('avatars')
+          .remove(filesToDelete)
+        
+        if (deleteError) {
+          console.error("Error deleting user files:", deleteError)
+        } else {
+          console.log(`Deleted ${filesToDelete.length} files for user`)
+        }
+      }
+    } catch (storageError) {
+      console.error("Error handling user storage:", storageError)
+      // Continue with user deletion even if storage cleanup fails
     }
     
     // Attempt to delete the user from auth.users
@@ -62,7 +102,7 @@ serve(async (req) => {
       console.error("Error deleting auth user:", authError)
       
       // Check for non-critical errors we can ignore
-      if (authError.message.includes('not found')) {
+      if (authError.message && authError.message.includes('not found')) {
         // User already deleted or never existed
         return new Response(
           JSON.stringify({ 
@@ -79,15 +119,22 @@ serve(async (req) => {
       )
     }
     
+    // All operations completed successfully
     return new Response(
-      JSON.stringify({ message: "User successfully deleted" }),
+      JSON.stringify({ 
+        message: "User successfully deleted",
+        userId: userId 
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error("Error in delete-user function:", error)
     
     return new Response(
-      JSON.stringify({ error: error.message || "Unknown error occurred" }),
+      JSON.stringify({ 
+        error: error.message || "Unknown error occurred",
+        details: error.stack || "No stack trace available"
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }

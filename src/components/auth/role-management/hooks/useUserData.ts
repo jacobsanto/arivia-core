@@ -1,53 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-// We'll keep the mock data as fallback
-const MOCK_USER_LIST: User[] = [{
-  id: "1",
-  email: "admin@ariviavillas.com",
-  name: "Admin User",
-  role: "administrator",
-  avatar: "/placeholder.svg"
-}, {
-  id: "2",
-  email: "manager@ariviavillas.com",
-  name: "Property Manager",
-  role: "property_manager",
-  avatar: "/placeholder.svg"
-}, {
-  id: "3",
-  email: "concierge@ariviavillas.com",
-  name: "Concierge Staff",
-  role: "concierge",
-  avatar: "/placeholder.svg"
-}, {
-  id: "4",
-  email: "housekeeping@ariviavillas.com",
-  name: "Housekeeping Staff",
-  role: "housekeeping_staff",
-  avatar: "/placeholder.svg"
-}, {
-  id: "5",
-  email: "maintenance@ariviavillas.com",
-  name: "Maintenance Staff",
-  role: "maintenance_staff",
-  avatar: "/placeholder.svg"
-}, {
-  id: "6",
-  email: "inventory@ariviavillas.com",
-  name: "Inventory Manager",
-  role: "inventory_manager",
-  avatar: "/placeholder.svg"
-}, {
-  id: "7",
-  email: "superadmin@ariviavillas.com",
-  name: "Super Admin",
-  role: "superadmin",
-  secondaryRoles: ["administrator"],
-  avatar: "/placeholder.svg"
-}];
 
 export const useUserData = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -60,6 +15,7 @@ export const useUserData = () => {
         setIsLoading(true);
         
         if (navigator.onLine) {
+          console.log("Fetching users from Supabase...");
           // Fetch profiles from Supabase
           const { data, error } = await supabase
             .from('profiles')
@@ -71,6 +27,7 @@ export const useUserData = () => {
           }
           
           if (data) {
+            console.log(`Fetched ${data.length} users successfully`, data);
             // Convert to User type
             const mappedUsers: User[] = data.map((profile: any) => ({
               id: profile.id,
@@ -86,26 +43,29 @@ export const useUserData = () => {
             
             // Update localStorage for offline use
             localStorage.setItem("users", JSON.stringify(mappedUsers));
+            console.log("Updated localStorage with fetched users");
           }
         } else {
+          console.log("Device is offline, using localStorage or mock data");
           // Offline mode - use localStorage
           const storedUsers = localStorage.getItem("users");
           if (storedUsers) {
             setUsers(JSON.parse(storedUsers));
-          } else {
-            // Fallback to mock data if no stored users
-            setUsers(MOCK_USER_LIST);
+            console.log("Loaded users from localStorage");
           }
         }
       } catch (error) {
         console.error("Error fetching users:", error);
         toast.error("Failed to load users", {
-          description: "Using cached or mock data instead"
+          description: "Using cached data instead"
         });
         
-        // Use mock data as fallback
+        // Use localStorage data as fallback
         const storedUsers = localStorage.getItem("users");
-        setUsers(storedUsers ? JSON.parse(storedUsers) : MOCK_USER_LIST);
+        if (storedUsers) {
+          setUsers(JSON.parse(storedUsers));
+          console.log("Loaded users from localStorage after error");
+        }
       } finally {
         setIsLoading(false);
       }
@@ -114,7 +74,7 @@ export const useUserData = () => {
     fetchUsers();
     
     // Set up real-time subscription for profile changes
-    const profilesSubscription = supabase
+    const profilesChannel = supabase
       .channel('public:profiles')
       .on('postgres_changes', { 
         event: '*', 
@@ -122,12 +82,65 @@ export const useUserData = () => {
         table: 'profiles' 
       }, (payload) => {
         console.log('Profile change detected:', payload);
-        fetchUsers(); // Reload users when profiles change
+        
+        // Handle different types of changes
+        if (payload.eventType === 'INSERT') {
+          const newProfile = payload.new;
+          // Add the new user to the list
+          setUsers(prevUsers => [
+            ...prevUsers,
+            {
+              id: newProfile.id,
+              email: newProfile.email,
+              name: newProfile.name || newProfile.email.split('@')[0],
+              role: newProfile.role as UserRole,
+              secondaryRoles: newProfile.secondary_roles,
+              avatar: newProfile.avatar || "/placeholder.svg",
+              customPermissions: newProfile.custom_permissions
+            }
+          ]);
+        } 
+        else if (payload.eventType === 'UPDATE') {
+          const updatedProfile = payload.new;
+          // Update the existing user
+          setUsers(prevUsers => 
+            prevUsers.map(user => 
+              user.id === updatedProfile.id 
+                ? {
+                    ...user,
+                    email: updatedProfile.email,
+                    name: updatedProfile.name || updatedProfile.email.split('@')[0],
+                    role: updatedProfile.role as UserRole,
+                    secondaryRoles: updatedProfile.secondary_roles,
+                    avatar: updatedProfile.avatar || "/placeholder.svg",
+                    customPermissions: updatedProfile.custom_permissions
+                  }
+                : user
+            )
+          );
+        }
+        else if (payload.eventType === 'DELETE') {
+          // Remove the deleted user
+          setUsers(prevUsers => 
+            prevUsers.filter(user => user.id !== payload.old.id)
+          );
+        }
+        
+        // Update localStorage
+        localStorage.setItem("users", JSON.stringify(
+          setUsers(prevState => {
+            localStorage.setItem("users", JSON.stringify(prevState));
+            return prevState;
+          })
+        ));
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Profile subscription status: ${status}`);
+      });
     
     return () => {
-      supabase.removeChannel(profilesSubscription);
+      console.log("Cleaning up profile subscription");
+      supabase.removeChannel(profilesChannel);
     };
   }, []);
 

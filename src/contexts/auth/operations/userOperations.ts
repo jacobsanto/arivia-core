@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User } from "@/types/auth";
@@ -105,6 +104,7 @@ export const removeUser = async (
       
       // Call the edge function to delete the user safely with admin privileges
       try {
+        console.log("Calling delete-user edge function with userId:", userIdToDelete);
         const { data, error } = await supabase.functions.invoke("delete-user", {
           body: { userId: userIdToDelete }
         });
@@ -115,6 +115,13 @@ export const removeUser = async (
         }
         
         console.log("Delete user function response:", data);
+        
+        // Update local state after successful deletion
+        const updatedUsers = users.filter(u => u.id !== userIdToDelete);
+        setUsers(updatedUsers);
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+        
+        toastService.success("User deleted successfully");
       } catch (functionError) {
         console.error("Error calling delete-user function:", functionError);
         throw functionError;
@@ -124,14 +131,12 @@ export const removeUser = async (
       toastService.warning("Offline delete", {
         description: "User will be removed locally but will sync when back online"
       });
+      
+      // Update local state for offline mode
+      const updatedUsers = users.filter(u => u.id !== userIdToDelete);
+      setUsers(updatedUsers);
+      localStorage.setItem("users", JSON.stringify(updatedUsers));
     }
-    
-    // Update local state regardless of online status
-    const updatedUsers = users.filter(u => u.id !== userIdToDelete);
-    setUsers(updatedUsers);
-    localStorage.setItem("users", JSON.stringify(updatedUsers));
-    
-    toastService.success("User deleted successfully");
     
     return true;
   } catch (error) {

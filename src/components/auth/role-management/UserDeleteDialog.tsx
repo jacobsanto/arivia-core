@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 
 interface UserDeleteDialogProps {
@@ -59,7 +60,13 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
           <Button variant="outline" onClick={onCancel} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={onConfirm} disabled={isDeleting}>
+          <Button 
+            variant="destructive" 
+            onClick={onConfirm} 
+            disabled={isDeleting}
+            className="flex items-center gap-2"
+          >
+            {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isDeleting ? "Deleting..." : "Delete User"}
           </Button>
         </DialogFooter>

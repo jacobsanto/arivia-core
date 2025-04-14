@@ -5,6 +5,7 @@ import { useExpandedUsers } from "./hooks/useExpandedUsers";
 import { useRoleActions } from "./hooks/useRoleActions";
 import { useUserDeletion } from "./hooks/useUserDeletion";
 import { useUserData } from "./hooks/useUserData";
+import { toast } from "sonner";
 
 export const useRoleManagement = () => {
   // Get user data and loading state
@@ -27,7 +28,16 @@ export const useRoleManagement = () => {
   
   // Handle user deletion confirm
   const handleDelete = async () => {
-    await handleDeleteConfirm(users, setUsers);
+    console.log("Handling delete confirmation");
+    try {
+      await handleDeleteConfirm(users, setUsers);
+      toast.success("User deleted successfully");
+    } catch (error) {
+      console.error("Error in handleDelete:", error);
+      toast.error("Failed to delete user", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    }
   };
   
   return {
