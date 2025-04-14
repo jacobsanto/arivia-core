@@ -1,14 +1,13 @@
-
-import { useEffect, useCallback } from "react";
-import { User, UserRole, Session, UserStateSetter } from "@/types/auth";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getUserFromStorage } from "@/services/auth/userAuthService";
+import { Session, User, UserStateSetter } from "@/types/auth";
+import { StateSetter } from "@/types/auth";
 
 export const useSessionSync = (
   setUser: UserStateSetter,
-  setSession: (session: Session | null) => void,
-  setLastAuthTime: (time: number) => void,
-  setIsLoading: (isLoading: boolean) => void,
+  setSession: StateSetter<Session | null>,
+  setLastAuthTime: StateSetter<number>,
+  setIsLoading: StateSetter<boolean>,
   fetchProfileData: (userId: string) => Promise<boolean>
 ) => {
   // Initialize auth state
