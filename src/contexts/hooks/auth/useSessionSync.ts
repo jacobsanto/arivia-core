@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,7 +38,7 @@ export const useSessionSync = (
         };
         
         // Only update user state if it doesn't match current state
-        setUser(prevUser => {
+        setUser((prevUser) => {
           if (!prevUser || prevUser.id !== userData.id) {
             return userData;
           }

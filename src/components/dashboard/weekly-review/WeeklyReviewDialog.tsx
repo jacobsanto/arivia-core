@@ -31,11 +31,16 @@ export const WeeklyReviewDialog: React.FC<WeeklyReviewDialogProps> = ({
   const startOfWeek = subDays(today, 6);
   const dateRange = `${format(startOfWeek, 'MMM d')} - ${format(today, 'MMM d, yyyy')}`;
 
-  // Prepare week-over-week comparison (simplified for demo)
+  // Prevent null reference issues by ensuring dashboardData is not null
+  if (!dashboardData) {
+    return null; // Don't render the dialog if there's no data
+  }
+
+  // Prepare week-over-week comparison with safe access using optional chaining
   const weekOverWeekData = {
     occupancy: {
-      current: dashboardData.properties?.occupied || 0,
-      previous: Math.max(0, (dashboardData.properties?.occupied || 0) - 1),
+      current: dashboardData?.properties?.occupied || 0,
+      previous: Math.max(0, (dashboardData?.properties?.occupied || 0) - 1),
       change: 1,
     },
     revenue: {
@@ -44,13 +49,13 @@ export const WeeklyReviewDialog: React.FC<WeeklyReviewDialogProps> = ({
       change: 11.8,
     },
     taskCompletion: {
-      current: dashboardData.tasks?.completed || 0,
-      previous: Math.floor((dashboardData.tasks?.completed || 0) * 0.9),
+      current: dashboardData?.tasks?.completed || 0,
+      previous: Math.floor((dashboardData?.tasks?.completed || 0) * 0.9),
       change: 10,
     },
     maintenanceIssues: {
-      current: dashboardData.maintenance?.total || 0,
-      previous: Math.ceil((dashboardData.maintenance?.total || 0) * 1.2),
+      current: dashboardData?.maintenance?.total || 0,
+      previous: Math.ceil((dashboardData?.maintenance?.total || 0) * 1.2),
       change: -20,
     }
   };
@@ -66,13 +71,13 @@ export const WeeklyReviewDialog: React.FC<WeeklyReviewDialogProps> = ({
       { Metric: 'Current Revenue', Value: `€${weekOverWeekData.revenue.current}` },
       { Metric: 'Previous Week Revenue', Value: `€${weekOverWeekData.revenue.previous}` },
       { Metric: 'Revenue Change', Value: `${weekOverWeekData.revenue.change}%` },
-      { Metric: 'Tasks Completed', Value: dashboardData.tasks?.completed || 0 },
-      { Metric: 'Tasks Pending', Value: dashboardData.tasks?.pending || 0 },
-      { Metric: 'Critical Maintenance Issues', Value: dashboardData.maintenance?.critical || 0 },
+      { Metric: 'Tasks Completed', Value: dashboardData?.tasks?.completed || 0 },
+      { Metric: 'Tasks Pending', Value: dashboardData?.tasks?.pending || 0 },
+      { Metric: 'Critical Maintenance Issues', Value: dashboardData?.maintenance?.critical || 0 },
     ];
     
     // Add upcoming tasks if available
-    if (dashboardData.upcomingTasks && dashboardData.upcomingTasks.length) {
+    if (dashboardData?.upcomingTasks && dashboardData.upcomingTasks.length) {
       dashboardData.upcomingTasks.forEach((task: any, index: number) => {
         data.push({
           Metric: `Upcoming Task ${index + 1}`,
@@ -124,3 +129,4 @@ export const WeeklyReviewDialog: React.FC<WeeklyReviewDialogProps> = ({
 };
 
 export default WeeklyReviewDialog;
+
