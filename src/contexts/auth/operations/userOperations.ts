@@ -103,47 +103,21 @@ export const removeUser = async (
         }
       }
       
-      // Delete the user's profile first
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userIdToDelete);
-      
-      if (profileError) {
-        console.error("Error deleting user profile:", profileError);
-        throw profileError;
-      }
-      
-      // Then attempt to delete the auth user
-      // Note: This may fail for OAuth users, but we'll handle that below
+      // Call the edge function to delete the user safely with admin privileges
       try {
-        const { error: authError } = await supabase.auth.admin.deleteUser(userIdToDelete);
-        
-        if (authError) {
-          console.error("Error from auth delete:", authError);
-          
-          // Determine if we should update the UI even with an error
-          const isNonCriticalError = 
-            // For OAuth users, we often can delete the profile but not the auth record
-            authError.message.includes('not found') || 
-            userIdToDelete.includes('-') || 
-            // For numeric IDs (timestamps), we may not be able to delete from auth
-            /^\d+$/.test(userIdToDelete);
-          
-          if (isNonCriticalError) {
-            toastService.warning("Partial user deletion", {
-              description: "The user's profile was removed, but there may be remnants in the authentication system."
-            });
-          } else {
-            throw authError;
-          }
-        }
-      } catch (authError) {
-        console.error("Error deleting auth user:", authError);
-        toastService.warning("Partial user deletion", {
-          description: "The user's profile was removed, but there may be remnants in the authentication system."
+        const { data, error } = await supabase.functions.invoke("delete-user", {
+          body: { userId: userIdToDelete }
         });
-        // Continue with UI update as the profile is deleted
+        
+        if (error) {
+          console.error("Error from delete-user function:", error);
+          throw new Error(error.message || "Failed to delete user through edge function");
+        }
+        
+        console.log("Delete user function response:", data);
+      } catch (functionError) {
+        console.error("Error calling delete-user function:", functionError);
+        throw functionError;
       }
     } else {
       console.log("Device is offline, updating local state only");

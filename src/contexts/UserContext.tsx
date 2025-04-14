@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext } from "react";
 import { User, UserRole } from "@/types/auth";
 import { useUserState } from "./hooks";
