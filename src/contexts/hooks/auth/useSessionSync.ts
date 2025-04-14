@@ -1,10 +1,11 @@
+
 import { useEffect, useCallback } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
 
 export const useSessionSync = (
-  setUser: (user: User | null) => void,
+  setUser: (user: User | null | ((prevUser: User | null) => User | null)) => void,
   setSession: (session: Session | null) => void,
   setLastAuthTime: (time: number) => void,
   setIsLoading: (isLoading: boolean) => void,
