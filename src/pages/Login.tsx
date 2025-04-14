@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
 import { LoginInfoPanel } from "@/components/auth/LoginInfoPanel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
@@ -21,6 +22,15 @@ const Login = () => {
       {/* Left panel - Login/Register Form */}
       <div className="flex-1 flex flex-col items-center justify-center bg-white p-10">
         <div className="w-full max-w-md">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" 
+              alt="Arivia Logo" 
+              className="h-24 w-auto object-contain"
+            />
+          </div>
+
           {/* Tabs */}
           <div className="flex mb-6 border-b">
             <button
@@ -89,3 +99,4 @@ const Login = () => {
 };
 
 export default Login;
+
