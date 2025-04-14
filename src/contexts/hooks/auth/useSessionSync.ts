@@ -14,58 +14,73 @@ export const useSessionSync = (
   // Initialize auth state
   const initializeSession = useCallback(async () => {
     console.log("Initializing session...");
-    const { data } = await supabase.auth.getSession();
-    
-    if (data.session) {
-      // User authenticated with Supabase
-      // Convert to our custom Session type
-      const customSession: Session = {
-        access_token: data.session.access_token,
-        token_type: data.session.token_type,
-        expires_in: data.session.expires_in,
-        refresh_token: data.session.refresh_token,
-        user: {
+    try {
+      const { data } = await supabase.auth.getSession();
+      
+      if (data.session) {
+        // User authenticated with Supabase
+        console.log("Found existing session:", data.session.user.id);
+        // Convert to our custom Session type
+        const customSession: Session = {
+          access_token: data.session.access_token,
+          token_type: data.session.token_type,
+          expires_in: data.session.expires_in,
+          refresh_token: data.session.refresh_token,
+          user: {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            user_metadata: {
+              name: data.session.user.user_metadata?.name,
+              role: data.session.user.user_metadata?.role,
+              avatar: data.session.user.user_metadata?.avatar,
+            },
+          },
+        };
+        
+        setSession(customSession);
+        
+        // Convert to our User format - basic info only
+        // Detailed profile data will be fetched separately
+        const userData: User = {
           id: data.session.user.id,
           email: data.session.user.email || '',
-          user_metadata: {
-            name: data.session.user.user_metadata.name,
-            role: data.session.user.user_metadata.role,
-            avatar: data.session.user.user_metadata.avatar,
-          },
-        },
-      };
-      
-      setSession(customSession);
-      
-      // Convert to our User format - basic info only
-      // Detailed profile data will be fetched separately
-      const userData: User = {
-        id: data.session.user.id,
-        email: data.session.user.email || '',
-        name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || 'User',
-        role: data.session.user.user_metadata?.role as UserRole || 'property_manager',
-        avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
-      };
-      
-      setUser(userData);
-      setLastAuthTime(Date.now());
-      
-      // Fetch profile data with a slight delay to avoid blocking the UI
-      setTimeout(() => {
-        fetchProfileData(userData.id).catch(err => {
-          console.error("Error fetching initial profile data:", err);
-        });
-      }, 100);
-    } else {
-      // Fall back to local storage for development
+          name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || 'User',
+          role: data.session.user.user_metadata?.role as UserRole || 'property_manager',
+          avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
+        };
+        
+        setUser(userData);
+        setLastAuthTime(Date.now());
+        console.log("User state initialized:", userData);
+        
+        // Fetch profile data with a slight delay to avoid blocking the UI
+        setTimeout(() => {
+          fetchProfileData(userData.id).catch(err => {
+            console.error("Error fetching initial profile data:", err);
+          });
+        }, 100);
+      } else {
+        console.log("No existing session found");
+        // Fall back to local storage for development
+        const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
+        if (storedUser) {
+          console.log("Found user in local storage:", storedUser.id);
+          setUser(storedUser);
+          setLastAuthTime(storedAuthTime);
+        }
+      }
+    } catch (error) {
+      console.error("Error during session initialization:", error);
+      // Fall back to local storage in case of error
       const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
       if (storedUser) {
+        console.log("Using fallback from local storage due to error");
         setUser(storedUser);
         setLastAuthTime(storedAuthTime);
       }
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   }, [setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
 
   useEffect(() => {
@@ -78,6 +93,7 @@ export const useSessionSync = (
         
         // Handle session change
         if (supaSession) {
+          console.log("Session user:", supaSession.user.id);
           // Convert to our custom Session type
           const customSession: Session = {
             access_token: supaSession.access_token,
@@ -88,9 +104,9 @@ export const useSessionSync = (
               id: supaSession.user.id,
               email: supaSession.user.email || '',
               user_metadata: {
-                name: supaSession.user.user_metadata.name,
-                role: supaSession.user.user_metadata.role,
-                avatar: supaSession.user.user_metadata.avatar,
+                name: supaSession.user.user_metadata?.name,
+                role: supaSession.user.user_metadata?.role,
+                avatar: supaSession.user.user_metadata?.avatar,
               },
             },
           };
@@ -108,6 +124,7 @@ export const useSessionSync = (
           
           setUser(userData);
           setLastAuthTime(Date.now());
+          console.log("User state updated:", userData);
           
           // For development, update mock storage too
           localStorage.setItem("user", JSON.stringify(userData));
@@ -120,8 +137,12 @@ export const useSessionSync = (
             });
           }, 100);
         } else {
-          setUser(null);
-          setSession(null);
+          console.log("No session in auth state change");
+          if (event === 'SIGNED_OUT') {
+            console.log("User signed out, clearing state");
+            setUser(null);
+            setSession(null);
+          }
         }
       }
     );
@@ -130,6 +151,7 @@ export const useSessionSync = (
     initializeSession();
     
     return () => {
+      console.log("Cleaning up auth subscription");
       subscription.unsubscribe();
     };
   }, [setUser, setSession, setLastAuthTime, fetchProfileData, initializeSession]);

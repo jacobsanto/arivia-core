@@ -3,11 +3,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const registerSuperAdmin = async (
-  email: string = "iakovos@ariviagroup.com",
-  password: string = "Lilakimou13@",
-  name: string = "Iakovos Kalaitzakis"
+  email: string,
+  password: string,
+  name: string
 ): Promise<boolean> => {
   try {
+    console.log("Registering super admin:", { email, name });
     const role = "superadmin";
     
     // Check if super admin already exists
@@ -33,6 +34,7 @@ export const registerSuperAdmin = async (
     }
     
     // Register the Super Admin with Supabase
+    console.log("Creating super admin account...");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -53,6 +55,7 @@ export const registerSuperAdmin = async (
       return false;
     }
 
+    console.log("Super Admin created successfully:", data.user?.id);
     toast.success("Super Admin created successfully", {
       description: `The Super Admin account for ${name} has been registered.`
     });

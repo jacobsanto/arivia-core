@@ -7,9 +7,15 @@ const AuthRedirect: React.FC = () => {
   const { user, isLoading } = useUser();
   const navigate = useNavigate();
   
+  console.log("AuthRedirect: user:", user?.id, "isLoading:", isLoading);
+  
   useEffect(() => {
     if (user && !isLoading) {
+      console.log("User authenticated, redirecting to dashboard");
       navigate('/dashboard');
+    } else if (!isLoading && !user) {
+      console.log("User not authenticated, redirecting to login");
+      navigate('/login');
     }
   }, [user, isLoading, navigate]);
 

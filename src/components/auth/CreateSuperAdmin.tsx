@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 const superAdminSchema = z.object({
   email: z.string().email("Valid email is required"),
@@ -21,6 +23,7 @@ type SuperAdminFormValues = z.infer<typeof superAdminSchema>;
 const CreateSuperAdmin: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [superAdminExists, setSuperAdminExists] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const form = useForm<SuperAdminFormValues>({
     resolver: zodResolver(superAdminSchema),
@@ -35,14 +38,23 @@ const CreateSuperAdmin: React.FC = () => {
   useEffect(() => {
     const checkForSuperAdmin = async () => {
       try {
+        console.log("Checking for existing super admin...");
         const { data, error } = await supabase
           .from('profiles')
           .select('id')
           .eq('role', 'superadmin')
           .maybeSingle();
         
-        if (!error && data) {
+        if (error) {
+          console.error("Error checking for super admin:", error);
+          return;
+        }
+        
+        if (data) {
+          console.log("Super admin already exists");
           setSuperAdminExists(true);
+        } else {
+          console.log("No super admin found");
         }
       } catch (error) {
         console.error("Error checking for super admin:", error);
@@ -54,9 +66,12 @@ const CreateSuperAdmin: React.FC = () => {
 
   const onSubmit = async (data: SuperAdminFormValues) => {
     setLoading(true);
+    setError(null);
     try {
+      console.log("Creating super admin with:", data.email);
       const success = await registerSuperAdmin(data.email, data.password, data.name);
       if (success) {
+        console.log("Super admin created successfully");
         // Check again if super admin exists after registration attempt
         const { data: adminData } = await supabase
           .from('profiles')
@@ -69,6 +84,9 @@ const CreateSuperAdmin: React.FC = () => {
           form.reset();
         }
       }
+    } catch (err) {
+      console.error("Error creating super admin:", err);
+      setError(err instanceof Error ? err.message : "Failed to create Super Admin");
     } finally {
       setLoading(false);
     }
@@ -84,11 +102,20 @@ const CreateSuperAdmin: React.FC = () => {
       </CardHeader>
       <CardContent>
         {superAdminExists ? (
-          <div className="text-sm text-green-600">
-            Super Admin account has been created successfully.
-          </div>
+          <Alert className="bg-green-50 text-green-800 border-green-200">
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>
+              Super Admin account has been created successfully.
+            </AlertDescription>
+          </Alert>
         ) : (
           <Form {...form}>
+            {error && (
+              <Alert className="mb-4 bg-red-50 text-red-800 border-red-200">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -12,8 +15,9 @@ interface LoginFormProps {
 
 const LoginForm = ({ isMobile = false }: LoginFormProps) => {
   const navigate = useNavigate();
-  const { login } = useUser();
+  const { login, user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [loginData, setLoginData] = useState({
     email: "",
     password: "",
@@ -24,19 +28,24 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
       ...prev,
       [e.target.name]: e.target.value
     }));
+    // Clear error when user types
+    if (error) setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     try {
+      console.log("Submitting login for:", loginData.email);
       await login(loginData.email, loginData.password);
       toast.success("Login successful");
-      navigate("/");
+      console.log("Login successful, navigating to dashboard");
+      navigate("/dashboard");
     } catch (error) {
-      toast.error("An error occurred during login");
-      console.error("Login error:", error);
+      console.error("Login form error:", error);
+      setError(error instanceof Error ? error.message : "An unexpected error occurred during login");
     } finally {
       setIsLoading(false);
     }
@@ -44,6 +53,13 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className={`space-y-${isMobile ? '4' : '6'}`}>
+      {error && (
+        <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-200">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input 
@@ -55,6 +71,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
           onChange={handleChange}
           required
           className={isMobile ? "h-10" : ""}
+          disabled={isLoading}
         />
       </div>
       <div className="space-y-2">
@@ -73,6 +90,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
           onChange={handleChange}
           required
           className={isMobile ? "h-10" : ""}
+          disabled={isLoading}
         />
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
@@ -83,7 +101,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
       {!isMobile && (
         <div className="text-sm text-center text-muted-foreground">
           <p>Demo credentials:</p>
-          <p>Email: admin@example.com / Password: password</p>
+          <p>Email: admin@ariviavillas.com / Password: password</p>
         </div>
       )}
     </form>
