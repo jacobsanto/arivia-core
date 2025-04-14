@@ -4,7 +4,7 @@ import { Lock, Home, Users } from "lucide-react";
 
 export const LoginInfoPanel: React.FC = () => {
   return (
-    <div className="hidden lg:block lg:w-[45%] bg-[#c2a988] text-white p-12 flex flex-col justify-center">
+    <div className="hidden lg:block lg:w-[45%] bg-primary text-white p-12 flex flex-col justify-center">
       <div className="max-w-lg mx-auto">
         <h1 className="text-4xl font-bold mb-4">
           Vacation Rental Management System

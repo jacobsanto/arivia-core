@@ -38,8 +38,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await login(email, password, setUser, setLastAuthTime, setIsLoading);
   };
 
-  const handleSignup = async (email: string, password: string, fullName: string) => {
-    await signup(email, password, fullName, setUser, setLastAuthTime, setIsLoading);
+  const handleSignup = async (email: string, password: string, fullName: string, role: UserRole = "property_manager") => {
+    await signup(email, password, fullName, role, setUser, setLastAuthTime, setIsLoading);
   };
 
   const handleLogout = async () => {

@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 
 export const login = async (
@@ -107,6 +108,7 @@ export const signup = async (
   email: string,
   password: string,
   fullName: string,
+  role: UserRole = "property_manager",
   setUser: (user: User | null) => void,
   setLastAuthTime: (time: number) => void,
   setIsLoading: (isLoading: boolean) => void
@@ -115,13 +117,28 @@ export const signup = async (
     console.log("Signup attempt for:", email);
     setIsLoading(true);
 
+    // Check if role is superadmin and one already exists
+    if (role === "superadmin") {
+      const { data: existingSuperAdmin, error: checkError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('role', 'superadmin')
+        .maybeSingle();
+      
+      if (checkError) throw checkError;
+      
+      if (existingSuperAdmin) {
+        throw new Error("Super Admin role is already taken. Only one Super Admin account can be created.");
+      }
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           name: fullName,
-          role: "property_manager" // Default role for new signups
+          role: role
         }
       }
     });

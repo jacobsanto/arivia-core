@@ -1,11 +1,13 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
-import { AlertCircle, Loader2, User, Mail, Lock, Eye, EyeOff, ChevronDown } from "lucide-react";
+import { AlertCircle, Loader2, User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { ROLE_DETAILS, UserRole } from "@/types/auth";
 
 interface SignUpFormProps {
   isMobile?: boolean;
@@ -17,14 +19,36 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [superAdminExists, setSuperAdminExists] = useState(false);
   
   const [signUpData, setSignUpData] = useState({
     fullName: "",
-    username: "",
     email: "",
     password: "",
-    role: "property_manager"
+    role: "property_manager" as UserRole
   });
+
+  // Check if super admin exists
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('role', 'superadmin')
+          .maybeSingle();
+        
+        if (error) throw error;
+        setSuperAdminExists(!!data);
+      } catch (err) {
+        console.error("Error checking for super admin:", err);
+        // Default to true as a safety measure
+        setSuperAdminExists(true);
+      }
+    };
+
+    checkSuperAdmin();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSignUpData(prev => ({
@@ -35,9 +59,17 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
   };
 
   const handleRoleChange = (value: string) => {
+    // Check if trying to select superadmin when one already exists
+    if (value === 'superadmin' && superAdminExists) {
+      toast.error("Super Admin role is restricted", {
+        description: "Only one Super Admin account can exist"
+      });
+      return;
+    }
+    
     setSignUpData(prev => ({
       ...prev,
-      role: value
+      role: value as UserRole
     }));
   };
 
@@ -54,11 +86,17 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
       return;
     }
     
+    // Block superadmin registration if one already exists
+    if (signUpData.role === 'superadmin' && superAdminExists) {
+      setError("Super Admin role is already taken");
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      await signup(signUpData.email, signUpData.password, signUpData.fullName);
+      await signup(signUpData.email, signUpData.password, signUpData.fullName, signUpData.role);
       toast.success("Account created successfully");
       navigate("/dashboard");
     } catch (error) {
@@ -95,26 +133,7 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
             value={signUpData.fullName} 
             onChange={handleChange}
             required
-            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
-            disabled={isLoading}
-          />
-        </div>
-      </div>
-      
-      <div className="space-y-2">
-        <label htmlFor="username" className="block font-medium">Username</label>
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <User className="h-5 w-5 text-gray-400" />
-          </div>
-          <input 
-            id="username" 
-            name="username"
-            placeholder="johnsmith" 
-            value={signUpData.username} 
-            onChange={handleChange}
-            required
-            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={isLoading}
           />
         </div>
@@ -134,7 +153,7 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
             value={signUpData.email} 
             onChange={handleChange}
             required
-            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={isLoading}
           />
         </div>
@@ -155,7 +174,7 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
             onChange={handleChange}
             required
             minLength={8}
-            className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={isLoading}
           />
           <button
@@ -180,22 +199,34 @@ const SignUpForm = ({ isMobile = false }: SignUpFormProps) => {
             onValueChange={handleRoleChange}
             disabled={isLoading}
           >
-            <SelectTrigger className="w-full border border-gray-300 rounded">
+            <SelectTrigger className="w-full border border-gray-300 rounded-md">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="property_manager">Property Manager</SelectItem>
-              <SelectItem value="housekeeping_staff">Housekeeping</SelectItem>
-              <SelectItem value="maintenance_staff">Maintenance</SelectItem>
-              <SelectItem value="concierge">Concierge</SelectItem>
+              {Object.entries(ROLE_DETAILS).map(([roleKey, roleInfo]) => {
+                // Skip superadmin if one already exists
+                if (roleKey === 'superadmin' && superAdminExists) {
+                  return null;
+                }
+                return (
+                  <SelectItem key={roleKey} value={roleKey}>
+                    {roleInfo.title}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
+          {signUpData.role && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {ROLE_DETAILS[signUpData.role].description}
+            </p>
+          )}
         </div>
       </div>
       
       <button
         type="submit"
-        className="w-full bg-primary text-white py-2 rounded hover:bg-primary/90 transition-colors mt-4"
+        className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors mt-4"
         disabled={isLoading}
       >
         {isLoading ? (

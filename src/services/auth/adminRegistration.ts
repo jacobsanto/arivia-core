@@ -2,6 +2,27 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export const checkSuperAdminExists = async (): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('role', 'superadmin')
+      .maybeSingle();
+    
+    if (error) {
+      console.error("Error checking for super admin:", error);
+      throw error;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error("Error checking for super admin:", error);
+    // Default to true as a safety measure
+    return true;
+  }
+};
+
 export const registerSuperAdmin = async (
   email: string,
   password: string,
@@ -12,20 +33,10 @@ export const registerSuperAdmin = async (
     const role = "superadmin";
     
     // Check if super admin already exists
-    const { data: existingSuperAdmin, error: checkError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('role', 'superadmin')
-      .maybeSingle();
-    
-    if (checkError) {
-      console.error("Error checking for existing super admin:", checkError);
-      toast.error("Failed to check for existing super admin");
-      return false;
-    }
+    const superAdminExists = await checkSuperAdminExists();
     
     // If super admin already exists, don't create a new one
-    if (existingSuperAdmin) {
+    if (superAdminExists) {
       console.log("Super admin already exists");
       toast.info("Super Admin already exists", {
         description: "A Super Admin user is already registered in the system."

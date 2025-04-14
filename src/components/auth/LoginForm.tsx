@@ -98,7 +98,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
       )}
       
       <div className="space-y-2">
-        <label htmlFor="email" className="block font-medium">Username</label>
+        <label htmlFor="email" className="block font-medium">Email</label>
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <User className="h-5 w-5 text-gray-400" />
@@ -107,13 +107,13 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
             id="email"
             name="email"
             type="email"
-            placeholder="Enter your username"
+            placeholder="Enter your email"
             value={loginData.email}
             onChange={handleChange}
             required
-            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="pl-10 pr-3 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={isLoading}
-            autoComplete="username"
+            autoComplete="email"
           />
         </div>
       </div>
@@ -137,7 +137,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
             value={loginData.password}
             onChange={handleChange}
             required
-            className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary"
+            className="pl-10 pr-10 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary"
             disabled={isLoading}
             autoComplete="current-password"
           />
@@ -167,7 +167,7 @@ const LoginForm = ({ isMobile = false }: LoginFormProps) => {
       
       <button
         type="submit"
-        className="w-full bg-primary text-white py-2 rounded hover:bg-primary/90 transition-colors"
+        className="w-full bg-primary text-white py-2 rounded-md hover:bg-primary/90 transition-colors"
         disabled={isLoading}
       >
         {isLoading ? (
