@@ -2,7 +2,7 @@
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,53 +14,52 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const propertyFormSchema = z.object({
-  name: z.string().min(2, "Property name must be at least 2 characters"),
-  type: z.string().min(2, "Property type is required"),
-  location: z.string().min(2, "Location is required"),
-  bedrooms: z.coerce.number().int().min(1, "At least 1 bedroom is required"),
-  bathrooms: z.coerce.number().min(0.5, "Number of bathrooms is required"),
-  price: z.coerce.number().positive("Base price must be positive"),
+// Create a schema for property data
+const propertySchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  location: z.string().min(2, "Location must be at least 2 characters"),
+  type: z.string().min(2, "Type must be at least 2 characters"),
+  status: z.string(),
+  bedrooms: z.coerce.number().int().min(1, "Must have at least 1 bedroom"),
+  bathrooms: z.coerce.number().min(1, "Must have at least 1 bathroom"),
+  price: z.coerce.number().min(50, "Price must be at least €50"),
+  max_guests: z.coerce.number().int().min(1, "Maximum guests must be at least 1"),
+  imageUrl: z.string().url().optional().or(z.literal("")),
   description: z.string().optional(),
-  address: z.string().min(5, "Full address is required"),
-  amenities: z.string().optional(),
 });
 
-type PropertyFormValues = z.infer<typeof propertyFormSchema>;
+type PropertyFormValues = z.infer<typeof propertySchema>;
 
 interface PropertyFormProps {
-  initialData?: Partial<PropertyFormValues>;
   onSubmit: (data: PropertyFormValues) => void;
+  initialData?: Partial<PropertyFormValues>;
 }
 
-const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
+const PropertyForm = ({ onSubmit, initialData }: PropertyFormProps) => {
+  // Create form with validation
   const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(propertyFormSchema),
+    resolver: zodResolver(propertySchema),
     defaultValues: {
-      name: "",
-      type: "",
-      location: "",
-      bedrooms: 1,
-      bathrooms: 1,
-      price: 100,
-      description: "",
-      address: "",
-      amenities: "",
-      ...initialData,
+      name: initialData?.name || "",
+      address: initialData?.address || "",
+      location: initialData?.location || "Santorini, Greece", // Default
+      type: initialData?.type || "Luxury Villa", // Default
+      status: initialData?.status || "Vacant",
+      bedrooms: initialData?.bedrooms || 3,
+      bathrooms: initialData?.bathrooms || 2,
+      price: initialData?.price || 300,
+      max_guests: initialData?.max_guests || 6,
+      imageUrl: initialData?.imageUrl || "/placeholder.svg",
+      description: initialData?.description || "",
     },
   });
 
-  const handleSubmit = (data: PropertyFormValues) => {
-    onSubmit(data);
+  const handleSubmit = (values: PropertyFormValues) => {
+    onSubmit(values);
   };
 
   return (
@@ -74,13 +73,13 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
               <FormItem>
                 <FormLabel>Property Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Villa Paradise" {...field} />
+                  <Input placeholder="Villa Caldera" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="type"
@@ -90,36 +89,21 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select property type" />
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
                     <SelectItem value="Luxury Villa">Luxury Villa</SelectItem>
                     <SelectItem value="Deluxe Villa">Deluxe Villa</SelectItem>
                     <SelectItem value="Premium Villa">Premium Villa</SelectItem>
-                    <SelectItem value="Beachfront Villa">Beachfront Villa</SelectItem>
-                    <SelectItem value="Mountain View Villa">Mountain View Villa</SelectItem>
+                    <SelectItem value="Standard Villa">Standard Villa</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
               </FormItem>
             )}
           />
-                    
-          <FormField
-            control={form.control}
-            name="location"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl>
-                  <Input placeholder="Santorini, Greece" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
+
           <FormField
             control={form.control}
             name="address"
@@ -127,13 +111,61 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
               <FormItem>
                 <FormLabel>Full Address</FormLabel>
                 <FormControl>
-                  <Input placeholder="123 Ocean View Rd, Santorini" {...field} />
+                  <Input placeholder="Complete address" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
+          <FormField
+            control={form.control}
+            name="location"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Santorini, Greece">Santorini, Greece</SelectItem>
+                    <SelectItem value="Athens, Greece">Athens, Greece</SelectItem>
+                    <SelectItem value="Mykonos, Greece">Mykonos, Greece</SelectItem>
+                    <SelectItem value="Crete, Greece">Crete, Greece</SelectItem>
+                    <SelectItem value="Rhodes, Greece">Rhodes, Greece</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="Vacant">Vacant</SelectItem>
+                    <SelectItem value="Occupied">Occupied</SelectItem>
+                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="bedrooms"
@@ -147,7 +179,7 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="bathrooms"
@@ -155,19 +187,19 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
               <FormItem>
                 <FormLabel>Bathrooms</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0.5" step="0.5" {...field} />
+                  <Input type="number" min="1" step="0.5" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
-            name="price"
+            name="max_guests"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Base Price per Night (€)</FormLabel>
+                <FormLabel>Maximum Guests</FormLabel>
                 <FormControl>
                   <Input type="number" min="1" {...field} />
                 </FormControl>
@@ -175,53 +207,58 @@ const PropertyForm = ({ initialData = {}, onSubmit }: PropertyFormProps) => {
               </FormItem>
             )}
           />
-          
-          <div className="md:col-span-2">
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe your property with key features and selling points..." 
-                      className="h-24"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          
-          <div className="md:col-span-2">
-            <FormField
-              control={form.control}
-              name="amenities"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Amenities</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Swimming pool, hot tub, sauna, etc. (comma separated)" 
-                      className="h-24"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    List amenities separated by commas
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Price per Night (€)</FormLabel>
+                <FormControl>
+                  <Input type="number" min="50" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="imageUrl"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Image URL</FormLabel>
+                <FormControl>
+                  <Input placeholder="https://example.com/image.jpg" {...field} />
+                </FormControl>
+                <FormDescription>
+                  Enter a URL for the property image or leave blank to use a placeholder
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+              <FormItem className="col-span-2">
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Describe the property features and amenities"
+                    className="min-h-[100px]"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
-        
-        <div className="flex justify-end gap-4">
-          <Button type="button" variant="outline">Cancel</Button>
+
+        <div className="flex justify-end gap-2">
           <Button type="submit">Save Property</Button>
         </div>
       </form>

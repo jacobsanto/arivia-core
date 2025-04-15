@@ -1,199 +1,231 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { 
+import {
   Dialog,
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { ArrowLeft, Plus, Calendar as CalendarIcon } from "lucide-react";
-import { format, isSameDay, isWithinInterval } from "date-fns";
-import { toast } from "sonner";
-import BookingForm from "./BookingForm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, ChevronLeft } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { formatDate } from "@/services/dataFormatService";
+import { Property } from "@/hooks/useProperties";
+import { supabase } from "@/integrations/supabase/client";
+import { toastService } from "@/services/toast/toast.service";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Sample booking data
-const sampleBookings = [
-  {
-    id: 1,
-    guestName: "John & Sarah Miller",
-    checkIn: "2025-04-01",
-    checkOut: "2025-04-08",
-    status: "Confirmed",
-    guests: 3,
-    totalAmount: "€3,150"
-  },
-  {
-    id: 2,
-    guestName: "Roberto Garcia",
-    checkIn: "2025-04-09",
-    checkOut: "2025-04-15",
-    status: "Confirmed",
-    guests: 4,
-    totalAmount: "€2,700"
-  },
-  {
-    id: 3,
-    guestName: "Emma Thompson",
-    checkIn: "2025-05-02",
-    checkOut: "2025-05-09",
-    status: "Pending",
-    guests: 2,
-    totalAmount: "€3,360"
-  }
-];
+interface Booking {
+  id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone?: string;
+  check_in_date: string;
+  check_out_date: string;
+  num_guests: number;
+  total_price: number;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  property_id: string;
+}
 
 interface BookingCalendarProps {
-  property: any;
+  property: Property;
   onBack: () => void;
 }
 
 const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
-  const [bookings] = useState(sampleBookings);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [isAddBookingOpen, setIsAddBookingOpen] = useState(false);
-  
-  const handleAddBooking = () => {
-    setIsAddBookingOpen(true);
-  };
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isAddBookingDialogOpen, setIsAddBookingDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleBookingCreated = (booking: any) => {
-    toast.success(`Booking for ${booking.guestName} has been created`);
-    setIsAddBookingOpen(false);
-    // In a real app, we would add the booking to state/database
-  };
-
-  // Function to determine which dates have bookings
-  const getDayHasBooking = (date: Date) => {
-    const dateString = format(date, "yyyy-MM-dd");
+  // Load bookings for the property
+  useEffect(() => {
+    const fetchBookings = async () => {
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('property_id', property.id);
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        setBookings(data || []);
+      } catch (err: any) {
+        console.error('Error fetching bookings:', err);
+        toastService.error('Failed to load bookings', {
+          description: err.message
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    // Check if date falls within any booking range
-    return bookings.some(booking => {
-      const checkIn = new Date(booking.checkIn);
-      const checkOut = new Date(booking.checkOut);
-      const currentDate = new Date(dateString);
+    fetchBookings();
+  }, [property.id]);
+
+  // Calculate calendar day class names based on bookings
+  const getDayClassNames = (day: Date): string => {
+    const dateString = day.toISOString().split('T')[0];
+    
+    // Check if this day is included in any booking's date range
+    const hasBooking = bookings.some(booking => {
+      const checkInDate = booking.check_in_date;
+      const checkOutDate = booking.check_out_date;
       
-      return currentDate >= checkIn && currentDate <= checkOut;
+      return dateString >= checkInDate && dateString <= checkOutDate;
     });
+    
+    return hasBooking ? 'bg-blue-100 text-blue-900 rounded-md' : '';
   };
-  
-  // Create a custom day class name function
-  const dayClassName = (date: Date) => {
-    return getDayHasBooking(date) ? "bg-blue-100" : "";
-  };
+
+  // Filter bookings by month if a date is selected
+  const filteredBookings = selectedDate 
+    ? bookings.filter(booking => {
+        const bookingMonth = new Date(booking.check_in_date).getMonth();
+        const selectedMonth = selectedDate.getMonth();
+        return bookingMonth === selectedMonth;
+      })
+    : bookings;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Properties
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
         </Button>
         <div>
-          <h2 className="text-2xl font-bold">{property.name}</h2>
-          <p className="text-muted-foreground">Booking Management</p>
+          <h1 className="text-2xl font-bold">{property.name}</h1>
+          <p className="text-muted-foreground">{property.location}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1">
+      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
+        <Card className="h-fit">
           <CardHeader>
-            <div className="flex justify-between items-center">
-              <CardTitle>Availability</CardTitle>
-              <CalendarIcon className="h-5 w-5 text-muted-foreground" />
-            </div>
+            <CardTitle className="flex justify-between items-center">
+              <span>Calendar</span>
+              <Dialog open={isAddBookingDialogOpen} onOpenChange={setIsAddBookingDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Booking
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
+                  <DialogHeader>
+                    <DialogTitle>Add New Booking</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p className="text-center text-muted-foreground">
+                      Booking form would go here in a real implementation.
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <Calendar 
-              className="pointer-events-auto"
+            <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              disabled={{ before: new Date() }}
-              modifiers={{
-                booked: (date) => getDayHasBooking(date)
-              }}
+              className="rounded-md border"
               modifiersClassNames={{
-                booked: "bg-blue-100"
+                selected: 'bg-primary text-primary-foreground',
               }}
+              modifiersStyles={{
+                booked: { 
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  color: 'rgba(30, 64, 175, 1)',
+                  fontWeight: 'bold'
+                }
+              }}
+              dayClassName={getDayClassNames}
             />
-            <div className="mt-4 flex gap-2 items-center text-sm">
-              <div className="w-4 h-4 bg-blue-100 rounded-sm"></div>
-              <span>Booked</span>
-            </div>
           </CardContent>
         </Card>
 
-        <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Bookings</CardTitle>
-            <Button size="sm" onClick={handleAddBooking}>
-              <Plus className="mr-2 h-4 w-4" />
-              New Booking
-            </Button>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {selectedDate
+                ? `Bookings for ${selectedDate.toLocaleString('default', { month: 'long' })} ${selectedDate.getFullYear()}`
+                : 'All Bookings'
+              }
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Guest</TableHead>
-                  <TableHead>Check-In</TableHead>
-                  <TableHead>Check-Out</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {bookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.guestName}</TableCell>
-                    <TableCell>{booking.checkIn}</TableCell>
-                    <TableCell>{booking.checkOut}</TableCell>
-                    <TableCell>
-                      <span className={`px-2 py-1 rounded-full text-xs 
-                        ${booking.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 
-                          'bg-yellow-100 text-yellow-800'}`}>
-                        {booking.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>{booking.totalAmount}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => toast.info(`Viewing booking for ${booking.guestName}`)}>
-                        View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((index) => (
+                  <div key={index} className="flex flex-col space-y-3">
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-1/4" />
+                  </div>
                 ))}
-              </TableBody>
-            </Table>
+              </div>
+            ) : filteredBookings.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">No bookings found for this period.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Guest</TableHead>
+                      <TableHead>Check-In</TableHead>
+                      <TableHead>Check-Out</TableHead>
+                      <TableHead>Guests</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredBookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{booking.guest_name}</div>
+                            <div className="text-sm text-muted-foreground">{booking.guest_email}</div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatDate(booking.check_in_date)}</TableCell>
+                        <TableCell>{formatDate(booking.check_out_date)}</TableCell>
+                        <TableCell>{booking.num_guests}</TableCell>
+                        <TableCell>€{booking.total_price}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              booking.status === 'confirmed' ? 'default' :
+                              booking.status === 'pending' ? 'outline' :
+                              booking.status === 'cancelled' ? 'destructive' : 'secondary'
+                            }
+                          >
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Add Booking Dialog */}
-      <Dialog open={isAddBookingOpen} onOpenChange={setIsAddBookingOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Create New Booking</DialogTitle>
-          </DialogHeader>
-          <BookingForm 
-            propertyId={property.id} 
-            propertyName={property.name} 
-            onSubmit={handleBookingCreated} 
-          />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };

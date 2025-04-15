@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -18,95 +19,41 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MoreHorizontal, Search, Plus, Calendar as CalendarIcon, Home, User, MessageSquare, DollarSign, Filter, Map } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Plus, Calendar as CalendarIcon, Home, User, MessageSquare, DollarSign, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import PropertyForm from "@/components/properties/PropertyForm";
 import BookingCalendar from "@/components/properties/BookingCalendar";
 import PricingConfig from "@/components/properties/PricingConfig";
 import GuestManagement from "@/components/properties/GuestManagement";
-
-// Sample property data
-const properties = [
-  {
-    id: 1,
-    name: "Villa Caldera",
-    location: "Santorini, Greece",
-    status: "Occupied",
-    type: "Luxury Villa",
-    bedrooms: 4,
-    bathrooms: 3,
-    price: 450,
-    imageUrl: "/placeholder.svg",
-    currentGuests: { name: "John & Sarah Miller", checkIn: "2025-04-01", checkOut: "2025-04-08" },
-    nextBooking: { name: "Roberto Garcia", checkIn: "2025-04-09", checkOut: "2025-04-15" }
-  },
-  {
-    id: 2,
-    name: "Villa Azure",
-    location: "Santorini, Greece",
-    status: "Vacant",
-    type: "Deluxe Villa",
-    bedrooms: 3,
-    bathrooms: 2,
-    price: 380,
-    imageUrl: "/placeholder.svg",
-    nextBooking: { name: "Emma Thompson", checkIn: "2025-04-10", checkOut: "2025-04-17" }
-  },
-  {
-    id: 3,
-    name: "Villa Sunset",
-    location: "Santorini, Greece",
-    status: "Occupied",
-    type: "Premium Villa",
-    bedrooms: 5,
-    bathrooms: 4,
-    price: 520,
-    imageUrl: "/placeholder.svg",
-  },
-  {
-    id: 4,
-    name: "Villa Oceana",
-    location: "Athens, Greece",
-    status: "Vacant",
-    type: "Luxury Villa",
-    bedrooms: 4,
-    bathrooms: 3,
-    price: 420,
-    imageUrl: "/placeholder.svg",
-  },
-  {
-    id: 5,
-    name: "Villa Harmony",
-    location: "Athens, Greece",
-    status: "Occupied",
-    type: "Premium Villa",
-    bedrooms: 3,
-    bathrooms: 2,
-    price: 390,
-    imageUrl: "/placeholder.svg",
-  },
-  {
-    id: 6,
-    name: "Villa Breeze",
-    location: "Santorini, Greece",
-    status: "Maintenance",
-    type: "Deluxe Villa",
-    bedrooms: 4,
-    bathrooms: 3,
-    price: 410,
-    imageUrl: "/placeholder.svg",
-  },
-];
+import { useProperties, Property } from "@/hooks/useProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Properties = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedProperty, setSelectedProperty] = useState(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [activeView, setActiveView] = useState("properties");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  
+  const { 
+    properties, 
+    isLoading, 
+    error, 
+    fetchProperties, 
+    addProperty, 
+    updateProperty, 
+    deleteProperty 
+  } = useProperties();
+
+  // Show error toast if error occurs
+  useEffect(() => {
+    if (error) {
+      toast.error('Failed to load properties', {
+        description: error
+      });
+    }
+  }, [error]);
 
   const filteredProperties = properties.filter((property) => {
     // Filter by search query
@@ -127,28 +74,32 @@ const Properties = () => {
     setIsAddPropertyOpen(true);
   };
 
-  const handlePropertyCreated = (newProperty) => {
-    toast.success(`${newProperty.name} has been added to your properties`);
-    setIsAddPropertyOpen(false);
-    // In a real app, we would add the property to the state/database
+  const handlePropertyCreated = async (newProperty: any) => {
+    try {
+      await addProperty(newProperty);
+      toast.success(`${newProperty.name} has been added to your properties`);
+      setIsAddPropertyOpen(false);
+    } catch (err: any) {
+      // Error is handled in the hook with a toast
+    }
   };
 
-  const handleViewDetails = (property) => {
+  const handleViewDetails = (property: Property) => {
     setSelectedProperty(property);
     setActiveView("details");
   };
 
-  const handleBookingManagement = (property) => {
+  const handleBookingManagement = (property: Property) => {
     setSelectedProperty(property);
     setActiveView("bookings");
   };
   
-  const handlePricingConfig = (property) => {
+  const handlePricingConfig = (property: Property) => {
     setSelectedProperty(property);
     setActiveView("pricing");
   };
   
-  const handleGuestManagement = (property) => {
+  const handleGuestManagement = (property: Property) => {
     setSelectedProperty(property);
     setActiveView("guests");
   };
@@ -156,6 +107,17 @@ const Properties = () => {
   const handleBackToProperties = () => {
     setActiveView("properties");
     setSelectedProperty(null);
+  };
+
+  const handleDeleteProperty = async (id: string, name: string) => {
+    if (confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
+      try {
+        await deleteProperty(id);
+        toast.success(`${name} has been deleted`);
+      } catch (err) {
+        // Error is handled in the hook with a toast
+      }
+    }
   };
 
   if (activeView === "details" && selectedProperty) {
@@ -214,18 +176,62 @@ const Properties = () => {
         </Tabs>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProperties.map((property) => (
-          <PropertyCard 
-            key={property.id} 
-            property={property} 
-            onViewDetails={handleViewDetails}
-            onBookingManagement={handleBookingManagement}
-            onPricingConfig={handlePricingConfig}
-            onGuestManagement={handleGuestManagement}
-          />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((key) => (
+            <Card key={key} className="overflow-hidden">
+              <div className="relative h-48">
+                <Skeleton className="h-full w-full" />
+              </div>
+              <CardHeader className="pb-2">
+                <Skeleton className="h-6 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-4 w-1/4" />
+                  <Skeleton className="h-4 w-1/4" />
+                </div>
+              </CardContent>
+              <CardFooter className="pt-2">
+                <div className="flex justify-between w-full">
+                  <Skeleton className="h-3 w-1/4" />
+                  <Skeleton className="h-3 w-1/4" />
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      ) : filteredProperties.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-lg font-medium mb-2">No properties found</h3>
+          <p className="text-muted-foreground mb-6">
+            {properties.length === 0
+              ? "You haven't added any properties yet."
+              : "No properties match your current search or filter."}
+          </p>
+          {properties.length === 0 && (
+            <Button onClick={handleAddProperty}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Your First Property
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredProperties.map((property) => (
+            <PropertyCard 
+              key={property.id} 
+              property={property} 
+              onViewDetails={handleViewDetails}
+              onBookingManagement={handleBookingManagement}
+              onPricingConfig={handlePricingConfig}
+              onGuestManagement={handleGuestManagement}
+              onDelete={handleDeleteProperty}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Add Property Dialog */}
       <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
@@ -240,7 +246,7 @@ const Properties = () => {
   );
 };
 
-const PropertyDetails = ({ property, onBack }) => {
+const PropertyDetails = ({ property, onBack }: { property: Property, onBack: () => void }) => {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -281,6 +287,14 @@ const PropertyDetails = ({ property, onBack }) => {
                 <span className="text-muted-foreground">Base Price:</span>
                 <span className="font-medium">€{property.price}/night</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Address:</span>
+                <span className="font-medium">{property.address}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Max Guests:</span>
+                <span className="font-medium">{property.max_guests}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -290,41 +304,7 @@ const PropertyDetails = ({ property, onBack }) => {
             <CardTitle>Current Status</CardTitle>
           </CardHeader>
           <CardContent>
-            {property.currentGuests ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Current Guests</h3>
-                  <p>{property.currentGuests.name}</p>
-                  <div className="text-sm text-muted-foreground">
-                    {property.currentGuests.checkIn} to {property.currentGuests.checkOut}
-                  </div>
-                </div>
-                <div>
-                  <Button variant="outline" size="sm" className="mr-2">
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Message Guests
-                  </Button>
-                </div>
-              </div>
-            ) : property.nextBooking ? (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium">Next Booking</h3>
-                  <p>{property.nextBooking.name}</p>
-                  <div className="text-sm text-muted-foreground">
-                    {property.nextBooking.checkIn} to {property.nextBooking.checkOut}
-                  </div>
-                </div>
-                <div>
-                  <Button variant="outline" size="sm">Prepare Welcome Package</Button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <p>No current or upcoming bookings.</p>
-                <Button className="mt-4" size="sm" variant="outline">Create Booking</Button>
-              </div>
-            )}
+            <BookingStatusContent property={property} />
           </CardContent>
         </Card>
         
@@ -358,24 +338,103 @@ const PropertyDetails = ({ property, onBack }) => {
   );
 };
 
+const BookingStatusContent = ({ property }: { property: Property }) => {
+  const [currentBooking, setCurrentBooking] = useState<any>(null);
+  const [nextBooking, setNextBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { getPropertyBookings } = useProperties();
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const bookings = await getPropertyBookings(property.id);
+        
+        // Find current booking (check-in date <= today <= check-out date)
+        const today = new Date();
+        const current = bookings.find(booking => 
+          new Date(booking.check_in_date) <= today && 
+          new Date(booking.check_out_date) >= today
+        );
+        setCurrentBooking(current || null);
+        
+        // Find next booking (check-in date > today, ordered by closest date)
+        const upcoming = bookings
+          .filter(booking => new Date(booking.check_in_date) > today)
+          .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
+        setNextBooking(upcoming || null);
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching bookings:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    if (property.id) {
+      fetchBookings();
+    }
+  }, [property.id]);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-full" />
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-4 w-2/4" />
+        <Skeleton className="h-10 w-40" />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {currentBooking ? (
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium">Current Guests</h3>
+            <p>{currentBooking.guest_name}</p>
+            <div className="text-sm text-muted-foreground">
+              {new Date(currentBooking.check_in_date).toLocaleDateString()} to {new Date(currentBooking.check_out_date).toLocaleDateString()}
+            </div>
+          </div>
+          <div>
+            <Button variant="outline" size="sm" className="mr-2">
+              <MessageSquare className="mr-2 h-4 w-4" />
+              Message Guests
+            </Button>
+          </div>
+        </div>
+      ) : nextBooking ? (
+        <div className="space-y-4">
+          <div>
+            <h3 className="font-medium">Next Booking</h3>
+            <p>{nextBooking.guest_name}</p>
+            <div className="text-sm text-muted-foreground">
+              {new Date(nextBooking.check_in_date).toLocaleDateString()} to {new Date(nextBooking.check_out_date).toLocaleDateString()}
+            </div>
+          </div>
+          <div>
+            <Button variant="outline" size="sm">Prepare Welcome Package</Button>
+          </div>
+        </div>
+      ) : (
+        <div>
+          <p>No current or upcoming bookings.</p>
+          <Button className="mt-4" size="sm" variant="outline">Create Booking</Button>
+        </div>
+      )}
+    </>
+  );
+};
+
 interface PropertyCardProps {
-  property: {
-    id: number;
-    name: string;
-    location: string;
-    status: string;
-    type: string;
-    bedrooms: number;
-    bathrooms: number;
-    price: number;
-    imageUrl: string;
-    currentGuests?: { name: string; checkIn: string; checkOut: string };
-    nextBooking?: { name: string; checkIn: string; checkOut: string };
-  };
-  onViewDetails: (property: any) => void;
-  onBookingManagement: (property: any) => void;
-  onPricingConfig: (property: any) => void;
-  onGuestManagement: (property: any) => void;
+  property: Property;
+  onViewDetails: (property: Property) => void;
+  onBookingManagement: (property: Property) => void;
+  onPricingConfig: (property: Property) => void;
+  onGuestManagement: (property: Property) => void;
+  onDelete: (id: string, name: string) => void;
 }
 
 const PropertyCard = ({ 
@@ -383,13 +442,40 @@ const PropertyCard = ({
   onViewDetails,
   onBookingManagement,
   onPricingConfig,
-  onGuestManagement
+  onGuestManagement,
+  onDelete
 }: PropertyCardProps) => {
   const statusColors = {
     Occupied: "bg-green-100 text-green-800",
     Vacant: "bg-blue-100 text-blue-800",
     Maintenance: "bg-amber-100 text-amber-800",
   };
+
+  const [currentBooking, setCurrentBooking] = useState<any>(null);
+  const [nextBooking, setNextBooking] = useState<any>(null);
+  const { getPropertyBookings } = useProperties();
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      const bookings = await getPropertyBookings(property.id);
+      
+      // Find current booking (check-in date <= today <= check-out date)
+      const today = new Date();
+      const current = bookings.find(booking => 
+        new Date(booking.check_in_date) <= today && 
+        new Date(booking.check_out_date) >= today
+      );
+      setCurrentBooking(current || null);
+      
+      // Find next booking (check-in date > today, ordered by closest date)
+      const upcoming = bookings
+        .filter(booking => new Date(booking.check_in_date) > today)
+        .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
+      setNextBooking(upcoming || null);
+    };
+    
+    fetchBookings();
+  }, [property.id]);
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -418,7 +504,9 @@ const PropertyCard = ({
               <DropdownMenuItem onClick={() => onPricingConfig(property)}>Configure Pricing</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onGuestManagement(property)}>Guest Management</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Edit Property</DropdownMenuItem>
+              <DropdownMenuItem className="text-red-600" onClick={() => onDelete(property.id, property.name)}>
+                Delete Property
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -432,19 +520,19 @@ const PropertyCard = ({
           <div className="font-medium">€{property.price}/night</div>
         </div>
         
-        {property.currentGuests && (
+        {currentBooking && (
           <div className="mt-2 pt-2 border-t text-xs">
             <p className="font-medium">Currently occupied by:</p>
-            <p className="text-muted-foreground">{property.currentGuests.name}</p>
-            <p className="text-muted-foreground">Until {property.currentGuests.checkOut}</p>
+            <p className="text-muted-foreground">{currentBooking.guest_name}</p>
+            <p className="text-muted-foreground">Until {new Date(currentBooking.check_out_date).toLocaleDateString()}</p>
           </div>
         )}
         
-        {!property.currentGuests && property.nextBooking && (
+        {!currentBooking && nextBooking && (
           <div className="mt-2 pt-2 border-t text-xs">
             <p className="font-medium">Next booking:</p>
-            <p className="text-muted-foreground">{property.nextBooking.name}</p>
-            <p className="text-muted-foreground">From {property.nextBooking.checkIn}</p>
+            <p className="text-muted-foreground">{nextBooking.guest_name}</p>
+            <p className="text-muted-foreground">From {new Date(nextBooking.check_in_date).toLocaleDateString()}</p>
           </div>
         )}
       </CardContent>

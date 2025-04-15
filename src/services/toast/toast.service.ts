@@ -1,67 +1,64 @@
 
-import { toast as sonnerToast } from 'sonner';
-import { ToastId, ToastOptions, LoadingToastOptions, ToastType } from './toast.types';
+import { toast } from "sonner";
 
-const defaultToastOptions: ToastOptions = {
-  duration: 5000,
-  dismissible: true,
-};
+interface ToastProps {
+  description?: string;
+  duration?: number;
+}
 
-export class ToastService {
-  show(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast(title, mergedOptions);
+class ToastService {
+  success(title: string, props?: ToastProps) {
+    toast.success(title, {
+      description: props?.description,
+      duration: props?.duration || 4000,
+    });
   }
 
-  success(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast.success(title, mergedOptions);
+  error(title: string, props?: ToastProps) {
+    toast.error(title, {
+      description: props?.description,
+      duration: props?.duration || 5000,
+    });
   }
 
-  error(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast.error(title, mergedOptions);
+  info(title: string, props?: ToastProps) {
+    toast.info(title, {
+      description: props?.description,
+      duration: props?.duration || 4000,
+    });
   }
 
-  warning(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast.warning(title, mergedOptions);
+  warning(title: string, props?: ToastProps) {
+    toast.warning(title, {
+      description: props?.description,
+      duration: props?.duration || 4500,
+    });
   }
 
-  info(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast.info(title, mergedOptions);
+  custom(title: string, props?: ToastProps & { icon?: React.ReactNode }) {
+    toast(title, {
+      description: props?.description,
+      duration: props?.duration || 4000,
+      icon: props?.icon,
+    });
   }
 
-  loading(title: string, options?: LoadingToastOptions): ToastId {
-    const mergedOptions = { ...defaultToastOptions, ...options };
-    return sonnerToast.loading(title, mergedOptions);
-  }
-
-  update(id: ToastId, title: string, options?: ToastOptions): void {
-    // Dismiss the old toast and create a new one
-    this.dismiss(id);
-    this.show(title, options);
-  }
-
-  dismiss(id?: ToastId): void {
-    if (id) {
-      sonnerToast.dismiss(id);
-    } else {
-      sonnerToast.dismiss();
-    }
-  }
-
-  // Custom method for Arivia-specific toast needs
-  task(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = { 
-      ...defaultToastOptions, 
-      ...options,
-      // Apply any Arivia-specific styling
-    };
-    return sonnerToast(title, mergedOptions);
+  promise<T>(
+    promise: Promise<T>,
+    messages: {
+      loading: string;
+      success: string;
+      error: string;
+    },
+    props?: ToastProps
+  ) {
+    return toast.promise(promise, {
+      loading: messages.loading,
+      success: messages.success,
+      error: messages.error,
+      duration: props?.duration || 4000,
+    });
   }
 }
 
-// Create and export a singleton instance
 export const toastService = new ToastService();
