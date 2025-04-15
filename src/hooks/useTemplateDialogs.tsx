@@ -14,7 +14,7 @@ export const useTemplateDialogs = () => {
   
   // Selection states
   const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
-  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
   const [selectedTemplateForUse, setSelectedTemplateForUse] = useState<ChecklistTemplate | null>(null);
 
   // Function to prepare template for editing
@@ -24,9 +24,9 @@ export const useTemplateDialogs = () => {
   };
 
   // Function to prepare template for deletion
-  const openDeleteTemplateDialog = (templateId: number) => {
+  const openDeleteTemplateDialog = (templateId: string) => {
     setTemplateToDelete(templateId);
-    setIsDeleteDialogOpen(false);
+    setIsDeleteDialogOpen(true);
   };
 
   // Function to prepare template for use

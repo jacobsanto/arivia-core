@@ -24,8 +24,12 @@ export const useChecklistTemplates = () => {
   };
 
   const handleCreateTemplate = (data: ChecklistTemplateFormValues) => {
+    // Generate a new unique ID as string
+    const maxId = Math.max(0, ...templates.map(t => parseInt(t.id))) + 1;
+    const newId = maxId.toString();
+
     const newTemplate: ChecklistTemplate = {
-      id: Math.max(0, ...templates.map(t => t.id)) + 1,
+      id: newId,
       name: data.name,
       description: data.description,
       category: data.category,
@@ -44,6 +48,8 @@ export const useChecklistTemplates = () => {
   };
 
   const handleEditTemplate = (data: ChecklistTemplateFormValues) => {
+    if (!data.id) return;
+    
     const templateToEdit = templates.find(t => t.id === data.id);
     if (!templateToEdit) return;
     
@@ -57,6 +63,7 @@ export const useChecklistTemplates = () => {
         title: item.title, 
         completed: false 
       })),
+      updatedAt: new Date().toISOString()
     };
     
     setTemplates(templates.map(t => 
@@ -66,12 +73,12 @@ export const useChecklistTemplates = () => {
     toastService.success(`Checklist template "${data.name}" updated successfully!`);
   };
 
-  const handleDeleteTemplate = (templateId: number) => {
+  const handleDeleteTemplate = (templateId: string) => {
     setTemplates(templates.filter(t => t.id !== templateId));
     toastService.success("Checklist template deleted successfully!");
   };
 
-  const getTemplateById = (id: number) => {
+  const getTemplateById = (id: string) => {
     return templates.find(t => t.id === id) || null;
   };
 

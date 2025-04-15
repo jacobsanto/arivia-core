@@ -14,11 +14,15 @@ export const useChecklistForm = (
   const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
   const [isEditTemplateOpen, setIsEditTemplateOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
   const handleCreateTemplate = (data: ChecklistTemplateFormValues) => {
+    // Generate a new unique ID as string
+    const maxId = Math.max(0, ...templates.map(t => parseInt(t.id))) + 1;
+    const newId = maxId.toString();
+    
     const newTemplate: ChecklistTemplate = {
-      id: Math.max(0, ...templates.map(t => t.id)) + 1,
+      id: newId,
       name: data.name,
       description: data.description,
       category: data.category,
@@ -50,6 +54,7 @@ export const useChecklistForm = (
         title: item.title, 
         completed: false 
       })),
+      updatedAt: new Date().toISOString()
     };
     
     setTemplates(templates.map(t => 
@@ -70,7 +75,7 @@ export const useChecklistForm = (
     toastService.success("Checklist template deleted successfully!");
   };
 
-  const selectTemplateForEdit = (templateId: number) => {
+  const selectTemplateForEdit = (templateId: string) => {
     const template = templates.find(t => t.id === templateId);
     if (template) {
       setSelectedTemplate(template);
@@ -78,7 +83,7 @@ export const useChecklistForm = (
     }
   };
 
-  const selectTemplateForDelete = (templateId: number) => {
+  const selectTemplateForDelete = (templateId: string) => {
     setTemplateToDelete(templateId);
     setIsDeleteDialogOpen(true);
   };

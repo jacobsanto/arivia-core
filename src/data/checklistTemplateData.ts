@@ -3,7 +3,7 @@ import { ChecklistTemplate } from "@/types/checklistTypes";
 
 export const initialChecklistTemplates: ChecklistTemplate[] = [
   {
-    id: 1,
+    id: "1",
     name: "Standard Cleaning",
     description: "Basic cleaning checklist for regular housekeeping tasks",
     category: "Housekeeping",
@@ -24,7 +24,7 @@ export const initialChecklistTemplates: ChecklistTemplate[] = [
     ]
   },
   {
-    id: 2,
+    id: "2",
     name: "Full Cleaning",
     description: "Comprehensive cleaning checklist for full property cleaning",
     category: "Housekeeping",
@@ -41,7 +41,7 @@ export const initialChecklistTemplates: ChecklistTemplate[] = [
     ]
   },
   {
-    id: 3,
+    id: "3",
     name: "Linen & Towel Change",
     description: "Checklist for linen and towel replacement tasks",
     category: "Housekeeping",
@@ -59,7 +59,7 @@ export const initialChecklistTemplates: ChecklistTemplate[] = [
     ]
   },
   {
-    id: 4,
+    id: "4",
     name: "Basic Maintenance Check",
     description: "Standard maintenance inspection checklist",
     category: "Maintenance",

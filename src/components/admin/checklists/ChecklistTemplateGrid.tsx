@@ -5,10 +5,10 @@ import ChecklistTemplateCard from "./ChecklistTemplateCard";
 
 interface ChecklistTemplateGridProps {
   templates: ChecklistTemplate[];
-  onEdit: (id: number) => void;
-  onDelete: (id: number) => void;
-  onDuplicate: (id: number) => void;
-  onUse: (id: number) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  onUse: (id: string) => void;
 }
 
 const ChecklistTemplateGrid = ({

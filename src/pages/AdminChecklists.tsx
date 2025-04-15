@@ -69,7 +69,7 @@ const AdminChecklists = () => {
     return null;
   }
   
-  const handleDeleteClick = (templateId: number) => {
+  const handleDeleteClick = (templateId: string) => {
     setTemplateToDelete(templateId);
     setIsDeleteDialogOpen(true);
   };
@@ -82,7 +82,7 @@ const AdminChecklists = () => {
     }
   };
 
-  const handleDuplicateTemplate = (templateId: number) => {
+  const handleDuplicateTemplate = (templateId: string) => {
     const template = getTemplateById(templateId);
     if (template) {
       const duplicatedData = {
@@ -95,7 +95,7 @@ const AdminChecklists = () => {
     }
   };
 
-  const handleUseTemplate = (templateId: number) => {
+  const handleUseTemplate = (templateId: string) => {
     const template = getTemplateById(templateId);
     if (template) {
       setSelectedTemplateForUse(template);
@@ -103,7 +103,7 @@ const AdminChecklists = () => {
     }
   };
 
-  const handleEditClick = (templateId: number) => {
+  const handleEditClick = (templateId: string) => {
     const template = getTemplateById(templateId);
     if (template) {
       setIsEditTemplateOpen(true);
