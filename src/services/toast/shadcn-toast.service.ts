@@ -59,8 +59,9 @@ export class ShadcnToastService implements IToastService {
   }
 
   public update(id: ToastId, title: string, options?: ToastOptions): void {
+    // Dismiss the existing toast and create a new one
+    toast.dismiss(id);
     toast({
-      id: typeof id === 'string' ? id : undefined,
       title,
       description: options?.description,
       duration: options?.duration,
@@ -68,6 +69,7 @@ export class ShadcnToastService implements IToastService {
   }
 
   public dismiss(id?: ToastId): void {
-    // No direct dismiss method in shadcn/ui toast
+    // Dismiss a specific toast or all toasts
+    toast.dismiss(id);
   }
 }
