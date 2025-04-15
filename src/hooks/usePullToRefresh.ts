@@ -1,92 +1,72 @@
 
 import { useState, useRef, useCallback } from 'react';
 
-interface UsePullToRefreshProps {
-  onRefresh: () => Promise<void> | void;
-  pullThreshold?: number;
-  maxPull?: number;
+interface PullToRefreshOptions {
+  onRefresh?: () => void | Promise<void>;
+  pullDistance?: number;
+  maxPullDistance?: number;
 }
 
-export const usePullToRefresh = ({
-  onRefresh,
-  pullThreshold = 60,
-  maxPull = 100,
-}: UsePullToRefreshProps) => {
-  const [pullMoveY, setPullMoveY] = useState(0);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const startY = useRef<number | null>(null);
-  const touchIdentifier = useRef<number | null>(null);
+interface PullToRefreshResult {
+  pullMoveY: number;
+  isRefreshing: boolean;
+  contentRef: React.RefObject<HTMLDivElement>;
+  handlers: {
+    onTouchStart: (e: React.TouchEvent) => void;
+    onTouchMove: (e: React.TouchEvent) => void;
+    onTouchEnd: () => void;
+  };
+}
 
-  const reset = useCallback(() => {
-    startY.current = null;
-    touchIdentifier.current = null;
-    setPullMoveY(0);
-  }, []);
+export const usePullToRefresh = (options?: PullToRefreshOptions): PullToRefreshResult => {
+  const {
+    onRefresh,
+    pullDistance = 60,
+    maxPullDistance = 100
+  } = options || {};
+  
+  const [pullMoveY, setPullMoveY] = useState<number>(0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number>(0);
+  const initialScrollTop = useRef<number>(0);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    if (isRefreshing || touchIdentifier.current !== null) return;
-
-    // Store the identifier of the touch point to track
-    touchIdentifier.current = e.changedTouches[0].identifier;
-    
-    // Only allow pull to refresh when at the top of the content
-    if (contentRef.current && contentRef.current.scrollTop === 0) {
-      startY.current = e.touches[0].clientY;
+    touchStartY.current = e.touches[0].clientY;
+    if (contentRef.current) {
+      initialScrollTop.current = contentRef.current.scrollTop;
     }
-  }, [isRefreshing]);
+  }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (isRefreshing || startY.current === null || touchIdentifier.current === null) return;
-
-    // Find the touch point with our stored identifier
-    let touch;
-    for (let i = 0; i < e.changedTouches.length; i++) {
-      if (e.changedTouches[i].identifier === touchIdentifier.current) {
-        touch = e.changedTouches[i];
-        break;
-      }
+    if (isRefreshing) return;
+    
+    const touchY = e.touches[0].clientY;
+    const touchDiff = touchY - touchStartY.current;
+    
+    // Only allow pull-to-refresh when scrolled to top
+    if (contentRef.current && contentRef.current.scrollTop <= 0 && touchDiff > 0) {
+      setPullMoveY(Math.min(touchDiff / 2, maxPullDistance));
+      if (e.cancelable) e.preventDefault();
     }
-
-    if (!touch) return;
-
-    const currentY = touch.clientY;
-    const diffY = currentY - startY.current;
-
-    // Only allow pulling down
-    if (diffY > 0 && contentRef.current && contentRef.current.scrollTop === 0) {
-      // Apply resistance to make the pull feel natural
-      const pullDistance = Math.min(diffY * 0.5, maxPull);
-      setPullMoveY(pullDistance);
-      
-      // Prevent default to stop scrolling
-      e.preventDefault();
-    }
-  }, [isRefreshing, maxPull]);
+  }, [isRefreshing, maxPullDistance]);
 
   const handleTouchEnd = useCallback(() => {
-    if (startY.current === null || touchIdentifier.current === null) return;
-
-    // If pulled past threshold, trigger refresh
-    if (pullMoveY > pullThreshold && !isRefreshing) {
+    if (pullMoveY > pullDistance && !isRefreshing && onRefresh) {
       setIsRefreshing(true);
       
-      // Call the refresh function
-      Promise.resolve(onRefresh()).finally(() => {
-        setTimeout(() => {
-          setIsRefreshing(false);
-          setPullMoveY(0);
-        }, 1000); // Give time for animation
-      });
+      // Execute refresh function
+      Promise.resolve(onRefresh())
+        .finally(() => {
+          setTimeout(() => {
+            setIsRefreshing(false);
+            setPullMoveY(0);
+          }, 1000);
+        });
     } else {
-      // Reset if not pulled enough
       setPullMoveY(0);
     }
-    
-    // Reset
-    startY.current = null;
-    touchIdentifier.current = null;
-  }, [isRefreshing, onRefresh, pullMoveY, pullThreshold]);
+  }, [pullMoveY, isRefreshing, onRefresh, pullDistance]);
 
   return {
     pullMoveY,

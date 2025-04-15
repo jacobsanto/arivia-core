@@ -2,25 +2,17 @@
 /**
  * Exports data to CSV format
  */
-export const exportToCSV = (data: any[], filename: string) => {
-  // If data is not array or is empty, return
-  if (!Array.isArray(data) || !data.length) {
+export const exportToCSV = (data: any[] | Record<string, any[]>, filename: string) => {
+  if (!data || (Array.isArray(data) && !data.length) || (!Array.isArray(data) && Object.keys(data).length === 0)) {
     console.warn('No data to export');
     return;
   }
   
   try {
-    // Handle data structured as object with section arrays
     let csvContent = '';
-    let flatData = data;
     
-    // If first element is not an object with keys, try to flatten
-    if (typeof data[0] !== 'object' || data[0] === null) {
-      flatData = [data.map(item => ({ value: item }))];
-    }
-    
-    // Handle data sections (if data is an object with arrays)
-    if (Object.keys(data).length > 0 && !Array.isArray(data[0])) {
+    // Handle data structured as object with section arrays
+    if (!Array.isArray(data)) {
       let isFirstSection = true;
       
       // Process each section
@@ -53,21 +45,23 @@ export const exportToCSV = (data: any[], filename: string) => {
       }
     } else {
       // Standard array of objects processing
-      // Get headers from first item
-      const headers = Object.keys(flatData[0]);
-      csvContent = headers.join(',') + '\n';
-      
-      // Add rows
-      flatData.forEach(item => {
-        const row = headers.map(header => {
-          const value = item[header];
-          // Handle special values
-          if (value === null || value === undefined) return '';
-          if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
-          return value;
-        }).join(',');
-        csvContent += row + '\n';
-      });
+      if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
+        // Get headers from first item
+        const headers = Object.keys(data[0]);
+        csvContent = headers.join(',') + '\n';
+        
+        // Add rows
+        data.forEach(item => {
+          const row = headers.map(header => {
+            const value = item[header];
+            // Handle special values
+            if (value === null || value === undefined) return '';
+            if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
+            return value;
+          }).join(',');
+          csvContent += row + '\n';
+        });
+      }
     }
     
     // Create download link
@@ -88,7 +82,7 @@ export const exportToCSV = (data: any[], filename: string) => {
 /**
  * Prepares data for printing
  */
-export const preparePrint = (data: any[], title: string) => {
+export const preparePrint = (data: any[] | Record<string, any[]>, title: string) => {
   // Create a new window for printing
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
@@ -123,7 +117,7 @@ export const preparePrint = (data: any[], title: string) => {
     `;
     
     // Handle data structured as object with section arrays
-    if (Object.keys(data).length > 0 && !Array.isArray(data[0])) {
+    if (!Array.isArray(data)) {
       // Process each section
       for (const [section, items] of Object.entries(data)) {
         if (!Array.isArray(items) || !items.length) continue;

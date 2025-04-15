@@ -1,96 +1,97 @@
 
 import { toastService } from '@/services/toast';
 
-// Track when data was last refreshed
-let lastRefreshTimestamp = new Date();
-const refreshState = {
-  properties: { success: true, timestamp: new Date() },
-  tasks: { success: true, timestamp: new Date() },
-  maintenance: { success: true, timestamp: new Date() },
-  bookings: { success: true, timestamp: new Date() },
-  system: { success: true, timestamp: new Date() }
-};
-
 /**
- * Gets the last refresh timestamp and status
+ * Refreshes dashboard data with loading indicator and success message
  */
-export const getRefreshStatus = () => {
-  return {
-    lastRefresh: lastRefreshTimestamp,
-    sectionStatus: refreshState
-  };
-};
-
-/**
- * Refreshes all dashboard data with detailed progress
- */
-export const refreshDashboardData = async (callback: () => void) => {
-  const refreshStartTime = new Date();
-  const loadingToastId = toastService.loading("Refreshing dashboard", {
-    description: "Fetching latest data from all sources..."
-  });
+export const refreshDashboardData = async (
+  refreshFn: () => Promise<any>,
+  options: {
+    silent?: boolean;
+    successMessage?: string;
+    errorMessage?: string;
+  } = {}
+) => {
+  const {
+    silent = false,
+    successMessage = "Dashboard refreshed",
+    errorMessage = "Failed to refresh dashboard"
+  } = options;
+  
+  let loadingToastId: string | number | undefined;
   
   try {
-    // Track which sections need refresh
-    const sectionsToRefresh = ['properties', 'tasks', 'maintenance', 'bookings', 'system'];
-    const results: Record<string, boolean> = {};
-    let hasErrors = false;
-    
-    // In a real app, these would be actual API calls
-    // Here we're simulating async refreshes for each section
-    await Promise.all(sectionsToRefresh.map(async (section) => {
-      try {
-        // Simulate varying load times to make it more realistic
-        const loadTime = 1000 + Math.random() * 500;
-        await new Promise(resolve => setTimeout(resolve, loadTime));
-        
-        // Small chance of simulated error (10%)
-        if (Math.random() > 0.9) {
-          throw new Error(`Failed to refresh ${section} data`);
-        }
-        
-        // Update refresh state for this section
-        refreshState[section] = { success: true, timestamp: new Date() };
-        results[section] = true;
-      } catch (err) {
-        console.error(`Error refreshing ${section} data:`, err);
-        hasErrors = true;
-        refreshState[section] = { success: false, timestamp: refreshStartTime };
-        results[section] = false;
-      }
-    }));
-    
-    // Update last refresh timestamp
-    lastRefreshTimestamp = new Date();
-    
-    // Call the callback to update UI
-    callback();
-    
-    // Dismiss loading toast
-    toastService.dismiss(loadingToastId);
-    
-    // Show appropriate toast based on results
-    if (hasErrors) {
-      const failedSections = Object.entries(results)
-        .filter(([_, success]) => !success)
-        .map(([section]) => section);
-      
-      toastService.error("Partial refresh completed", {
-        description: `Some data couldn't be updated: ${failedSections.join(', ')}`
+    // Show loading toast if not silent
+    if (!silent) {
+      loadingToastId = toastService.loading("Refreshing dashboard", {
+        description: "Getting the latest data..."
       });
-      return false;
-    } else {
-      toastService.success("Dashboard refreshed", {
-        description: `All data updated as of ${new Date().toLocaleTimeString()}`
-      });
-      return true;
     }
+    
+    // Call the refresh function
+    const result = await refreshFn();
+    
+    // Show success toast if not silent
+    if (!silent) {
+      toastService.dismiss(loadingToastId);
+      toastService.success(successMessage, {
+        description: "Your dashboard is now up-to-date"
+      });
+    }
+    
+    return result;
   } catch (error) {
-    console.error("Error refreshing dashboard:", error);
-    toastService.dismiss(loadingToastId);
-    toastService.error("Refresh failed", {
-      description: "There was an unexpected error refreshing your dashboard data"
-    });
-    return false;
+    console.error("Dashboard refresh error:", error);
+    
+    // Show error toast if not silent
+    if (!silent) {
+      toastService.dismiss(loadingToastId);
+      toastService.error(errorMessage, {
+        description: "There was a problem getting the latest data"
+      });
+    }
+    
+    return null;
   }
+};
+
+/**
+ * Performs automatic dashboard refresh on a schedule
+ */
+export const setupAutoRefresh = (
+  refreshFn: () => Promise<any>,
+  intervalMinutes: number = 5
+) => {
+  // Initial refresh
+  refreshDashboardData(refreshFn, { silent: true });
+  
+  // Setup interval refresh
+  const intervalId = setInterval(() => {
+    refreshDashboardData(refreshFn, { 
+      silent: true,
+      successMessage: "Auto-refresh complete",
+      errorMessage: "Auto-refresh failed"
+    });
+  }, intervalMinutes * 60 * 1000);
+  
+  // Return cleanup function
+  return () => clearInterval(intervalId);
+};
+
+/**
+ * Create a helper function to prepare dashboard export data
+ */
+export const prepareDashboardExportData = (
+  dashboardData: any,
+  sections: string[] = ['properties', 'tasks', 'maintenance', 'bookings']
+) => {
+  const exportData: Record<string, any[]> = {};
+  
+  sections.forEach(section => {
+    if (dashboardData && dashboardData[section]) {
+      exportData[section] = dashboardData[section];
+    }
+  });
+  
+  return exportData;
 };

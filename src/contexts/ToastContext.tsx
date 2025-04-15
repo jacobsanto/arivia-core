@@ -1,7 +1,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { IToastService } from '@/services/toast/toast.types';
-import { toastService, setToastImplementation } from '@/services/toast';
+import { toastService as defaultToastService } from '@/services/toast';
+import { SonnerToastService } from '@/services/toast/sonner-toast.service';
+import { ShadcnToastService } from '@/services/toast/shadcn-toast.service';
 import { Toaster as ShadcnToaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from 'sonner';
 
@@ -17,11 +19,13 @@ const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [implementation, setImplementationState] = useState<ToastImplementation>('sonner');
-  const [service, setService] = useState<IToastService>(toastService);
+  const [service, setService] = useState<IToastService>(defaultToastService);
 
   const setImplementation = (impl: ToastImplementation) => {
     setImplementationState(impl);
-    const newService = setToastImplementation(impl === 'sonner');
+    const newService = impl === 'sonner' 
+      ? new SonnerToastService()
+      : new ShadcnToastService();
     setService(newService);
   };
 

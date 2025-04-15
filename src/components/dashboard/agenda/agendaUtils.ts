@@ -1,3 +1,4 @@
+
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { format, parse, isSameDay } from "date-fns";
@@ -6,7 +7,7 @@ export interface CombinedTask {
   id: string;
   title: string;
   type: string;
-  dueDate: string;
+  dueDate: string | Date;
   priority: string;
   property: string;
   status: string;
@@ -44,8 +45,8 @@ export const combineTasks = (
 export const filterTasksForSelectedDate = (tasks: CombinedTask[], selectedDate: Date): CombinedTask[] => {
   return tasks.filter(task => {
     try {
-      if (task.dueDate instanceof Date) {
-        return isSameDay(task.dueDate, selectedDate);
+      if (typeof task.dueDate === 'object' && task.dueDate !== null && 'getTime' in task.dueDate) {
+        return isSameDay(task.dueDate as Date, selectedDate);
       }
 
       let taskDate;
@@ -74,10 +75,10 @@ export const sortTasksByTime = (tasks: CombinedTask[]): CombinedTask[] => {
   return [...tasks].sort((a, b) => {
     const getTime = (dateStr: string | Date) => {
       try {
-        if (dateStr instanceof Date) {
-          return dateStr.getTime();
+        if (typeof dateStr === 'object' && dateStr !== null && 'getTime' in dateStr) {
+          return (dateStr as Date).getTime();
         }
-        return new Date(dateStr).getTime();
+        return new Date(String(dateStr)).getTime();
       } catch {
         return 0;
       }
@@ -96,10 +97,10 @@ export const groupTasksByTimeOfDay = (tasks: CombinedTask[]) => {
     try {
       let hour;
       
-      if (task.dueDate instanceof Date) {
-        hour = task.dueDate.getHours();
+      if (typeof task.dueDate === 'object' && task.dueDate !== null && 'getHours' in task.dueDate) {
+        hour = (task.dueDate as Date).getHours();
       } else {
-        const date = new Date(task.dueDate);
+        const date = new Date(String(task.dueDate));
         hour = date.getHours();
       }
 

@@ -3,7 +3,35 @@ import { format as dateFormat } from 'date-fns';
 import { exportToCSV, preparePrint } from '../reportExportUtils';
 import { toastService } from '@/services/toast';
 import { ExportFormat, ExportSection } from '@/components/dashboard/ExportConfigDialog';
-import { prepareDashboardExportData } from './dataPreparationUtils';
+
+// Helper function to convert dashboard data sections to arrays
+const convertToArrayForExport = (data: Record<string, any[]>): any[] => {
+  const flattenedArray: any[] = [];
+  Object.entries(data).forEach(([section, items]) => {
+    if (Array.isArray(items) && items.length > 0) {
+      flattenedArray.push(...items);
+    }
+  });
+  return flattenedArray;
+};
+
+/**
+ * Helper function to prepare dashboard data for export
+ */
+export const prepareDashboardExportData = (
+  dashboardData: any,
+  sections: ExportSection[] = ['properties', 'tasks', 'maintenance', 'bookings']
+) => {
+  const exportData: Record<string, any[]> = {};
+  
+  sections.forEach(section => {
+    if (dashboardData && dashboardData[section]) {
+      exportData[section] = dashboardData[section];
+    }
+  });
+  
+  return exportData;
+};
 
 /**
  * Exports dashboard data based on specified format and selected sections

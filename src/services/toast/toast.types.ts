@@ -1,10 +1,12 @@
 
+import { ReactNode } from 'react';
+
 export type ToastId = string | number;
 
 export interface ToastOptions {
   description?: string;
   duration?: number;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }
 
 export interface LoadingToastOptions extends ToastOptions {

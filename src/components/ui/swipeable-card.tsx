@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Card, CardProps } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { useSwipe } from "@/hooks/use-swipe";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ export interface SwipeableCardProps extends React.HTMLAttributes<HTMLDivElement>
   swipeLeftText?: string;
   swipeRightText?: string;
   children: React.ReactNode;
+  className?: string;
 }
 
 export const SwipeableCard: React.FC<SwipeableCardProps> = ({
