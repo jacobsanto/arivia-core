@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 import { addDays } from 'date-fns';
@@ -8,7 +8,7 @@ import { MaintenanceTask } from '@/types/maintenanceTypes';
 import { useSwipe } from "@/hooks/use-swipe";
 import { AnimatePresence } from "framer-motion";
 import SwipeIndicators from "@/components/profile/SwipeIndicators";
-import { useSwipeHint } from "@/hooks/useSwipeHint";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
 import AgendaHeader from './agenda/AgendaHeader';
 import AgendaContent from './agenda/AgendaContent';
@@ -30,7 +30,17 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   maintenanceTasks
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const { showSwipeHint, isMobile: isMobileDevice, resetSwipeHint } = useSwipeHint();
+  // Local state for managing swipe hint visibility
+  const [showSwipeHint, setShowSwipeHint] = useState<boolean>(true);
+  const isMobile = useIsMobile();
+  
+  // Check if user has seen hints before (from localStorage) on component mount
+  useEffect(() => {
+    const hasSeenSwipeHint = localStorage.getItem('seen_swipe_hint') === 'true';
+    if (hasSeenSwipeHint) {
+      setShowSwipeHint(false);
+    }
+  }, []);
 
   const combinedTasks: CombinedTask[] = combineTasks(housekeepingTasks, maintenanceTasks);
   const tasksForSelectedDate = filterTasksForSelectedDate(combinedTasks, selectedDate);
@@ -63,18 +73,21 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     swipeTouchEnd(e);
   };
 
-  // Effect to reset swipe hint whenever selected date changes
-  useEffect(() => {
-    if (showSwipeHint) {
-      resetSwipeHint();
-    }
-  }, [selectedDate, showSwipeHint, resetSwipeHint]);
+  // Hide swipe hint and save to localStorage
+  const hideSwipeHint = () => {
+    setShowSwipeHint(false);
+    localStorage.setItem('seen_swipe_hint', 'true');
+  };
 
   const navigateToDay = (direction: 'next' | 'prev') => {
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
-    // No longer calling resetSwipeHint here as it's handled by the useEffect
+    
+    // Hide swipe hint when user navigates
+    if (showSwipeHint) {
+      hideSwipeHint();
+    }
   };
 
   const handleTaskClick = (task: CombinedTask) => {
@@ -135,7 +148,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
         </CardContent>
       </div>
       
-      {isMobileDevice && (
+      {isMobile && (
         <SwipeIndicators
           hasPrevTab={true}
           hasNextTab={true}
