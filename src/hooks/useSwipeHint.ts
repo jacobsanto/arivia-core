@@ -2,36 +2,31 @@
 import { useState, useEffect } from 'react';
 import { useIsMobile } from './use-mobile';
 
+/**
+ * A hook that manages the hint indicator for swipe gestures
+ * Shows a hint to users about swipe gestures and tracks whether they have been seen
+ */
 export const useSwipeHint = () => {
-  const [showSwipeHint, setShowSwipeHint] = useState(false);
   const isMobile = useIsMobile();
+  const [showSwipeHint, setShowSwipeHint] = useState<boolean>(true);
   
+  // Check local storage on first render
   useEffect(() => {
-    // Only show swipe hint on mobile devices
-    if (isMobile) {
-      // Check if the user has seen the swipe hint before
-      const hasSeenSwipeHint = localStorage.getItem('hasSeenSwipeHint');
-      
-      if (!hasSeenSwipeHint) {
-        // Show the swipe hint after a short delay
-        const timer = setTimeout(() => {
-          setShowSwipeHint(true);
-          // Hide the swipe hint after 3 seconds
-          setTimeout(() => {
-            setShowSwipeHint(false);
-            // Save that the user has seen the swipe hint
-            localStorage.setItem('hasSeenSwipeHint', 'true');
-          }, 3000);
-        }, 1500);
-        
-        return () => clearTimeout(timer);
-      }
+    const hasSeenSwipeHint = localStorage.getItem('seen_swipe_hint') === 'true';
+    if (hasSeenSwipeHint) {
+      setShowSwipeHint(false);
     }
-  }, [isMobile]);
+  }, []);
   
+  // Function to reset the hint (hide it and save to localStorage)
   const resetSwipeHint = () => {
     setShowSwipeHint(false);
+    localStorage.setItem('seen_swipe_hint', 'true');
   };
   
-  return { showSwipeHint, isMobile, resetSwipeHint };
+  return {
+    showSwipeHint,
+    isMobile,
+    resetSwipeHint
+  };
 };

@@ -78,7 +78,8 @@ export class ShadcnToastService implements IToastService {
 
   dismiss(id?: ToastId): void {
     if (id) {
-      // Use the static toast.dismiss method instead
+      // Use the dismiss function from the imported toast object
+      // The toast.dismiss is a function not a method of the return value
       toast.dismiss(id);
     } else {
       toast.dismiss();

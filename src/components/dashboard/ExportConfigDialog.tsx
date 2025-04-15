@@ -1,15 +1,27 @@
 
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Loader2, FileDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
-export type ExportFormat = "csv" | "excel" | "pdf";
-export type ExportSection = "properties" | "tasks" | "maintenance" | "bookings";
+export type ExportFormat = 'csv' | 'excel' | 'pdf';
+export type ExportSection = 'properties' | 'tasks' | 'maintenance' | 'bookings';
 
 interface ExportConfigDialogProps {
   open: boolean;
@@ -24,126 +36,121 @@ export const ExportConfigDialog: React.FC<ExportConfigDialogProps> = ({
   onOpenChange,
   onExport,
   isExporting,
-  propertyFilter
+  propertyFilter,
 }) => {
-  const [format, setFormat] = useState<ExportFormat>("csv");
+  const [format, setFormat] = useState<ExportFormat>('csv');
   const [selectedSections, setSelectedSections] = useState<ExportSection[]>([
-    "properties", "tasks", "maintenance", "bookings"
+    'properties', 'tasks', 'maintenance', 'bookings'
   ]);
 
   const handleSectionToggle = (section: ExportSection) => {
-    setSelectedSections(current => {
-      if (current.includes(section)) {
-        return current.filter(s => s !== section);
-      } else {
-        return [...current, section];
-      }
-    });
+    setSelectedSections(prev => 
+      prev.includes(section) 
+        ? prev.filter(s => s !== section)
+        : [...prev, section]
+    );
   };
 
   const handleExport = () => {
-    if (selectedSections.length === 0) return;
-    onExport(format, selectedSections);
+    if (selectedSections.length > 0) {
+      onExport(format, selectedSections);
+    }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Export Dashboard Data</DialogTitle>
+          <DialogDescription>
+            Select data sections and format for export.
+            {propertyFilter !== 'all' && (
+              <span className="block mt-1">
+                Exporting data for property: <strong>{propertyFilter}</strong>
+              </span>
+            )}
+          </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-sm font-medium mb-3">Export Format</h3>
-            <RadioGroup defaultValue={format} onValueChange={(value) => setFormat(value as ExportFormat)}>
-              <div className="flex flex-wrap gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="csv" id="csv" />
-                  <Label htmlFor="csv">CSV</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="excel" id="excel" />
-                  <Label htmlFor="excel">Excel</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="pdf" id="pdf" />
-                  <Label htmlFor="pdf">PDF</Label>
-                </div>
+        <div className="grid gap-6 py-4">
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium">Data to Export</h3>
+            
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="properties"
+                  checked={selectedSections.includes('properties')}
+                  onCheckedChange={() => handleSectionToggle('properties')}
+                />
+                <Label htmlFor="properties">Properties Data</Label>
               </div>
-            </RadioGroup>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="tasks"
+                  checked={selectedSections.includes('tasks')}
+                  onCheckedChange={() => handleSectionToggle('tasks')}
+                />
+                <Label htmlFor="tasks">Tasks & Housekeeping</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="maintenance"
+                  checked={selectedSections.includes('maintenance')}
+                  onCheckedChange={() => handleSectionToggle('maintenance')}
+                />
+                <Label htmlFor="maintenance">Maintenance Records</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="bookings"
+                  checked={selectedSections.includes('bookings')}
+                  onCheckedChange={() => handleSectionToggle('bookings')}
+                />
+                <Label htmlFor="bookings">Booking Information</Label>
+              </div>
+            </div>
           </div>
           
-          <div>
-            <h3 className="text-sm font-medium mb-3">Include Sections</h3>
-            <Card className="border border-muted">
-              <CardContent className="pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="properties" 
-                      checked={selectedSections.includes("properties")}
-                      onCheckedChange={() => handleSectionToggle("properties")}
-                    />
-                    <Label htmlFor="properties">Properties</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="tasks" 
-                      checked={selectedSections.includes("tasks")}
-                      onCheckedChange={() => handleSectionToggle("tasks")}
-                    />
-                    <Label htmlFor="tasks">Cleaning Tasks</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="maintenance" 
-                      checked={selectedSections.includes("maintenance")}
-                      onCheckedChange={() => handleSectionToggle("maintenance")}
-                    />
-                    <Label htmlFor="maintenance">Maintenance</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="bookings" 
-                      checked={selectedSections.includes("bookings")}
-                      onCheckedChange={() => handleSectionToggle("bookings")}
-                    />
-                    <Label htmlFor="bookings">Bookings</Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div className="flex items-center justify-between pt-2">
-            <div className="text-sm text-muted-foreground">
-              {propertyFilter === "all" ? "All Properties" : propertyFilter}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleExport} 
-                disabled={isExporting || selectedSections.length === 0}
-                className="flex items-center gap-2"
-              >
-                {isExporting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <FileDown className="h-4 w-4" />
-                    Export
-                  </>
-                )}
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="format">Export Format</Label>
+            <Select 
+              value={format} 
+              onValueChange={(value: ExportFormat) => setFormat(value)}
+            >
+              <SelectTrigger id="format">
+                <SelectValue placeholder="Select format" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="csv">CSV (.csv)</SelectItem>
+                <SelectItem value="excel">Excel (.xlsx)</SelectItem>
+                <SelectItem value="pdf">PDF Document (.pdf)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleExport} 
+            disabled={selectedSections.length === 0 || isExporting}
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              `Export as ${format.toUpperCase()}`
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
