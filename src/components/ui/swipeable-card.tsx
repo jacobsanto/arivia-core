@@ -4,12 +4,15 @@ import { Card, CardProps } from "@/components/ui/card";
 import { useSwipe } from "@/hooks/use-swipe";
 import { cn } from "@/lib/utils";
 
-interface SwipeableCardProps extends CardProps {
+export interface SwipeableCardProps extends React.HTMLAttributes<HTMLDivElement> {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   swipeEnabled?: boolean;
   feedbackColor?: string;
   swipeThreshold?: number;
+  swipeIndicators?: boolean;
+  swipeLeftText?: string;
+  swipeRightText?: string;
   children: React.ReactNode;
 }
 
@@ -19,6 +22,9 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
   swipeEnabled = true,
   feedbackColor = "rgba(0, 0, 0, 0.05)",
   swipeThreshold = 80,
+  swipeIndicators = false,
+  swipeLeftText = "Delete",
+  swipeRightText = "Complete",
   className,
   children,
   ...props

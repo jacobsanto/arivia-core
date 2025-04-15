@@ -27,7 +27,7 @@ export interface Task {
   title: string;
   property: string;
   assignedTo: string;
-  dueDate: string; // Changed from Date to string for compatibility
+  dueDate: string; // Date stored as string format
   status: TaskStatus;
   priority: 'Low' | 'Medium' | 'High';
   description: string;

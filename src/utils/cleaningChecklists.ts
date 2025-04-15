@@ -1,5 +1,6 @@
 
 import { ChecklistItem } from "@/types/taskTypes";
+import { format, addDays, differenceInDays } from "date-fns";
 
 export const getCleaningChecklist = (cleaningType: string): ChecklistItem[] => {
   switch (cleaningType.toLowerCase()) {
@@ -35,4 +36,30 @@ export const getCleaningChecklist = (cleaningType: string): ChecklistItem[] => {
         { id: 3, title: "Vacuum floors", completed: false }
       ];
   }
+};
+
+export const generateCleaningSchedule = (checkIn: Date, checkOut: Date) => {
+  const stayDuration = differenceInDays(checkOut, checkIn);
+  const scheduledCleanings: string[] = [];
+  const cleaningTypes: string[] = [];
+
+  // Always add check-in day (pre-arrival cleaning)
+  scheduledCleanings.push(format(checkIn, "yyyy-MM-dd"));
+  cleaningTypes.push("Full");
+
+  // For stays longer than 3 days, add mid-stay cleaning every 3 days
+  if (stayDuration > 3) {
+    let currentDay = addDays(checkIn, 3);
+    while (differenceInDays(checkOut, currentDay) > 1) {
+      scheduledCleanings.push(format(currentDay, "yyyy-MM-dd"));
+      cleaningTypes.push("Linen & Towel Change");
+      currentDay = addDays(currentDay, 3);
+    }
+  }
+
+  // Always add check-out day
+  scheduledCleanings.push(format(checkOut, "yyyy-MM-dd"));
+  cleaningTypes.push("Full");
+
+  return { scheduledCleanings, cleaningTypes, stayDuration };
 };
