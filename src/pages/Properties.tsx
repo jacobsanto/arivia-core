@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -14,7 +13,6 @@ import PropertyDetails from "@/components/properties/PropertyDetails";
 import PropertyPagination from "@/components/properties/PropertyPagination";
 import GuestyPropertiesSection from "@/components/properties/GuestyPropertiesSection";
 
-// Define the advanced filters interface
 interface AdvancedFilters {
   priceRange: [number, number];
   bedrooms: string;
@@ -24,21 +22,17 @@ interface AdvancedFilters {
 }
 
 const Properties = () => {
-  // Search and filtering state
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters | null>(null);
   
-  // View and selected property state
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [activeView, setActiveView] = useState("properties");
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 9; // Adjust based on your UI
+  const itemsPerPage = 9;
 
-  // Get properties from the custom hook
   const { 
     properties, 
     isLoading, 
@@ -49,7 +43,6 @@ const Properties = () => {
     deleteProperty 
   } = useProperties();
 
-  // Show error messages
   useEffect(() => {
     if (error) {
       toast.error('Failed to load properties', {
@@ -58,29 +51,23 @@ const Properties = () => {
     }
   }, [error]);
 
-  // Filter properties based on search, tab, and advanced filters
   const filteredProperties = properties.filter((property) => {
-    // Basic search filtering
     const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Tab filtering
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "occupied" && property.status === "Occupied") ||
       (activeTab === "vacant" && property.status === "Vacant") ||
       (activeTab === "maintenance" && property.status === "Maintenance");
 
-    // Advanced filtering
     let matchesAdvancedFilters = true;
     if (advancedFilters) {
-      // Price range filter
       if (property.price < advancedFilters.priceRange[0] || 
           property.price > advancedFilters.priceRange[1]) {
         matchesAdvancedFilters = false;
       }
       
-      // Bedrooms filter
       if (advancedFilters.bedrooms && 
           property.bedrooms.toString() !== advancedFilters.bedrooms) {
         if (advancedFilters.bedrooms === "6+" && property.bedrooms < 6) {
@@ -90,7 +77,6 @@ const Properties = () => {
         }
       }
       
-      // Bathrooms filter
       if (advancedFilters.bathrooms && 
           property.bathrooms.toString() !== advancedFilters.bathrooms) {
         if (advancedFilters.bathrooms === "5+" && property.bathrooms < 5) {
@@ -100,7 +86,6 @@ const Properties = () => {
         }
       }
       
-      // Property type filter
       if (advancedFilters.propertyType && property.type !== advancedFilters.propertyType) {
         matchesAdvancedFilters = false;
       }
@@ -109,17 +94,14 @@ const Properties = () => {
     return matchesSearch && matchesTab && matchesAdvancedFilters;
   });
 
-  // Paging logic
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProperties = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, activeTab, advancedFilters]);
 
-  // Action handlers
   const handleAddProperty = () => {
     setIsAddPropertyOpen(true);
   };
@@ -130,7 +112,6 @@ const Properties = () => {
       toast.success(`${newProperty.name} has been added to your properties`);
       setIsAddPropertyOpen(false);
     } catch (err: any) {
-      // Error handling is done in the hook
     }
   };
 
@@ -165,7 +146,6 @@ const Properties = () => {
         await deleteProperty(id);
         toast.success(`${name} has been deleted`);
       } catch (err) {
-        // Error handling is done in the hook
       }
     }
   };
@@ -174,7 +154,6 @@ const Properties = () => {
     setAdvancedFilters(filters);
   };
 
-  // Conditional rendering for different views
   if (activeView === "details" && selectedProperty) {
     return <PropertyDetails property={selectedProperty} onBack={handleBackToProperties} />;
   }
@@ -193,10 +172,8 @@ const Properties = () => {
 
   return (
     <div className="space-y-8">
-      {/* Header section */}
       <PropertyHeader onAddProperty={handleAddProperty} />
       
-      {/* Filters section */}
       <PropertyFilters 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -207,7 +184,6 @@ const Properties = () => {
           Array.isArray(v) ? v.length > 0 : v).length : 0}
       />
 
-      {/* Property list section */}
       <PropertyList 
         properties={paginatedProperties}
         isLoading={isLoading}
@@ -219,14 +195,12 @@ const Properties = () => {
         onAddProperty={handleAddProperty}
       />
       
-      {/* Pagination */}
       <PropertyPagination 
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
       
-      {/* Guesty Integration Section */}
       <div className="border-t pt-8">
         <GuestyPropertiesSection
           onViewDetails={handleViewDetails}
@@ -238,7 +212,6 @@ const Properties = () => {
         />
       </div>
 
-      {/* Add Property Dialog */}
       <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
