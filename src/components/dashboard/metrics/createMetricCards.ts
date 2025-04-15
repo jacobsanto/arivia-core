@@ -3,17 +3,17 @@ import { MetricCardProps } from "./MetricCard";
 import React from "react";
 
 export interface DashboardMetricData {
-  properties: {
+  properties?: {
     total: number;
     occupied: number;
     vacant: number;
   };
-  tasks: {
+  tasks?: {
     total: number;
     completed: number;
     pending: number;
   };
-  maintenance: {
+  maintenance?: {
     total: number;
     critical: number;
     standard: number;
@@ -21,51 +21,56 @@ export interface DashboardMetricData {
 }
 
 export const createMetricCards = (data: DashboardMetricData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
+  // Ensure data structure with defaults
+  const properties = data?.properties || { total: 0, occupied: 0, vacant: 0 };
+  const tasks = data?.tasks || { total: 0, completed: 0, pending: 0 };
+  const maintenance = data?.maintenance || { total: 0, critical: 0, standard: 0 };
+  
   // Calculate variants based on data
-  const tasksVariant: 'warning' | 'success' = data.tasks.pending > data.tasks.completed / 2 ? 'warning' : 'success';
-  const maintenanceVariant: 'warning' | 'success' = data.maintenance.critical > 0 ? 'warning' : 'success';
+  const tasksVariant: 'warning' | 'success' = tasks.pending > tasks.completed / 2 ? 'warning' : 'success';
+  const maintenanceVariant: 'warning' | 'success' = maintenance.critical > 0 ? 'warning' : 'success';
   
   // Create footer content as string representations instead of JSX
   const propertiesFooterMobile = {
-    text: `${data.properties.occupied} Occ | ${data.properties.vacant} Vac`,
-    occupied: data.properties.occupied,
-    vacant: data.properties.vacant
+    text: `${properties.occupied} Occ | ${properties.vacant} Vac`,
+    occupied: properties.occupied,
+    vacant: properties.vacant
   };
   
   const propertiesFooterDesktop = {
-    text: `${data.properties.occupied} Occupied | ${data.properties.vacant} Vacant`,
-    occupied: data.properties.occupied,
-    vacant: data.properties.vacant
+    text: `${properties.occupied} Occupied | ${properties.vacant} Vacant`,
+    occupied: properties.occupied,
+    vacant: properties.vacant
   };
   
   const tasksFooterMobile = {
-    text: `${data.tasks.completed} Done | ${data.tasks.pending} Pend`,
-    completed: data.tasks.completed,
-    pending: data.tasks.pending
+    text: `${tasks.completed} Done | ${tasks.pending} Pend`,
+    completed: tasks.completed,
+    pending: tasks.pending
   };
   
   const tasksFooterDesktop = {
-    text: `${data.tasks.completed} Completed | ${data.tasks.pending} Pending`,
-    completed: data.tasks.completed,
-    pending: data.tasks.pending
+    text: `${tasks.completed} Completed | ${tasks.pending} Pending`,
+    completed: tasks.completed,
+    pending: tasks.pending
   };
   
   const maintenanceFooterMobile = {
-    text: `${data.maintenance.critical} Crit | ${data.maintenance.standard} Std`,
-    critical: data.maintenance.critical,
-    standard: data.maintenance.standard
+    text: `${maintenance.critical} Crit | ${maintenance.standard} Std`,
+    critical: maintenance.critical,
+    standard: maintenance.standard
   };
   
   const maintenanceFooterDesktop = {
-    text: `${data.maintenance.critical} Critical | ${data.maintenance.standard} Standard`,
-    critical: data.maintenance.critical,
-    standard: data.maintenance.standard
+    text: `${maintenance.critical} Critical | ${maintenance.standard} Standard`,
+    critical: maintenance.critical,
+    standard: maintenance.standard
   };
   
   return [
     {
       title: "Properties",
-      value: data.properties.total.toString(),
+      value: properties.total.toString(),
       description: "Properties Managed",
       footer: isMobile ? propertiesFooterMobile : propertiesFooterDesktop,
       trend: {
@@ -76,23 +81,23 @@ export const createMetricCards = (data: DashboardMetricData, isMobile: boolean):
     },
     {
       title: "Tasks",
-      value: data.tasks.total.toString(),
+      value: tasks.total.toString(),
       description: "Active Tasks",
       footer: isMobile ? tasksFooterMobile : tasksFooterDesktop,
       trend: {
         value: 12,
-        isPositive: data.tasks.completed > data.tasks.pending
+        isPositive: tasks.completed > tasks.pending
       },
       variant: tasksVariant
     },
     {
       title: "Maintenance",
-      value: data.maintenance.total.toString(),
+      value: maintenance.total.toString(),
       description: "Maintenance Issues",
       footer: isMobile ? maintenanceFooterMobile : maintenanceFooterDesktop,
       trend: {
-        value: data.maintenance.critical > 0 ? 5 : 2,
-        isPositive: data.maintenance.critical === 0
+        value: maintenance.critical > 0 ? 5 : 2,
+        isPositive: maintenance.critical === 0
       },
       variant: maintenanceVariant
     }

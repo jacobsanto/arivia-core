@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getDashboardData } from "@/utils/dashboardDataUtils";
 import { subDays } from 'date-fns';
-import { toastService } from "@/services/toast/toast.service";
+import { toastService } from "@/services/toast";
 
 export const useDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
@@ -20,7 +20,16 @@ export const useDashboard = () => {
     try {
       // Fetch dashboard data based on selected property and date range
       const data = getDashboardData(selectedProperty, dateRange);
-      setDashboardData(data);
+      
+      // Ensure the data has the required structure for metrics
+      const formattedData = {
+        ...data,
+        properties: data.properties || { total: 0, occupied: 0, vacant: 0 },
+        tasks: data.tasks || { total: 0, completed: 0, pending: 0 },
+        maintenance: data.maintenance || { total: 0, critical: 0, standard: 0 }
+      };
+      
+      setDashboardData(formattedData);
       setLastRefreshed(new Date());
     } catch (error) {
       console.error("Error fetching dashboard data:", error);

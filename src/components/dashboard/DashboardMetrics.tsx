@@ -6,18 +6,18 @@ import { MetricCardContainer } from "./metrics/MetricCardContainer";
 import { createMetricCards } from "./metrics/createMetricCards";
 
 interface DashboardMetricsProps {
-  data: {
-    properties: {
+  data?: {
+    properties?: {
       total: number;
       occupied: number;
       vacant: number;
     };
-    tasks: {
+    tasks?: {
       total: number;
       completed: number;
       pending: number;
     };
-    maintenance: {
+    maintenance?: {
       total: number;
       critical: number;
       standard: number;
@@ -25,7 +25,7 @@ interface DashboardMetricsProps {
   };
 }
 
-const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data }) => {
+const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ data = {} }) => {
   const isMobile = useIsMobile();
   const metricCards = createMetricCards(data, isMobile);
   
