@@ -80,12 +80,18 @@ export class ShadcnToastService implements IToastService {
     if (id) {
       // For shadcn toast, we need to access the dismiss function properly
       if (typeof id === 'string') {
-        // Using the dismiss method from the toast helper directly
-        toast.dismiss?.(id);
+        // We need to use the dismiss method directly without dot notation
+        const toastFn = toast as any; // Type assertion to avoid TypeScript errors
+        if (toastFn.dismiss) {
+          toastFn.dismiss(id);
+        }
       }
     } else {
       // To dismiss all toasts when no ID is provided
-      toast.dismiss?.();
+      const toastFn = toast as any; // Type assertion to avoid TypeScript errors
+      if (toastFn.dismiss) {
+        toastFn.dismiss();
+      }
     }
   }
 
