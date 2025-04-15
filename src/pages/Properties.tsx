@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import PropertyForm from "@/components/properties/PropertyForm";
+import PropertyForm from "@/components/properties/property-form";
 import BookingCalendar from "@/components/properties/bookings";
 import PricingConfig from "@/components/properties/PricingConfig";
 import GuestManagement from "@/components/properties/GuestManagement";
