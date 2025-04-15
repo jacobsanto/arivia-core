@@ -79,9 +79,10 @@ export const setupAutoRefresh = (
 };
 
 /**
- * Create a helper function to prepare dashboard export data
+ * Create a helper function to prepare dashboard for refresh operations
+ * Renamed to avoid conflict with dataPreparationUtils.ts
  */
-export const prepareDashboardExportData = (
+export const prepareRefreshData = (
   dashboardData: any,
   sections: string[] = ['properties', 'tasks', 'maintenance', 'bookings']
 ) => {

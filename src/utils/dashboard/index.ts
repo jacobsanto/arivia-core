@@ -1,6 +1,12 @@
 
 // Export all dashboard utilities from this central file
 export * from './weeklyReviewUtils';
-export * from './dataPreparationUtils';
+export { 
+  formatMetricsForExport,
+  prepareDashboardExportData as prepareExportData 
+} from './dataPreparationUtils';
 export * from './exportUtils';
-export * from './refreshUtils';
+export { 
+  refreshDashboardData,
+  setupAutoRefresh 
+} from './refreshUtils';

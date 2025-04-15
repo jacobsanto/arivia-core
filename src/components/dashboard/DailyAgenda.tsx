@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
@@ -32,44 +31,35 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const { showSwipeHint, isMobile: isMobileDevice, resetSwipeHint } = useSwipeHint();
 
-  // Combine housekeeping and maintenance tasks
   const combinedTasks: CombinedTask[] = combineTasks(housekeepingTasks, maintenanceTasks);
 
-  // Filter tasks for the selected date
   const tasksForSelectedDate = filterTasksForSelectedDate(combinedTasks, selectedDate);
 
-  // Sort tasks by time
   const sortedTasks = sortTasksByTime(tasksForSelectedDate);
 
-  // Group tasks by morning, afternoon, evening
   const { morningTasks, afternoonTasks, eveningTasks } = groupTasksByTimeOfDay(sortedTasks);
 
-  // Handle pull-to-refresh functionality
   const { pullMoveY, isRefreshing, contentRef, handlers } = usePullToRefresh({
     onRefresh: () => {
       console.log("Refreshing tasks data...");
-      // Here you would typically fetch fresh data
-      // For this example, we're just using the mock refresh implementation from the hook
     }
   });
 
-  // Swipe to change days
   const { onTouchStart: swipeTouchStart, onTouchMove: swipeTouchMove, onTouchEnd: swipeTouchEnd } = useSwipe({
     onSwipeLeft: () => navigateToDay('next'),
     onSwipeRight: () => navigateToDay('prev'),
   });
-  
-  // Combined touch handlers
+
   const onTouchStart = (e: React.TouchEvent) => {
     handlers.onTouchStart(e);
     swipeTouchStart(e);
   };
-  
+
   const onTouchMove = (e: React.TouchEvent) => {
     handlers.onTouchMove(e);
     swipeTouchMove(e);
   };
-  
+
   const onTouchEnd = (e: React.TouchEvent) => {
     handlers.onTouchEnd();
     swipeTouchEnd(e);
@@ -79,19 +69,17 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
-    resetSwipeHint(); // Fixed: Removed the argument since resetSwipeHint doesn't expect any
+    resetSwipeHint();
   };
 
   const handleTaskClick = (task: CombinedTask) => {
     console.log("Task clicked:", task.title);
   };
-  
-  // Track swipe direction for animations
+
   const [swipeDirection, setSwipeDirection] = useState<number>(0);
-  
+
   useEffect(() => {
-    // Update swipe direction when date changes
-    setSwipeDirection(1); // Default to forward direction
+    setSwipeDirection(1);
   }, [selectedDate]);
 
   return (
@@ -109,7 +97,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Pull to refresh indicator */}
         {pullMoveY > 0 && (
           <div 
             className="absolute top-0 left-0 w-full flex justify-center items-center"
@@ -143,7 +130,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
         </CardContent>
       </div>
       
-      {/* Show swipe indicators for navigation */}
       {isMobileDevice && (
         <SwipeIndicators
           hasPrevTab={true}
