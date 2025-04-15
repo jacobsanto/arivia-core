@@ -1,9 +1,8 @@
 
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
-import { toast, useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import * as React from "react";
-import type { ToastActionElement } from "@/components/ui/toast";
 
 export class ShadcnToastService implements IToastService {
   show(title: string, options?: ToastOptions): ToastId {
@@ -11,7 +10,10 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      action: options?.action ? 
+        <ToastAction altText={options.action.label} onClick={options.action.onClick}>
+          {options.action.label}
+        </ToastAction> : undefined,
     });
     return result.id;
   }
@@ -21,7 +23,10 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      action: options?.action ? 
+        <ToastAction altText={options.action.label} onClick={options.action.onClick}>
+          {options.action.label}
+        </ToastAction> : undefined,
       variant: "default", // Using default as success
     });
     return result.id;
@@ -32,7 +37,10 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      action: options?.action ? 
+        <ToastAction altText={options.action.label} onClick={options.action.onClick}>
+          {options.action.label}
+        </ToastAction> : undefined,
       variant: "destructive",
     });
     return result.id;
@@ -43,7 +51,10 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      action: options?.action ? 
+        <ToastAction altText={options.action.label} onClick={options.action.onClick}>
+          {options.action.label}
+        </ToastAction> : undefined,
       variant: "default", // Using default for warning
     });
     return result.id;
@@ -54,7 +65,10 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      action: options?.action ? 
+        <ToastAction altText={options.action.label} onClick={options.action.onClick}>
+          {options.action.label}
+        </ToastAction> : undefined,
       variant: "default",
     });
     return result.id;
@@ -79,29 +93,10 @@ export class ShadcnToastService implements IToastService {
   dismiss(id?: ToastId): void {
     if (id) {
       // For shadcn toast, we need to access the dismiss function properly
-      if (typeof id === 'string') {
-        // We need to use the dismiss method directly without dot notation
-        const toastFn = toast as any; // Type assertion to avoid TypeScript errors
-        if (toastFn.dismiss) {
-          toastFn.dismiss(id);
-        }
-      }
+      toast.dismiss(id);
     } else {
       // To dismiss all toasts when no ID is provided
-      const toastFn = toast as any; // Type assertion to avoid TypeScript errors
-      if (toastFn.dismiss) {
-        toastFn.dismiss();
-      }
+      toast.dismiss();
     }
-  }
-
-  // Helper method to convert ReactNode to ToastAction component
-  private convertToToastAction(action: React.ReactNode): ToastActionElement | undefined {
-    if (!action) return undefined;
-    if (React.isValidElement(action)) return action as ToastActionElement;
-    
-    // If it's not a valid React element, we can't use it in the toast
-    console.warn("Invalid toast action provided. Must be a valid React element.");
-    return undefined;
   }
 }

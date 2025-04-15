@@ -7,7 +7,10 @@ export class SonnerToastService implements IToastService {
     return toast(title, {
       description: options?.description,
       duration: options?.duration,
-      action: options?.action
+      action: options?.action ? {
+        label: options.action.label,
+        onClick: options.action.onClick
+      } : undefined
     });
   }
 
@@ -15,7 +18,10 @@ export class SonnerToastService implements IToastService {
     return toast.success(title, {
       description: options?.description,
       duration: options?.duration,
-      action: options?.action
+      action: options?.action ? {
+        label: options.action.label,
+        onClick: options.action.onClick
+      } : undefined
     });
   }
 
@@ -23,7 +29,10 @@ export class SonnerToastService implements IToastService {
     return toast.error(title, {
       description: options?.description,
       duration: options?.duration,
-      action: options?.action
+      action: options?.action ? {
+        label: options.action.label,
+        onClick: options.action.onClick
+      } : undefined
     });
   }
 
@@ -31,7 +40,10 @@ export class SonnerToastService implements IToastService {
     return toast.warning(title, {
       description: options?.description,
       duration: options?.duration,
-      action: options?.action
+      action: options?.action ? {
+        label: options.action.label,
+        onClick: options.action.onClick
+      } : undefined
     });
   }
 
@@ -39,7 +51,10 @@ export class SonnerToastService implements IToastService {
     return toast.info(title, {
       description: options?.description,
       duration: options?.duration,
-      action: options?.action
+      action: options?.action ? {
+        label: options.action.label,
+        onClick: options.action.onClick
+      } : undefined
     });
   }
 

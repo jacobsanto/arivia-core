@@ -1,60 +1,59 @@
 
 import { toast as sonnerToast } from 'sonner';
-
-type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info';
-
-export interface ToastOptions {
-  description?: string;
-  duration?: number;
-  dismissible?: boolean;
-  important?: boolean;
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
-}
+import { ToastId, ToastOptions, LoadingToastOptions, ToastType } from './toast.types';
 
 const defaultToastOptions: ToastOptions = {
   duration: 5000,
   dismissible: true,
 };
 
-export const toast = {
-  show: (title: string, options?: ToastOptions) => {
+export class ToastService {
+  show(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { ...defaultToastOptions, ...options };
     return sonnerToast(title, mergedOptions);
-  },
+  }
 
-  success: (title: string, options?: ToastOptions) => {
+  success(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { ...defaultToastOptions, ...options };
     return sonnerToast.success(title, mergedOptions);
-  },
+  }
 
-  error: (title: string, options?: ToastOptions) => {
+  error(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { ...defaultToastOptions, ...options };
     return sonnerToast.error(title, mergedOptions);
-  },
+  }
 
-  warning: (title: string, options?: ToastOptions) => {
+  warning(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { ...defaultToastOptions, ...options };
     return sonnerToast.warning(title, mergedOptions);
-  },
+  }
 
-  info: (title: string, options?: ToastOptions) => {
+  info(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { ...defaultToastOptions, ...options };
     return sonnerToast.info(title, mergedOptions);
-  },
+  }
 
-  dismiss: (toastId?: string) => {
-    if (toastId) {
-      sonnerToast.dismiss(toastId);
+  loading(title: string, options?: LoadingToastOptions): ToastId {
+    const mergedOptions = { ...defaultToastOptions, ...options };
+    return sonnerToast.loading(title, mergedOptions);
+  }
+
+  update(id: ToastId, title: string, options?: ToastOptions): void {
+    // Dismiss the old toast and create a new one
+    this.dismiss(id);
+    this.show(title, options);
+  }
+
+  dismiss(id?: ToastId): void {
+    if (id) {
+      sonnerToast.dismiss(id);
     } else {
       sonnerToast.dismiss();
     }
-  },
+  }
 
   // Custom method for Arivia-specific toast needs
-  task: (title: string, options?: ToastOptions) => {
+  task(title: string, options?: ToastOptions): ToastId {
     const mergedOptions = { 
       ...defaultToastOptions, 
       ...options,
@@ -62,6 +61,7 @@ export const toast = {
     };
     return sonnerToast(title, mergedOptions);
   }
-};
+}
 
-export type { ToastType };
+// Create and export a singleton instance
+export const toastService = new ToastService();
