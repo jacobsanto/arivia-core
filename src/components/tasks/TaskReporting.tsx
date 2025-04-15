@@ -40,35 +40,53 @@ const TaskReporting = () => {
     }
   }, [dateRange]);
   
-  // Load data whenever the date range changes
+  // Load all data whenever the date range changes
   useEffect(() => {
-    loadReportData();
-  }, [customDateRange, activeTab]);
+    loadAllReportData();
+  }, [customDateRange]);
   
-  const loadReportData = async () => {
+  const loadAllReportData = async () => {
     try {
       setIsLoading(true);
       
-      // Only load data for the active tab to improve performance
-      switch (activeTab) {
-        case 'properties':
-          const propertyResult = await reportDataService.getPropertyData({ dateRange: customDateRange });
-          setPropertyData(propertyResult);
-          break;
-        case 'staff':
-          const staffResult = await reportDataService.getStaffData({ dateRange: customDateRange });
-          setStaffData(staffResult);
-          break;
-        case 'time':
-          const timeResult = await reportDataService.getTimeAnalysisData({ dateRange: customDateRange });
-          setTimeAnalysisData(timeResult);
-          break;
-      }
+      // Load all data types at once
+      await Promise.all([
+        loadPropertyData(),
+        loadStaffData(),
+        loadTimeData()
+      ]);
     } catch (error) {
       console.error('Error loading report data:', error);
       toastService.error('Failed to load report data');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const loadPropertyData = async () => {
+    try {
+      const propertyResult = await reportDataService.getPropertyData({ dateRange: customDateRange });
+      setPropertyData(propertyResult);
+    } catch (error) {
+      console.error('Error loading property data:', error);
+    }
+  };
+  
+  const loadStaffData = async () => {
+    try {
+      const staffResult = await reportDataService.getStaffData({ dateRange: customDateRange });
+      setStaffData(staffResult);
+    } catch (error) {
+      console.error('Error loading staff data:', error);
+    }
+  };
+  
+  const loadTimeData = async () => {
+    try {
+      const timeResult = await reportDataService.getTimeAnalysisData({ dateRange: customDateRange });
+      setTimeAnalysisData(timeResult);
+    } catch (error) {
+      console.error('Error loading time analysis data:', error);
     }
   };
   

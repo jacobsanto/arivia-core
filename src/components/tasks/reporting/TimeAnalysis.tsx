@@ -12,9 +12,21 @@ interface TimeAnalysisProps {
 
 export const TimeAnalysis = ({ data, isLoading }: TimeAnalysisProps) => {
   // Calculate averages for summary cards
-  const avgCleaningTime = isLoading ? 0 : data.reduce((sum, item) => sum + item.avgTime, 0) / (data.length || 1);
-  const fastestTime = isLoading ? 0 : Math.min(...data.map(item => item.avgTime));
+  const avgCleaningTime = isLoading ? 0 : 
+    data.reduce((sum, item) => sum + (item.avgTime * item.tasks), 0) / 
+    Math.max(1, data.reduce((sum, item) => sum + item.tasks, 0));
+    
+  const fastestTime = isLoading ? 0 : Math.min(...data.filter(item => item.avgTime > 0).map(item => item.avgTime), Infinity);
   const longestTime = isLoading ? 0 : Math.max(...data.map(item => item.avgTime));
+  
+  // Order days of the week correctly
+  const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const orderedData = [...data].sort((a, b) => 
+    daysOfWeek.indexOf(a.name) - daysOfWeek.indexOf(b.name)
+  );
+  
+  // Calculate total tasks for the period
+  const totalTasks = data.reduce((sum, item) => sum + item.tasks, 0);
   
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -28,7 +40,7 @@ export const TimeAnalysis = ({ data, isLoading }: TimeAnalysisProps) => {
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={data} 
+                data={orderedData} 
                 margin={{
                   top: 5,
                   right: 30,
@@ -51,21 +63,26 @@ export const TimeAnalysis = ({ data, isLoading }: TimeAnalysisProps) => {
       
       <Card>
         <CardContent className="pt-6">
-          <h3 className="text-lg font-medium mb-4">Time Analysis</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <h3 className="text-lg font-medium mb-4">Time Analysis Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="text-lg font-semibold text-blue-700">{Math.round(avgCleaningTime)} min</h4>
               <p className="text-sm text-blue-600">Average cleaning time</p>
             </div>
             
             <div className="bg-green-50 p-4 rounded-lg">
-              <h4 className="text-lg font-semibold text-green-700">{Math.round(fastestTime)} min</h4>
+              <h4 className="text-lg font-semibold text-green-700">{Math.round(fastestTime) || 'N/A'} min</h4>
               <p className="text-sm text-green-600">Fastest cleaning time</p>
             </div>
             
             <div className="bg-amber-50 p-4 rounded-lg">
-              <h4 className="text-lg font-semibold text-amber-700">{Math.round(longestTime)} min</h4>
+              <h4 className="text-lg font-semibold text-amber-700">{Math.round(longestTime) || 'N/A'} min</h4>
               <p className="text-sm text-amber-600">Longest cleaning time</p>
+            </div>
+            
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h4 className="text-lg font-semibold text-purple-700">{totalTasks}</h4>
+              <p className="text-sm text-purple-600">Total tasks completed</p>
             </div>
           </div>
         </CardContent>
@@ -88,8 +105,8 @@ const LoadingSkeleton = () => (
       
     <Card>
       <CardContent className="pt-6">
-        <h3 className="text-lg font-medium mb-4">Time Analysis</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <h3 className="text-lg font-medium mb-4">Time Analysis Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <Skeleton className="h-6 w-16 bg-blue-200" />
             <p className="text-sm text-blue-600">Average cleaning time</p>
@@ -103,6 +120,11 @@ const LoadingSkeleton = () => (
           <div className="bg-amber-50 p-4 rounded-lg">
             <Skeleton className="h-6 w-16 bg-amber-200" />
             <p className="text-sm text-amber-600">Longest cleaning time</p>
+          </div>
+          
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <Skeleton className="h-6 w-16 bg-purple-200" />
+            <p className="text-sm text-purple-600">Total tasks completed</p>
           </div>
         </div>
       </CardContent>
