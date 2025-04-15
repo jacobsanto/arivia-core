@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Define validation schema
 const generalSettingsSchema = z.object({
@@ -27,7 +29,7 @@ type GeneralSettingsFormValues = z.infer<typeof generalSettingsSchema>;
 
 const GeneralSettings: React.FC = () => {
   // Default values for the form
-  const defaultValues: Partial<GeneralSettingsFormValues> = {
+  const defaultValues: GeneralSettingsFormValues = {
     siteName: "Arivia Villa Sync",
     siteDescription: "Villa property management system for Arivia",
     contactEmail: "admin@arivia-villas.com",
@@ -38,18 +40,42 @@ const GeneralSettings: React.FC = () => {
     timeZone: "Europe/Athens",
   };
 
+  const { settings, saveSettings, isLoading } = useSystemSettings<GeneralSettingsFormValues>(
+    'general',
+    defaultValues
+  );
+
   const form = useForm<GeneralSettingsFormValues>({
     resolver: zodResolver(generalSettingsSchema),
-    defaultValues,
+    defaultValues: settings,
+    values: settings,
   });
 
-  function onSubmit(data: GeneralSettingsFormValues) {
-    // Here we would typically save the settings to a database or local storage
-    // For now we'll just show a success toast
-    toast.success("General settings updated", {
-      description: "Your changes have been saved."
-    });
-    console.log("General settings saved:", data);
+  // Update form values when settings are loaded
+  React.useEffect(() => {
+    if (!isLoading) {
+      Object.keys(settings).forEach(key => {
+        form.setValue(key as keyof GeneralSettingsFormValues, 
+          settings[key as keyof GeneralSettingsFormValues]);
+      });
+    }
+  }, [settings, isLoading, form]);
+
+  async function onSubmit(data: GeneralSettingsFormValues) {
+    const success = await saveSettings(data);
+    if (success) {
+      form.reset(data);
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <Card className="w-full">
+        <CardContent className="pt-6 flex justify-center">
+          <LoadingSpinner />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -121,7 +147,7 @@ const GeneralSettings: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Language</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select language" />
@@ -146,7 +172,7 @@ const GeneralSettings: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time Zone</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select time zone" />
@@ -173,7 +199,7 @@ const GeneralSettings: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Date Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select date format" />
@@ -199,7 +225,7 @@ const GeneralSettings: React.FC = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Time Format</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select time format" />
@@ -230,6 +256,7 @@ const GeneralSettings: React.FC = () => {
                       placeholder="Brief description of this system" 
                       className="resize-none" 
                       {...field} 
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormDescription>
@@ -241,10 +268,12 @@ const GeneralSettings: React.FC = () => {
             />
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" type="button" onClick={() => form.reset()}>
+            <Button variant="outline" type="button" onClick={() => form.reset(settings)}>
               Reset
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              Save Changes
+            </Button>
           </CardFooter>
         </form>
       </Form>

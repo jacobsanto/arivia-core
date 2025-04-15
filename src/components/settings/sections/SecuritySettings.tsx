@@ -6,12 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
 import { RefreshCw, LockKeyhole } from "lucide-react";
 import { securityUtils } from "@/utils/securityUtils";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 const securitySchema = z.object({
   enableTwoFactor: z.boolean(),
@@ -27,25 +27,44 @@ const securitySchema = z.object({
 type SecurityFormValues = z.infer<typeof securitySchema>;
 
 const SecuritySettings: React.FC = () => {
+  // Default values
+  const defaultValues: SecurityFormValues = {
+    enableTwoFactor: false,
+    loginAttempts: 5,
+    lockoutDuration: 15,
+    passwordExpiration: 90,
+    enforceStrongPasswords: true,
+    sessionDuration: 8,
+    ipRestriction: false,
+    allowedIPs: "",
+  };
+
+  const { settings, saveSettings, isLoading } = useSystemSettings<SecurityFormValues>(
+    'security', 
+    defaultValues
+  );
+
   const form = useForm<SecurityFormValues>({
     resolver: zodResolver(securitySchema),
-    defaultValues: {
-      enableTwoFactor: false,
-      loginAttempts: 5,
-      lockoutDuration: 15,
-      passwordExpiration: 90,
-      enforceStrongPasswords: true,
-      sessionDuration: 8,
-      ipRestriction: false,
-      allowedIPs: "",
-    },
+    defaultValues: settings,
+    values: settings
   });
 
-  function onSubmit(data: SecurityFormValues) {
-    toast.success("Security settings updated", {
-      description: "Your changes have been saved."
-    });
-    console.log("Security settings saved:", data);
+  // Update form values when settings are loaded
+  React.useEffect(() => {
+    if (!isLoading) {
+      Object.keys(settings).forEach(key => {
+        form.setValue(key as keyof SecurityFormValues, 
+          settings[key as keyof SecurityFormValues]);
+      });
+    }
+  }, [settings, isLoading, form]);
+
+  async function onSubmit(data: SecurityFormValues) {
+    const success = await saveSettings(data);
+    if (success) {
+      form.reset(data);
+    }
   }
 
   const watchIpRestriction = form.watch("ipRestriction");
@@ -76,6 +95,7 @@ const SecuritySettings: React.FC = () => {
           <SettingsCard 
             title="Security Settings" 
             description="Configure system security and authentication options"
+            isLoading={isLoading}
           >
             <div className="space-y-6">
               <div className="rounded-md border p-4">
@@ -249,7 +269,7 @@ const SecuritySettings: React.FC = () => {
                     <FormItem>
                       <FormLabel>Allowed IP Addresses</FormLabel>
                       <FormControl>
-                        <Input placeholder="192.168.1.1, 10.0.0.1" {...field} />
+                        <Input placeholder="192.168.1.1, 10.0.0.1" {...field} value={field.value || ''} />
                       </FormControl>
                       <FormDescription>
                         Comma-separated list of allowed IP addresses

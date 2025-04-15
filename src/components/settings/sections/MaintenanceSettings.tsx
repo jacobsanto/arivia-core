@@ -7,36 +7,56 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 const maintenanceSchema = z.object({
   taskReminderHours: z.number().min(1).max(72),
   defaultTaskPriority: z.string(),
   autoAssignTasks: z.boolean(),
   enableRecurringTasks: z.boolean(),
-  maintenanceEmail: z.string().email("Must be a valid email address").optional(),
+  maintenanceEmail: z.string().email("Must be a valid email address").optional().or(z.literal('')),
 });
 
 type MaintenanceFormValues = z.infer<typeof maintenanceSchema>;
 
 const MaintenanceSettings: React.FC = () => {
+  const defaultValues: MaintenanceFormValues = {
+    taskReminderHours: 24,
+    defaultTaskPriority: "normal",
+    autoAssignTasks: true,
+    enableRecurringTasks: true,
+    maintenanceEmail: "maintenance@arivia-villas.com",
+  };
+
+  const { settings, saveSettings, isLoading } = useSystemSettings<MaintenanceFormValues>(
+    'maintenance', 
+    defaultValues
+  );
+
   const form = useForm<MaintenanceFormValues>({
     resolver: zodResolver(maintenanceSchema),
-    defaultValues: {
-      taskReminderHours: 24,
-      defaultTaskPriority: "normal",
-      autoAssignTasks: true,
-      enableRecurringTasks: true,
-      maintenanceEmail: "maintenance@arivia-villas.com",
-    },
+    defaultValues: settings,
+    values: settings
   });
 
-  function onSubmit(data: MaintenanceFormValues) {
-    toast.success("Maintenance settings updated", {
-      description: "Your changes have been saved."
-    });
-    console.log("Maintenance settings saved:", data);
+  // Update form values when settings are loaded
+  React.useEffect(() => {
+    if (!isLoading) {
+      Object.keys(settings).forEach(key => {
+        form.setValue(key as keyof MaintenanceFormValues, 
+          settings[key as keyof MaintenanceFormValues]);
+      });
+    }
+  }, [settings, isLoading, form]);
+
+  async function onSubmit(data: MaintenanceFormValues) {
+    const success = await saveSettings(data);
+    if (success) {
+      form.reset(data);
+    }
   }
 
   return (
@@ -45,6 +65,7 @@ const MaintenanceSettings: React.FC = () => {
         <SettingsCard 
           title="Maintenance Configuration" 
           description="Configure settings for the maintenance system"
+          isLoading={isLoading}
         >
           <div className="space-y-6">
             <FormField
@@ -74,7 +95,7 @@ const MaintenanceSettings: React.FC = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Default Task Priority</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select default priority" />
@@ -102,7 +123,12 @@ const MaintenanceSettings: React.FC = () => {
                 <FormItem>
                   <FormLabel>Maintenance Notification Email</FormLabel>
                   <FormControl>
-                    <Input type="email" placeholder="maintenance@arivia-villas.com" {...field} />
+                    <Input 
+                      type="email" 
+                      placeholder="maintenance@arivia-villas.com" 
+                      {...field} 
+                      value={field.value || ''} 
+                    />
                   </FormControl>
                   <FormDescription>
                     Email to receive maintenance notifications
@@ -153,6 +179,12 @@ const MaintenanceSettings: React.FC = () => {
                 </FormItem>
               )}
             />
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? 'Saving...' : 'Save Settings'}
+              </Button>
+            </div>
           </div>
         </SettingsCard>
       </form>

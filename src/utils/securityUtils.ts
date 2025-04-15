@@ -1,78 +1,56 @@
 
-/**
- * Utility functions for checking security context and features
- */
+// Security utility functions
 
-/**
- * Checks if running in a secure context (HTTPS)
- */
-export const isSecureContext = (): boolean => {
-  return window.isSecureContext;
-};
-
-/**
- * Checks if cookies are enabled
- */
-export const areCookiesEnabled = (): boolean => {
-  try {
-    document.cookie = "testcookie=1";
-    const cookieEnabled = document.cookie.indexOf("testcookie") !== -1;
-    
-    // Clean up the test cookie
-    document.cookie = "testcookie=1; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    
-    return cookieEnabled;
-  } catch (e) {
-    return false;
-  }
-};
-
-/**
- * Checks if localStorage is available
- */
-export const isLocalStorageAvailable = (): boolean => {
-  try {
-    const test = '__test__';
-    localStorage.setItem(test, test);
-    const result = localStorage.getItem(test) === test;
-    localStorage.removeItem(test);
-    return result;
-  } catch (e) {
-    return false;
-  }
-};
-
-/**
- * Checks if the browser supports modern security features
- */
-export const supportsModernSecurity = (): boolean => {
-  return (
-    typeof crypto !== 'undefined' &&
-    typeof crypto.subtle !== 'undefined' &&
-    typeof TextEncoder !== 'undefined'
-  );
-};
-
-/**
- * Checks if session storage is available
- */
-export const isSessionStorageAvailable = (): boolean => {
-  try {
-    const test = '__test__';
-    sessionStorage.setItem(test, test);
-    const result = sessionStorage.getItem(test) === test;
-    sessionStorage.removeItem(test);
-    return result;
-  } catch (e) {
-    return false;
-  }
-};
-
-// Export a named object for easier imports
 export const securityUtils = {
-  isSecureContext,
-  areCookiesEnabled,
-  isLocalStorageAvailable,
-  supportsModernSecurity,
-  isSessionStorageAvailable
+  isSecureContext(): boolean {
+    return typeof window !== 'undefined' && window.isSecureContext;
+  },
+
+  areCookiesEnabled(): boolean {
+    try {
+      document.cookie = "cookietest=1";
+      const result = document.cookie.indexOf("cookietest=") !== -1;
+      document.cookie = "cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT";
+      return result;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  isLocalStorageAvailable(): boolean {
+    try {
+      const testKey = '__storage_test__';
+      localStorage.setItem(testKey, testKey);
+      localStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  isSessionStorageAvailable(): boolean {
+    try {
+      const testKey = '__storage_test__';
+      sessionStorage.setItem(testKey, testKey);
+      sessionStorage.removeItem(testKey);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+
+  supportsModernSecurity(): boolean {
+    return typeof window !== 'undefined' && 
+      'crypto' in window && 
+      'subtle' in window.crypto;
+  },
+
+  generateUUID(): string {
+    // Simple UUID generator for client-side use
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
 };

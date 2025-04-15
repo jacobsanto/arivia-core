@@ -62,6 +62,36 @@ export type Database = {
           },
         ]
       }
+      chat_channels: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_property_specific: boolean | null
+          name: string
+          property_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_property_specific?: boolean | null
+          name: string
+          property_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_property_specific?: boolean | null
+          name?: string
+          property_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -130,6 +160,72 @@ export type Database = {
           task_type?: string
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      direct_messages: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      financial_reports: {
+        Row: {
+          category: string
+          created_at: string | null
+          expenses: number
+          id: string
+          margin: string
+          month: string
+          profit: number
+          property: string
+          revenue: number
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          expenses: number
+          id?: string
+          margin: string
+          month: string
+          profit: number
+          property: string
+          revenue: number
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          expenses?: number
+          id?: string
+          margin?: string
+          month?: string
+          profit?: number
+          property?: string
+          revenue?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -304,6 +400,39 @@ export type Database = {
           },
         ]
       }
+      inventory_usage: {
+        Row: {
+          category: string
+          created_at: string | null
+          date: string | null
+          id: string
+          item: string
+          property: string
+          quantity: number
+          reported_by: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          item: string
+          property: string
+          quantity: number
+          reported_by: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          date?: string | null
+          id?: string
+          item?: string
+          property?: string
+          quantity?: number
+          reported_by?: string
+        }
+        Relationships: []
+      }
       maintenance_tasks: {
         Row: {
           assigned_to: string | null
@@ -363,6 +492,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      occupancy_reports: {
+        Row: {
+          average_stay: number | null
+          bookings: number
+          created_at: string | null
+          id: string
+          month: string
+          occupancy_rate: number
+          property: string
+          revenue: number
+          updated_at: string | null
+        }
+        Insert: {
+          average_stay?: number | null
+          bookings: number
+          created_at?: string | null
+          id?: string
+          month: string
+          occupancy_rate: number
+          property: string
+          revenue: number
+          updated_at?: string | null
+        }
+        Update: {
+          average_stay?: number | null
+          bookings?: number
+          created_at?: string | null
+          id?: string
+          month?: string
+          occupancy_rate?: number
+          property?: string
+          revenue?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       order_items: {
         Row: {
@@ -542,6 +707,57 @@ export type Database = {
           price_per_night?: number
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          settings: Json
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          settings: Json
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          settings?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          setting_key: string
+          setting_value: Json
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          setting_key: string
+          setting_value: Json
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
