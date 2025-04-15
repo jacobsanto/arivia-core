@@ -24,6 +24,7 @@ export interface GuestyProperty {
   accommodates: number;
   bedrooms: number;
   bathrooms: number;
+  price?: number; // Add optional price field
   defaultCheckInTime?: string;
   defaultCheckOutTime?: string;
   active: boolean;
