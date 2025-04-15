@@ -16,10 +16,14 @@ import {
   updateUserProfile,
   signup
 } from "./auth/operations";
+import { useAuth } from "./AuthContext";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Use the central auth state from AuthContext
+  const authState = useAuth();
+  
   const { 
     user, 
     setUser, 
@@ -33,6 +37,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUsers,
     refreshUserProfile
   } = useUserState();
+
+  // Override the local user state with the one from AuthContext to ensure consistency
+  const currentUser = authState.user || user;
+  const currentSession = authState.session || session;
+  const currentIsLoading = authState.isLoading || isLoading;
 
   const handleLogin = async (email: string, password: string): Promise<void> => {
     return await login(email, password, setUser, setLastAuthTime, setIsLoading);
@@ -49,19 +58,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleHasPermission = (roles: UserRole[]) => {
-    return hasPermission(user, roles);
+    return hasPermission(currentUser, roles);
   };
 
   const handleHasFeatureAccess = (featureKey: string) => {
-    return hasFeatureAccess(user, featureKey);
+    return hasFeatureAccess(currentUser, featureKey);
   };
 
   const handleUpdateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
-    return updatePermissions(user, users, setUsers, setUser as UserStateSetter, userId, permissions);
+    return updatePermissions(currentUser, users, setUsers, setUser as UserStateSetter, userId, permissions);
   };
 
   const handleGetOfflineLoginStatus = () => {
-    const status = getOfflineLoginStatus(user, lastAuthTime, isOffline);
+    const status = getOfflineLoginStatus(currentUser, lastAuthTime, isOffline);
     return {
       isOfflineLoggedIn: status,
       timeRemaining: 0  // Since the original function doesn't calculate time remaining, we'll default to 0
@@ -69,16 +78,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const handleUpdateUserAvatar = async (userId: string, avatarUrl: string) => {
-    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as UserStateSetter, user);
+    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as UserStateSetter, currentUser);
   };
   
   const handleDeleteUser = async (userId: string) => {
-    return await removeUser(user, users, setUsers, userId);
+    return await removeUser(currentUser, users, setUsers, userId);
   };
 
   const handleSyncUserProfile = async () => {
-    if (user) {
-      return await syncUserWithProfile(user.id, setUser as UserStateSetter, user);
+    if (currentUser) {
+      return await syncUserWithProfile(currentUser.id, setUser as UserStateSetter, currentUser);
     }
     return false;
   };
@@ -93,7 +102,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       customPermissions?: Record<string, boolean>;
     }>
   ) => {
-    return await updateUserProfile(userId, profileData, setUser as UserStateSetter, user);
+    return await updateUserProfile(userId, profileData, setUser as UserStateSetter, currentUser);
   };
   
   const handleRefreshProfile = async () => {
@@ -102,9 +111,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   return (
     <UserContext.Provider value={{ 
-      user,
-      session,
-      isLoading, 
+      user: currentUser,
+      session: currentSession,
+      isLoading: currentIsLoading, 
       login: handleLogin,
       signup: handleSignup,
       logout: handleLogout, 

@@ -1,29 +1,44 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
 import { LoginInfoPanel } from "@/components/auth/LoginInfoPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Use the mobile-optimized login for small screens
+  useEffect(() => {
+    if (isAuthenticated && !isLoading) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
+
   if (isMobile) {
     return <MobileLogin />;
   }
 
-  // Desktop login layout
   return (
     <div className="min-h-screen flex">
-      {/* Left panel - Login/Register Form */}
       <div className="flex-1 flex flex-col items-center justify-center bg-white p-10">
         <div className="w-full max-w-md">
-          {/* Logo */}
           <div className="flex justify-center mb-8">
             <img 
               src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" 
@@ -32,7 +47,6 @@ const Login = () => {
             />
           </div>
 
-          {/* Tabs */}
           <div className="flex mb-6 border-b">
             <button
               onClick={() => setActiveTab("signin")}
@@ -56,7 +70,6 @@ const Login = () => {
             </button>
           </div>
 
-          {/* Form container */}
           <div className="mt-6">
             {activeTab === "signin" ? (
               <div>
@@ -93,7 +106,6 @@ const Login = () => {
         </div>
       </div>
       
-      {/* Right panel - Info */}
       <LoginInfoPanel />
     </div>
   );
