@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,6 +11,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus } from "lucide-react";
 import { useBookings } from "./useBookings";
+import BookingForm from "../booking-form";
 
 interface BookingCalendarViewProps {
   propertyId: string;
@@ -27,7 +27,6 @@ export const BookingCalendarView = ({
   const [isAddBookingDialogOpen, setIsAddBookingDialogOpen] = useState(false);
   const { bookings } = useBookings(propertyId);
 
-  // Calculate calendar day class names based on bookings
   const getBookedDaysModifiers = () => {
     const bookedDays: Date[] = [];
     
@@ -35,7 +34,6 @@ export const BookingCalendarView = ({
       const checkInDate = new Date(booking.check_in_date);
       const checkOutDate = new Date(booking.check_out_date);
       
-      // Add all dates between check-in and check-out to the bookedDays array
       const currentDate = new Date(checkInDate);
       while (currentDate <= checkOutDate) {
         bookedDays.push(new Date(currentDate));
