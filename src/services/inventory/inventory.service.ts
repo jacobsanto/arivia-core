@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -34,7 +33,21 @@ export const inventoryService = {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      
+      // Convert database response to match our interface
+      const items: InventoryItem[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        location: item.location,
+        current_stock: item.current_stock,
+        min_level: item.min_level,
+        vendor_ids: item.vendor_ids || [],
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      
+      return items;
     } catch (error: any) {
       console.error('Error fetching inventory items:', error);
       toast.error('Failed to load inventory items', {
@@ -53,7 +66,21 @@ export const inventoryService = {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      
+      if (!data) return null;
+      
+      // Convert to match our interface
+      return {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        location: data.location,
+        current_stock: data.current_stock,
+        min_level: data.min_level,
+        vendor_ids: data.vendor_ids || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
     } catch (error: any) {
       console.error(`Error fetching inventory item with id ${id}:`, error);
       return null;
@@ -69,7 +96,21 @@ export const inventoryService = {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      
+      // Convert database response to match our interface
+      const items: InventoryItem[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        location: item.location,
+        current_stock: item.current_stock,
+        min_level: item.min_level,
+        vendor_ids: item.vendor_ids || [],
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      
+      return items;
     } catch (error: any) {
       console.error(`Error fetching inventory items for location ${location}:`, error);
       return [];
@@ -85,7 +126,21 @@ export const inventoryService = {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      
+      // Convert database response to match our interface
+      const items: InventoryItem[] = (data || []).map(item => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        location: item.location,
+        current_stock: item.current_stock,
+        min_level: item.min_level,
+        vendor_ids: item.vendor_ids || [],
+        created_at: item.created_at,
+        updated_at: item.updated_at
+      }));
+      
+      return items;
     } catch (error: any) {
       console.error(`Error fetching inventory items for category ${category}:`, error);
       return [];
@@ -102,7 +157,19 @@ export const inventoryService = {
 
       if (error) throw error;
       toast.success('Inventory item added successfully');
-      return data;
+      
+      // Convert to match our interface
+      return {
+        id: data.id,
+        name: data.name,
+        category: data.category,
+        location: data.location,
+        current_stock: data.current_stock,
+        min_level: data.min_level,
+        vendor_ids: data.vendor_ids || [],
+        created_at: data.created_at,
+        updated_at: data.updated_at
+      };
     } catch (error: any) {
       console.error('Error adding inventory item:', error);
       toast.error('Failed to add inventory item', {
@@ -176,7 +243,7 @@ export const inventoryService = {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return data as InventoryUsage[] || [];
     } catch (error: any) {
       console.error('Error fetching inventory usage history:', error);
       toast.error('Failed to load inventory usage history', {
@@ -186,7 +253,6 @@ export const inventoryService = {
     }
   },
 
-  // Methods for getting unique items, categories, locations
   async getUniqueCategories(): Promise<string[]> {
     try {
       const { data, error } = await supabase

@@ -89,7 +89,7 @@ export const chatService = {
     }
   },
 
-  async sendChannelMessage(message: Omit<ChatMessage, 'id' | 'created_at' | 'updated_at'>): Promise<ChatMessage | null> {
+  async sendChannelMessage(message: { channel_id: string; user_id?: string; content: string; is_read?: boolean }): Promise<ChatMessage | null> {
     try {
       const { data, error } = await supabase
         .from('chat_messages')

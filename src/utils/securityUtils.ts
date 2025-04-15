@@ -54,3 +54,6 @@ export const securityUtils = {
     });
   }
 };
+
+// Direct export of isSecureContext for backward compatibility
+export const isSecureContext = securityUtils.isSecureContext;

@@ -1,0 +1,4 @@
+
+// Placeholder for occupancy data until we fully integrate with the database
+
+export const occupancyData = [];
