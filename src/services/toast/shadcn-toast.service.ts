@@ -1,3 +1,4 @@
+
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
@@ -77,14 +78,16 @@ export class ShadcnToastService implements IToastService {
 
   dismiss(id?: ToastId): void {
     if (id) {
-      // For shadcn toast, we need to use the dismiss method differently
-      // The toast function has a dismiss method on it
+      // For shadcn toast, we need to access the dismiss function from the useToast hook
       if (typeof id === 'string') {
-        toast.dismiss(id);
+        // Using the imported toast function's dismiss method
+        const { dismiss } = toast;
+        dismiss(id);
       }
     } else {
       // To dismiss all toasts when no ID is provided
-      toast.dismiss();
+      const { dismiss } = toast;
+      dismiss();
     }
   }
 
