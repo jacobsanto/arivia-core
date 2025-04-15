@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
@@ -33,11 +32,8 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   const { showSwipeHint, isMobile: isMobileDevice, resetSwipeHint } = useSwipeHint();
 
   const combinedTasks: CombinedTask[] = combineTasks(housekeepingTasks, maintenanceTasks);
-
   const tasksForSelectedDate = filterTasksForSelectedDate(combinedTasks, selectedDate);
-
   const sortedTasks = sortTasksByTime(tasksForSelectedDate);
-
   const { morningTasks, afternoonTasks, eveningTasks } = groupTasksByTimeOfDay(sortedTasks);
 
   const { pullMoveY, isRefreshing, contentRef, handlers } = usePullToRefresh({

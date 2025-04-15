@@ -78,11 +78,11 @@ export class ShadcnToastService implements IToastService {
 
   dismiss(id?: ToastId): void {
     if (id) {
-      // Import toast directly from hooks and use it as a function
-      toast.dismiss(id);
+      // For shadcn toast, toast.dismiss is a function
+      toast.dismiss?.(id as string);
     } else {
       // Dismiss all toasts when no ID is provided
-      toast.dismiss();
+      toast.dismiss?.();
     }
   }
 

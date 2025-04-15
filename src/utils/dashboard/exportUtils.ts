@@ -1,6 +1,6 @@
 
 import { toastService } from '@/services/toast';
-import { formatMetricsForExport, prepareDashboardExportData } from '@/utils/dashboard';
+import { formatMetricsForExport, prepareDashboardExportData } from '@/utils/dashboard/dataPreparationUtils';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
 import { ExportFormat, ExportSection } from '@/components/dashboard/ExportConfigDialog';
