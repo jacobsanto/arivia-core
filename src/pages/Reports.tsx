@@ -9,6 +9,7 @@ import { AnalyticsContent } from '@/components/reports/AnalyticsContent';
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileReports from '@/components/reports/MobileReports';
 import { DateRange } from '@/components/reports/DateRangeSelector';
+import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
 
 const Reports = () => {
   // Initialize the reports hook for task reports
@@ -44,14 +45,16 @@ const Reports = () => {
   // Render mobile UI
   if (isMobile) {
     return (
-      <div className="container max-w-7xl mx-auto p-2">
-        <MobileReports 
-          dateRange={dateRange}
-          setDateRange={setDateRange}
-          reports={reports}
-          isLoading={isLoading}
-        />
-      </div>
+      <AnalyticsProvider>
+        <div className="container max-w-7xl mx-auto p-2">
+          <MobileReports 
+            dateRange={dateRange}
+            setDateRange={setDateRange}
+            reports={reports}
+            isLoading={isLoading}
+          />
+        </div>
+      </AnalyticsProvider>
     );
   }
 
@@ -72,18 +75,20 @@ const Reports = () => {
           />
         </div>
         
-        {activeView === 'reporting' ? (
-          <div className="overflow-hidden">
-            <ReportingContent 
-              reportsCount={reports.length} 
-              isLoading={isLoading} 
-            />
-          </div>
-        ) : (
-          <div className="overflow-hidden">
-            <AnalyticsContent />
-          </div>
-        )}
+        <AnalyticsProvider>
+          {activeView === 'reporting' ? (
+            <div className="overflow-hidden">
+              <ReportingContent 
+                reportsCount={reports.length} 
+                isLoading={isLoading} 
+              />
+            </div>
+          ) : (
+            <div className="overflow-hidden">
+              <AnalyticsContent />
+            </div>
+          )}
+        </AnalyticsProvider>
       </div>
     </div>
   );
