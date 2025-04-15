@@ -1,0 +1,90 @@
+
+import { useState, useEffect } from "react";
+import { Property } from "@/hooks/useProperties";
+
+interface AdvancedFilters {
+  priceRange: [number, number];
+  bedrooms: string;
+  bathrooms: string;
+  propertyType: string;
+  locations: string[];
+}
+
+export const usePropertyFiltering = (properties: Property[]) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 9;
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, activeTab, advancedFilters]);
+
+  const filteredProperties = properties.filter((property) => {
+    const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      property.location.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesTab =
+      activeTab === "all" ||
+      (activeTab === "occupied" && property.status === "Occupied") ||
+      (activeTab === "vacant" && property.status === "Vacant") ||
+      (activeTab === "maintenance" && property.status === "Maintenance");
+
+    let matchesAdvancedFilters = true;
+    if (advancedFilters) {
+      if (property.price < advancedFilters.priceRange[0] || 
+          property.price > advancedFilters.priceRange[1]) {
+        matchesAdvancedFilters = false;
+      }
+      
+      if (advancedFilters.bedrooms && 
+          property.bedrooms.toString() !== advancedFilters.bedrooms) {
+        if (advancedFilters.bedrooms === "6+" && property.bedrooms < 6) {
+          matchesAdvancedFilters = false;
+        } else if (advancedFilters.bedrooms !== "6+") {
+          matchesAdvancedFilters = false;
+        }
+      }
+      
+      if (advancedFilters.bathrooms && 
+          property.bathrooms.toString() !== advancedFilters.bathrooms) {
+        if (advancedFilters.bathrooms === "5+" && property.bathrooms < 5) {
+          matchesAdvancedFilters = false;
+        } else if (advancedFilters.bathrooms !== "5+") {
+          matchesAdvancedFilters = false;
+        }
+      }
+      
+      if (advancedFilters.propertyType && property.type !== advancedFilters.propertyType) {
+        matchesAdvancedFilters = false;
+      }
+    }
+
+    return matchesSearch && matchesTab && matchesAdvancedFilters;
+  });
+
+  const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProperties = filteredProperties.slice(startIndex, startIndex + itemsPerPage);
+
+  const handleAdvancedFilters = (filters: AdvancedFilters) => {
+    setAdvancedFilters(filters);
+  };
+
+  return {
+    searchQuery,
+    setSearchQuery,
+    activeTab,
+    setActiveTab,
+    advancedFilters,
+    handleAdvancedFilters,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedProperties,
+    activeFiltersCount: advancedFilters ? Object.values(advancedFilters).filter(v => 
+      Array.isArray(v) ? v.length > 0 : v).length : 0
+  };
+};
