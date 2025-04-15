@@ -66,7 +66,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
-    resetSwipeHint(); // Use without arguments
+    resetSwipeHint(); // Ensure this is called without any arguments
   };
 
   const handleTaskClick = (task: CombinedTask) => {
