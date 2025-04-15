@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
+import { DateRangeSelector, DateRange } from '@/components/reports/DateRangeSelector';
 import { Button } from '@/components/ui/button';
 import { Calendar, Building, Filter, X, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
