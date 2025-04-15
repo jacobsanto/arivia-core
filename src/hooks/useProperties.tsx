@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
+import { GuestyProperty } from '@/integrations/guesty/types';  // Import the Guesty Property type
 
 export interface Property {
   id: string;
@@ -19,6 +20,9 @@ export interface Property {
   price_per_night: number;
   created_at: string;
   updated_at: string;
+  // Add these new properties for Guesty integration
+  guesty_id?: string;
+  guesty_data?: GuestyProperty;
 }
 
 export const useProperties = () => {
