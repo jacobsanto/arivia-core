@@ -1,5 +1,5 @@
 
-import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
+import { IToastService, ToastId, ToastOptions, LoadingToastOptions, Toast } from "./toast.types";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import * as React from "react";
