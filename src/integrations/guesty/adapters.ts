@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 import { GuestyProperty, GuestyReservation, GuestyTask } from "./types";
 import { Property } from "@/hooks/useProperties";
@@ -14,18 +13,17 @@ export const adaptGuestyProperty = (guestyProperty: GuestyProperty): Property =>
   return {
     id: guestyProperty._id,
     name: guestyProperty.title,
-    location: guestyProperty.address?.city || 'Greece', // Add location field
+    location: guestyProperty.address?.city || 'Greece',
     address: guestyProperty.address.full,
     description: "",
-    image_url: guestyProperty.picture?.large || guestyProperty.picture?.regular || null,
-    imageUrl: guestyProperty.picture?.large || guestyProperty.picture?.regular || '/placeholder.svg', // Add imageUrl field
+    imageUrl: guestyProperty.picture?.large || guestyProperty.picture?.regular || '/placeholder.svg',
     status: guestyProperty.active ? "active" : "inactive",
-    type: "Luxury Villa", // Add type field
-    price: guestyProperty.price || 0, // Add price field matching price_per_night
+    type: "Luxury Villa",
+    price: guestyProperty.price || 0,
     price_per_night: guestyProperty.price || 0,
     max_guests: guestyProperty.accommodates,
-    bedrooms: guestyProperty.bedrooms, // Add bedrooms field
-    bathrooms: guestyProperty.bathrooms, // Add bathrooms field
+    bedrooms: guestyProperty.bedrooms,
+    bathrooms: guestyProperty.bathrooms,
     num_bedrooms: guestyProperty.bedrooms,
     num_bathrooms: guestyProperty.bathrooms,
     created_at: new Date().toISOString(),
@@ -99,8 +97,8 @@ export const adaptGuestyTask = (guestyTask: GuestyTask, taskType: 'housekeeping'
   if (taskType === 'maintenance') {
     return {
       ...baseTask,
-      required_tools: '', // Not available from Guesty, would need to be added separately
-      location: '', // Not available from Guesty, would need to be added separately
+      required_tools: '',
+      location: '',
     };
   }
   
