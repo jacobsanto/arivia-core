@@ -63,12 +63,18 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     swipeTouchEnd(e);
   };
 
+  // Effect to reset swipe hint whenever selected date changes
+  useEffect(() => {
+    if (showSwipeHint) {
+      resetSwipeHint();
+    }
+  }, [selectedDate, showSwipeHint, resetSwipeHint]);
+
   const navigateToDay = (direction: 'next' | 'prev') => {
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
-    // Removed argument from resetSwipeHint() call
-    resetSwipeHint();
+    // No longer calling resetSwipeHint here as it's handled by the useEffect
   };
 
   const handleTaskClick = (task: CombinedTask) => {
