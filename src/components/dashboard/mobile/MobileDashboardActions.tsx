@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { NavigateFunction } from 'react-router-dom';
 import { 
-  Broom, 
+  Brush, 
   Hammer, 
   ShoppingCart, 
   FileSpreadsheet, 
@@ -25,7 +25,7 @@ const MobileDashboardActions: React.FC<MobileDashboardActionsProps> = ({
 }) => {
   const actionItems = [
     {
-      icon: <Broom className="h-5 w-5" />,
+      icon: <Brush className="h-5 w-5" />,
       label: "New Cleaning Task",
       onClick: onCreateCleaningTask,
       color: "bg-purple-100 text-purple-800"
