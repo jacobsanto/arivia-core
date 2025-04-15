@@ -9,6 +9,7 @@ import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from './toa
  */
 class ToastService implements IToastService {
   private implementation: IToastService;
+  private static defaultDuration = 5000; // 5 seconds default duration
 
   /**
    * Constructor for the ToastService
@@ -21,12 +22,23 @@ class ToastService implements IToastService {
   }
 
   /**
+   * Switch the toast implementation at runtime
+   * @param useSonner Whether to use Sonner (true) or Shadcn/ui (false)
+   */
+  public switchImplementation(useSonner: boolean): void {
+    this.implementation = useSonner 
+      ? new SonnerToastService() 
+      : new ShadcnToastService();
+  }
+
+  /**
    * Displays a default toast notification
    * @param title The title of the toast
    * @param options Toast options
    */
   public show(title: string, options?: ToastOptions): ToastId {
-    return this.implementation.show(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.show(title, mergedOptions);
   }
 
   /**
@@ -35,7 +47,8 @@ class ToastService implements IToastService {
    * @param options Toast options
    */
   public success(title: string, options?: ToastOptions): ToastId {
-    return this.implementation.success(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.success(title, mergedOptions);
   }
 
   /**
@@ -44,7 +57,8 @@ class ToastService implements IToastService {
    * @param options Toast options
    */
   public warning(title: string, options?: ToastOptions): ToastId {
-    return this.implementation.warning(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.warning(title, mergedOptions);
   }
 
   /**
@@ -53,7 +67,8 @@ class ToastService implements IToastService {
    * @param options Toast options
    */
   public error(title: string, options?: ToastOptions): ToastId {
-    return this.implementation.error(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.error(title, mergedOptions);
   }
 
   /**
@@ -63,7 +78,8 @@ class ToastService implements IToastService {
    * @returns The toast ID that can be used to dismiss or update the toast
    */
   public loading(title: string, options?: LoadingToastOptions): ToastId {
-    return this.implementation.loading(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.loading(title, mergedOptions);
   }
 
   /**
@@ -72,7 +88,8 @@ class ToastService implements IToastService {
    * @param options Toast options
    */
   public info(title: string, options?: ToastOptions): ToastId {
-    return this.implementation.info(title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    return this.implementation.info(title, mergedOptions);
   }
 
   /**
@@ -82,7 +99,8 @@ class ToastService implements IToastService {
    * @param options The new options
    */
   public update(id: ToastId, title: string, options?: ToastOptions): void {
-    this.implementation.update(id, title, options);
+    const mergedOptions = this.applyDefaultOptions(options);
+    this.implementation.update(id, title, mergedOptions);
   }
 
   /**
@@ -92,12 +110,25 @@ class ToastService implements IToastService {
   public dismiss(id?: ToastId): void {
     this.implementation.dismiss(id);
   }
+
+  /**
+   * Apply default options to toast options
+   * @param options User-provided options
+   * @returns Options with defaults applied
+   */
+  private applyDefaultOptions<T extends ToastOptions | LoadingToastOptions>(options?: T): T {
+    return {
+      duration: ToastService.defaultDuration,
+      ...options,
+    } as T;
+  }
 }
 
 // Create and export a singleton instance
 export const toastService = new ToastService(true); // Using Sonner by default
 
 // Convenience method to switch between toast implementations
-export const setToastImplementation = (useSonner: boolean) => {
-  return new ToastService(useSonner);
+export const setToastImplementation = (useSonner: boolean): IToastService => {
+  const service = new ToastService(useSonner);
+  return service;
 };

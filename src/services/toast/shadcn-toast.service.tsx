@@ -1,9 +1,12 @@
 
-import { IToastService, ToastId, ToastOptions, LoadingToastOptions, Toast } from "./toast.types";
+import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import * as React from "react";
 
+/**
+ * Toast service implementation using shadcn/ui toast components
+ */
 export class ShadcnToastService implements IToastService {
   show(title: string, options?: ToastOptions): ToastId {
     const result = toast({
@@ -78,7 +81,7 @@ export class ShadcnToastService implements IToastService {
     const result = toast({
       title,
       description: options?.description,
-      duration: options?.duration || 30000,
+      duration: options?.duration || 30000, // Longer default for loading toasts
     });
     return result.id;
   }
@@ -86,16 +89,14 @@ export class ShadcnToastService implements IToastService {
   update(id: ToastId, title: string, options?: ToastOptions): void {
     // Shadcn toast doesn't have built-in update functionality
     // Dismiss the old toast and create a new one
-    this.dismiss(id);
+    toast.dismiss(id.toString());
     this.show(title, options);
   }
 
   dismiss(id?: ToastId): void {
-    if (id) {
-      // For shadcn toast, we need to access the dismiss function from the imported toast
+    if (id !== undefined) {
       toast.dismiss(id.toString());
     } else {
-      // To dismiss all toasts when no ID is provided - calling toast.dismiss() without args
       toast.dismiss();
     }
   }

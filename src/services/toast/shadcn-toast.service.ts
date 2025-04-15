@@ -60,7 +60,8 @@ export class ShadcnToastService implements IToastService {
 
   public update(id: ToastId, title: string, options?: ToastOptions): void {
     // Dismiss the existing toast and create a new one
-    toast.dismiss(id);
+    // Convert id to string if it's a number to match shadcn toast API
+    toast.dismiss(id.toString());
     toast({
       title,
       description: options?.description,
@@ -70,6 +71,11 @@ export class ShadcnToastService implements IToastService {
 
   public dismiss(id?: ToastId): void {
     // Dismiss a specific toast or all toasts
-    toast.dismiss(id);
+    // Convert id to string if it's provided to match shadcn toast API
+    if (id !== undefined) {
+      toast.dismiss(id.toString());
+    } else {
+      toast.dismiss();
+    }
   }
 }

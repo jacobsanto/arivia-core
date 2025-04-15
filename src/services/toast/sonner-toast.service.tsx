@@ -2,6 +2,9 @@
 import { toast } from "sonner";
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
 
+/**
+ * Toast service implementation using Sonner
+ */
 export class SonnerToastService implements IToastService {
   show(title: string, options?: ToastOptions): ToastId {
     return toast(title, {
@@ -61,18 +64,19 @@ export class SonnerToastService implements IToastService {
   loading(title: string, options?: LoadingToastOptions): ToastId {
     return toast.loading(title, {
       description: options?.description,
-      duration: options?.duration
+      duration: options?.duration || 30000 // Longer default for loading toasts
     });
   }
 
   update(id: ToastId, title: string, options?: ToastOptions): void {
-    // Manually handle update since sonner doesn't have direct TypeScript support for this
+    // Sonner doesn't have a direct update method for the same ID
+    // Dismiss the old toast and create a new one
     toast.dismiss(id);
     this.show(title, options);
   }
 
   dismiss(id?: ToastId): void {
-    if (id) {
+    if (id !== undefined) {
       toast.dismiss(id);
     } else {
       toast.dismiss();

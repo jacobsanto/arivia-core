@@ -1,6 +1,12 @@
 
-// Re-export the toast service and types
-import { toastService } from './toast.service';
+// Re-export the toast service and implementation switcher
+import { toastService, setToastImplementation } from './toast.service';
+
+// Re-export the service implementations for direct access if needed
+import { SonnerToastService } from './sonner-toast.service';
+import { ShadcnToastService } from './shadcn-toast.service';
+
+// Re-export types
 import { 
   IToastService, 
   ToastId, 
@@ -10,10 +16,16 @@ import {
   LoadingToastOptions 
 } from './toast.types';
 
-// Export the toast service
+// Export the toast service singleton
 export { toastService };
 
-// Export the types for consumers
+// Export implementation switching functionality
+export { setToastImplementation };
+
+// Export service implementations
+export { SonnerToastService, ShadcnToastService };
+
+// Export types
 export type {
   IToastService,
   ToastId,
