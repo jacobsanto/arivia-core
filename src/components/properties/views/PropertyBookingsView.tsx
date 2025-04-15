@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import BookingCalendar from "@/components/properties/bookings";
 
 interface PropertyBookingsViewProps {

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import PropertiesListView from "@/components/properties/views/PropertiesListView";
 import PropertyDetailsView from "@/components/properties/views/PropertyDetailsView";
 import PropertyBookingsView from "@/components/properties/views/PropertyBookingsView";

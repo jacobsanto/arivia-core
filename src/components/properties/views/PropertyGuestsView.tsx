@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import GuestManagement from "@/components/properties/GuestManagement";
 
 interface PropertyGuestsViewProps {

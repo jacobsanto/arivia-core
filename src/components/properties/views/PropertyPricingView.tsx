@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import PricingConfig from "@/components/properties/PricingConfig";
 
 interface PropertyPricingViewProps {

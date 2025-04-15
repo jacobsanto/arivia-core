@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, DollarSign, Home, MessageSquare, User } from "lucide-react";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import BookingStatusContent from "./BookingStatusContent";
 
 interface PropertyDetailsProps {

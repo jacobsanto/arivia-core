@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 
 interface AdvancedFilters {
   priceRange: [number, number];
@@ -17,7 +16,6 @@ export const usePropertyFiltering = (properties: Property[]) => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, activeTab, advancedFilters]);

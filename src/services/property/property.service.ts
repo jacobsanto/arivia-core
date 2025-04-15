@@ -1,39 +1,10 @@
 
-import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
-import { GuestyProperty } from '@/integrations/guesty/types';  // Import the Guesty Property type
+import { Property, PropertyFormData } from '@/types/property.types';
 
-export interface Property {
-  id: string;
-  name: string;
-  location: string;
-  status: string;
-  type: string;
-  bedrooms: number;
-  bathrooms: number;
-  price: number;
-  imageUrl: string;
-  description?: string;
-  address: string;
-  max_guests: number;
-  price_per_night: number;
-  created_at: string;
-  updated_at: string;
-  // Add these new properties for Guesty integration
-  guesty_id?: string;
-  guesty_data?: GuestyProperty;
-}
-
-export const useProperties = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchProperties = async () => {
-    setIsLoading(true);
-    setError(null);
-
+export const propertyService = {
+  async fetchProperties(): Promise<Property[]> {
     try {
       const { data, error } = await supabase
         .from('properties')
@@ -44,12 +15,12 @@ export const useProperties = () => {
       }
 
       // Transform data to match the expected Property interface
-      const formattedProperties = data.map(item => ({
+      return data.map(item => ({
         id: item.id,
         name: item.name,
         location: item.address?.split(',').pop()?.trim() || 'Greece',
         status: item.status || 'Vacant',
-        type: 'Luxury Villa', // Default value, you might want to add this column to the table
+        type: 'Luxury Villa', // Default value
         bedrooms: item.num_bedrooms,
         bathrooms: item.num_bathrooms,
         price: item.price_per_night,
@@ -61,24 +32,16 @@ export const useProperties = () => {
         created_at: item.created_at,
         updated_at: item.updated_at
       }));
-
-      setProperties(formattedProperties);
     } catch (err: any) {
       console.error('Error fetching properties:', err);
-      setError(err.message);
       toastService.error('Failed to fetch properties', {
         description: err.message
       });
-    } finally {
-      setIsLoading(false);
+      throw err;
     }
-  };
+  },
 
-  useEffect(() => {
-    fetchProperties();
-  }, []);
-
-  const addProperty = async (propertyData: Omit<Property, 'id' | 'created_at' | 'updated_at'>) => {
+  async addProperty(propertyData: PropertyFormData): Promise<Property> {
     try {
       const { data, error } = await supabase
         .from('properties')
@@ -99,8 +62,26 @@ export const useProperties = () => {
         throw new Error(error.message);
       }
 
-      await fetchProperties(); // Refresh the list
-      return data[0];
+      // Transform the response to match our Property interface
+      const newProperty: Property = {
+        id: data[0].id,
+        name: data[0].name,
+        location: data[0].address?.split(',').pop()?.trim() || 'Greece',
+        status: data[0].status || 'Vacant',
+        type: 'Luxury Villa',
+        bedrooms: data[0].num_bedrooms,
+        bathrooms: data[0].num_bathrooms,
+        price: data[0].price_per_night,
+        price_per_night: data[0].price_per_night,
+        imageUrl: data[0].image_url || '/placeholder.svg',
+        description: data[0].description,
+        address: data[0].address,
+        max_guests: data[0].max_guests,
+        created_at: data[0].created_at,
+        updated_at: data[0].updated_at
+      };
+
+      return newProperty;
     } catch (err: any) {
       console.error('Error adding property:', err);
       toastService.error('Failed to add property', {
@@ -108,9 +89,9 @@ export const useProperties = () => {
       });
       throw err;
     }
-  };
+  },
 
-  const updateProperty = async (id: string, propertyData: Partial<Property>) => {
+  async updateProperty(id: string, propertyData: Partial<PropertyFormData>): Promise<boolean> {
     try {
       // Map the property data to the database columns
       const dbData: any = {};
@@ -133,8 +114,7 @@ export const useProperties = () => {
       if (error) {
         throw new Error(error.message);
       }
-
-      await fetchProperties(); // Refresh the list
+      
       return true;
     } catch (err: any) {
       console.error('Error updating property:', err);
@@ -143,9 +123,9 @@ export const useProperties = () => {
       });
       throw err;
     }
-  };
+  },
 
-  const deleteProperty = async (id: string) => {
+  async deleteProperty(id: string): Promise<boolean> {
     try {
       const { error } = await supabase
         .from('properties')
@@ -156,7 +136,6 @@ export const useProperties = () => {
         throw new Error(error.message);
       }
 
-      await fetchProperties(); // Refresh the list
       return true;
     } catch (err: any) {
       console.error('Error deleting property:', err);
@@ -165,9 +144,9 @@ export const useProperties = () => {
       });
       throw err;
     }
-  };
+  },
 
-  const getPropertyBookings = async (propertyId: string) => {
+  async getPropertyBookings(propertyId: string): Promise<any[]> {
     try {
       const { data, error } = await supabase
         .from('bookings')
@@ -178,7 +157,7 @@ export const useProperties = () => {
         throw new Error(error.message);
       }
 
-      return data;
+      return data || [];
     } catch (err: any) {
       console.error('Error fetching property bookings:', err);
       toastService.error('Failed to fetch bookings', {
@@ -186,16 +165,5 @@ export const useProperties = () => {
       });
       return [];
     }
-  };
-
-  return {
-    properties,
-    isLoading,
-    error,
-    fetchProperties,
-    addProperty,
-    updateProperty,
-    deleteProperty,
-    getPropertyBookings
-  };
+  }
 };

@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Property } from "@/hooks/useProperties";
+import { Property } from "@/types/property.types";
 import PropertyCard from "./PropertyCard";
 
 interface PropertyListProps {
