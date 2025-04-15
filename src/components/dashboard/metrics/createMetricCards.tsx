@@ -66,4 +66,3 @@ export const createMetricCards = (data: DashboardData, isMobile: boolean): Array
 
   return [propertyCard, tasksCard, maintenanceCard];
 };
-
