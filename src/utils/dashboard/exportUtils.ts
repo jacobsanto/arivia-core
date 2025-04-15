@@ -31,7 +31,7 @@ export const exportDashboardData = async (
     
     // Convert object to array for export
     const dataArray = Object.entries(exportData).flatMap(([section, items]) => {
-      return [{ section }].concat(items || []);
+      return [{ section }].concat(items as { section: string }[]);
     });
 
     let loadingToastId: string | number | undefined;
