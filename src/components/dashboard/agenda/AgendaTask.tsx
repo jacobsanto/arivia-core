@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import TaskDetail from "@/components/tasks/TaskDetail";
 import MaintenanceDetail from "@/components/maintenance/MaintenanceDetail";
 import { Task } from "@/types/taskTypes";
@@ -20,7 +20,9 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [selectedMaintenanceTask, setSelectedMaintenanceTask] = useState<MaintenanceTask | null>(null);
   
-  const taskTime = format(parseISO(task.dueDate), 'h:mm a');
+  const taskTime = typeof task.dueDate === 'string' 
+    ? format(new Date(task.dueDate), 'h:mm a')
+    : format(task.dueDate as Date, 'h:mm a');
   
   // Prioritize which badge to show on mobile - only show the most important one
   const showPriorityBadge = task.priority === "High" || task.priority === "high";

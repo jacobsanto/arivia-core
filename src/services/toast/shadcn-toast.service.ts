@@ -1,6 +1,8 @@
 
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
 import { toast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+import { ReactElement } from "react";
 
 export class ShadcnToastService implements IToastService {
   show(title: string, options?: ToastOptions): ToastId {
@@ -8,7 +10,7 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
+      action: options?.action ? this.convertToToastAction(options.action) : undefined,
     });
     return result.id;
   }
@@ -18,8 +20,8 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
-      variant: "default", // Changed from "success" to "default"
+      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      variant: "default", // Using default as success
     });
     return result.id;
   }
@@ -29,7 +31,7 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
+      action: options?.action ? this.convertToToastAction(options.action) : undefined,
       variant: "destructive",
     });
     return result.id;
@@ -40,8 +42,8 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
-      variant: "default", // Changed from "warning" to "default"
+      action: options?.action ? this.convertToToastAction(options.action) : undefined,
+      variant: "default", // Using default for warning
     });
     return result.id;
   }
@@ -51,7 +53,7 @@ export class ShadcnToastService implements IToastService {
       title,
       description: options?.description,
       duration: options?.duration,
-      action: options?.action,
+      action: options?.action ? this.convertToToastAction(options.action) : undefined,
       variant: "default",
     });
     return result.id;
@@ -74,11 +76,21 @@ export class ShadcnToastService implements IToastService {
   }
 
   dismiss(id?: ToastId): void {
-    // Dismiss functionality in Shadcn implementation
     if (id) {
+      // Use static method instead of instance property
       toast.dismiss(id as string);
     } else {
       toast.dismiss();
     }
+  }
+
+  // Helper method to convert ReactNode to ToastAction component
+  private convertToToastAction(action: React.ReactNode): ReactElement | undefined {
+    if (!action) return undefined;
+    if (React.isValidElement(action)) return action as ReactElement;
+    
+    // If it's not a valid React element, we can't use it in the toast
+    console.warn("Invalid toast action provided. Must be a valid React element.");
+    return undefined;
   }
 }

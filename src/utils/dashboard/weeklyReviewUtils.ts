@@ -1,46 +1,37 @@
 
-import { toastService } from '@/services/toast/toast.service';
+import { toastService } from '@/services/toast';
 
 /**
- * Generates a weekly review report (only opens the dialog now)
- * The actual report generation is handled by the WeeklyReviewDialog component
+ * Generates a weekly review based on dashboard data
+ * Returns true if successful (needed for UI flow control)
  */
-export const generateWeeklyReview = (dashboardData: any, propertyFilter: string) => {
+export const generateWeeklyReview = (
+  dashboardData: any,
+  propertyFilter: string = 'all'
+): boolean => {
   if (!dashboardData) {
-    toastService.error("Weekly review failed", { 
-      description: "No data available to generate review" 
+    toastService.error('Cannot generate weekly review', {
+      description: 'Dashboard data is not available'
     });
     return false;
   }
   
-  try {
-    // The actual report generation happens in the WeeklyReviewDialog component
-    // This function now simply returns true to indicate success
-    return true;
-  } catch (error) {
-    console.error("Error generating weekly review:", error);
-    toastService.error("Weekly review failed", {
-      description: "There was an error generating your weekly review"
-    });
-    return false;
-  }
+  console.log('Generating weekly review for', propertyFilter);
+  
+  // In a real implementation, you would process the data here
+  // For now, just returning true to indicate success
+  return true;
 };
 
 /**
- * Schedules a weekly review report for automated delivery
+ * Returns information about the last dashboard refresh
  */
-export const scheduleWeeklyReview = (propertyFilter: string, emailRecipients: string[], dayOfWeek: string, time: string) => {
-  try {
-    // In a real app, this would create a scheduled task in the backend
-    toastService.success("Weekly review scheduled", {
-      description: `Report will be delivered to ${emailRecipients.length} recipients every ${dayOfWeek} at ${time}`
-    });
-    return true;
-  } catch (error) {
-    console.error("Error scheduling weekly review:", error);
-    toastService.error("Scheduling failed", {
-      description: "There was an error scheduling your weekly review"
-    });
-    return false;
-  }
+export const getRefreshStatus = () => {
+  // This would typically be stored in a global state or retrieved from an API
+  // For demonstration purposes, we're just returning the current time
+  return {
+    lastRefresh: new Date(),
+    isRefreshing: false,
+    refreshCount: 1
+  };
 };

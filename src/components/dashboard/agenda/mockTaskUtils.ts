@@ -11,7 +11,7 @@ export const createMockHousekeepingTask = (task: CombinedTask): Task => {
     type: task.type,
     status: task.status as any, // Type casting to resolve compatibility
     priority: task.priority as "Low" | "Medium" | "High", // Type casting
-    dueDate: task.dueDate,
+    dueDate: typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString(),
     assignedTo: "Assigned Staff", // This would come from the actual task data
     description: "Task details would be loaded here in a real implementation.",
     approvalStatus: "Pending" as any,
@@ -31,7 +31,7 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     property: task.property,
     status: task.status,
     priority: task.priority,
-    dueDate: task.dueDate,
+    dueDate: typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString(),
     assignee: "Maintenance Staff",
     description: "Maintenance task details would be loaded here in a real implementation.",
     location: "Location details",

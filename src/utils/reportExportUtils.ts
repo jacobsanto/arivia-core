@@ -2,184 +2,99 @@
 /**
  * Exports data to CSV format
  */
-export const exportToCSV = (data: any[] | Record<string, any[]>, filename: string) => {
-  if (!data || (Array.isArray(data) && !data.length) || (!Array.isArray(data) && Object.keys(data).length === 0)) {
-    console.warn('No data to export');
-    return;
-  }
+export const exportToCSV = (data: any[], filename: string) => {
+  // Convert data to CSV format
+  const headers = data.length > 0 ? Object.keys(data[0]) : [];
+  const csvContent = [
+    headers.join(','), // CSV header row
+    ...data.map(row => headers.map(header => {
+      // Handle string values that contain commas by wrapping in quotes
+      const value = row[header];
+      if (typeof value === 'string' && value.includes(',')) {
+        return `"${value}"`;
+      }
+      return value;
+    }).join(','))
+  ].join('\n');
   
-  try {
-    let csvContent = '';
-    
-    // Handle data structured as object with section arrays
-    if (!Array.isArray(data)) {
-      let isFirstSection = true;
-      
-      // Process each section
-      for (const [section, items] of Object.entries(data)) {
-        if (!Array.isArray(items) || !items.length) continue;
-        
-        // Add section header
-        if (!isFirstSection) {
-          csvContent += '\n\n';
-        }
-        csvContent += `${section.toUpperCase()}\n`;
-        
-        // Get headers from first item
-        const headers = Object.keys(items[0]);
-        csvContent += headers.join(',') + '\n';
-        
-        // Add items
-        items.forEach(item => {
-          const values = headers.map(header => {
-            const value = item[header];
-            // Handle special values
-            if (value === null || value === undefined) return '';
-            if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
-            return value;
-          });
-          csvContent += values.join(',') + '\n';
-        });
-        
-        isFirstSection = false;
-      }
-    } else {
-      // Standard array of objects processing
-      if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
-        // Get headers from first item
-        const headers = Object.keys(data[0]);
-        csvContent = headers.join(',') + '\n';
-        
-        // Add rows
-        data.forEach(item => {
-          const row = headers.map(header => {
-            const value = item[header];
-            // Handle special values
-            if (value === null || value === undefined) return '';
-            if (typeof value === 'string') return `"${value.replace(/"/g, '""')}"`;
-            return value;
-          }).join(',');
-          csvContent += row + '\n';
-        });
-      }
-    }
-    
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${filename}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  } catch (error) {
-    console.error('Error exporting to CSV:', error);
-  }
+  // Create a CSV file and trigger download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  
+  link.setAttribute('href', url);
+  link.setAttribute('download', `${filename}.csv`);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 /**
  * Prepares data for printing
  */
-export const preparePrint = (data: any[] | Record<string, any[]>, title: string) => {
-  // Create a new window for printing
+export const preparePrint = (data: any[], title: string) => {
+  // Create a printable version of the data
   const printWindow = window.open('', '_blank');
-  if (!printWindow) {
-    console.error('Could not open print window');
-    return;
+  if (!printWindow) return;
+  
+  // Generate HTML content
+  let htmlContent = `
+    <html>
+    <head>
+      <title>${title}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #333; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+      </style>
+    </head>
+    <body>
+      <h1>${title}</h1>
+      <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+      <table>
+        <thead>
+          <tr>
+  `;
+  
+  // Add table headers
+  if (data.length > 0) {
+    const headers = Object.keys(data[0]);
+    headers.forEach(header => {
+      htmlContent += `<th>${header}</th>`;
+    });
   }
   
-  try {
-    // Generate HTML content
-    let htmlContent = `
-      <html>
-      <head>
-          <title>${title}</title>
-          <style>
-              body { font-family: Arial, sans-serif; margin: 20px; }
-              h1 { color: #333; }
-              h2 { color: #555; margin-top: 20px; }
-              table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-              th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-              th { background-color: #f2f2f2; }
-              .print-date { color: #777; font-size: 12px; margin-bottom: 20px; }
-              @media print {
-                  button { display: none; }
-              }
-          </style>
-      </head>
-      <body>
-          <button onclick="window.print()">Print</button>
-          <button onclick="window.close()">Close</button>
-          <h1>${title}</h1>
-          <div class="print-date">Generated on ${new Date().toLocaleString()}</div>
-    `;
-    
-    // Handle data structured as object with section arrays
-    if (!Array.isArray(data)) {
-      // Process each section
-      for (const [section, items] of Object.entries(data)) {
-        if (!Array.isArray(items) || !items.length) continue;
-        
-        // Add section header
-        htmlContent += `<h2>${section.toUpperCase()}</h2>`;
-        
-        // Generate table
-        htmlContent += '<table><thead><tr>';
-        
-        // Add headers
-        const headers = Object.keys(items[0]);
-        headers.forEach(header => {
-          htmlContent += `<th>${header}</th>`;
-        });
-        htmlContent += '</tr></thead><tbody>';
-        
-        // Add rows
-        items.forEach(item => {
-          htmlContent += '<tr>';
-          headers.forEach(header => {
-            const value = item[header];
-            htmlContent += `<td>${value !== undefined && value !== null ? value : ''}</td>`;
-          });
-          htmlContent += '</tr>';
-        });
-        
-        htmlContent += '</tbody></table>';
-      }
-    } else if (Array.isArray(data) && data.length > 0) {
-      // Standard array of objects
-      htmlContent += '<table><thead><tr>';
-      
-      // Add headers
-      const headers = Object.keys(data[0]);
-      headers.forEach(header => {
-        htmlContent += `<th>${header}</th>`;
-      });
-      htmlContent += '</tr></thead><tbody>';
-      
-      // Add rows
-      data.forEach(item => {
-        htmlContent += '<tr>';
-        headers.forEach(header => {
-          const value = item[header];
-          htmlContent += `<td>${value !== undefined && value !== null ? value : ''}</td>`;
-        });
-        htmlContent += '</tr>';
-      });
-      
-      htmlContent += '</tbody></table>';
-    }
-    
-    htmlContent += '</body></html>';
-    
-    // Write to the new window
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    
-  } catch (error) {
-    console.error('Error preparing print:', error);
-    printWindow.close();
-  }
+  htmlContent += `
+          </tr>
+        </thead>
+        <tbody>
+  `;
+  
+  // Add table rows
+  data.forEach(row => {
+    htmlContent += '<tr>';
+    Object.values(row).forEach(value => {
+      htmlContent += `<td>${value}</td>`;
+    });
+    htmlContent += '</tr>';
+  });
+  
+  htmlContent += `
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+  
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  
+  // Trigger print after the content has loaded
+  printWindow.onload = () => {
+    printWindow.print();
+  };
 };
