@@ -1,5 +1,5 @@
 
-export type ToastId = string;
+export type ToastId = string | number;
 
 export interface ToastOptions {
   description?: string;
@@ -20,7 +20,7 @@ export interface LoadingToastOptions {
 export type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info' | 'task';
 
 export interface Toast {
-  id: string;
+  id: string | number;
   title: string;
   type: ToastType;
   options: ToastOptions;

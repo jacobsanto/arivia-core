@@ -1,3 +1,4 @@
+
 import * as React from "react"
 
 import type {
@@ -166,6 +167,11 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   }
+}
+
+// Add dismiss method to toast function
+toast.dismiss = (toastId?: string) => {
+  dispatch({ type: "DISMISS_TOAST", toastId })
 }
 
 function useToast() {

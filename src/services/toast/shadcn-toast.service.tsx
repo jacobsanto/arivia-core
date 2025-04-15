@@ -92,10 +92,10 @@ export class ShadcnToastService implements IToastService {
 
   dismiss(id?: ToastId): void {
     if (id) {
-      // For shadcn toast, we need to access the dismiss function properly
-      toast.dismiss(id);
+      // For shadcn toast, we need to access the dismiss function from the imported toast
+      toast.dismiss(id.toString());
     } else {
-      // To dismiss all toasts when no ID is provided
+      // To dismiss all toasts when no ID is provided - calling toast.dismiss() without args
       toast.dismiss();
     }
   }

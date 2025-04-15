@@ -1,5 +1,6 @@
 
 import { toastService } from '@/services/toast';
+import { ToastId } from '@/services/toast/toast.types';
 
 /**
  * Refreshes dashboard data with loading indicator and success message
@@ -18,7 +19,7 @@ export const refreshDashboardData = async (
     errorMessage = "Failed to refresh dashboard"
   } = options;
   
-  let loadingToastId: string | number | undefined;
+  let loadingToastId: ToastId | undefined;
   
   try {
     // Show loading toast if not silent
