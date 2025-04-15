@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { useGuestyProperties } from "@/hooks/guesty/useGuestyProperties";
 import PropertyList from "./PropertyList";
-import { Property } from "@/hooks/useProperties";
+import type { Property } from "@/types/property.types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 

@@ -3,7 +3,8 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageSquare } from "lucide-react";
-import { Property, useProperties } from "@/hooks/useProperties";
+import { useProperties } from "@/hooks/useProperties";
+import type { Property } from "@/types/property.types";
 
 interface BookingStatusContentProps {
   property: Property;

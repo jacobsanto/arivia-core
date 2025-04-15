@@ -18,7 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal } from "lucide-react";
-import { Property, useProperties } from "@/hooks/useProperties";
+import { useProperties } from "@/hooks/useProperties";
+import type { Property } from "@/types/property.types";
 
 interface PropertyCardProps {
   property: Property;

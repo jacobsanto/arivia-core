@@ -1,6 +1,7 @@
+
 import { format } from "date-fns";
 import { GuestyProperty, GuestyReservation, GuestyTask } from "./types";
-import { Property } from "@/hooks/useProperties";
+import type { Property } from "@/types/property.types";
 
 /**
  * Adapters to transform Guesty API responses to our internal app models

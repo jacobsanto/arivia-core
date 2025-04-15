@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft } from "lucide-react";
-import { Property } from "@/hooks/useProperties";
+import type { Property } from "@/types/property.types";
 import { BookingCalendarView } from "./BookingCalendarView";
 import { BookingsList } from "./BookingsList";
 

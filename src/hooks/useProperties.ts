@@ -1,6 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { propertyService } from '@/services/property/property.service';
 import type { Property, PropertyFormData } from '@/types/property.types';
+
+// Re-export the Property type
+export type { Property } from '@/types/property.types';
 
 export const useProperties = () => {
   const [properties, setProperties] = useState<Property[]>([]);
