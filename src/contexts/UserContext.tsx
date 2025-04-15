@@ -21,8 +21,19 @@ import { useAuth } from "./AuthContext";
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Use the central auth state from AuthContext
-  const authState = useAuth();
+  // Try to use the central auth state but don't fail if not available
+  let authState: { user: User | null; session: Session | null; isLoading: boolean } = { 
+    user: null, 
+    session: null, 
+    isLoading: false 
+  };
+  
+  try {
+    authState = useAuth();
+  } catch (error) {
+    // If AuthContext is not available, we'll just use our local state
+    console.warn("AuthContext not available, using local state only");
+  }
   
   const { 
     user, 
