@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -23,7 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search, Plus, Calendar as CalendarIcon, Home, User, MessageSquare, DollarSign, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import PropertyForm from "@/components/properties/PropertyForm";
-import BookingCalendar from "@/components/properties/BookingCalendar";
+import BookingCalendar from "@/components/properties/bookings";
 import PricingConfig from "@/components/properties/PricingConfig";
 import GuestManagement from "@/components/properties/GuestManagement";
 import { useProperties, Property } from "@/hooks/useProperties";
@@ -46,7 +45,6 @@ const Properties = () => {
     deleteProperty 
   } = useProperties();
 
-  // Show error toast if error occurs
   useEffect(() => {
     if (error) {
       toast.error('Failed to load properties', {
@@ -56,11 +54,9 @@ const Properties = () => {
   }, [error]);
 
   const filteredProperties = properties.filter((property) => {
-    // Filter by search query
     const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase());
 
-    // Filter by tab
     const matchesTab =
       activeTab === "all" ||
       (activeTab === "occupied" && property.status === "Occupied") ||
@@ -80,7 +76,6 @@ const Properties = () => {
       toast.success(`${newProperty.name} has been added to your properties`);
       setIsAddPropertyOpen(false);
     } catch (err: any) {
-      // Error is handled in the hook with a toast
     }
   };
 
@@ -115,7 +110,6 @@ const Properties = () => {
         await deleteProperty(id);
         toast.success(`${name} has been deleted`);
       } catch (err) {
-        // Error is handled in the hook with a toast
       }
     }
   };
@@ -233,7 +227,6 @@ const Properties = () => {
         </div>
       )}
 
-      {/* Add Property Dialog */}
       <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -350,7 +343,6 @@ const BookingStatusContent = ({ property }: { property: Property }) => {
       try {
         const bookings = await getPropertyBookings(property.id);
         
-        // Find current booking (check-in date <= today <= check-out date)
         const today = new Date();
         const current = bookings.find(booking => 
           new Date(booking.check_in_date) <= today && 
@@ -358,7 +350,6 @@ const BookingStatusContent = ({ property }: { property: Property }) => {
         );
         setCurrentBooking(current || null);
         
-        // Find next booking (check-in date > today, ordered by closest date)
         const upcoming = bookings
           .filter(booking => new Date(booking.check_in_date) > today)
           .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
@@ -459,7 +450,6 @@ const PropertyCard = ({
     const fetchBookings = async () => {
       const bookings = await getPropertyBookings(property.id);
       
-      // Find current booking (check-in date <= today <= check-out date)
       const today = new Date();
       const current = bookings.find(booking => 
         new Date(booking.check_in_date) <= today && 
@@ -467,7 +457,6 @@ const PropertyCard = ({
       );
       setCurrentBooking(current || null);
       
-      // Find next booking (check-in date > today, ordered by closest date)
       const upcoming = bookings
         .filter(booking => new Date(booking.check_in_date) > today)
         .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
