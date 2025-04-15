@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { addDays, startOfDay, endOfDay } from "date-fns";
-import { toast } from "sonner";
+import { toastService } from "@/services/toast";
 import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
 import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
 
@@ -38,47 +38,66 @@ export const useDashboard = () => {
   });
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadDashboardData = async () => {
     setIsLoading(true);
+    setError(null);
+    
     try {
       // In a real app, this would be an API call
       // For now, mock data with a delay to simulate API call
-      setTimeout(() => {
-        setDashboardData({
-          properties: {
-            total: 15,
-            occupied: 9,
-            maintenance: 2,
-            available: 4
-          },
-          tasks: {
-            total: 24,
-            completed: 12,
-            inProgress: 8,
-            pending: 4
-          },
-          upcomingTasks: initialHousekeepingTasks.slice(0, 5),
-          housekeepingTasks: initialHousekeepingTasks,
-          maintenanceTasks: initialMaintenanceTasks,
-          quickStats: {
-            occupancyRate: 75,
-            avgRating: 4.8,
-            revenueToday: 2450,
-            pendingCheckouts: 3
+      return new Promise<void>((resolve, reject) => {
+        setTimeout(() => {
+          try {
+            setDashboardData({
+              properties: {
+                total: 15,
+                occupied: 9,
+                maintenance: 2,
+                available: 4
+              },
+              tasks: {
+                total: 24,
+                completed: 12,
+                inProgress: 8,
+                pending: 4
+              },
+              upcomingTasks: initialHousekeepingTasks.slice(0, 5),
+              housekeepingTasks: initialHousekeepingTasks,
+              maintenanceTasks: initialMaintenanceTasks,
+              quickStats: {
+                occupancyRate: 75,
+                avgRating: 4.8,
+                revenueToday: 2450,
+                pendingCheckouts: 3
+              }
+            });
+            setIsLoading(false);
+            resolve();
+          } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+            setError(errorMessage);
+            setIsLoading(false);
+            reject(new Error(errorMessage));
           }
-        });
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Failed to load dashboard data", error);
-      toast.error("Failed to load dashboard data");
+        }, 1000);
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      setError(errorMessage);
+      toastService.error("Dashboard data error", {
+        description: errorMessage
+      });
       setIsLoading(false);
+      throw err;
     }
   };
 
   useEffect(() => {
-    loadDashboardData();
+    loadDashboardData().catch(err => {
+      // Error already handled in loadDashboardData
+    });
   }, [selectedProperty, dateRange]);
 
   const handlePropertyChange = (property: string) => {
@@ -90,7 +109,7 @@ export const useDashboard = () => {
   };
 
   const refreshDashboard = () => {
-    loadDashboardData();
+    return loadDashboardData();
   };
 
   return {
@@ -100,6 +119,7 @@ export const useDashboard = () => {
     handlePropertyChange,
     handleDateRangeChange,
     refreshDashboard,
-    isLoading
+    isLoading,
+    error
   };
 };

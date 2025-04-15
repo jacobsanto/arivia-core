@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/types/auth";
-import { toast } from "sonner";
+import { toastService } from "@/services/toast";
 
 export const login = async (
   email: string,
@@ -11,7 +11,6 @@ export const login = async (
   setIsLoading: (isLoading: boolean) => void
 ): Promise<void> => {
   try {
-    console.log(`Login operation started for: ${email} (${Date.now()})`);
     setIsLoading(true);
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -20,11 +19,8 @@ export const login = async (
     });
 
     if (error) {
-      console.error("Login error from Supabase:", error);
       throw error;
     }
-
-    console.log("Login successful, data:", data);
 
     // Convert Supabase user to our User format
     if (data.user) {
@@ -38,22 +34,18 @@ export const login = async (
       
       // Important: Update user state immediately after successful auth
       setUser(userData);
-      console.log("User state updated:", userData);
       
       // Update localStorage with last auth time for offline login capability
       const authTime = Date.now();
       localStorage.setItem("lastAuthTime", authTime.toString());
       setLastAuthTime(authTime);
       localStorage.setItem("user", JSON.stringify(userData)); // Store user in localStorage for offline support
-      console.log("Auth time updated:", authTime);
     } else {
       // Handle the case where authentication was successful but no user data returned
-      console.error("Authentication successful but no user data returned");
       throw new Error("Authentication successful but failed to retrieve user data.");
     }
 
   } catch (error) {
-    console.error("Login error:", error);
     let errorMessage = error instanceof Error ? error.message : "Invalid credentials";
     
     // Better error messages
@@ -67,22 +59,20 @@ export const login = async (
       }
     }
     
-    toast.error("Login failed", {
+    toastService.error("Login failed", {
       description: errorMessage
     });
     
     throw new Error(errorMessage);
   } finally {
     setIsLoading(false);
-    console.log(`Login operation finished for: ${email} (${Date.now()})`);
   }
 };
 
 export const logout = async () => {
   try {
-    console.log("Logging out user");
     await supabase.auth.signOut({ scope: 'local' });
-    toast.success("Logged out successfully");
+    toastService.success("Logged out successfully");
     
     // Clear ALL relevant auth data from localStorage
     localStorage.removeItem("user");
@@ -94,9 +84,9 @@ export const logout = async () => {
     // This ensures all React state is cleared and a fresh login page is shown
     window.location.href = "/login";
   } catch (error) {
-    console.error("Logout error:", error);
-    toast.error("Failed to log out", {
-      description: "Please try again"
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    toastService.error("Failed to log out", {
+      description: errorMessage
     });
     
     // Even if there's an error, try to redirect to login
@@ -114,7 +104,6 @@ export const signup = async (
   setIsLoading: (isLoading: boolean) => void
 ) => {
   try {
-    console.log("Signup attempt for:", email);
     setIsLoading(true);
 
     // Check if role is superadmin and one already exists
@@ -144,10 +133,8 @@ export const signup = async (
     });
 
     if (error) throw error;
-
-    console.log("Signup successful, data:", data);
     
-    toast.success("Account created successfully", {
+    toastService.success("Account created successfully", {
       description: "You can now login with your credentials"
     });
 
@@ -158,7 +145,6 @@ export const signup = async (
     
     return data;
   } catch (error) {
-    console.error("Signup error:", error);
     let errorMessage = "An error occurred during signup";
     
     if (error instanceof Error) {
@@ -171,7 +157,7 @@ export const signup = async (
       }
     }
     
-    toast.error("Signup failed", {
+    toastService.error("Signup failed", {
       description: errorMessage
     });
     throw error;

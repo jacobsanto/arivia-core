@@ -2,12 +2,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { toastService } from "@/services/toast";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,12 +18,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Set up auth state listener FIRST to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("Auth state change detected:", event, Boolean(newSession));
         setSession(newSession);
         setUser(newSession?.user ? {
           id: newSession.user.id,
@@ -36,11 +38,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // THEN check for existing session
     const initializeSession = async () => {
       try {
-        console.log("Initializing auth session...");
-        const { data } = await supabase.auth.getSession();
+        setError(null);
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          throw sessionError;
+        }
         
         if (data.session) {
-          console.log("Existing session found");
           setSession(data.session);
           setUser({
             id: data.session.user.id,
@@ -49,11 +54,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: data.session.user.user_metadata?.role || 'property_manager',
             avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
           });
-        } else {
-          console.log("No existing session found");
         }
-      } catch (error) {
-        console.error("Error fetching session:", error);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Authentication error';
+        setError(errorMessage);
+        toastService.error("Authentication error", {
+          description: "There was a problem with your authentication session"
+        });
       } finally {
         setIsLoading(false);
       }
@@ -70,7 +77,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     isLoading,
-    isAuthenticated: !!user && !!session
+    isAuthenticated: !!user && !!session,
+    error
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -9,6 +9,8 @@ import {
   generateWeeklyReview,
   getRefreshStatus
 } from "@/utils/dashboard";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { ExternalLink } from "lucide-react";
 
 // Import refactored components
 import DashboardHeading from "./header/DashboardHeading";
@@ -20,6 +22,7 @@ import { WeeklyReviewDialog } from "./weekly-review";
 import { ExportConfigDialog, ExportFormat, ExportSection } from "./ExportConfigDialog";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toastService } from "@/services/toast";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
@@ -47,14 +50,26 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const [showExportConfig, setShowExportConfig] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   const { lastRefresh } = getRefreshStatus();
   const lastRefreshTime = format(lastRefresh, 'HH:mm:ss');
 
   const handleExport = async (format: ExportFormat, sections: ExportSection[]) => {
     setIsExporting(true);
+    setError(null);
+    
     try {
       await exportDashboardData(dashboardData, selectedProperty, format, sections);
+      toastService.success("Dashboard exported successfully", {
+        description: `Your ${format.toUpperCase()} export is ready to download`
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(`Export failed: ${errorMessage}`);
+      toastService.error("Export failed", {
+        description: "There was a problem generating your export"
+      });
     } finally {
       setIsExporting(false);
       setShowExportConfig(false);
@@ -65,20 +80,37 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     if (isRefreshing) return;
     
     setIsRefreshing(true);
+    setError(null);
+    
     try {
       // Wrap the function in a Promise if it doesn't return one
       await refreshDashboardData(async () => {
-        refreshDashboardContent();
-        return Promise.resolve({});
+        try {
+          await refreshDashboardContent();
+          return Promise.resolve({});
+        } catch (error) {
+          throw error;
+        }
       });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(`Refresh failed: ${errorMessage}`);
     } finally {
       setIsRefreshing(false);
     }
   };
   
   const handleWeeklyReview = () => {
-    if (generateWeeklyReview(dashboardData, selectedProperty)) {
-      setShowWeeklyReview(true);
+    try {
+      if (generateWeeklyReview(dashboardData, selectedProperty)) {
+        setShowWeeklyReview(true);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+      setError(`Failed to generate weekly review: ${errorMessage}`);
+      toastService.error("Weekly review failed", {
+        description: "Could not generate weekly review data"
+      });
     }
   };
 
@@ -107,6 +139,23 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           />
         )}
       </div>
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription className="flex items-center gap-2">
+            {error}
+            <button 
+              onClick={() => setError(null)}
+              className="ml-auto text-xs underline flex items-center gap-1"
+              aria-label="Dismiss error"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Dismiss
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
       
       {isLoading ? (
         <div className="flex flex-col sm:flex-row gap-3 w-full">

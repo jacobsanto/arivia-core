@@ -6,10 +6,12 @@ import MobileDashboard from "@/components/dashboard/MobileDashboard";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Helmet } from "react-helmet-async";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 // Loader component for better UX during loading states
-const DashboardLoader = () => (
+const DashboardLoader: React.FC = () => (
   <div className="flex items-center justify-center h-64">
     <div className="flex flex-col items-center gap-2">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -18,7 +20,25 @@ const DashboardLoader = () => (
   </div>
 );
 
-const Dashboard = () => {
+// Error fallback component for error states
+const DashboardErrorFallback: React.FC<{
+  error: string;
+  onRetry: () => void;
+}> = ({ error, onRetry }) => (
+  <div className="flex flex-col items-center justify-center h-64 px-4">
+    <Alert variant="destructive" className="max-w-md w-full mb-4">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>Error loading dashboard</AlertTitle>
+      <AlertDescription>{error}</AlertDescription>
+    </Alert>
+    <Button onClick={onRetry} variant="outline">
+      <Loader2 className="mr-2 h-4 w-4" />
+      Retry
+    </Button>
+  </div>
+);
+
+const Dashboard: React.FC = () => {
   const {
     selectedProperty,
     dateRange,
@@ -26,23 +46,36 @@ const Dashboard = () => {
     handlePropertyChange,
     handleDateRangeChange,
     refreshDashboard,
-    isLoading
+    isLoading,
+    error
   } = useDashboard();
   
   const isMobile = useIsMobile();
 
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
+    if (error) {
+      return (
+        <DashboardErrorFallback 
+          error={error} 
+          onRetry={refreshDashboard} 
+        />
+      );
+    }
+    
     if (isLoading || !dashboardData) {
       return <DashboardLoader />;
     }
 
     return isMobile ? (
-      <MobileDashboard dashboardData={dashboardData} />
+      <MobileDashboard 
+        dashboardData={dashboardData} 
+        onRefresh={refreshDashboard} 
+      />
     ) : (
       <DashboardContent dashboardData={dashboardData} />
     );
-  }, [dashboardData, isMobile, isLoading]);
+  }, [dashboardData, isMobile, isLoading, error, refreshDashboard]);
 
   return (
     <>
