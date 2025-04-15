@@ -70,7 +70,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
 
   const onTouchEnd = (e: React.TouchEvent) => {
     handlers.onTouchEnd();
-    swipeTouchEnd(e);
+    swipeTouchEnd();
   };
 
   // Hide swipe hint and save to localStorage
