@@ -26,7 +26,7 @@ export const createMetricCards = (data: DashboardData, isMobile: boolean): Array
     title: "Properties",
     value: `${data.properties?.total || 0}`,
     description: isMobile ? "Managed properties" : "Total properties under management",
-    icon: () => <BuildingIcon className="h-4 w-4" />,
+    icon: <BuildingIcon className="h-4 w-4" />,
     footer: {
       text: isMobile ? "Occupancy details" : "Occupied vs Vacant properties",
       occupied: data.properties?.occupied || 0,
@@ -43,7 +43,7 @@ export const createMetricCards = (data: DashboardData, isMobile: boolean): Array
     title: "Tasks",
     value: `${data.tasks?.total || 0}`,
     description: isMobile ? "Scheduled tasks" : "Total tasks in system",
-    icon: () => <ClipboardCheck className="h-4 w-4" />,
+    icon: <ClipboardCheck className="h-4 w-4" />,
     footer: {
       text: isMobile ? "Status details" : "Completed vs Pending tasks",
       completed: data.tasks?.completed || 0,
@@ -56,7 +56,7 @@ export const createMetricCards = (data: DashboardData, isMobile: boolean): Array
     title: "Maintenance",
     value: `${data.maintenance?.total || 0}`,
     description: isMobile ? "Maint. tasks" : "Maintenance tasks",
-    icon: () => <Wrench className="h-4 w-4" />,
+    icon: <Wrench className="h-4 w-4" />,
     footer: {
       text: isMobile ? "Priority details" : "Critical vs Standard issues",
       critical: data.maintenance?.critical || 0,
