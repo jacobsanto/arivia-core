@@ -7,22 +7,22 @@ import {
   User,
   Session,
   UserRole,
-  UserStateSetter,
   StateSetter,
+  UserStateSetter,
   FEATURE_PERMISSIONS,
   ROLE_DETAILS,
   OFFLINE_CAPABILITIES,
   hasPermissionWithAllRoles,
   getAllPermissionKeys,
   getDefaultPermissionsForRole
-} from './auth';
+} from '@/types/auth/index';
 
 export type {
   User,
   Session,
   UserRole,
-  UserStateSetter,
-  StateSetter
+  StateSetter,
+  UserStateSetter
 };
 
 export {
