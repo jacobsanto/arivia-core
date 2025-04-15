@@ -74,18 +74,22 @@ const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
   }, [property.id]);
 
   // Calculate calendar day class names based on bookings
-  const getDayClassNames = (day: Date): string => {
-    const dateString = day.toISOString().split('T')[0];
+  const getBookedDaysModifiers = () => {
+    const bookedDays: Date[] = [];
     
-    // Check if this day is included in any booking's date range
-    const hasBooking = bookings.some(booking => {
-      const checkInDate = booking.check_in_date;
-      const checkOutDate = booking.check_out_date;
+    bookings.forEach(booking => {
+      const checkInDate = new Date(booking.check_in_date);
+      const checkOutDate = new Date(booking.check_out_date);
       
-      return dateString >= checkInDate && dateString <= checkOutDate;
+      // Add all dates between check-in and check-out to the bookedDays array
+      const currentDate = new Date(checkInDate);
+      while (currentDate <= checkOutDate) {
+        bookedDays.push(new Date(currentDate));
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
     });
     
-    return hasBooking ? 'bg-blue-100 text-blue-900 rounded-md' : '';
+    return bookedDays;
   };
 
   // Filter bookings by month if a date is selected
@@ -143,15 +147,11 @@ const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
               className="rounded-md border"
               modifiersClassNames={{
                 selected: 'bg-primary text-primary-foreground',
+                booked: 'bg-blue-100 text-blue-900 rounded-md'
               }}
-              modifiersStyles={{
-                booked: { 
-                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                  color: 'rgba(30, 64, 175, 1)',
-                  fontWeight: 'bold'
-                }
+              modifiers={{
+                booked: getBookedDaysModifiers()
               }}
-              dayClassName={getDayClassNames}
             />
           </CardContent>
         </Card>
