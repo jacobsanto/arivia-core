@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PropertyReporting } from './reporting/PropertyReporting';
 import { StaffReporting } from './reporting/StaffReporting';
@@ -8,17 +9,27 @@ import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
 import { ReportActionButtons } from './reporting/ReportActionButtons';
 import { completionData, staffData, performanceByDayData } from './reporting/reportingData';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { getDateRangeForTimeFilter } from '@/utils/dateRangeUtils';
 
 const TaskReporting = () => {
   const [dateRange, setDateRange] = useState('month'); // week, month, quarter, year
   const [customDateRange, setCustomDateRange] = useState({
-    from: undefined,
-    to: undefined
+    from: getDateRangeForTimeFilter('month').from,
+    to: getDateRangeForTimeFilter('month').to
   });
   const [activeTab, setActiveTab] = useState("properties");
   const isMobile = useIsMobile();
   
+  // When dateRange changes, update the customDateRange if it's not a custom range
+  useEffect(() => {
+    if (dateRange !== 'custom') {
+      const newDateRange = getDateRangeForTimeFilter(dateRange);
+      setCustomDateRange(newDateRange);
+    }
+  }, [dateRange]);
+  
   const getCurrentData = () => {
+    // In a real app, you would filter this data based on the dateRange
     switch (activeTab) {
       case 'properties':
         return completionData;

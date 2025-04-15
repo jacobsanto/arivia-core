@@ -1,8 +1,9 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { Building } from "lucide-react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
+import DateRangeDisplay from './DateRangeDisplay';
 
 interface FilterBadgesProps {
   selectedProperty: string;
@@ -14,13 +15,12 @@ const FilterBadges: React.FC<FilterBadgesProps> = ({
   dateRange 
 }) => {
   return (
-    <div className="flex items-center mt-2">
-      <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200 mr-2">
+    <div className="flex items-center mt-2 flex-wrap gap-2">
+      <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+        <Building className="mr-1 h-3 w-3" />
         {selectedProperty === "all" ? "All Properties" : selectedProperty}
       </Badge>
-      <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">
-        {format(dateRange.from || new Date(), 'MMM d')} - {format(dateRange.to || new Date(), 'MMM d')}
-      </Badge>
+      <DateRangeDisplay dateRange={dateRange} />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar, Loader2 } from "lucide-react";
+import { getDateRangeDescription } from "@/utils/dateRangeUtils";
 
 interface ReportingHeaderProps {
   dateRange: string;
@@ -21,7 +22,7 @@ export const ReportingHeader = ({
         {isLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
         <span className="font-medium flex items-center text-sm">
           <Calendar className="h-4 w-4 mr-1" />
-          {dateRange === "custom" ? "Custom Period" : `${dateRange.charAt(0).toUpperCase() + dateRange.slice(1)} View`}
+          {dateRange === "custom" ? "Custom Period" : getDateRangeDescription(dateRange)}
         </span>
       </div>
       
@@ -34,7 +35,7 @@ export const ReportingHeader = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Last 7 days</p>
+              <p>Current week</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -47,7 +48,7 @@ export const ReportingHeader = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Last 30 days</p>
+              <p>Current month</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -60,7 +61,7 @@ export const ReportingHeader = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Last 3 months</p>
+              <p>Current quarter</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -73,7 +74,7 @@ export const ReportingHeader = ({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Last 12 months</p>
+              <p>Current year</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

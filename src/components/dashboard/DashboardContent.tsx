@@ -1,9 +1,9 @@
 
-import React, { memo } from "react";
+import React, { memo, useEffect } from "react";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 import TasksSchedule from "@/components/dashboard/TasksSchedule";
 import DailyAgenda from "@/components/dashboard/DailyAgenda";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
@@ -24,6 +24,14 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(initialMaintenanceTasks);
   const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("daily");
+  
+  // In a real application, we would filter tasks based on the selected date range
+  useEffect(() => {
+    if (dashboardData?.dateRange) {
+      // Example filtering logic - would be replaced with actual filtering based on date range
+      console.log("Filtering tasks for date range:", dashboardData.dateRange);
+    }
+  }, [dashboardData?.dateRange]);
   
   return (
     <div className="space-y-6 px-2 md:px-4">

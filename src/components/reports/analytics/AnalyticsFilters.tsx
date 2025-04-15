@@ -1,12 +1,15 @@
+
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
 import { Button } from '@/components/ui/button';
-import { Calendar, Building, Filter, X } from 'lucide-react';
+import { Calendar, Building, Filter, X, RefreshCw } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PropertyFilter, TimeRangeFilter, useAnalytics } from '@/contexts/AnalyticsContext';
 import { format } from 'date-fns';
+import { formatDateRangeDisplay, getDateRangeDescription } from '@/utils/dateRangeUtils';
+
 export const AnalyticsFilters: React.FC = () => {
   const isMobile = useIsMobile();
   const {
@@ -17,8 +20,11 @@ export const AnalyticsFilters: React.FC = () => {
     dateRange,
     setDateRange,
     timeRangeFilter,
-    setTimeRangeFilter
+    setTimeRangeFilter,
+    isLoading,
+    refreshData
   } = useAnalytics();
+  
   const propertyOptions: {
     value: PropertyFilter;
     label: string;
@@ -41,82 +47,127 @@ export const AnalyticsFilters: React.FC = () => {
     value: 'Villa Azure',
     label: 'Villa Azure'
   }];
+  
   const yearOptions = ['2024', '2025', '2026'];
+  
   const timeRangeOptions: {
     value: TimeRangeFilter;
     label: string;
-  }[] = [{
-    value: 'week',
-    label: 'This Week'
-  }, {
-    value: 'month',
-    label: 'This Month'
-  }, {
-    value: 'quarter',
-    label: 'This Quarter'
-  }, {
-    value: 'year',
-    label: 'This Year'
-  }, {
-    value: 'custom',
-    label: 'Custom Range'
-  }];
+  }[] = [
+    { value: 'week', label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'quarter', label: 'This Quarter' },
+    { value: 'year', label: 'This Year' },
+    { value: 'last7', label: 'Last 7 Days' },
+    { value: 'last30', label: 'Last 30 Days' },
+    { value: 'last90', label: 'Last 90 Days' },
+    { value: 'last12months', label: 'Last 12 Months' },
+    { value: 'custom', label: 'Custom Range' }
+  ];
+  
   const handleClearFilters = () => {
     setSelectedProperty('all');
     setSelectedYear('2025');
     setTimeRangeFilter('month');
   };
-  return <div className="space-y-4">
+
+  const handleCustomDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
+    if (range.from && range.to) {
+      setTimeRangeFilter('custom');
+    }
+  };
+
+  const displayDateRange = () => {
+    if (timeRangeFilter === 'custom' && dateRange.from && dateRange.to) {
+      return `${format(dateRange.from, 'MMM dd, yyyy')} - ${format(dateRange.to, 'MMM dd, yyyy')}`;
+    }
+    return getDateRangeDescription(timeRangeFilter);
+  };
+
+  return (
+    <div className="space-y-4">
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
         <div className="flex items-center gap-1 text-sm text-muted-foreground">
           <Filter className="h-4 w-4" /> Filters:
         </div>
         
-        {selectedProperty !== 'all' && <Badge variant="outline" className="bg-muted/50 text-nowrap">
+        {selectedProperty !== 'all' && (
+          <Badge variant="outline" className="bg-muted/50 text-nowrap">
             <Building className="mr-1 h-3 w-3" />
             {selectedProperty}
             <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setSelectedProperty('all')} />
-          </Badge>}
+          </Badge>
+        )}
         
         <Badge variant="outline" className="text-nowrap rounded-none bg-zinc-50">
           <Calendar className="mr-1 h-3 w-3" />
-          {timeRangeFilter === 'custom' && dateRange.from && dateRange.to ? `${format(dateRange.from, 'MM/dd/yy')} - ${format(dateRange.to, 'MM/dd/yy')}` : timeRangeOptions.find(option => option.value === timeRangeFilter)?.label}
+          {displayDateRange()}
         </Badge>
 
         <div className="flex gap-2 ml-auto">
-          <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-xs h-7 text-nowrap text-justify mx-0 font-thin bg-zinc-50 rounded px-[7px]">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={refreshData} 
+            disabled={isLoading}
+            className="text-xs h-7 text-nowrap"
+          >
+            <RefreshCw className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleClearFilters} 
+            className="text-xs h-7 text-nowrap text-justify mx-0 font-thin bg-zinc-50 rounded px-[7px]"
+          >
             Reset Filters
           </Button>
         </div>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <Select value={selectedProperty} onValueChange={value => setSelectedProperty(value as PropertyFilter)}>
+        <Select 
+          value={selectedProperty} 
+          onValueChange={value => setSelectedProperty(value as PropertyFilter)}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select Property" />
           </SelectTrigger>
           <SelectContent>
-            {propertyOptions.map(option => <SelectItem key={option.value} value={option.value}>
+            {propertyOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
                 {option.label}
-              </SelectItem>)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
+        <Select 
+          value={timeRangeFilter} 
+          onValueChange={value => setTimeRangeFilter(value as TimeRangeFilter)}
+        >
           <SelectTrigger>
-            <SelectValue placeholder="Select Year" />
+            <SelectValue placeholder="Select Time Range" />
           </SelectTrigger>
           <SelectContent>
-            {yearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+            {timeRangeOptions.map(option => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         
         <div className="flex-grow">
-          <DateRangeSelector value={dateRange} onChange={range => {
-          setDateRange(range);
-          setTimeRangeFilter('custom');
-        }} />
+          <DateRangeSelector 
+            value={dateRange} 
+            onChange={handleCustomDateRangeChange}
+          />
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
