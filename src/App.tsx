@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { GuestyProvider } from "@/contexts/GuestyContext";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
@@ -30,39 +31,41 @@ function App() {
   return (
     <HelmetProvider>
       <ToastProvider>
-        <Router>
-          <Routes>
-            {/* Login route - doesn't use the unified layout */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected routes with UnifiedLayout */}
-            <Route element={
-              <ProtectedRoute>
-                <UnifiedLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/housekeeping" element={<Housekeeping />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/team-chat" element={<TeamChat />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/reports" element={<Reports />} />
+        <GuestyProvider>
+          <Router>
+            <Routes>
+              {/* Login route - doesn't use the unified layout */}
+              <Route path="/login" element={<Login />} />
               
-              {/* Admin routes */}
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/permissions" element={<AdminPermissions />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/checklists" element={<AdminChecklists />} />
-            </Route>
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
+              {/* Protected routes with UnifiedLayout */}
+              <Route element={
+                <ProtectedRoute>
+                  <UnifiedLayout />
+                </ProtectedRoute>
+              }>
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/housekeeping" element={<Housekeeping />} />
+                <Route path="/maintenance" element={<Maintenance />} />
+                <Route path="/properties" element={<Properties />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/team-chat" element={<TeamChat />} />
+                <Route path="/analytics" element={<Analytics />} />
+                <Route path="/reports" element={<Reports />} />
+                
+                {/* Admin routes */}
+                <Route path="/admin/users" element={<AdminUsers />} />
+                <Route path="/admin/permissions" element={<AdminPermissions />} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/checklists" element={<AdminChecklists />} />
+              </Route>
+              
+              {/* Catch all route */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </Router>
+        </GuestyProvider>
       </ToastProvider>
     </HelmetProvider>
   );
