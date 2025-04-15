@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
@@ -30,11 +29,9 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   maintenanceTasks
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  // Local state for managing swipe hint visibility
   const [showSwipeHint, setShowSwipeHint] = useState<boolean>(true);
   const isMobile = useIsMobile();
   
-  // Check if user has seen hints before (from localStorage) on component mount
   useEffect(() => {
     const hasSeenSwipeHint = localStorage.getItem('seen_swipe_hint') === 'true';
     if (hasSeenSwipeHint) {
@@ -68,12 +65,11 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     swipeTouchMove(e);
   };
 
-  const onTouchEnd = (e: React.TouchEvent) => {
+  const onTouchEnd = () => {
     handlers.onTouchEnd();
     swipeTouchEnd();
   };
 
-  // Hide swipe hint and save to localStorage
   const hideSwipeHint = () => {
     setShowSwipeHint(false);
     localStorage.setItem('seen_swipe_hint', 'true');
@@ -84,7 +80,6 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
     
-    // Hide swipe hint when user navigates
     if (showSwipeHint) {
       hideSwipeHint();
     }
