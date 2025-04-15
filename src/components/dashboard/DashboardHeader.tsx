@@ -5,9 +5,10 @@ import { useUser } from "@/contexts/UserContext";
 import { format } from 'date-fns';
 import { 
   exportDashboardData, 
-  refreshDashboardData
+  refreshDashboardData,
+  generateWeeklyReview,
+  getRefreshStatus
 } from "@/utils/dashboard";
-import { generateWeeklyReview, getRefreshStatus } from "@/utils/dashboard/weeklyReviewUtils";
 
 // Import refactored components
 import DashboardHeading from "./header/DashboardHeading";
@@ -66,9 +67,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     setIsRefreshing(true);
     try {
       // Wrap the function in a Promise if it doesn't return one
-      await refreshDashboardData(() => {
+      await refreshDashboardData(async () => {
         refreshDashboardContent();
-        return Promise.resolve();
+        return Promise.resolve({});
       });
     } finally {
       setIsRefreshing(false);

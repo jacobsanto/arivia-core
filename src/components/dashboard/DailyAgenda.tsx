@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
@@ -78,7 +79,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
-    resetSwipeHint();
+    resetSwipeHint(); // Call without arguments
   };
 
   const handleTaskClick = (task: CombinedTask) => {

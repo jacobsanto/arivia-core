@@ -1,10 +1,9 @@
 
 import { toastService } from '@/services/toast';
-import { formatMetricsForExport, prepareExportData } from '@/utils/dashboard';
+import { formatMetricsForExport, prepareDashboardExportData } from '@/utils/dashboard';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-
-export type ExportFormat = 'csv' | 'excel' | 'pdf';
+import { ExportFormat, ExportSection } from '@/components/dashboard/ExportConfigDialog';
 
 /**
  * Exports dashboard data in the specified format
@@ -13,7 +12,7 @@ export const exportDashboardData = async (
   dashboardData: any,
   propertyFilter: string = 'all',
   format: ExportFormat = 'csv',
-  sections: string[] = ['properties', 'tasks', 'maintenance', 'bookings']
+  sections: ExportSection[] = ['properties', 'tasks', 'maintenance', 'bookings']
 ): Promise<boolean> => {
   if (!dashboardData) {
     toastService.error('Export failed', {
@@ -28,7 +27,7 @@ export const exportDashboardData = async (
   
   try {
     // Prepare the data for export
-    const exportData = prepareExportData(dashboardData, sections);
+    const exportData = prepareDashboardExportData(dashboardData, sections);
     
     // Convert object to array for export
     const dataArray = Object.entries(exportData).flatMap(([section, items]) => {

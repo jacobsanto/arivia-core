@@ -2,7 +2,8 @@
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from "./toast.types";
 import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
-import { ReactElement } from "react";
+import * as React from "react";
+import type { ToastActionElement } from "@/components/ui/toast";
 
 export class ShadcnToastService implements IToastService {
   show(title: string, options?: ToastOptions): ToastId {
@@ -77,17 +78,17 @@ export class ShadcnToastService implements IToastService {
 
   dismiss(id?: ToastId): void {
     if (id) {
-      // Use static method instead of instance property
-      toast.dismiss(id as string);
+      // Use the static toast.dismiss method instead
+      toast.dismiss(id);
     } else {
       toast.dismiss();
     }
   }
 
   // Helper method to convert ReactNode to ToastAction component
-  private convertToToastAction(action: React.ReactNode): ReactElement | undefined {
+  private convertToToastAction(action: React.ReactNode): ToastActionElement | undefined {
     if (!action) return undefined;
-    if (React.isValidElement(action)) return action as ReactElement;
+    if (React.isValidElement(action)) return action as ToastActionElement;
     
     // If it's not a valid React element, we can't use it in the toast
     console.warn("Invalid toast action provided. Must be a valid React element.");
