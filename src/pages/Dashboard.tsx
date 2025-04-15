@@ -1,5 +1,5 @@
 
-import React, { useMemo, Suspense } from "react";
+import React, { useMemo, Suspense, useCallback } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import MobileDashboard from "@/components/dashboard/MobileDashboard";
@@ -52,13 +52,18 @@ const Dashboard: React.FC = () => {
   
   const isMobile = useIsMobile();
 
+  // Optimize refresh callback with useCallback
+  const handleRefresh = useCallback(() => {
+    return refreshDashboard();
+  }, [refreshDashboard]);
+
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
     if (error) {
       return (
         <DashboardErrorFallback 
           error={error} 
-          onRetry={refreshDashboard} 
+          onRetry={handleRefresh} 
         />
       );
     }
@@ -70,25 +75,25 @@ const Dashboard: React.FC = () => {
     return isMobile ? (
       <MobileDashboard 
         dashboardData={dashboardData} 
-        onRefresh={refreshDashboard} 
+        onRefresh={handleRefresh} 
       />
     ) : (
       <DashboardContent dashboardData={dashboardData} />
     );
-  }, [dashboardData, isMobile, isLoading, error, refreshDashboard]);
+  }, [dashboardData, isMobile, isLoading, error, handleRefresh]);
 
   return (
     <>
       <Helmet>
         <title>Dashboard - Arivia Villas</title>
       </Helmet>
-      <div className="space-y-6">
+      <div className="space-y-6 pb-8">
         <DashboardHeader 
           selectedProperty={selectedProperty}
           onPropertyChange={handlePropertyChange}
           dateRange={dateRange}
           onDateRangeChange={handleDateRangeChange}
-          refreshDashboardContent={refreshDashboard}
+          refreshDashboardContent={handleRefresh}
           dashboardData={dashboardData}
           isLoading={isLoading}
         />

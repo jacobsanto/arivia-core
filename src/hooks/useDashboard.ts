@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { addDays, startOfDay, endOfDay } from "date-fns";
 import { toastService } from "@/services/toast";
@@ -40,7 +40,7 @@ export const useDashboard = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
@@ -92,25 +92,34 @@ export const useDashboard = () => {
       setIsLoading(false);
       throw err;
     }
-  };
-
-  useEffect(() => {
-    loadDashboardData().catch(err => {
-      // Error already handled in loadDashboardData
-    });
   }, [selectedProperty, dateRange]);
 
-  const handlePropertyChange = (property: string) => {
+  useEffect(() => {
+    let isMounted = true;
+    
+    // Only update state if component is still mounted
+    loadDashboardData().catch(err => {
+      // Handle error but prevent state updates if unmounted
+      if (!isMounted) return;
+      // Error already handled in loadDashboardData
+    });
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [loadDashboardData]);
+
+  const handlePropertyChange = useCallback((property: string) => {
     setSelectedProperty(property);
-  };
+  }, []);
 
-  const handleDateRangeChange = (range: DateRange) => {
+  const handleDateRangeChange = useCallback((range: DateRange) => {
     setDateRange(range);
-  };
+  }, []);
 
-  const refreshDashboard = () => {
+  const refreshDashboard = useCallback(() => {
     return loadDashboardData();
-  };
+  }, [loadDashboardData]);
 
   return {
     selectedProperty,

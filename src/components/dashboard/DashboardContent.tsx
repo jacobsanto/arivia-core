@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import DashboardMetrics from "@/components/dashboard/DashboardMetrics";
 import TasksSchedule from "@/components/dashboard/TasksSchedule";
 import DailyAgenda from "@/components/dashboard/DailyAgenda";
@@ -37,7 +37,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       <div className="w-full">
         <Tabs defaultValue="daily" className="w-full" onValueChange={setSelectedTab}>
           <div className="flex items-center justify-between mb-4">
-            <TabsList>
+            <TabsList className="shadow-sm">
               <TabsTrigger value="daily" className="flex items-center gap-2">
                 <CalendarClock className="h-4 w-4" />
                 <span className="hidden sm:inline">Daily Agenda</span>
@@ -70,4 +70,5 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   );
 };
 
-export default DashboardContent;
+// Optimize rendering with memo
+export default memo(DashboardContent);

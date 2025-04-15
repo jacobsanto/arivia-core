@@ -1,7 +1,6 @@
 
 // Re-export the toast service and implementation switcher
-import { toastService } from './toast.service.tsx';
-import { setToastImplementation } from './toast.service.tsx';
+import { toastService, setToastImplementation } from './toast.service.tsx';
 
 // Re-export the service implementations for direct access if needed
 import { SonnerToastService } from './sonner-toast.service';

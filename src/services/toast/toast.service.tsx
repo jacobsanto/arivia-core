@@ -1,134 +1,96 @@
 
-import { SonnerToastService } from './sonner-toast.service';
-import { ShadcnToastService } from './shadcn-toast.service';
 import { IToastService, ToastId, ToastOptions, LoadingToastOptions } from './toast.types';
+import { ShadcnToastService } from './shadcn-toast.service';
+import { SonnerToastService } from './sonner-toast.service';
+
+// Default implementation
+let currentToastImplementation: IToastService = new SonnerToastService();
+
+// Allow switching implementations at runtime
+export const setToastImplementation = (implementation: IToastService): void => {
+  currentToastImplementation = implementation;
+};
 
 /**
- * ToastService is a unified service for displaying toast notifications
- * It supports both Sonner and Shadcn/ui toast implementations
+ * Singleton toast service that delegates to the current implementation
  */
-class ToastService implements IToastService {
-  private implementation: IToastService;
-  private static defaultDuration = 5000; // 5 seconds default duration
-
+export const toastService: IToastService = {
   /**
-   * Constructor for the ToastService
-   * @param useSonner Whether to use Sonner (true) or Shadcn/ui (false)
+   * Show a default toast notification
+   * @param title The main message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  constructor(useSonner: boolean = true) {
-    this.implementation = useSonner 
-      ? new SonnerToastService() 
-      : new ShadcnToastService();
-  }
+  show(title: string, options?: ToastOptions): ToastId {
+    return currentToastImplementation.show(title, options);
+  },
 
   /**
-   * Switch the toast implementation at runtime
-   * @param useSonner Whether to use Sonner (true) or Shadcn/ui (false)
+   * Show a success toast notification
+   * @param title The success message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  public switchImplementation(useSonner: boolean): void {
-    this.implementation = useSonner 
-      ? new SonnerToastService() 
-      : new ShadcnToastService();
-  }
+  success(title: string, options?: ToastOptions): ToastId {
+    return currentToastImplementation.success(title, options);
+  },
 
   /**
-   * Displays a default toast notification
-   * @param title The title of the toast
-   * @param options Toast options
+   * Show an error toast notification
+   * @param title The error message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  public show(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.show(title, mergedOptions);
-  }
+  error(title: string, options?: ToastOptions): ToastId {
+    return currentToastImplementation.error(title, options);
+  },
 
   /**
-   * Displays a success toast notification
-   * @param title The title of the toast
-   * @param options Toast options
+   * Show a warning toast notification
+   * @param title The warning message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  public success(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.success(title, mergedOptions);
-  }
+  warning(title: string, options?: ToastOptions): ToastId {
+    return currentToastImplementation.warning(title, options);
+  },
 
   /**
-   * Displays a warning toast notification
-   * @param title The title of the toast
-   * @param options Toast options
+   * Show an info toast notification
+   * @param title The info message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  public warning(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.warning(title, mergedOptions);
-  }
+  info(title: string, options?: ToastOptions): ToastId {
+    return currentToastImplementation.info(title, options);
+  },
 
   /**
-   * Displays an error toast notification
-   * @param title The title of the toast
-   * @param options Toast options
+   * Show a loading toast notification
+   * @param title The loading message to display
+   * @param options Additional configuration options
+   * @returns A unique identifier for the toast
    */
-  public error(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.error(title, mergedOptions);
-  }
+  loading(title: string, options?: LoadingToastOptions): ToastId {
+    return currentToastImplementation.loading(title, options);
+  },
 
   /**
-   * Displays a loading toast notification
-   * @param title The title of the toast
-   * @param options Toast options
-   * @returns The toast ID that can be used to dismiss or update the toast
-   */
-  public loading(title: string, options?: LoadingToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.loading(title, mergedOptions);
-  }
-
-  /**
-   * Displays an info toast notification
-   * @param title The title of the toast
-   * @param options Toast options
-   */
-  public info(title: string, options?: ToastOptions): ToastId {
-    const mergedOptions = this.applyDefaultOptions(options);
-    return this.implementation.info(title, mergedOptions);
-  }
-
-  /**
-   * Updates an existing toast notification
+   * Update an existing toast notification
    * @param id The ID of the toast to update
-   * @param title The new title
-   * @param options The new options
+   * @param title The updated message to display
+   * @param options Additional configuration options
    */
-  public update(id: ToastId, title: string, options?: ToastOptions): void {
-    const mergedOptions = this.applyDefaultOptions(options);
-    this.implementation.update(id, title, mergedOptions);
-  }
+  update(id: ToastId, title: string, options?: ToastOptions): void {
+    currentToastImplementation.update(id, title, options);
+  },
 
   /**
-   * Dismisses a specific toast or all toasts
+   * Dismiss one or all toast notifications
    * @param id The ID of the toast to dismiss, or undefined to dismiss all
    */
-  public dismiss(id?: ToastId): void {
-    this.implementation.dismiss(id);
+  dismiss(id?: ToastId): void {
+    currentToastImplementation.dismiss(id);
   }
-
-  /**
-   * Apply default options to toast options
-   * @param options User-provided options
-   * @returns Options with defaults applied
-   */
-  private applyDefaultOptions<T extends ToastOptions | LoadingToastOptions>(options?: T): T {
-    return {
-      duration: ToastService.defaultDuration,
-      ...options,
-    } as T;
-  }
-}
-
-// Create and export a singleton instance
-export const toastService = new ToastService(true); // Using Sonner by default
-
-// Convenience method to switch between toast implementations
-export const setToastImplementation = (useSonner: boolean): IToastService => {
-  const service = new ToastService(useSonner);
-  return service;
 };
+
