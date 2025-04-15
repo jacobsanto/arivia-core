@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ChevronDown } from "lucide-react";
 import { addDays } from 'date-fns';
@@ -9,6 +10,7 @@ import { AnimatePresence } from "framer-motion";
 import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePullToRefresh } from '@/hooks/usePullToRefresh';
+import { useSwipeHint } from '@/hooks/useSwipeHint';
 import AgendaHeader from './agenda/AgendaHeader';
 import AgendaContent from './agenda/AgendaContent';
 import { 
@@ -22,23 +24,18 @@ import {
 interface DailyAgendaProps {
   housekeepingTasks: Task[];
   maintenanceTasks: MaintenanceTask[];
+  onRefresh?: () => void;
 }
 
 export const DailyAgenda: React.FC<DailyAgendaProps> = ({
   housekeepingTasks,
-  maintenanceTasks
+  maintenanceTasks,
+  onRefresh
 }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showSwipeHint, setShowSwipeHint] = useState<boolean>(true);
+  const { showSwipeHint, resetSwipeHint } = useSwipeHint();
   const isMobile = useIsMobile();
   
-  useEffect(() => {
-    const hasSeenSwipeHint = localStorage.getItem('seen_swipe_hint') === 'true';
-    if (hasSeenSwipeHint) {
-      setShowSwipeHint(false);
-    }
-  }, []);
-
   const combinedTasks: CombinedTask[] = combineTasks(housekeepingTasks, maintenanceTasks);
   const tasksForSelectedDate = filterTasksForSelectedDate(combinedTasks, selectedDate);
   const sortedTasks = sortTasksByTime(tasksForSelectedDate);
@@ -46,7 +43,9 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
 
   const { pullMoveY, isRefreshing, contentRef, handlers } = usePullToRefresh({
     onRefresh: () => {
-      console.log("Refreshing tasks data...");
+      if (onRefresh) {
+        onRefresh();
+      }
     }
   });
 
@@ -70,23 +69,18 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
     swipeTouchEnd();
   };
 
-  const hideSwipeHint = () => {
-    setShowSwipeHint(false);
-    localStorage.setItem('seen_swipe_hint', 'true');
-  };
-
   const navigateToDay = (direction: 'next' | 'prev') => {
     setSelectedDate(prevDate => 
       direction === 'next' ? addDays(prevDate, 1) : addDays(prevDate, -1)
     );
     
     if (showSwipeHint) {
-      hideSwipeHint();
+      resetSwipeHint();
     }
   };
 
   const handleTaskClick = (task: CombinedTask) => {
-    console.log("Task clicked:", task.title);
+    // Task click handler - empty by design, actual implementation in AgendaTask
   };
 
   const [swipeDirection, setSwipeDirection] = useState<number>(0);
@@ -126,7 +120,7 @@ export const DailyAgenda: React.FC<DailyAgendaProps> = ({
         
         <CardContent 
           ref={contentRef}
-          className="px-3 overflow-y-auto max-h-[500px]"
+          className="px-3 overflow-y-auto max-h-[500px] pb-6"
           style={{ transform: pullMoveY > 0 ? `translateY(${pullMoveY}px)` : 'none' }}
         >
           <AnimatePresence initial={false} mode="wait" custom={swipeDirection}>

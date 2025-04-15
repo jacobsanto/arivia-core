@@ -39,7 +39,6 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
       }
       setIsTaskDetailOpen(true);
     } catch (error) {
-      console.error("Error loading task details:", error);
       toast.error("Could not load task details");
     }
   };
@@ -83,14 +82,22 @@ export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
   return (
     <>
       <div 
-        className="flex items-center p-2 rounded-md border hover:bg-secondary/50 active:bg-secondary cursor-pointer transition-colors"
+        className="flex items-center p-3 rounded-md border hover:bg-secondary/50 active:bg-secondary cursor-pointer transition-colors my-1"
         onClick={handleTaskClick}
+        role="button"
+        tabIndex={0}
+        aria-label={`Task: ${cleanTaskTitle} at ${taskTime}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleTaskClick();
+          }
+        }}
       >
-        <div className="min-w-[45px] text-2xs md:text-xs text-muted-foreground">
+        <div className="min-w-[50px] text-xs md:text-sm text-muted-foreground">
           {taskTime}
         </div>
-        <div className="flex-1 ml-2 mr-1">
-          <div className="font-medium text-sm line-clamp-1">{cleanTaskTitle}</div>
+        <div className="flex-1 ml-3 mr-2">
+          <div className="font-medium text-sm md:text-base line-clamp-1">{cleanTaskTitle}</div>
           <div className="text-2xs md:text-xs text-muted-foreground line-clamp-1">{task.property}</div>
         </div>
         <div className="ml-auto">

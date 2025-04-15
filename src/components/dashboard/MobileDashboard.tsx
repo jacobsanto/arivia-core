@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import DashboardMetrics from "./DashboardMetrics";
-import { Button } from "@/components/ui/button";
-import { Calendar, CalendarClock, CalendarDays } from "lucide-react";
+import { Calendar, CalendarClock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 import DailyAgenda from "./DailyAgenda";
@@ -18,9 +17,10 @@ import MobileDashboardActions from "./mobile/MobileDashboardActions";
 
 interface MobileDashboardProps {
   dashboardData: any;
+  onRefresh?: () => void;
 }
 
-const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
+const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData, onRefresh }) => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState<string>("today");
   const [showSwipeHint, setShowSwipeHint] = useState(true);
@@ -69,6 +69,13 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
     }
   }, []);
 
+  const handleRefresh = () => {
+    if (onRefresh) {
+      onRefresh();
+      toast.success("Dashboard updated");
+    }
+  };
+
   return (
     <div 
       className="space-y-4 relative"
@@ -92,11 +99,11 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
       {/* Tabs for Today's Agenda and Quick Actions */}
       <Tabs defaultValue="today" className="w-full" value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="w-full grid grid-cols-2">
-          <TabsTrigger value="today" className="flex items-center gap-2">
+          <TabsTrigger value="today" className="flex items-center gap-2 py-2.5">
             <CalendarClock className="h-4 w-4" />
             <span>Today</span>
           </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2">
+          <TabsTrigger value="actions" className="flex items-center gap-2 py-2.5">
             <Calendar className="h-4 w-4" />
             <span>Actions</span>
           </TabsTrigger>
@@ -128,6 +135,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({ dashboardData }) => {
           <DailyAgenda 
             housekeepingTasks={dashboardData.housekeepingTasks || []}
             maintenanceTasks={dashboardData.maintenanceTasks || []}
+            onRefresh={handleRefresh}
           />
         </TabsContent>
         
