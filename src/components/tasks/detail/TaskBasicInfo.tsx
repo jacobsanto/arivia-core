@@ -53,7 +53,7 @@ const TaskBasicInfo = ({ task }: TaskBasicInfoProps) => {
         </div>
         <div>
           <span className="text-muted-foreground">Assignee:</span>{" "}
-          {task.assignee}
+          {task.assignedTo}
         </div>
       </div>
     </div>

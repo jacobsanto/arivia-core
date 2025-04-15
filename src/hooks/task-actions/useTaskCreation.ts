@@ -23,12 +23,15 @@ export const useTaskCreation = (
       checklist = data.checklist || getCleaningChecklist(data.cleaningType || "Standard");
     }
     
+    // Create a unique ID (using string since our Task interface uses string IDs now)
+    const newId = Math.max(...tasks.map(t => parseInt(t.id) || 0), 0) + 1;
+    
     // Create the base task
     const newTask = {
       ...taskData,
       type: "Housekeeping",
-      id: Math.max(...tasks.map(t => t.id), 0) + 1,
-      status: "Pending",
+      id: newId.toString(), // Convert to string
+      status: "Pending" as const,
       approvalStatus: null,
       rejectionReason: null,
       photos: [],
@@ -53,16 +56,18 @@ export const useTaskCreation = (
         const cleaningDate = new Date(cleaningDetails.scheduledCleanings[i]);
         const cleaningType = i % 2 === 1 ? "Linen & Towel Change" : "Full";
         
+        const additionalId = Math.max(...tasks.map(t => parseInt(t.id) || 0), 0) + 1 + i;
+        
         const additionalTask = {
           ...taskData,
           title: `${cleaningType} - ${data.property}`,
           type: "Housekeeping",
-          id: Math.max(...tasks.map(t => t.id), 0) + 1 + i,
-          status: "Pending",
+          id: additionalId.toString(), // Convert to string
+          status: "Pending" as const,
           approvalStatus: null,
           rejectionReason: null,
           photos: [],
-          dueDate: cleaningDate,
+          dueDate: cleaningDate.toISOString(), // Convert to string
           checklist: getCleaningChecklist(cleaningType),
           cleaningDetails: {
             ...cleaningDetails,

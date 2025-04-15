@@ -29,7 +29,7 @@ export const filterTasks = (
     const matchesCleaningType = 
       cleaningTypeFilter === "all" || 
       !task.cleaningDetails || 
-      task.cleaningDetails.cleaningType === cleaningTypeFilter;
+      (task.cleaningDetails && task.cleaningDetails.cleaningType === cleaningTypeFilter);
 
     return matchesSearch && matchesTab && matchesProperty && matchesType && matchesCleaningType;
   });

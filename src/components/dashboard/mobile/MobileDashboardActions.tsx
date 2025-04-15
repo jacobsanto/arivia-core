@@ -1,8 +1,16 @@
 
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { NavigateFunction } from "react-router-dom";
-import { Calendar, Wrench, Package, PieChart, BedDouble } from "lucide-react";
+import { NavigateFunction } from 'react-router-dom';
+import { 
+  Broom, 
+  Hammer, 
+  ShoppingCart, 
+  FileSpreadsheet, 
+  CalendarDays,
+  Users
+} from "lucide-react";
 
 interface MobileDashboardActionsProps {
   onCreateCleaningTask: () => void;
@@ -15,74 +23,65 @@ const MobileDashboardActions: React.FC<MobileDashboardActionsProps> = ({
   onCreateMaintenanceTask,
   navigate
 }) => {
-  return (
-    <div className="grid grid-cols-2 gap-3">
-      {/* Quick access buttons */}
-      <ActionButton 
-        icon={<Calendar className="h-4 w-4 text-blue-600" />}
-        label="View Tasks"
-        onClick={() => navigate('/housekeeping')}
-        bgColor="bg-blue-100"
-      />
-      
-      <ActionButton 
-        icon={<Wrench className="h-4 w-4 text-amber-600" />}
-        label="Maintenance"
-        onClick={() => navigate('/maintenance')}
-        bgColor="bg-amber-100"
-      />
-      
-      {/* New task creation buttons */}
-      <ActionButton 
-        icon={<BedDouble className="h-4 w-4 text-blue-600" />}
-        label="New Cleaning Task"
-        onClick={onCreateCleaningTask}
-        bgColor="bg-blue-100"
-      />
-      
-      <ActionButton 
-        icon={<Wrench className="h-4 w-4 text-amber-600" />}
-        label="New Maintenance Task"
-        onClick={onCreateMaintenanceTask}
-        bgColor="bg-amber-100"
-      />
-      
-      <ActionButton 
-        icon={<Package className="h-4 w-4 text-green-600" />}
-        label="Inventory"
-        onClick={() => navigate('/inventory')}
-        bgColor="bg-green-100"
-      />
-      
-      <ActionButton 
-        icon={<PieChart className="h-4 w-4 text-purple-600" />}
-        label="Reports"
-        onClick={() => navigate('/reports')}
-        bgColor="bg-purple-100"
-      />
-    </div>
-  );
-};
+  const actionItems = [
+    {
+      icon: <Broom className="h-5 w-5" />,
+      label: "New Cleaning Task",
+      onClick: onCreateCleaningTask,
+      color: "bg-purple-100 text-purple-800"
+    },
+    {
+      icon: <Hammer className="h-5 w-5" />,
+      label: "New Maintenance",
+      onClick: onCreateMaintenanceTask,
+      color: "bg-emerald-100 text-emerald-800" 
+    },
+    {
+      icon: <ShoppingCart className="h-5 w-5" />,
+      label: "Inventory",
+      onClick: () => navigate('/inventory'),
+      color: "bg-blue-100 text-blue-800"
+    },
+    {
+      icon: <FileSpreadsheet className="h-5 w-5" />,
+      label: "My Reports",
+      onClick: () => navigate('/reports'),
+      color: "bg-amber-100 text-amber-800"
+    },
+    {
+      icon: <CalendarDays className="h-5 w-5" />,
+      label: "Calendar View",
+      onClick: () => navigate('/calendar'),
+      color: "bg-indigo-100 text-indigo-800"
+    },
+    {
+      icon: <Users className="h-5 w-5" />,
+      label: "Team Members",
+      onClick: () => navigate('/team'),
+      color: "bg-rose-100 text-rose-800"
+    }
+  ];
 
-interface ActionButtonProps {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  bgColor: string;
-}
-
-const ActionButton: React.FC<ActionButtonProps> = ({ icon, label, onClick, bgColor }) => {
   return (
-    <Button 
-      variant="outline" 
-      className="border-dashed border-2 h-20 flex flex-col items-center justify-center gap-1 hover:bg-muted/50 transition-colors"
-      onClick={onClick}
-    >
-      <div className={`w-8 h-8 rounded-full ${bgColor} flex items-center justify-center`}>
-        {icon}
-      </div>
-      <span className="text-xs">{label}</span>
-    </Button>
+    <Card>
+      <CardContent className="p-4">
+        <div className="grid grid-cols-2 gap-3">
+          {actionItems.map((item, index) => (
+            <Button
+              key={index}
+              variant="outline"
+              className={`h-auto py-6 flex flex-col items-center justify-center gap-3 ${item.color} border-none`}
+              onClick={item.onClick}
+            >
+              <div className="bg-white p-3 rounded-full shadow-sm">
+                {item.icon}
+              </div>
+              <span className="text-sm font-medium">{item.label}</span>
+            </Button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

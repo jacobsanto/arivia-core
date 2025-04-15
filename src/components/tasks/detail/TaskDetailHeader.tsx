@@ -16,7 +16,7 @@ const TaskDetailHeader = ({
       <div className="space-y-1">
         <CardTitle className="text-xl">{task.title}</CardTitle>
         <CardDescription>
-          {task.type}
+          {task.type || "Housekeeping"}
         </CardDescription>
       </div>
     </div>;

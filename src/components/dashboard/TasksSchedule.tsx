@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,16 +7,7 @@ import { isSameDay } from "date-fns";
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-interface CombinedTask {
-  id: number;
-  title: string;
-  type: string;
-  dueDate: string;
-  priority: string;
-  property: string;
-  taskType: "housekeeping" | "maintenance";
-}
+import { CombinedTask } from "./agenda/agendaUtils";
 
 interface TasksScheduleProps {
   housekeepingTasks: Task[];
@@ -35,19 +25,21 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({
     ...housekeepingTasks.map(task => ({
       id: task.id,
       title: task.title,
-      type: task.type,
+      type: task.type || "Housekeeping",
       dueDate: task.dueDate,
       priority: task.priority,
       property: task.property,
+      status: task.status,
       taskType: "housekeeping" as const
     })),
     ...maintenanceTasks.map(task => ({
-      id: task.id,
+      id: task.id.toString(),
       title: task.title,
       type: "Maintenance",
       dueDate: task.dueDate,
       priority: task.priority,
       property: task.property,
+      status: task.status,
       taskType: "maintenance" as const
     }))
   ];

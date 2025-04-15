@@ -82,7 +82,7 @@ const TaskCard = ({ task, onClick, onComplete, onReject }: TaskCardProps) => {
         <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row justify-between items-center'}`}>
           <TaskCardHeader 
             title={task.title}
-            type={task.type}
+            type={task.type || "Housekeeping"}
             approvalStatus={task.approvalStatus}
             property={task.property}
           />

@@ -1,23 +1,21 @@
 
 /**
- * Extracts task name without villa name and "at" prefix
- * @param title Original task title
- * @param propertyName Property/villa name to remove
- * @returns Cleaned task title
+ * Extracts a clean task title by removing the property name from it if it exists
+ * Example: "Villa Caldera Cleaning" => "Cleaning" when property is "Villa Caldera"
  */
-export const getTaskNameWithoutVilla = (title: string, propertyName: string): string => {
-  let cleanTitle = title;
-  
-  // Remove property name if it appears in the title
-  if (cleanTitle.includes(propertyName)) {
-    cleanTitle = cleanTitle.replace(`${propertyName} `, '').replace(`${propertyName}`, '');
+export const getTaskNameWithoutVilla = (title: string, property: string): string => {
+  // If the title starts with the property name, remove it
+  if (title.startsWith(property)) {
+    return title.substring(property.length).trim();
   }
   
-  // Remove "at" if it appears at the beginning of the title after cleanup
-  cleanTitle = cleanTitle.trim();
-  if (cleanTitle.toLowerCase().startsWith('at ')) {
-    cleanTitle = cleanTitle.substring(3);
+  // Handle case where property name is within the title but not at the start
+  const propertyIndex = title.indexOf(property);
+  if (propertyIndex > -1) {
+    const beforeProperty = title.substring(0, propertyIndex).trim();
+    const afterProperty = title.substring(propertyIndex + property.length).trim();
+    return `${beforeProperty} ${afterProperty}`.trim();
   }
   
-  return cleanTitle.trim();
+  return title;
 };

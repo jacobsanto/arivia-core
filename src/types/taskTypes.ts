@@ -2,7 +2,7 @@
 import { z } from "zod";
 
 export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
-export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected';
+export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected' | null;
 
 export interface ChecklistItem {
   id: number;
@@ -10,12 +10,24 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
+export interface CleaningDetails {
+  roomType: string;
+  bedCount: number;
+  bathCount: number;
+  estimatedTime: number;
+  cleaningType?: string;
+  stayDuration?: number;
+  guestCheckIn?: string;
+  guestCheckOut?: string;
+  scheduledCleanings?: string[];
+}
+
 export interface Task {
   id: string;
   title: string;
   property: string;
   assignedTo: string;
-  dueDate: Date;
+  dueDate: string; // Changed from Date to string for compatibility
   status: TaskStatus;
   priority: 'Low' | 'Medium' | 'High';
   description: string;
@@ -23,13 +35,9 @@ export interface Task {
   photos?: string[];
   location?: string;
   approvalStatus: ApprovalStatus;
-  rejectionReason?: string;
-  cleaningDetails?: {
-    roomType: string;
-    bedCount: number;
-    bathCount: number;
-    estimatedTime: number;
-  };
+  rejectionReason?: string | null;
+  cleaningDetails?: CleaningDetails;
+  type?: string; // Added type field as it's used in many places
 }
 
 export interface CleaningTaskFormValues {

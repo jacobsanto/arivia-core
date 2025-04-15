@@ -4,7 +4,7 @@ import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { isSameDay } from "date-fns";
 
 export interface CombinedTask {
-  id: number;
+  id: string; // Changed to string to match Task
   title: string;
   type: string;
   dueDate: string;
@@ -22,7 +22,7 @@ export const combineTasks = (
     ...housekeepingTasks.map(task => ({
       id: task.id,
       title: task.title,
-      type: task.type,
+      type: task.type || "Housekeeping", // Use optional chaining to handle undefined
       dueDate: task.dueDate,
       priority: task.priority,
       property: task.property,
@@ -30,7 +30,7 @@ export const combineTasks = (
       taskType: "housekeeping" as const
     })),
     ...maintenanceTasks.map(task => ({
-      id: task.id,
+      id: task.id.toString(), // Convert to string
       title: task.title,
       type: "Maintenance",
       dueDate: task.dueDate,

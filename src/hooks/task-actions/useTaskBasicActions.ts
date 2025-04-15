@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Task } from "@/types/taskTypes";
+import { Task, TaskStatus, ApprovalStatus } from "@/types/taskTypes";
 import { toastService } from "@/services/toast";
 
 export const useTaskBasicActions = (
@@ -23,8 +23,8 @@ export const useTaskBasicActions = (
         if (task.id === selectedTask.id) {
           return {
             ...task, 
-            status: "Completed",
-            approvalStatus: "Pending" as const
+            status: "Completed" as TaskStatus,
+            approvalStatus: "Pending" as ApprovalStatus
           };
         }
         return task;
@@ -33,8 +33,8 @@ export const useTaskBasicActions = (
       setTasks(updatedTasks);
       setSelectedTask({
         ...selectedTask,
-        status: "Completed",
-        approvalStatus: "Pending"
+        status: "Completed" as TaskStatus,
+        approvalStatus: "Pending" as ApprovalStatus
       });
       
       toastService.success(`Task "${selectedTask.title}" marked as complete and awaiting approval!`);

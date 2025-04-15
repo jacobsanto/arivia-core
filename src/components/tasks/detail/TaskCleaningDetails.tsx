@@ -35,8 +35,8 @@ const TaskCleaningDetails = ({ cleaningDetails }: TaskCleaningDetailsProps) => {
       <div className="grid gap-2">
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Type:</span>
-          <Badge className={`${getBadgeColor(cleaningDetails.cleaningType)}`}>
-            {cleaningDetails.cleaningType}
+          <Badge className={`${getBadgeColor(cleaningDetails.cleaningType || "Standard")}`}>
+            {cleaningDetails.cleaningType || "Standard"}
           </Badge>
         </div>
         
