@@ -1,17 +1,18 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogTitle, DialogHeader } from "@/components/ui/dialog";
-import TaskCreationForm from "@/components/tasks/TaskCreationForm";
+import React from 'react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { CleaningTaskFormValues } from "@/types/taskTypes";
+import { MaintenanceFormValues } from "@/components/maintenance/forms/types";
+import CleaningTaskForm from "@/components/tasks/forms/CleaningTaskForm";
 import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceCreationForm";
-import { BedDouble, Wrench } from "lucide-react";
 
 interface TaskCreationDialogsProps {
   isCleaningDialogOpen: boolean;
-  setIsCleaningDialogOpen: (value: boolean) => void;
+  setIsCleaningDialogOpen: (isOpen: boolean) => void;
   isMaintenanceDialogOpen: boolean;
-  setIsMaintenanceDialogOpen: (value: boolean) => void;
-  onCleaningTaskCreate: (data: any) => void;
-  onMaintenanceTaskCreate: (data: any) => void;
+  setIsMaintenanceDialogOpen: (isOpen: boolean) => void;
+  onCleaningTaskCreate: (data: CleaningTaskFormValues) => void;
+  onMaintenanceTaskCreate: (data: MaintenanceFormValues) => void;
 }
 
 const TaskCreationDialogs: React.FC<TaskCreationDialogsProps> = ({
@@ -22,47 +23,47 @@ const TaskCreationDialogs: React.FC<TaskCreationDialogsProps> = ({
   onCleaningTaskCreate,
   onMaintenanceTaskCreate
 }) => {
-  const handleCleaningDialogClose = () => {
+  const handleCleaningTaskSubmit = (data: CleaningTaskFormValues) => {
+    onCleaningTaskCreate(data);
     setIsCleaningDialogOpen(false);
   };
 
-  const handleMaintenanceDialogClose = () => {
+  const handleMaintenanceTaskSubmit = (data: MaintenanceFormValues) => {
+    onMaintenanceTaskCreate(data);
     setIsMaintenanceDialogOpen(false);
   };
 
   return (
     <>
-      {/* Cleaning Task Dialog */}
-      <Dialog open={isCleaningDialogOpen} onOpenChange={setIsCleaningDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <BedDouble className="h-5 w-5 mr-2 text-blue-500" />
-              Create Cleaning Task
-            </DialogTitle>
-          </DialogHeader>
-          <TaskCreationForm 
-            onSubmit={onCleaningTaskCreate} 
-            onCancel={handleCleaningDialogClose} 
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Maintenance Task Dialog */}
-      <Dialog open={isMaintenanceDialogOpen} onOpenChange={setIsMaintenanceDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center">
-              <Wrench className="h-5 w-5 mr-2 text-amber-500" />
-              Create Maintenance Task
-            </DialogTitle>
-          </DialogHeader>
-          <MaintenanceCreationForm 
-            onSubmit={onMaintenanceTaskCreate} 
-            onCancel={handleMaintenanceDialogClose} 
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Cleaning Task Creation */}
+      <Sheet open={isCleaningDialogOpen} onOpenChange={setIsCleaningDialogOpen}>
+        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Create Cleaning Task</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            <CleaningTaskForm 
+              onSubmit={handleCleaningTaskSubmit}
+              onCancel={() => setIsCleaningDialogOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
+      
+      {/* Maintenance Task Creation */}
+      <Sheet open={isMaintenanceDialogOpen} onOpenChange={setIsMaintenanceDialogOpen}>
+        <SheetContent side="bottom" className="h-[85vh] overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Create Maintenance Task</SheetTitle>
+          </SheetHeader>
+          <div className="py-4">
+            <MaintenanceCreationForm 
+              onSubmit={handleMaintenanceTaskSubmit}
+              onCancel={() => setIsMaintenanceDialogOpen(false)}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 };

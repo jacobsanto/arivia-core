@@ -1,37 +1,55 @@
 
+import { z } from "zod";
+
+export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected';
+
 export interface ChecklistItem {
   id: number;
   title: string;
   completed: boolean;
 }
 
-export interface CleaningDetails {
-  cleaningType: "Standard" | "Full" | "Linen & Towel Change";
-  stayDuration?: number; // Number of nights
-  scheduledCleanings?: string[]; // Array of scheduled cleaning dates
-  guestCheckIn?: string; // Check-in date
-  guestCheckOut?: string; // Check-out date
-}
-
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   property: string;
-  type: string;
-  status: string;
-  priority: string;
-  dueDate: string;
-  assignee: string;
+  assignedTo: string;
+  dueDate: Date;
+  status: TaskStatus;
+  priority: 'Low' | 'Medium' | 'High';
   description: string;
-  approvalStatus: "Approved" | "Rejected" | "Pending" | null;
-  rejectionReason: string | null;
-  photos?: string[];
   checklist: ChecklistItem[];
-  // Adding new fields to support more rich task management
-  isRecurring?: boolean;
-  category?: string;
-  estimatedTime?: number; // in minutes
-  actualTime?: number; // in minutes
-  location?: string; // specific location within property
-  cleaningDetails?: CleaningDetails; // For housekeeping specific information
+  photos?: string[];
+  location?: string;
+  approvalStatus: ApprovalStatus;
+  rejectionReason?: string;
+  cleaningDetails?: {
+    roomType: string;
+    bedCount: number;
+    bathCount: number;
+    estimatedTime: number;
+  };
 }
+
+export interface CleaningTaskFormValues {
+  title: string;
+  property: string;
+  roomType: string;
+  dueDate: Date | undefined;
+  assignedTo: string;
+  priority: string;
+  description: string;
+  checklistTemplate?: string;
+}
+
+export const cleaningTaskFormSchema = z.object({
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  property: z.string().min(1, { message: "Property is required" }),
+  roomType: z.string().min(1, { message: "Room type is required" }),
+  dueDate: z.date().optional(),
+  assignedTo: z.string().min(1, { message: "Assignee is required" }),
+  priority: z.string().min(1, { message: "Priority is required" }),
+  description: z.string().optional(),
+  checklistTemplate: z.string().optional()
+});

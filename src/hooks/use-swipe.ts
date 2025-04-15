@@ -1,102 +1,70 @@
 
-import { useState, useRef, TouchEvent } from 'react';
+import { useState } from 'react';
 
-interface SwipeOptions {
-  threshold?: number;
+interface UseSwipeOptions {
   onSwipeLeft?: () => void;
   onSwipeRight?: () => void;
   onSwipeUp?: () => void;
   onSwipeDown?: () => void;
-  onSwipeProgress?: (direction: 'left' | 'right' | 'up' | 'down', progress: number) => void;
+  threshold?: number;
 }
 
-export function useSwipe({
-  threshold = 50,
+export const useSwipe = ({
   onSwipeLeft,
   onSwipeRight,
   onSwipeUp,
   onSwipeDown,
-  onSwipeProgress
-}: SwipeOptions = {}) {
-  const touchStart = useRef<{ x: number; y: number } | null>(null);
-  const touchEnd = useRef<{ x: number; y: number } | null>(null);
-  const [swiping, setSwiping] = useState(false);
-  const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | 'up' | 'down' | null>(null);
+  threshold = 50
+}: UseSwipeOptions) => {
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
+  const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
 
-  const onTouchStart = (e: TouchEvent) => {
-    touchEnd.current = null; // Reset touchEnd
-    touchStart.current = {
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
-    };
-    setSwiping(true);
-    setSwipeDirection(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const touchObj = e.targetTouches[0];
+    setTouchStart({
+      x: touchObj.clientX,
+      y: touchObj.clientY
+    });
   };
 
-  const onTouchMove = (e: TouchEvent) => {
-    if (!touchStart.current) return;
-    
-    touchEnd.current = {
-      x: e.targetTouches[0].clientX,
-      y: e.targetTouches[0].clientY
-    };
-    
-    // Calculate progress for dynamic feedback
-    if (onSwipeProgress && touchStart.current && touchEnd.current) {
-      const deltaX = touchEnd.current.x - touchStart.current.x;
-      const deltaY = touchEnd.current.y - touchStart.current.y;
-      
-      const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-      
-      if (isHorizontalSwipe) {
-        const direction = deltaX > 0 ? 'right' : 'left';
-        const progress = Math.min(Math.abs(deltaX) / threshold, 1);
-        onSwipeProgress(direction, progress);
-        setSwipeDirection(direction);
-      } else {
-        const direction = deltaY > 0 ? 'down' : 'up';
-        const progress = Math.min(Math.abs(deltaY) / threshold, 1);
-        onSwipeProgress(direction, progress);
-        setSwipeDirection(direction);
-      }
-    }
+  const onTouchMove = (e: React.TouchEvent) => {
+    const touchObj = e.targetTouches[0];
+    setTouchEnd({
+      x: touchObj.clientX,
+      y: touchObj.clientY
+    });
   };
 
-  const onTouchEnd = (e: TouchEvent) => {
-    if (!touchStart.current || !touchEnd.current) return;
-    
-    setSwiping(false);
-    
-    const deltaX = touchEnd.current.x - touchStart.current.x;
-    const deltaY = touchEnd.current.y - touchStart.current.y;
-    
-    const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
-    
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+
+    const distanceX = touchStart.x - touchEnd.x;
+    const distanceY = touchStart.y - touchEnd.y;
+    const isHorizontalSwipe = Math.abs(distanceX) > Math.abs(distanceY);
+
     if (isHorizontalSwipe) {
-      if (deltaX > threshold && onSwipeRight) {
-        onSwipeRight();
-      } else if (deltaX < -threshold && onSwipeLeft) {
+      if (distanceX > threshold && onSwipeLeft) {
         onSwipeLeft();
       }
+      if (distanceX < -threshold && onSwipeRight) {
+        onSwipeRight();
+      }
     } else {
-      if (deltaY > threshold && onSwipeDown) {
-        onSwipeDown();
-      } else if (deltaY < -threshold && onSwipeUp) {
+      if (distanceY > threshold && onSwipeUp) {
         onSwipeUp();
       }
+      if (distanceY < -threshold && onSwipeDown) {
+        onSwipeDown();
+      }
     }
-    
-    // Reset after processing
-    touchStart.current = null;
-    touchEnd.current = null;
-    setSwipeDirection(null);
+
+    // Reset
+    setTouchEnd(null);
   };
 
   return {
     onTouchStart,
     onTouchMove,
-    onTouchEnd,
-    swiping,
-    swipeDirection
+    onTouchEnd
   };
-}
+};

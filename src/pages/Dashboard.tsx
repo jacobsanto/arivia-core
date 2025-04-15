@@ -1,11 +1,22 @@
 
-import React, { useMemo } from "react";
+import React, { useMemo, Suspense } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import MobileDashboard from "@/components/dashboard/MobileDashboard";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Helmet } from "react-helmet-async";
+import { Loader2 } from "lucide-react";
+
+// Loader component for better UX during loading states
+const DashboardLoader = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="flex flex-col items-center gap-2">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
+    </div>
+  </div>
+);
 
 const Dashboard = () => {
   const {
@@ -14,22 +25,16 @@ const Dashboard = () => {
     dashboardData,
     handlePropertyChange,
     handleDateRangeChange,
-    refreshDashboard
+    refreshDashboard,
+    isLoading
   } = useDashboard();
+  
   const isMobile = useIsMobile();
 
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
-    // If data is not yet loaded, show loading state
-    if (!dashboardData) {
-      return (
-        <div className="flex items-center justify-center h-64">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
-          </div>
-        </div>
-      );
+    if (isLoading || !dashboardData) {
+      return <DashboardLoader />;
     }
 
     return isMobile ? (
@@ -37,7 +42,7 @@ const Dashboard = () => {
     ) : (
       <DashboardContent dashboardData={dashboardData} />
     );
-  }, [dashboardData, isMobile]);
+  }, [dashboardData, isMobile, isLoading]);
 
   return (
     <>
@@ -52,9 +57,12 @@ const Dashboard = () => {
           onDateRangeChange={handleDateRangeChange}
           refreshDashboardContent={refreshDashboard}
           dashboardData={dashboardData}
+          isLoading={isLoading}
         />
         
-        {dashboardContent}
+        <Suspense fallback={<DashboardLoader />}>
+          {dashboardContent}
+        </Suspense>
       </div>
     </>
   );

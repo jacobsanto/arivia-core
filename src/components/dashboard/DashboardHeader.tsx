@@ -19,6 +19,7 @@ import DashboardFilters from "./header/DashboardFilters";
 import { WeeklyReviewDialog } from "./weekly-review";
 import { ExportConfigDialog, ExportFormat, ExportSection } from "./ExportConfigDialog";
 import { DateRange } from "@/components/reports/DateRangeSelector";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardHeaderProps {
   selectedProperty: string;
@@ -27,6 +28,7 @@ interface DashboardHeaderProps {
   onDateRangeChange: (dateRange: DateRange) => void;
   refreshDashboardContent: () => void;
   dashboardData: any;
+  isLoading?: boolean;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -35,7 +37,8 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   dateRange,
   onDateRangeChange,
   refreshDashboardContent,
-  dashboardData
+  dashboardData,
+  isLoading = false
 }) => {
   const isMobile = useIsMobile();
   const { user } = useUser();
@@ -84,10 +87,11 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           {isSuperAdmin && !isMobile && (
             <ActionButtons
               isExporting={isExporting}
-              isRefreshing={isRefreshing}
+              isRefreshing={isRefreshing || isLoading}
               onExportClick={() => setShowExportConfig(true)}
               onRefreshClick={handleRefreshData}
               onWeeklyReviewClick={handleWeeklyReview}
+              disabled={isLoading}
             />
           )}
         </div>
@@ -100,23 +104,30 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
         )}
       </div>
       
-      <div className="flex flex-col sm:flex-row gap-3 w-full">
-        <DashboardFilters
-          selectedProperty={selectedProperty}
-          onPropertyChange={onPropertyChange}
-          dateRange={dateRange}
-          onDateRangeChange={onDateRangeChange}
-        />
-        
-        {isMobile && isSuperAdmin && (
-          <MobileActionButtons
-            isExporting={isExporting}
-            isRefreshing={isRefreshing}
-            onExportClick={() => setShowExportConfig(true)}
-            onRefreshClick={handleRefreshData}
+      {isLoading ? (
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Skeleton className="h-10 w-full sm:w-1/2" />
+          <Skeleton className="h-10 w-full sm:w-1/2" />
+        </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <DashboardFilters
+            selectedProperty={selectedProperty}
+            onPropertyChange={onPropertyChange}
+            dateRange={dateRange}
+            onDateRangeChange={onDateRangeChange}
           />
-        )}
-      </div>
+          
+          {isMobile && isSuperAdmin && (
+            <MobileActionButtons
+              isExporting={isExporting}
+              isRefreshing={isRefreshing}
+              onExportClick={() => setShowExportConfig(true)}
+              onRefreshClick={handleRefreshData}
+            />
+          )}
+        </div>
+      )}
 
       {/* Weekly Review Dialog */}
       <WeeklyReviewDialog

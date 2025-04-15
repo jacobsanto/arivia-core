@@ -1,8 +1,7 @@
 
 import React from 'react';
-import ExportButton from './ExportButton';
-import RefreshButton from './RefreshButton';
-import WeeklyReviewButton from './WeeklyReviewButton';
+import { Button } from "@/components/ui/button";
+import { Download, RefreshCw, BarChart4 } from "lucide-react";
 
 interface ActionButtonsProps {
   isExporting: boolean;
@@ -10,6 +9,7 @@ interface ActionButtonsProps {
   onExportClick: () => void;
   onRefreshClick: () => void;
   onWeeklyReviewClick: () => void;
+  disabled?: boolean;
 }
 
 const ActionButtons: React.FC<ActionButtonsProps> = ({
@@ -17,13 +17,38 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
   isRefreshing,
   onExportClick,
   onRefreshClick,
-  onWeeklyReviewClick
+  onWeeklyReviewClick,
+  disabled = false
 }) => {
   return (
-    <div className="flex items-center gap-2">
-      <ExportButton isExporting={isExporting} onClick={onExportClick} />
-      <RefreshButton isRefreshing={isRefreshing} onClick={onRefreshClick} />
-      <WeeklyReviewButton onClick={onWeeklyReviewClick} />
+    <div className="flex gap-2">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onExportClick}
+        disabled={isExporting || disabled}
+      >
+        <Download className="h-4 w-4 mr-2" />
+        {isExporting ? 'Exporting...' : 'Export'}
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onRefreshClick}
+        disabled={isRefreshing || disabled}
+      >
+        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+      </Button>
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={onWeeklyReviewClick}
+        disabled={disabled}
+      >
+        <BarChart4 className="h-4 w-4 mr-2" />
+        Weekly Review
+      </Button>
     </div>
   );
 };

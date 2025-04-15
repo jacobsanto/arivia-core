@@ -1,0 +1,105 @@
+
+import { useState, useEffect } from "react";
+import { DateRange } from "@/components/reports/DateRangeSelector";
+import { addDays, startOfDay, endOfDay } from "date-fns";
+import { toast } from "sonner";
+import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
+import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
+
+export interface DashboardData {
+  properties: {
+    total: number;
+    occupied: number;
+    maintenance: number;
+    available: number;
+  };
+  tasks: {
+    total: number;
+    completed: number;
+    inProgress: number;
+    pending: number;
+  };
+  upcomingTasks: Array<any>;
+  housekeepingTasks: Array<any>;
+  maintenanceTasks: Array<any>;
+  quickStats: {
+    occupancyRate: number;
+    avgRating: number;
+    revenueToday: number;
+    pendingCheckouts: number;
+  };
+}
+
+export const useDashboard = () => {
+  const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfDay(new Date()),
+    to: endOfDay(addDays(new Date(), 7))
+  });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const loadDashboardData = async () => {
+    setIsLoading(true);
+    try {
+      // In a real app, this would be an API call
+      // For now, mock data with a delay to simulate API call
+      setTimeout(() => {
+        setDashboardData({
+          properties: {
+            total: 15,
+            occupied: 9,
+            maintenance: 2,
+            available: 4
+          },
+          tasks: {
+            total: 24,
+            completed: 12,
+            inProgress: 8,
+            pending: 4
+          },
+          upcomingTasks: initialHousekeepingTasks.slice(0, 5),
+          housekeepingTasks: initialHousekeepingTasks,
+          maintenanceTasks: initialMaintenanceTasks,
+          quickStats: {
+            occupancyRate: 75,
+            avgRating: 4.8,
+            revenueToday: 2450,
+            pendingCheckouts: 3
+          }
+        });
+        setIsLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error("Failed to load dashboard data", error);
+      toast.error("Failed to load dashboard data");
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [selectedProperty, dateRange]);
+
+  const handlePropertyChange = (property: string) => {
+    setSelectedProperty(property);
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
+  };
+
+  const refreshDashboard = () => {
+    loadDashboardData();
+  };
+
+  return {
+    selectedProperty,
+    dateRange,
+    dashboardData,
+    handlePropertyChange,
+    handleDateRangeChange,
+    refreshDashboard,
+    isLoading
+  };
+};

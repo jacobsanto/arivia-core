@@ -1,63 +1,54 @@
 
-import React from "react";
+import React from 'react';
 import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
+
+type SwipeDirection = 'left' | 'right';
+type SwipeSize = 'sm' | 'md' | 'lg';
+type SwipeVariant = 'ghost' | 'solid';
 
 interface SwipeIndicatorProps {
-  direction: "left" | "right" | "up" | "down";
-  visible?: boolean;
+  direction: SwipeDirection;
+  visible: boolean;
   className?: string;
-  size?: "sm" | "md" | "lg";
-  variant?: "subtle" | "solid";
+  size?: SwipeSize;
+  variant?: SwipeVariant;
 }
 
-export function SwipeIndicator({
+export const SwipeIndicator: React.FC<SwipeIndicatorProps> = ({
   direction,
-  visible = true,
+  visible,
   className,
-  size = "md",
-  variant = "subtle"
-}: SwipeIndicatorProps) {
-  const getIcon = () => {
-    switch (direction) {
-      case "left": return <ChevronLeft className={size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"} />;
-      case "right": return <ChevronRight className={size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"} />;
-      case "up": return <ChevronUp className={size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"} />;
-      case "down": return <ChevronDown className={size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4"} />;
-    }
+  size = 'md',
+  variant = 'ghost'
+}) => {
+  if (!visible) return null;
+  
+  const sizeClasses = {
+    sm: 'p-1',
+    md: 'p-2',
+    lg: 'p-3'
+  };
+  
+  const variantClasses = {
+    ghost: 'bg-transparent text-muted-foreground',
+    solid: 'bg-primary/10 text-primary'
   };
   
   return (
-    <div
+    <div 
       className={cn(
-        "absolute flex items-center justify-center rounded-full text-primary transition-all",
-        {
-          // Size variants
-          "p-0.5": size === "sm",
-          "p-1": size === "md",
-          "p-1.5": size === "lg",
-          
-          // Position variants
-          "left-2": direction === "right",
-          "right-2": direction === "left",
-          "top-2": direction === "down",
-          "bottom-2": direction === "up",
-          
-          // Visibility
-          "opacity-0 scale-90": !visible,
-          "opacity-100 scale-100": visible,
-          
-          // Variant styles
-          "bg-primary/10": variant === "subtle",
-          "bg-primary text-primary-foreground": variant === "solid",
-          
-          // Animation
-          "animate-pulse-swipe": visible
-        },
+        'absolute flex items-center justify-center rounded-full animate-pulse-swipe',
+        sizeClasses[size],
+        variantClasses[variant],
         className
       )}
     >
-      {getIcon()}
+      {direction === 'left' ? (
+        <ChevronsRight className="h-4 w-4" />
+      ) : (
+        <ChevronsLeft className="h-4 w-4" />
+      )}
     </div>
   );
-}
+};
