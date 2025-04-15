@@ -24,8 +24,6 @@ export const adaptGuestyProperty = (guestyProperty: GuestyProperty): Property =>
     max_guests: guestyProperty.accommodates,
     bedrooms: guestyProperty.bedrooms,
     bathrooms: guestyProperty.bathrooms,
-    num_bedrooms: guestyProperty.bedrooms,
-    num_bathrooms: guestyProperty.bathrooms,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
     guesty_id: guestyProperty._id,
