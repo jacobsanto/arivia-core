@@ -11,10 +11,12 @@ export {
   setupAutoRefresh,
   getRefreshStatus
 } from './refreshUtils';
-export {
-  fetchDashboardData,
-  fetchPropertiesData,
-  fetchHousekeepingTasks,
-  fetchMaintenanceTasks,
-  type TaskRecord
-} from './dataFetchUtils';
+
+// Export fetch utilities
+export { fetchDashboardData } from './fetch/dashboardDataFetcher';
+export { fetchPropertiesData } from './fetch/propertyUtils';
+export { fetchHousekeepingTasks } from './fetch/housekeepingUtils';
+export { fetchMaintenanceTasks } from './fetch/maintenanceUtils';
+
+// Export types
+export type { TaskRecord, DashboardData } from './types';

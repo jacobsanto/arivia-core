@@ -3,38 +3,8 @@ import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { startOfDay, endOfDay, addDays } from "date-fns";
 import { toastService } from "@/services/toast";
-import { fetchDashboardData, TaskRecord } from "@/utils/dashboard";
+import { fetchDashboardData, TaskRecord, DashboardData } from "@/utils/dashboard";
 import { refreshDashboardData } from "@/utils/dashboard";
-
-export interface DashboardData {
-  properties: {
-    total: number;
-    occupied: number;
-    vacant: number;
-    maintenance?: number;
-    available?: number;
-  };
-  tasks: {
-    total: number;
-    completed: number;
-    pending: number;
-    inProgress?: number;
-  };
-  maintenance: {
-    total: number;
-    critical: number;
-    standard: number;
-  };
-  upcomingTasks?: TaskRecord[];
-  housekeepingTasks?: TaskRecord[];
-  maintenanceTasks?: TaskRecord[];
-  quickStats?: {
-    occupancyRate: number;
-    avgRating: number;
-    revenueToday: number;
-    pendingCheckouts: number;
-  };
-}
 
 export const useDashboard = () => {
   const [selectedProperty, setSelectedProperty] = useState<string>("all");
