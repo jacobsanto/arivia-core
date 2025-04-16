@@ -132,6 +132,15 @@ export const fetchTodayRevenue = async () => {
   return revenueToday;
 };
 
+// Define a simple type for task records to avoid infinite type instantiation
+type TaskRecord = {
+  id: string;
+  status: string;
+  due_date: string;
+  priority?: string;
+  [key: string]: any;
+};
+
 /**
  * Fetch and assemble complete dashboard data
  */
@@ -159,7 +168,7 @@ export const fetchDashboardData = async (
     ]
       .filter(task => new Date(task.due_date) >= now && task.status !== 'completed')
       .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
-      .slice(0, 5);
+      .slice(0, 5) as TaskRecord[];
     
     // Calculate occupancy rate
     const occupancyRate = propertiesResult.stats.total > 0 

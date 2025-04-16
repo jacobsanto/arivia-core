@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { startOfDay, endOfDay, addDays } from "date-fns";
@@ -25,9 +24,26 @@ export interface DashboardData {
     critical: number;
     standard: number;
   };
-  upcomingTasks?: Array<Record<string, any>>;
-  housekeepingTasks?: Array<Record<string, any>>;
-  maintenanceTasks?: Array<Record<string, any>>;
+  upcomingTasks?: Array<{
+    id: string;
+    status: string;
+    due_date: string;
+    priority?: string;
+    [key: string]: any;
+  }>;
+  housekeepingTasks?: Array<{
+    id: string;
+    status: string;
+    due_date: string;
+    [key: string]: any;
+  }>;
+  maintenanceTasks?: Array<{
+    id: string;
+    status: string;
+    priority: string;
+    due_date: string;
+    [key: string]: any;
+  }>;
   quickStats?: {
     occupancyRate: number;
     avgRating: number;
@@ -47,13 +63,11 @@ export const useDashboard = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
-  // Load dashboard data function
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // Make sure both from and to exist before calling fetchDashboardData
       const safeRange = {
         from: dateRange.from || new Date(),
         to: dateRange.to || new Date()
@@ -72,15 +86,11 @@ export const useDashboard = () => {
     }
   }, [selectedProperty, dateRange]);
 
-  // Effect to load data when dependencies change
   useEffect(() => {
     let isMounted = true;
     
-    // Only update state if component is still mounted
     loadDashboardData().catch(err => {
-      // Handle error but prevent state updates if unmounted
       if (!isMounted) return;
-      // Error already handled in loadDashboardData
     });
     
     return () => {
@@ -88,17 +98,14 @@ export const useDashboard = () => {
     };
   }, [loadDashboardData]);
 
-  // Handler for property selection change
   const handlePropertyChange = useCallback((property: string) => {
     setSelectedProperty(property);
   }, []);
 
-  // Handler for date range change
   const handleDateRangeChange = useCallback((range: DateRange) => {
     setDateRange(range);
   }, []);
 
-  // Refresh dashboard data
   const refreshDashboard = useCallback(() => {
     return refreshDashboardData(loadDashboardData);
   }, [loadDashboardData]);
