@@ -1,6 +1,7 @@
 
 import { financialData, revenueByPropertyData, expenseAnalysisData } from "@/components/reports/analytics/financialData";
 import { occupancyData, monthlyOccupancyData } from "@/components/reports/analytics/occupancyData";
+import { DashboardData } from "@/hooks/useDashboard";
 
 export const getDashboardFinancialData = (selectedProperty: string = "all") => {
   // Filter financial data based on property selection
@@ -54,3 +55,38 @@ export const getDashboardOccupancyData = (selectedProperty: string = "all") => {
   };
 };
 
+/**
+ * Generate mock dashboard data as a fallback when database is empty
+ * This is useful during development or when setting up a new instance
+ */
+export const getDefaultDashboardData = (): DashboardData => {
+  return {
+    properties: {
+      total: 15,
+      occupied: 9,
+      vacant: 4,
+      maintenance: 2,
+      available: 4
+    },
+    tasks: {
+      total: 24,
+      completed: 12,
+      pending: 4,
+      inProgress: 8
+    },
+    maintenance: {
+      total: 14,
+      critical: 3,
+      standard: 11
+    },
+    upcomingTasks: [],
+    housekeepingTasks: [],
+    maintenanceTasks: [],
+    quickStats: {
+      occupancyRate: 75,
+      avgRating: 4.8,
+      revenueToday: 2450,
+      pendingCheckouts: 3
+    }
+  };
+};

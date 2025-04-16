@@ -1,6 +1,8 @@
-
 import { toastService } from '@/services/toast';
 import { ToastId } from '@/services/toast/toast.types';
+
+// Keep track of the last refresh timestamp
+let lastRefreshTimestamp: number = Date.now();
 
 /**
  * Refreshes dashboard data with loading indicator and success message
@@ -32,6 +34,9 @@ export const refreshDashboardData = async (
     // Call the refresh function
     const result = await refreshFn();
     
+    // Update last refresh timestamp
+    lastRefreshTimestamp = Date.now();
+    
     // Show success toast if not silent
     if (!silent) {
       toastService.dismiss(loadingToastId);
@@ -54,6 +59,15 @@ export const refreshDashboardData = async (
     
     return null;
   }
+};
+
+/**
+ * Get the status of the last refresh
+ */
+export const getRefreshStatus = () => {
+  return {
+    lastRefresh: new Date(lastRefreshTimestamp)
+  };
 };
 
 /**
