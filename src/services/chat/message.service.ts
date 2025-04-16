@@ -10,7 +10,7 @@ interface DbChatMessage {
   channel_id: string;
   sender_id: string;
   is_read: boolean;
-  reactions?: Record<string, string[]>;
+  reactions?: Record<string, string[]> | null;
   created_at: string;
   updated_at: string;
 }
@@ -27,7 +27,7 @@ export const messageService = {
       if (error) throw error;
       
       // Map the database result to the expected format using the explicitly typed interface
-      return (data as DbChatMessage[] || []).map(msg => ({
+      return (data as unknown as DbChatMessage[] || []).map(msg => ({
         id: msg.id,
         channel_id: channelId,
         user_id: msg.sender_id,

@@ -14,7 +14,7 @@ export interface ChatMessage {
   channel_id: string;
   user_id?: string;
   content: string;
-  reactions?: Record<string, any>;
+  reactions: Record<string, string[]>;
   is_read?: boolean;
   created_at?: string;
   updated_at?: string;
