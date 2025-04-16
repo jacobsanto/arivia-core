@@ -40,6 +40,9 @@ const TeamChat = () => {
     }
   };
 
+  // Convert EmojiData array to string array for compatibility with ChatArea component
+  const emojiSymbols = emojis.map(emoji => emoji.symbol);
+
   return (
     <div className="h-[calc(100vh-10rem)] flex flex-col">
       <div className="mb-4">
@@ -84,7 +87,7 @@ const TeamChat = () => {
           handleChangeMessage={handleChangeMessage}
           handleSendMessage={handleSendMessage}
           toggleSidebar={toggleSidebar}
-          emojis={emojis as EmojiData[]}
+          emojis={emojiSymbols}
           onAddReaction={addReaction}
           reactionMessageId={reactionMessageId}
           setReactionMessageId={setReactionMessageId}

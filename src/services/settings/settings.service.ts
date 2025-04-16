@@ -33,7 +33,10 @@ export const settingsService = {
         throw error;
       }
 
-      return data?.settings || {};
+      // Ensure we return an object even if data.settings is a primitive
+      return data?.settings ? 
+        (typeof data.settings === 'object' ? data.settings : { value: data.settings }) : 
+        {};
     } catch (error: any) {
       console.error('Failed to fetch settings:', error.message);
       return {};
@@ -92,7 +95,10 @@ export const settingsService = {
         throw error;
       }
 
-      return data?.setting_value || null;
+      // Ensure we return an object even if data.setting_value is a primitive
+      return data?.setting_value ? 
+        (typeof data.setting_value === 'object' ? data.setting_value : { value: data.setting_value }) : 
+        null;
     } catch (error: any) {
       console.error('Failed to fetch user settings:', error.message);
       return null;

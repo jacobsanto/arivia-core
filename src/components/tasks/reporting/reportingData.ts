@@ -21,7 +21,6 @@ export const barColors = {
   completed: "#10b981",
   pending: "#f59e0b",
   overdue: "#ef4444",
-  rejected: "#f43f5e",  // Added missing color
-  approved: "#22c55e"   // Added missing color
+  rejected: "#f43f5e",  // Added color for rejected tasks
+  approved: "#22c55e"   // Added color for approved tasks
 };
-

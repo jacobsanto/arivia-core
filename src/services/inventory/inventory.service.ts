@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -26,14 +27,25 @@ export interface InventoryItem {
   updated_at?: string;
 }
 
+export interface InventoryUsage {
+  id?: string;
+  date?: string;
+  item: string;
+  category: string;
+  quantity: number;
+  property: string;
+  reported_by: string;
+  created_at?: string;
+}
+
 const mapDbItemToClientItem = (dbItem: InventoryItemDB): InventoryItem => {
   return {
     id: dbItem.id,
     name: dbItem.name,
     description: dbItem.description || '',
     category: dbItem.category_id,
-    location: 'Main Storage',
-    current_stock: 0,
+    location: 'Main Storage', // Default location since it's not in DB
+    current_stock: 0, // Default stock since it's not in DB
     min_level: dbItem.min_quantity,
     unit: dbItem.unit,
     vendor_ids: [],
@@ -42,13 +54,13 @@ const mapDbItemToClientItem = (dbItem: InventoryItemDB): InventoryItem => {
   };
 };
 
-const mapClientItemToDbItem = (clientItem: Partial<InventoryItem>): Partial<InventoryItemDB> => {
+const mapClientItemToDbItem = (clientItem: Partial<InventoryItem>): { category_id: string; name: string; description?: string; min_quantity: number; unit: string } => {
   return {
-    name: clientItem.name,
+    name: clientItem.name!,
     description: clientItem.description,
-    category_id: clientItem.category,
-    min_quantity: clientItem.min_level,
-    unit: clientItem.unit
+    category_id: clientItem.category!,
+    min_quantity: clientItem.min_level!,
+    unit: clientItem.unit!
   };
 };
 
@@ -149,16 +161,18 @@ export const inventoryService = {
 
   async updateInventoryItem(id: string, updates: Partial<InventoryItem>): Promise<boolean> {
     try {
+      // Convert client model to database model
+      const dbUpdates: Partial<InventoryItemDB> = {};
+      
+      if (updates.name) dbUpdates.name = updates.name;
+      if (updates.description) dbUpdates.description = updates.description;
+      if (updates.category) dbUpdates.category_id = updates.category;
+      if (updates.min_level !== undefined) dbUpdates.min_quantity = updates.min_level;
+      if (updates.unit) dbUpdates.unit = updates.unit;
+
       const { error } = await supabase
         .from('inventory_items')
-        .update({
-          name: updates.name,
-          category: updates.category,
-          location: updates.location,
-          current_stock: updates.current_stock,
-          min_level: updates.min_level,
-          vendor_ids: updates.vendor_ids
-        })
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -196,7 +210,14 @@ export const inventoryService = {
     try {
       const { error } = await supabase
         .from('inventory_usage')
-        .insert(usage);
+        .insert({
+          item: usage.item,
+          category: usage.category,
+          quantity: usage.quantity,
+          property: usage.property,
+          reported_by: usage.reported_by,
+          date: usage.date
+        });
 
       if (error) throw error;
       toast.success('Inventory usage recorded successfully');
@@ -244,16 +265,11 @@ export const inventoryService = {
     }
   },
 
+  // This function doesn't use the DB directly since 'location' isn't in inventory_items table
   async getUniqueLocations(): Promise<string[]> {
     try {
-      const { data, error } = await supabase
-        .from('inventory_items')
-        .select('location');
-
-      if (error) throw error;
-      
-      const locations = new Set(data.map(item => item.location));
-      return Array.from(locations).sort();
+      // For now, just return static locations until we have a locations table
+      return ["Main Storage", "Villa Caldera", "Villa Oceana", "Villa Azure", "Villa Sunset", "Villa Paradiso"];
     } catch (error: any) {
       console.error('Error fetching unique locations:', error);
       return [];

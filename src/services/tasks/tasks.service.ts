@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -8,16 +9,16 @@ export interface MaintenanceTask {
   type: string;
   status: string;
   priority: string;
-  due_date: string;
+  dueDate: string;
   assignee?: string;
   description?: string;
   location?: string;
-  required_tools?: string[];
+  requiredTools?: string[];
   instructions?: { id: number; title: string; completed: boolean }[];
-  before_photos?: string[];
-  after_photos?: string[];
-  before_videos?: string[];
-  after_videos?: string[];
+  beforePhotos?: string[];
+  afterPhotos?: string[];
+  beforeVideos?: string[];
+  afterVideos?: string[];
   report?: Record<string, any>;
   created_at?: string;
   updated_at?: string;
@@ -30,16 +31,112 @@ export interface HousekeepingTask {
   type: string;
   status: string;
   priority: string;
-  due_date: string;
-  assigned_to?: string;
+  dueDate: string;
+  assignedTo?: string;
   description?: string;
-  approval_status?: string;
-  rejection_reason?: string;
+  approvalStatus?: string;
+  rejectionReason?: string;
   photos?: string[];
   checklist?: { id: number; title: string; completed: boolean }[];
   created_at?: string;
   updated_at?: string;
 }
+
+// Define database structure interfaces to avoid type mismatches
+interface MaintenanceTaskDB {
+  id: string;
+  title: string;
+  property_id: string;
+  status: string;
+  priority: string;
+  due_date: string;
+  assigned_to?: string;
+  description?: string;
+  location?: string;
+  required_tools?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface HousekeepingTaskDB {
+  id: string;
+  title: string;
+  property_id: string;
+  status: string;
+  priority: string;
+  due_date: string;
+  assigned_to?: string;
+  description?: string;
+  approval_status?: string;
+  rejection_reason?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// Mapping functions between DB and client types
+const mapDbToMaintenanceTask = (db: MaintenanceTaskDB): MaintenanceTask => {
+  return {
+    id: db.id,
+    title: db.title,
+    property: db.property_id,
+    type: 'Maintenance',
+    status: db.status,
+    priority: db.priority,
+    dueDate: db.due_date,
+    assignee: db.assigned_to,
+    description: db.description,
+    location: db.location,
+    requiredTools: db.required_tools ? db.required_tools.split(',') : [],
+    created_at: db.created_at,
+    updated_at: db.updated_at
+  };
+};
+
+const mapMaintenanceTaskToDb = (task: Partial<MaintenanceTask>): Partial<MaintenanceTaskDB> => {
+  return {
+    title: task.title,
+    property_id: task.property,
+    status: task.status,
+    priority: task.priority,
+    due_date: task.dueDate,
+    assigned_to: task.assignee,
+    description: task.description,
+    location: task.location,
+    required_tools: task.requiredTools ? task.requiredTools.join(',') : undefined
+  };
+};
+
+const mapDbToHousekeepingTask = (db: HousekeepingTaskDB): HousekeepingTask => {
+  return {
+    id: db.id,
+    title: db.title,
+    property: db.property_id,
+    type: 'Housekeeping',
+    status: db.status,
+    priority: db.priority,
+    dueDate: db.due_date,
+    assignedTo: db.assigned_to,
+    description: db.description,
+    approvalStatus: db.approval_status,
+    rejectionReason: db.rejection_reason,
+    created_at: db.created_at,
+    updated_at: db.updated_at
+  };
+};
+
+const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Partial<HousekeepingTaskDB> => {
+  return {
+    title: task.title,
+    property_id: task.property,
+    status: task.status,
+    priority: task.priority,
+    due_date: task.dueDate,
+    assigned_to: task.assignedTo,
+    description: task.description,
+    approval_status: task.approvalStatus,
+    rejection_reason: task.rejectionReason
+  };
+};
 
 export const tasksService = {
   // Maintenance Tasks
@@ -51,7 +148,7 @@ export const tasksService = {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapDbToMaintenanceTask);
     } catch (error: any) {
       console.error('Error fetching maintenance tasks:', error);
       toast.error('Failed to load maintenance tasks', {
@@ -70,7 +167,7 @@ export const tasksService = {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data ? mapDbToMaintenanceTask(data) : null;
     } catch (error: any) {
       console.error(`Error fetching maintenance task with id ${id}:`, error);
       return null;
@@ -79,15 +176,17 @@ export const tasksService = {
 
   async addMaintenanceTask(task: Omit<MaintenanceTask, 'id' | 'created_at' | 'updated_at'>): Promise<MaintenanceTask | null> {
     try {
+      const dbTask = mapMaintenanceTaskToDb(task);
+      
       const { data, error } = await supabase
         .from('maintenance_tasks')
-        .insert(task)
+        .insert(dbTask)
         .select()
         .single();
 
       if (error) throw error;
       toast.success('Maintenance task added successfully');
-      return data;
+      return mapDbToMaintenanceTask(data);
     } catch (error: any) {
       console.error('Error adding maintenance task:', error);
       toast.error('Failed to add maintenance task', {
@@ -99,9 +198,11 @@ export const tasksService = {
 
   async updateMaintenanceTask(id: string, updates: Partial<MaintenanceTask>): Promise<boolean> {
     try {
+      const dbUpdates = mapMaintenanceTaskToDb(updates);
+      
       const { error } = await supabase
         .from('maintenance_tasks')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -144,7 +245,7 @@ export const tasksService = {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapDbToHousekeepingTask);
     } catch (error: any) {
       console.error('Error fetching housekeeping tasks:', error);
       toast.error('Failed to load housekeeping tasks', {
@@ -163,7 +264,7 @@ export const tasksService = {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data ? mapDbToHousekeepingTask(data) : null;
     } catch (error: any) {
       console.error(`Error fetching housekeeping task with id ${id}:`, error);
       return null;
@@ -172,15 +273,17 @@ export const tasksService = {
 
   async addHousekeepingTask(task: Omit<HousekeepingTask, 'id' | 'created_at' | 'updated_at'>): Promise<HousekeepingTask | null> {
     try {
+      const dbTask = mapHousekeepingTaskToDb(task);
+      
       const { data, error } = await supabase
         .from('housekeeping_tasks')
-        .insert(task)
+        .insert(dbTask)
         .select()
         .single();
 
       if (error) throw error;
       toast.success('Housekeeping task added successfully');
-      return data;
+      return mapDbToHousekeepingTask(data);
     } catch (error: any) {
       console.error('Error adding housekeeping task:', error);
       toast.error('Failed to add housekeeping task', {
@@ -192,9 +295,11 @@ export const tasksService = {
 
   async updateHousekeepingTask(id: string, updates: Partial<HousekeepingTask>): Promise<boolean> {
     try {
+      const dbUpdates = mapHousekeepingTaskToDb(updates);
+      
       const { error } = await supabase
         .from('housekeeping_tasks')
-        .update(updates)
+        .update(dbUpdates)
         .eq('id', id);
 
       if (error) throw error;
@@ -258,11 +363,14 @@ export const tasksService = {
       if (housekeepingError) throw housekeepingError;
 
       // Combine the tasks
-      const allTasks = [...(maintenanceTasks || []), ...(housekeepingTasks || [])];
+      const allTasks = [
+        ...(maintenanceTasks || []).map(mapDbToMaintenanceTask), 
+        ...(housekeepingTasks || []).map(mapDbToHousekeepingTask)
+      ];
       
       // Sort by due date
       return allTasks.sort((a, b) => {
-        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
       });
     } catch (error: any) {
       console.error('Error fetching tasks for today:', error);

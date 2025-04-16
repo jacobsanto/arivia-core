@@ -32,6 +32,17 @@ export interface DirectMessage {
   created_at?: string;
 }
 
+// Define database structure interfaces to avoid type mismatches
+interface ChatMessageDB {
+  id: string;
+  content: string;
+  sender_id: string;
+  channel_id?: string;
+  is_read: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export const chatService = {
   // Channels
   async getChannels(): Promise<ChatChannel[]> {
@@ -83,10 +94,15 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Ensure correct type mapping
+      // Map DB format to our interface
       const messages: ChatMessage[] = (data || []).map(msg => ({
-        ...msg,
-        channel_id: msg.channel_id || channelId // Ensure channel_id is present
+        id: msg.id,
+        channel_id: channelId, // Ensure channel_id is always set
+        user_id: msg.sender_id,
+        content: msg.content,
+        is_read: msg.is_read,
+        created_at: msg.created_at,
+        updated_at: msg.updated_at
       }));
       
       return messages;
@@ -116,9 +132,13 @@ export const chatService = {
       
       // Transform response to match ChatMessage interface
       const chatMessage: ChatMessage = {
-        ...data,
-        channel_id: message.channel_id, // Ensure channel_id is present
-        user_id: message.user_id
+        id: data.id,
+        channel_id: message.channel_id,
+        user_id: message.user_id,
+        content: data.content,
+        is_read: data.is_read,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       
       return chatMessage;

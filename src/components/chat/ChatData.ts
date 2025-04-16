@@ -19,4 +19,3 @@ export const emojis: EmojiData[] = [
   { id: "emoji-4", symbol: "🎉", name: "party" },
   { id: "emoji-5", symbol: "👏", name: "clap" }
 ];
-
