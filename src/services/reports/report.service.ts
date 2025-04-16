@@ -52,10 +52,17 @@ export class ReportService extends BaseService<Report> {
         throw new Error("Report type is required");
       }
       
+      // Create a properly structured report object that matches the database requirements
       const reportData = {
-        ...report,
-        created_by: user.user.id,
-        status: 'active'
+        name: report.name, // name is required
+        type: report.type, // type is required
+        created_by: user.user.id, // created_by is required
+        status: 'active',
+        filters: report.filters || {},
+        date_range: report.date_range || null,
+        frequency: report.frequency || null,
+        recipients: report.recipients || null,
+        next_scheduled: report.next_scheduled || null
       };
       
       const { data, error } = await supabase

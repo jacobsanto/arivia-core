@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { toastService } from "@/services/toast/toast.service";
@@ -21,10 +20,8 @@ export const ScheduledReports = () => {
     to: undefined
   });
   
-  // Use our reports hook
   const { reports, loadReports, sendReportNow, isAuthenticated } = useReports('custom');
   
-  // Transform reports to match the component's expected format
   const formattedReports = reports.map(report => ({
     id: report.id,
     name: report.name,
@@ -42,7 +39,6 @@ export const ScheduledReports = () => {
 
   const handleDeleteReport = async (id: string) => {
     try {
-      // Call Supabase to delete the report
       const { error } = await supabase
         .from('reports')
         .update({ status: 'archived' })
@@ -50,7 +46,6 @@ export const ScheduledReports = () => {
       
       if (error) throw error;
       
-      // Refresh reports list
       await loadReports();
       toastService.success("Report deleted successfully");
     } catch (error: any) {
@@ -64,15 +59,12 @@ export const ScheduledReports = () => {
     try {
       setSendingReportId(report.id);
       
-      // Show a "preparing" message
       toastService.info(`Preparing ${report.name}...`, {
         description: `Gathering data for report delivery.`
       });
       
-      // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Call the send report function
       await sendReportNow(report.id);
       
     } catch (error) {
@@ -111,7 +103,6 @@ export const ScheduledReports = () => {
         .filter(email => email);
       
       if (isEditMode && editReportId) {
-        // Update existing report
         const { error } = await supabase
           .from('reports')
           .update({
@@ -125,19 +116,19 @@ export const ScheduledReports = () => {
         
         toastService.success("Report updated successfully");
       } else {
-        // Creating a new report
         const { error } = await supabase
           .from('reports')
           .insert({
             name: reportName,
             type: 'custom',
+            created_by: user.user.id,
             frequency: reportFrequency,
             recipients: recipientsList,
             date_range: {
               start_date: dateRange.from?.toISOString() || null,
               end_date: dateRange.to?.toISOString() || null
             },
-            created_by: user.user.id
+            status: 'active'
           });
         
         if (error) throw error;
@@ -145,7 +136,6 @@ export const ScheduledReports = () => {
         toastService.success("New scheduled report created");
       }
       
-      // Refresh reports list
       await loadReports();
     } catch (error: any) {
       toastService.error("Error saving report", {
@@ -153,7 +143,6 @@ export const ScheduledReports = () => {
       });
     }
     
-    // Close dialog and reset form
     setIsDialogOpen(false);
     setReportName("");
     setReportFrequency("Weekly");
