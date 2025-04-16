@@ -2,6 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
+// Define specific types to prevent excessive type inference
 interface FinancialReportData {
   revenue: number;
 }
@@ -15,7 +16,7 @@ interface BookingData {
  * @returns A promise that resolves to the total revenue for today
  */
 export const fetchTodayRevenue = async (): Promise<number> => {
-  let revenueToday: number = 0;
+  let revenueToday = 0;
   try {
     // Query the financial_reports table for today's revenue
     const today = format(new Date(), 'yyyy-MM-dd');
@@ -33,9 +34,9 @@ export const fetchTodayRevenue = async (): Promise<number> => {
     }
     
     // Check if we got financial data
-    const financialData = financialResult.data as FinancialReportData | null;
-    if (financialData?.revenue) {
-      revenueToday = financialData.revenue;
+    if (financialResult.data) {
+      const financialData = financialResult.data as FinancialReportData;
+      revenueToday = financialData.revenue || 0;
     } else {
       // If no financial data exists for today, calculate an estimate from bookings
       const bookingsResult = await supabase
@@ -54,8 +55,8 @@ export const fetchTodayRevenue = async (): Promise<number> => {
         revenueToday = bookingsData.reduce((sum, booking) => sum + booking.total_price, 0);
       }
     }
-  } catch (finError) {
-    console.log('No financial data available for today:', finError);
+  } catch (error) {
+    console.error('Error calculating today\'s revenue:', error);
     revenueToday = 0;
   }
   

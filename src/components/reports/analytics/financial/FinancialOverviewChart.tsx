@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PerformanceMetricsChart } from '@/components/analytics/PerformanceMetricsChart';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FinancialOverviewChartProps {
   title: string;
@@ -14,6 +15,8 @@ export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({
   description, 
   chartData 
 }) => {
+  const isMobile = useIsMobile();
+
   return (
     <Card>
       <CardHeader>
@@ -25,17 +28,66 @@ export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        <PerformanceMetricsChart 
-          title={title}
-          data={chartData} 
-          height={300} 
-          type="multi-line" 
-          dataKeys={[
-            { key: 'revenue', name: 'Revenue', color: '#4CAF50' },
-            { key: 'expenses', name: 'Expenses', color: '#F44336' },
-            { key: 'profit', name: 'Profit', color: '#2196F3' }
-          ]}
-        />
+        <div className="h-[300px]">
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={chartData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  height={40}
+                  tickMargin={5}
+                />
+                <YAxis 
+                  tick={{ fontSize: isMobile ? 10 : 12 }}
+                  tickFormatter={(value) => `$${value}`}
+                />
+                <Tooltip 
+                  formatter={(value) => `$${value.toLocaleString()}`}
+                  labelFormatter={(label) => `Month: ${label}`}
+                />
+                {!isMobile && <Legend />}
+                <Line 
+                  type="monotone" 
+                  dataKey="revenue" 
+                  name="Revenue" 
+                  stroke="#4CAF50" 
+                  activeDot={{ r: 8 }}
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="expenses" 
+                  name="Expenses" 
+                  stroke="#F44336"
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="profit" 
+                  name="Profit" 
+                  stroke="#2196F3"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center text-muted-foreground">
+                <p>No financial data available</p>
+              </div>
+            </div>
+          )}
+        </div>
       </CardContent>
     </Card>
   );
