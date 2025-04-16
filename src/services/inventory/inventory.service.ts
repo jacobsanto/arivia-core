@@ -9,6 +9,7 @@ export interface InventoryItemDB {
   category_id: string;
   min_quantity: number;
   unit: string;
+  item_code: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +23,7 @@ export interface InventoryItem {
   current_stock: number;
   min_level: number;
   unit: string;
+  item_code?: string;
   vendor_ids: string[];
   created_at?: string;
   updated_at?: string;
@@ -48,19 +50,21 @@ const mapDbItemToClientItem = (dbItem: InventoryItemDB): InventoryItem => {
     current_stock: 0, // Default stock since it's not in DB
     min_level: dbItem.min_quantity,
     unit: dbItem.unit,
+    item_code: dbItem.item_code || undefined,
     vendor_ids: [],
     created_at: dbItem.created_at,
     updated_at: dbItem.updated_at
   };
 };
 
-const mapClientItemToDbItem = (clientItem: Partial<InventoryItem>): { category_id: string; name: string; description?: string; min_quantity: number; unit: string } => {
+const mapClientItemToDbItem = (clientItem: Partial<InventoryItem>): { category_id: string; name: string; description?: string; min_quantity: number; unit: string; item_code?: string } => {
   return {
     name: clientItem.name!,
     description: clientItem.description,
     category_id: clientItem.category!,
     min_quantity: clientItem.min_level!,
-    unit: clientItem.unit!
+    unit: clientItem.unit!,
+    item_code: clientItem.item_code
   };
 };
 
@@ -169,6 +173,7 @@ export const inventoryService = {
       if (updates.category) dbUpdates.category_id = updates.category;
       if (updates.min_level !== undefined) dbUpdates.min_quantity = updates.min_level;
       if (updates.unit) dbUpdates.unit = updates.unit;
+      if (updates.item_code !== undefined) dbUpdates.item_code = updates.item_code;
 
       const { error } = await supabase
         .from('inventory_items')

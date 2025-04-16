@@ -12,17 +12,25 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Camera, Upload } from "lucide-react";
+import { useInventory } from "@/contexts/InventoryContext";
 
 interface MobileAddItemProps {
   onComplete: () => void;
 }
 
 const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
+  const { categories, units } = useInventory();
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="name">Item Name</Label>
         <Input id="name" placeholder="Enter item name" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="itemCode">Item Code/SKU</Label>
+        <Input id="itemCode" placeholder="Enter item code (optional)" />
       </div>
 
       <div className="space-y-2">
@@ -32,11 +40,11 @@ const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="bathroom">Bathroom</SelectItem>
-            <SelectItem value="kitchen">Kitchen</SelectItem>
-            <SelectItem value="bedroom">Bedroom</SelectItem>
-            <SelectItem value="cleaning">Cleaning</SelectItem>
-            <SelectItem value="other">Other</SelectItem>
+            {categories.map((category, index) => (
+              <SelectItem key={index} value={category}>
+                {category}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -48,21 +56,31 @@ const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label htmlFor="sku">SKU/Code</Label>
-          <Input id="sku" placeholder="Optional" />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="unit">Unit</Label>
           <Select>
             <SelectTrigger id="unit">
               <SelectValue placeholder="Select unit" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="each">Each</SelectItem>
-              <SelectItem value="box">Box</SelectItem>
-              <SelectItem value="pack">Pack</SelectItem>
-              <SelectItem value="kg">Kilogram</SelectItem>
-              <SelectItem value="l">Liter</SelectItem>
+              {units.map((unit, index) => (
+                <SelectItem key={index} value={unit}>
+                  {unit}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="location">Initial Location</Label>
+          <Select>
+            <SelectTrigger id="location">
+              <SelectValue placeholder="Select location" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="main">Main Storage</SelectItem>
+              <SelectItem value="villa1">Villa Caldera</SelectItem>
+              <SelectItem value="villa2">Villa Azure</SelectItem>
+              <SelectItem value="villa3">Villa Sunset</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -77,21 +95,6 @@ const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
           <Label htmlFor="initialStock">Initial Stock</Label>
           <Input id="initialStock" type="number" min="0" placeholder="0" />
         </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="location">Initial Location</Label>
-        <Select>
-          <SelectTrigger id="location">
-            <SelectValue placeholder="Select location" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="main">Main Storage</SelectItem>
-            <SelectItem value="villa1">Villa Caldera</SelectItem>
-            <SelectItem value="villa2">Villa Azure</SelectItem>
-            <SelectItem value="villa3">Villa Sunset</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">

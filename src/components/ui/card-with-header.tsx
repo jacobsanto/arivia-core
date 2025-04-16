@@ -13,6 +13,7 @@ export interface CardWithHeaderProps {
   footer?: ReactNode;
   noBodyPadding?: boolean;
   rightHeaderContent?: ReactNode;
+  subtitle?: string;
 }
 
 export const CardWithHeader = ({
@@ -25,12 +26,14 @@ export const CardWithHeader = ({
   footer,
   noBodyPadding = false,
   rightHeaderContent,
+  subtitle,
 }: CardWithHeaderProps) => {
   return (
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className={cn("flex flex-row items-start justify-between gap-2", headerClassName)}>
         <div>
           <CardTitle>{title}</CardTitle>
+          {subtitle && <div className="text-sm font-medium text-muted-foreground mt-1">{subtitle}</div>}
           {description && <CardDescription>{description}</CardDescription>}
         </div>
         {rightHeaderContent && (

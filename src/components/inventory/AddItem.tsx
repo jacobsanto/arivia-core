@@ -14,6 +14,7 @@ import ItemFormVendors from "./forms/ItemFormVendors";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Item name must be at least 2 characters." }),
+  itemCode: z.string().optional(),
   category: z.string().min(1, { message: "Please select a category." }),
   unit: z.string().min(1, { message: "Please select a unit." }),
   minLevel: z.coerce.number().min(0, { message: "Minimum level must be 0 or higher." }),
@@ -32,6 +33,7 @@ const AddItem = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
+      itemCode: "",
       category: "",
       unit: "",
       minLevel: 10,

@@ -326,6 +326,7 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          item_code: string | null
           min_quantity: number
           name: string
           unit: string
@@ -336,6 +337,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          item_code?: string | null
           min_quantity?: number
           name: string
           unit: string
@@ -346,6 +348,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          item_code?: string | null
           min_quantity?: number
           name?: string
           unit?: string
