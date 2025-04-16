@@ -94,20 +94,17 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Fix the recursive mapping issue by directly returning transformed data
-      if (data) {
-        return data.map((msg: ChatMessageDB) => ({
-          id: msg.id,
-          channel_id: channelId,
-          user_id: msg.sender_id,
-          content: msg.content,
-          is_read: msg.is_read,
-          created_at: msg.created_at,
-          updated_at: msg.updated_at
-        }));
-      }
-      
-      return [];
+      // Convert database response to ChatMessage format directly
+      // Using an explicit type cast to prevent infinite recursion
+      return (data || []).map((msg: any) => ({
+        id: msg.id,
+        channel_id: channelId,
+        user_id: msg.sender_id,
+        content: msg.content,
+        is_read: msg.is_read,
+        created_at: msg.created_at,
+        updated_at: msg.updated_at
+      }));
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
