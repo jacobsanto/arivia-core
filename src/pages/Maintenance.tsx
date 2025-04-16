@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useMaintenanceTasks } from "@/hooks/useMaintenanceTasks";
 import MaintenanceHeader from "@/components/maintenance/MaintenanceHeader";
@@ -6,7 +7,7 @@ import MaintenanceDetail from "@/components/maintenance/MaintenanceDetail";
 import MaintenanceReport from "@/components/maintenance/MaintenanceReport";
 import MaintenanceCreationForm from "@/components/maintenance/forms/MaintenanceCreationForm";
 import MaintenanceFilters from "@/components/maintenance/MaintenanceFilters";
-import MaintenanceStats from "@/components/maintenance/MaintenanceStats";
+import MaintenanceStats from "@/components/maintenance/stats/MaintenanceStats";
 import MaintenanceHistory from "@/components/maintenance/MaintenanceHistory";
 import MaintenanceReporting from "@/components/maintenance/reporting/MaintenanceReporting";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
