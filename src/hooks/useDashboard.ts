@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { addDays, startOfDay, endOfDay, format } from "date-fns";
@@ -24,9 +25,9 @@ export interface DashboardData {
     critical: number;
     standard: number;
   };
-  upcomingTasks?: Array<any>;
-  housekeepingTasks?: Array<any>;
-  maintenanceTasks?: Array<any>;
+  upcomingTasks?: Array<Record<string, any>>;
+  housekeepingTasks?: Array<Record<string, any>>;
+  maintenanceTasks?: Array<Record<string, any>>;
   quickStats?: {
     occupancyRate: number;
     avgRating: number;
