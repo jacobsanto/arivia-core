@@ -40,7 +40,7 @@ const TeamChat = () => {
     }
   };
 
-  // Convert emojis to just the symbols array for compatibility with ChatArea component
+  // Extract just the emoji symbols for the ChatArea component
   const emojiSymbols = emojis.map(emoji => emoji.symbol);
 
   return (

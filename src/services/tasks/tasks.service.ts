@@ -187,9 +187,22 @@ export const tasksService = {
       if (!dbTask.property_id) throw new Error('Property is required');
       if (!dbTask.due_date) throw new Error('Due date is required');
       
+      // Explicitly set required fields to ensure type safety
+      const insertData = {
+        title: dbTask.title,
+        property_id: dbTask.property_id,
+        due_date: dbTask.due_date,
+        status: dbTask.status || 'pending',
+        priority: dbTask.priority || 'normal',
+        assigned_to: dbTask.assigned_to,
+        description: dbTask.description,
+        location: dbTask.location,
+        required_tools: dbTask.required_tools
+      };
+      
       const { data, error } = await supabase
         .from('maintenance_tasks')
-        .insert(dbTask)
+        .insert(insertData)
         .select()
         .single();
 
@@ -289,9 +302,22 @@ export const tasksService = {
       if (!dbTask.property_id) throw new Error('Property is required');
       if (!dbTask.due_date) throw new Error('Due date is required');
       
+      // Explicitly set required fields to ensure type safety
+      const insertData = {
+        title: dbTask.title,
+        property_id: dbTask.property_id,
+        due_date: dbTask.due_date,
+        status: dbTask.status || 'pending',
+        priority: dbTask.priority || 'normal',
+        assigned_to: dbTask.assigned_to,
+        description: dbTask.description,
+        approval_status: dbTask.approval_status,
+        rejection_reason: dbTask.rejection_reason
+      };
+      
       const { data, error } = await supabase
         .from('housekeeping_tasks')
-        .insert(dbTask)
+        .insert(insertData)
         .select()
         .single();
 

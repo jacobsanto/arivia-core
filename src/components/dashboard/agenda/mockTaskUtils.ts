@@ -41,7 +41,7 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     : task.dueDate;
 
   return {
-    id: task.id || `maintenance-${Math.random().toString(36).substr(2, 9)}`,
+    id: parseInt(task.id) || Math.floor(Math.random() * 10000), // Convert string ID to number
     title: task.title,
     property: task.property,
     type: "Maintenance",

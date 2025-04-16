@@ -94,17 +94,24 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Map DB format to our interface
-      return (data || []).map((msg: ChatMessageDB) => ({
-        id: msg.id,
-        channel_id: channelId, // Ensure channel_id is always set
-        user_id: msg.sender_id,
-        content: msg.content,
-        is_read: msg.is_read,
-        created_at: msg.created_at,
-        updated_at: msg.updated_at
-      }));
+      // Map DB format to our interface without causing recursion
+      const result: ChatMessage[] = [];
+      if (data) {
+        for (const msg of data) {
+          const chatMessage: ChatMessage = {
+            id: msg.id,
+            channel_id: channelId,
+            user_id: msg.sender_id,
+            content: msg.content,
+            is_read: msg.is_read,
+            created_at: msg.created_at,
+            updated_at: msg.updated_at
+          };
+          result.push(chatMessage);
+        }
+      }
       
+      return result;
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
