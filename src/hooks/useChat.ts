@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
 
 export interface Message {
-  id: string; // Using string to match database IDs
+  id: string;
   sender: string;
   avatar: string;
   content: string;
@@ -197,6 +197,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   };
 
   const handleAddReaction = async (messageId: string, emoji: string) => {
+    // Remove the unnecessary return of a truthy statement
     if (!user) return;
     
     try {
