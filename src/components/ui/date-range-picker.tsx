@@ -25,6 +25,17 @@ export function DatePickerWithRange({
   value,
   onChange
 }: DatePickerWithRangeProps) {
+  // Convert our DateRange to the react-day-picker's DateRange when needed
+  const toRdpDateRange = (range: DateRange | undefined): DayPickerDateRange | undefined => {
+    // If range or from is undefined, return undefined
+    if (!range || !range.from) return undefined;
+    
+    return {
+      from: range.from,
+      to: range.to
+    };
+  };
+
   return (
     <div className={cn("grid gap-2", className)}>
       <Popover>
@@ -34,7 +45,7 @@ export function DatePickerWithRange({
             variant={"outline"}
             className={cn(
               "w-full justify-start text-left font-normal",
-              !value && "text-muted-foreground"
+              !value?.from && "text-muted-foreground"
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -57,7 +68,7 @@ export function DatePickerWithRange({
             initialFocus
             mode="range"
             defaultMonth={value?.from}
-            selected={value}
+            selected={toRdpDateRange(value)}
             onSelect={onChange}
             numberOfMonths={2}
             className="pointer-events-auto"
