@@ -91,9 +91,17 @@ export const chatService = {
 
   async sendChannelMessage(message: { channel_id: string; user_id?: string; content: string; is_read?: boolean }): Promise<ChatMessage | null> {
     try {
+      // Convert user_id to sender_id for compatibility with the table structure
+      const dbMessage = {
+        content: message.content,
+        sender_id: message.user_id || '',
+        channel_id: message.channel_id,
+        is_read: message.is_read || false
+      };
+      
       const { data, error } = await supabase
         .from('chat_messages')
-        .insert(message)
+        .insert(dbMessage)
         .select()
         .single();
 

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -34,14 +35,14 @@ export const inventoryService = {
 
       if (error) throw error;
       
-      // Convert database response to match our interface
+      // Map DB column names to our interface properties
       const items: InventoryItem[] = (data || []).map(item => ({
         id: item.id,
         name: item.name,
-        category: item.category,
-        location: item.location,
-        current_stock: item.current_stock,
-        min_level: item.min_level,
+        category: item.category || '',
+        location: item.location || 'main',
+        current_stock: item.current_stock || 0,
+        min_level: item.min_level || 0,
         vendor_ids: item.vendor_ids || [],
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -69,14 +70,14 @@ export const inventoryService = {
       
       if (!data) return null;
       
-      // Convert to match our interface
+      // Map DB column names to our interface properties
       return {
         id: data.id,
         name: data.name,
-        category: data.category,
-        location: data.location,
-        current_stock: data.current_stock,
-        min_level: data.min_level,
+        category: data.category || '',
+        location: data.location || 'main',
+        current_stock: data.current_stock || 0,
+        min_level: data.min_level || 0,
         vendor_ids: data.vendor_ids || [],
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -97,14 +98,14 @@ export const inventoryService = {
 
       if (error) throw error;
       
-      // Convert database response to match our interface
+      // Map DB column names to our interface properties
       const items: InventoryItem[] = (data || []).map(item => ({
         id: item.id,
         name: item.name,
-        category: item.category,
-        location: item.location,
-        current_stock: item.current_stock,
-        min_level: item.min_level,
+        category: item.category || '',
+        location: item.location || location,
+        current_stock: item.current_stock || 0,
+        min_level: item.min_level || 0,
         vendor_ids: item.vendor_ids || [],
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -127,14 +128,14 @@ export const inventoryService = {
 
       if (error) throw error;
       
-      // Convert database response to match our interface
+      // Map DB column names to our interface properties
       const items: InventoryItem[] = (data || []).map(item => ({
         id: item.id,
         name: item.name,
-        category: item.category,
-        location: item.location,
-        current_stock: item.current_stock,
-        min_level: item.min_level,
+        category: item.category || category,
+        location: item.location || 'main',
+        current_stock: item.current_stock || 0,
+        min_level: item.min_level || 0,
         vendor_ids: item.vendor_ids || [],
         created_at: item.created_at,
         updated_at: item.updated_at
@@ -149,23 +150,33 @@ export const inventoryService = {
 
   async addInventoryItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>): Promise<InventoryItem | null> {
     try {
+      // Map our interface properties to DB column names
+      const dbItem = {
+        name: item.name,
+        category: item.category,
+        location: item.location,
+        current_stock: item.current_stock,
+        min_level: item.min_level,
+        vendor_ids: item.vendor_ids
+      };
+      
       const { data, error } = await supabase
         .from('inventory_items')
-        .insert(item)
+        .insert(dbItem)
         .select()
         .single();
 
       if (error) throw error;
       toast.success('Inventory item added successfully');
       
-      // Convert to match our interface
+      // Map DB response back to our interface
       return {
         id: data.id,
         name: data.name,
-        category: data.category,
-        location: data.location,
-        current_stock: data.current_stock,
-        min_level: data.min_level,
+        category: data.category || '',
+        location: data.location || 'main',
+        current_stock: data.current_stock || 0,
+        min_level: data.min_level || 0,
         vendor_ids: data.vendor_ids || [],
         created_at: data.created_at,
         updated_at: data.updated_at
@@ -183,7 +194,14 @@ export const inventoryService = {
     try {
       const { error } = await supabase
         .from('inventory_items')
-        .update(updates)
+        .update({
+          name: updates.name,
+          category: updates.category,
+          location: updates.location,
+          current_stock: updates.current_stock,
+          min_level: updates.min_level,
+          vendor_ids: updates.vendor_ids
+        })
         .eq('id', id);
 
       if (error) throw error;
