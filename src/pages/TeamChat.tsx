@@ -43,13 +43,13 @@ const TeamChat = () => {
   // Map the channels data to match the Channel interface
   const typedChannels: Channel[] = channels.map(channel => ({
     ...channel,
-    status: channel.online ? "online" : "offline" // Add status property
+    status: "offline" // Add a default status since channels don't have online property
   }));
 
   // Map the directMessages data to match the DirectMessage interface
   const typedDirectMessages: DirectMessage[] = directMessages.map(dm => ({
     ...dm,
-    status: dm.online ? "online" : "offline" // Add status property
+    status: dm.online ? "online" : "offline" // Convert boolean 'online' to status string
   }));
 
   // Extract just the emoji symbols for the ChatArea component

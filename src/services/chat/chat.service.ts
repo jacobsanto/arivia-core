@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -93,9 +94,9 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Fix the recursive mapping issue
+      // Fix the recursive mapping issue by directly returning transformed data
       if (data) {
-        return data.map(msg => ({
+        return data.map((msg: ChatMessageDB) => ({
           id: msg.id,
           channel_id: channelId,
           user_id: msg.sender_id,
