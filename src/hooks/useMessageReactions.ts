@@ -3,10 +3,10 @@ import { useState } from "react";
 import { Message } from "./useChatTypes";
 
 export const useMessageReactions = (messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
-  const [reactionMessageId, setReactionMessageId] = useState<number | null>(null);
+  const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
-  const addReaction = (messageId: number, emoji: string, username: string) => {
+  const addReaction = (messageId: string, emoji: string, username: string) => {
     setMessages(prevMessages => 
       prevMessages.map(msg => {
         if (msg.id === messageId) {

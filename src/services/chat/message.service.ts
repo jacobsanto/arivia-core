@@ -9,7 +9,7 @@ interface DbChatMessage {
   channel_id: string;
   sender_id: string;
   is_read: boolean;
-  reactions?: Record<string, any>;
+  reactions?: Record<string, string[]>;
   created_at: string;
   updated_at: string;
 }

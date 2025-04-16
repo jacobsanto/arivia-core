@@ -34,8 +34,8 @@ export const useChatMessages = (activeChat: string) => {
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (message.trim()) {
-      const newMessage = {
-        id: messages.length + 1,
+      const newMessage: Message = {
+        id: `temp-${Date.now()}`, // Using string ID
         sender: user?.name || "Admin",
         avatar: user?.avatar || "/placeholder.svg",
         content: message.trim(),
@@ -55,7 +55,7 @@ export const useChatMessages = (activeChat: string) => {
     }
   };
   
-  const addReaction = (messageId: number, emoji: string) => {
+  const addReaction = (messageId: string, emoji: string) => {
     const username = user?.name || "Admin";
     addReactionToMessage(messageId, emoji, username);
   };
