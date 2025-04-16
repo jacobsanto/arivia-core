@@ -2,12 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
-// Define specific types to prevent excessive type inference
-interface FinancialReportData {
+// Define specific interfaces to prevent excessive type inference
+interface FinancialReport {
   revenue: number;
+  date?: string;
+  month?: string;
 }
 
-interface BookingData {
+interface Booking {
   total_price: number;
 }
 
@@ -18,14 +20,14 @@ interface BookingData {
 export const fetchTodayRevenue = async (): Promise<number> => {
   let revenueToday = 0;
   try {
-    // Query the financial_reports table for today's revenue
     const today = format(new Date(), 'yyyy-MM-dd');
+    const currentMonth = format(new Date(), 'MMM yyyy'); // Format matching the month column
     
-    // First attempt to get financial data
+    // First attempt to get financial data from financial_reports table
     const financialResult = await supabase
       .from('financial_reports')
       .select('revenue')
-      .eq('date', today)
+      .eq('month', currentMonth)
       .maybeSingle();
     
     if (financialResult.error) {
@@ -35,7 +37,7 @@ export const fetchTodayRevenue = async (): Promise<number> => {
     
     // Check if we got financial data
     if (financialResult.data) {
-      revenueToday = (financialResult.data as FinancialReportData).revenue || 0;
+      revenueToday = (financialResult.data as FinancialReport).revenue || 0;
     } else {
       // If no financial data exists for today, calculate an estimate from bookings
       const bookingsResult = await supabase
@@ -50,7 +52,7 @@ export const fetchTodayRevenue = async (): Promise<number> => {
         
       // Calculate total from bookings
       if (bookingsResult.data && bookingsResult.data.length > 0) {
-        revenueToday = (bookingsResult.data as BookingData[]).reduce(
+        revenueToday = (bookingsResult.data as Booking[]).reduce(
           (sum, booking) => sum + booking.total_price, 
           0
         );
