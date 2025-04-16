@@ -4,7 +4,7 @@ export interface MessageReaction {
 }
 
 export interface Message {
-  id: number;
+  id: string; // Changed from number to string to match the database
   sender: string;
   avatar: string;
   content: string;

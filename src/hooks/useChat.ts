@@ -4,10 +4,10 @@ import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { GENERAL_CHAT_CHANNEL_ID, ChatMessage, DirectMessage } from "@/services/chat/chat.types";
+import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
 
 export interface Message {
-  id: string;
+  id: string; // Using string to match database IDs
   sender: string;
   avatar: string;
   content: string;

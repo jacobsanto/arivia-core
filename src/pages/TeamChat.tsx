@@ -121,11 +121,11 @@ const TeamChat = () => {
     setTimeout(() => setTypingStatus(""), 3000);
   };
 
-  // For reactions (simplified version)
+  // For reactions
   const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
-  const addReaction = (messageId: number, emoji: string) => {
+  const addReaction = (messageId: string, emoji: string) => {
     // In a real implementation, this would update the reactions in the database
     console.log(`Adding reaction ${emoji} to message ${messageId}`);
   };
@@ -179,8 +179,8 @@ const TeamChat = () => {
           toggleSidebar={toggleSidebar}
           emojis={emojiSymbols}
           onAddReaction={addReaction}
-          reactionMessageId={parseInt(reactionMessageId || '0')}
-          setReactionMessageId={(id) => setReactionMessageId(id?.toString() || null)}
+          reactionMessageId={reactionMessageId}
+          setReactionMessageId={setReactionMessageId}
           showEmojiPicker={showEmojiPicker}
           setShowEmojiPicker={setShowEmojiPicker}
           isLoading={loading}

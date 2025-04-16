@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Message } from "@/hooks/useChatMessages";
+import { Message } from "@/hooks/useChatTypes";
 import EmojiPicker from "../emoji/EmojiPicker";
 import MessageReactions from "../emoji/MessageReactions";
 
@@ -12,7 +12,7 @@ interface MessageContentProps {
   handleMessageMouseEnter: () => void;
   handleMessageMouseLeave: () => void;
   handleEmojiClick: (emoji: string, e: React.MouseEvent) => void;
-  reactionMessageId: number | null;
+  reactionMessageId: string | null;
   showEmojiPicker: boolean;
   handlePickerMouseEnter: () => void;
   handlePickerMouseLeave: () => void;

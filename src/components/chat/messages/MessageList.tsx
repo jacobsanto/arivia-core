@@ -3,15 +3,15 @@ import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
-import { Message } from "@/hooks/useChat";
+import { Message } from "@/hooks/useChatTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
   messages: Message[];
   emojis: string[];
-  onAddReaction: (messageId: number, emoji: string) => void;
-  reactionMessageId: number | null;
-  setReactionMessageId: (id: number | null) => void;
+  onAddReaction: (messageId: string, emoji: string) => void;
+  reactionMessageId: string | null;
+  setReactionMessageId: (id: string | null) => void;
   showEmojiPicker: boolean;
   setShowEmojiPicker: (show: boolean) => void;
   typingStatus: string;

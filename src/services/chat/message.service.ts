@@ -3,6 +3,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
 
+interface DbChatMessage {
+  id: string;
+  content: string;
+  channel_id: string;
+  sender_id: string;
+  is_read: boolean;
+  reactions?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
 export const messageService = {
   async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
     try {
@@ -15,7 +26,7 @@ export const messageService = {
       if (error) throw error;
       
       // Map the database result to the expected format
-      return (data || []).map(msg => ({
+      return (data as DbChatMessage[] || []).map(msg => ({
         id: msg.id,
         channel_id: channelId,
         user_id: msg.sender_id,
@@ -58,7 +69,8 @@ export const messageService = {
           content: data.content,
           is_read: data.is_read,
           created_at: data.created_at,
-          updated_at: data.updated_at
+          updated_at: data.updated_at,
+          reactions: {}
         };
       }
       
