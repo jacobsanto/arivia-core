@@ -2,6 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
+interface FinancialReportData {
+  revenue: number;
+}
+
+interface BookingData {
+  total_price: number;
+}
+
 /**
  * Calculates revenue for today
  * @returns A promise that resolves to the total revenue for today
@@ -12,32 +20,36 @@ export const fetchTodayRevenue = async (): Promise<number> => {
     // Query the financial_reports table for today's revenue
     const today = format(new Date(), 'yyyy-MM-dd');
     
-    // Use explicit type for the database query result
-    const { data: financialData, error } = await supabase
+    // First attempt to get financial data
+    const financialResult = await supabase
       .from('financial_reports')
       .select('revenue')
       .eq('date', today)
       .maybeSingle();
     
-    if (error) {
-      console.error('Error fetching financial data:', error);
+    if (financialResult.error) {
+      console.error('Error fetching financial data:', financialResult.error);
       return 0;
     }
     
+    // Check if we got financial data
+    const financialData = financialResult.data as FinancialReportData | null;
     if (financialData?.revenue) {
       revenueToday = financialData.revenue;
     } else {
       // If no financial data exists for today, calculate an estimate from bookings
-      const { data: bookingsData, error: bookingsError } = await supabase
+      const bookingsResult = await supabase
         .from('bookings')
         .select('total_price')
         .eq('check_in_date', today);
       
-      if (bookingsError) {
-        console.error('Error fetching bookings data:', bookingsError);
+      if (bookingsResult.error) {
+        console.error('Error fetching bookings data:', bookingsResult.error);
         return 0;
       }
         
+      // Calculate total from bookings
+      const bookingsData = bookingsResult.data as BookingData[];
       if (bookingsData && bookingsData.length > 0) {
         revenueToday = bookingsData.reduce((sum, booking) => sum + booking.total_price, 0);
       }
