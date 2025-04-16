@@ -24,7 +24,7 @@ export interface MetricCardProps {
   variant?: 'default' | 'accent' | 'success' | 'warning';
 }
 
-export const MetricCard: React.FC<MetricCardProps> = ({ 
+const MetricCard: React.FC<MetricCardProps> = ({ 
   title, 
   value, 
   description, 
@@ -140,3 +140,5 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   
   return <Card className={`h-full ${getCardStyle()}`}>{cardContent}</Card>;
 };
+
+export default MetricCard;

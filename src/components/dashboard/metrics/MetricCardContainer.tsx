@@ -9,7 +9,7 @@ interface MetricCardContainerProps {
   renderCard: (card: Omit<MetricCardProps, 'swipeable'>, index: number) => React.ReactNode;
 }
 
-export const MetricCardContainer: React.FC<MetricCardContainerProps> = ({ 
+const MetricCardContainer: React.FC<MetricCardContainerProps> = ({ 
   cards,
   renderCard
 }) => {
@@ -69,3 +69,5 @@ export const MetricCardContainer: React.FC<MetricCardContainerProps> = ({
     </div>
   );
 };
+
+export default MetricCardContainer;

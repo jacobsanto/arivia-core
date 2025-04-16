@@ -21,7 +21,7 @@ interface DashboardData {
   };
 }
 
-export const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
+const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
   const cards: Array<Omit<MetricCardProps, 'swipeable'>> = [];
   
   // Only add the property card if properties data exists
@@ -78,3 +78,5 @@ export const createMetricCards = (data: DashboardData, isMobile: boolean): Array
 
   return cards;
 };
+
+export default createMetricCards;
