@@ -27,6 +27,7 @@ export const chatService = {
   getChannelMessages: messageService.getChannelMessages,
   sendChannelMessage: messageService.sendChannelMessage,
   markAsRead: messageService.markAsRead,
+  addReaction: messageService.addReaction,
   
   // Direct Messages
   getDirectMessages: directMessageService.getDirectMessages,

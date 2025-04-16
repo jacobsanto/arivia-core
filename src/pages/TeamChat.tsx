@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -125,11 +126,6 @@ const TeamChat = () => {
   const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
-  const addReaction = (messageId: string, emoji: string) => {
-    // In a real implementation, this would update the reactions in the database
-    console.log(`Adding reaction ${emoji} to message ${messageId}`);
-  };
-
   // Extract just the emoji symbols
   const emojiSymbols = ["👍", "❤️", "😊", "🎉", "😂", "🤔"];
 

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
@@ -195,7 +196,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     }
   };
 
-  const addReaction = async (messageId: string, emoji: string) => {
+  const handleAddReaction = async (messageId: string, emoji: string) => {
     if (!user) return;
     
     try {
@@ -245,6 +246,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     messageInput,
     setMessageInput,
     sendMessage,
-    addReaction
+    addReaction: handleAddReaction
   };
 }

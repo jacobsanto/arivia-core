@@ -72,7 +72,7 @@ export const messageService = {
           is_read: data.is_read || false,
           created_at: data.created_at,
           updated_at: data.updated_at,
-          reactions: data.reactions || {}
+          reactions: data.reactions as Record<string, string[]> || {}
         };
       }
       
@@ -113,7 +113,7 @@ export const messageService = {
       if (fetchError) throw fetchError;
       
       // Get current reactions or initialize empty object
-      const currentReactions = message?.reactions as Record<string, string[]> || {};
+      const currentReactions = (message?.reactions as Record<string, string[]>) || {};
       
       // Get users who reacted with this emoji or initialize empty array
       const usersForEmoji = currentReactions[emoji] || [];
