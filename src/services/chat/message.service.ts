@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChatMessage } from './chat.types';
+import { ChatMessage, ChatMessageDB } from './chat.types';
 
 export const messageService = {
   async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
@@ -15,7 +15,7 @@ export const messageService = {
       if (error) throw error;
       
       // Fix: Use type assertion to break recursive type inference
-      const messages = (data || []) as any[];
+      const messages = (data || []) as ChatMessageDB[];
       return messages.map(msg => ({
         id: msg.id,
         channel_id: channelId,
