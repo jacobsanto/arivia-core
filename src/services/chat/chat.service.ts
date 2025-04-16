@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -94,24 +93,20 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Map DB format to our interface without causing recursion
-      const result: ChatMessage[] = [];
+      // Fix the recursive mapping issue
       if (data) {
-        for (const msg of data) {
-          const chatMessage: ChatMessage = {
-            id: msg.id,
-            channel_id: channelId,
-            user_id: msg.sender_id,
-            content: msg.content,
-            is_read: msg.is_read,
-            created_at: msg.created_at,
-            updated_at: msg.updated_at
-          };
-          result.push(chatMessage);
-        }
+        return data.map(msg => ({
+          id: msg.id,
+          channel_id: channelId,
+          user_id: msg.sender_id,
+          content: msg.content,
+          is_read: msg.is_read,
+          created_at: msg.created_at,
+          updated_at: msg.updated_at
+        }));
       }
       
-      return result;
+      return [];
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
@@ -137,17 +132,19 @@ export const chatService = {
       if (error) throw error;
       
       // Transform response to match ChatMessage interface
-      const chatMessage: ChatMessage = {
-        id: data.id,
-        channel_id: message.channel_id,
-        user_id: message.user_id,
-        content: data.content,
-        is_read: data.is_read,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
+      if (data) {
+        return {
+          id: data.id,
+          channel_id: message.channel_id,
+          user_id: message.user_id,
+          content: data.content,
+          is_read: data.is_read,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+      }
       
-      return chatMessage;
+      return null;
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message', {

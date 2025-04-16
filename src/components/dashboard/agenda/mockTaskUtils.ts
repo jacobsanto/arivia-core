@@ -39,6 +39,9 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
   const dueDateString = typeof task.dueDate === 'object' 
     ? (task.dueDate as Date).toISOString() 
     : task.dueDate;
+  
+  // Current date for createdAt field
+  const now = new Date().toISOString();
 
   return {
     id: parseInt(task.id) || Math.floor(Math.random() * 10000), // Convert string ID to number
@@ -51,12 +54,16 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     assignee: task.assignedTo || "Unassigned",
     description: task.description || "",
     location: task.property,
+    specialInstructions: "",
     requiredTools: ["Screwdriver", "Wrench"],
     instructions: [
       { id: 1, title: "Check AC filter", completed: false },
       { id: 2, title: "Test thermostat", completed: false }
     ],
     beforePhotos: [],
-    afterPhotos: []
+    afterPhotos: [],
+    beforeVideos: [], // Added missing property
+    afterVideos: [], // Added missing property
+    createdAt: now, // Added missing property
   };
 };

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useChatMessages } from "@/hooks/useChatMessages";
-import ChatSidebar from "@/components/chat/ChatSidebar";
+import ChatSidebar, { Channel, DirectMessage } from "@/components/chat/ChatSidebar";
 import ChatArea from "@/components/chat/ChatArea";
 import { channels, directMessages, emojis } from "@/components/chat/ChatData";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,6 +40,18 @@ const TeamChat = () => {
     }
   };
 
+  // Map the channels data to match the Channel interface
+  const typedChannels: Channel[] = channels.map(channel => ({
+    ...channel,
+    status: channel.online ? "online" : "offline" // Add status property
+  }));
+
+  // Map the directMessages data to match the DirectMessage interface
+  const typedDirectMessages: DirectMessage[] = directMessages.map(dm => ({
+    ...dm,
+    status: dm.online ? "online" : "offline" // Add status property
+  }));
+
   // Extract just the emoji symbols for the ChatArea component
   const emojiSymbols = emojis.map(emoji => emoji.symbol);
 
@@ -67,8 +79,8 @@ const TeamChat = () => {
         
         {/* Sidebar */}
         <ChatSidebar
-          channels={channels}
-          directMessages={directMessages}
+          channels={typedChannels}
+          directMessages={typedDirectMessages}
           activeChat={activeChat}
           activeTab={activeTab}
           setActiveTab={setActiveTab}

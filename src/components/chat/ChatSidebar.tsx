@@ -8,18 +8,20 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Channel and DM types
-interface Channel {
-  id: number;
+// Channel and DM types updated to match what's used in TeamChat.tsx
+export interface Channel {
+  id: string;
   name: string;
+  unreadCount: number;
 }
 
-interface DirectMessage {
-  id: number;
+export interface DirectMessage {
+  id: string;
   name: string;
   avatar: string;
-  status: "online" | "offline" | "away";
+  online: boolean;
   unreadCount: number;
+  status: "online" | "offline" | "away";
 }
 
 interface ChatSidebarProps {
