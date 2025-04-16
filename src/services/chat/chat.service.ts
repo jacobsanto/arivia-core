@@ -94,17 +94,20 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Convert database response to ChatMessage format directly
-      // Using an explicit type cast to prevent infinite recursion
-      return (data || []).map((msg: any) => ({
-        id: msg.id,
-        channel_id: channelId,
-        user_id: msg.sender_id,
-        content: msg.content,
-        is_read: msg.is_read,
-        created_at: msg.created_at,
-        updated_at: msg.updated_at
-      }));
+      // Convert database response to ChatMessage format explicitly
+      // Break the recursive type reference by using explicit mapping
+      return (data || []).map((msg) => {
+        const chatMessage: ChatMessage = {
+          id: msg.id,
+          channel_id: channelId,
+          user_id: msg.sender_id,
+          content: msg.content,
+          is_read: msg.is_read,
+          created_at: msg.created_at,
+          updated_at: msg.updated_at
+        };
+        return chatMessage;
+      });
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
