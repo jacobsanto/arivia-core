@@ -1,6 +1,6 @@
 
 // Mock task utilities for development purposes
-import { Task } from "@/types/taskTypes";
+import { Task, TaskStatus } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { CombinedTask } from "./agendaUtils";
 
@@ -10,13 +10,18 @@ export const getRandomAssignee = () => 'Unassigned';
 export const getTimeDisplay = (date: Date) => '12:00 PM';
 
 export const createMockHousekeepingTask = (task: CombinedTask): Task => {
+  // Convert the task.dueDate to string if it's a Date object
+  const dueDateString = typeof task.dueDate === 'object' 
+    ? (task.dueDate as Date).toISOString() 
+    : task.dueDate;
+
   return {
     id: task.id || `task-${Math.random().toString(36).substr(2, 9)}`,
     title: task.title,
     property: task.property,
-    status: task.status || "Pending",
-    priority: task.priority || "Medium",
-    dueDate: task.dueDate,
+    status: task.status as TaskStatus || "Pending",
+    priority: task.priority as "Low" | "Medium" | "High" || "Medium",
+    dueDate: dueDateString,
     assignedTo: task.assignedTo || "Unassigned",
     description: task.description || "",
     approvalStatus: "Pending",
@@ -30,13 +35,18 @@ export const createMockHousekeepingTask = (task: CombinedTask): Task => {
 };
 
 export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask => {
+  // Convert the task.dueDate to string if it's a Date object
+  const dueDateString = typeof task.dueDate === 'object' 
+    ? (task.dueDate as Date).toISOString() 
+    : task.dueDate;
+
   return {
     id: task.id || `maintenance-${Math.random().toString(36).substr(2, 9)}`,
     title: task.title,
     property: task.property,
-    status: task.status || "Pending",
-    priority: task.priority || "Medium",
-    dueDate: task.dueDate,
+    status: task.status as TaskStatus || "Pending",
+    priority: task.priority as "Low" | "Medium" | "High" || "Medium",
+    dueDate: dueDateString,
     assignee: task.assignedTo || "Unassigned",
     description: task.description || "",
     location: task.property,

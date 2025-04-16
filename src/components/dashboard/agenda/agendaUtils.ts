@@ -12,6 +12,8 @@ export interface CombinedTask {
   property: string;
   status: string;
   taskType: "housekeeping" | "maintenance";
+  assignedTo?: string;  // Added missing property
+  description?: string; // Added missing property
 }
 
 export const combineTasks = (
@@ -27,7 +29,9 @@ export const combineTasks = (
       priority: task.priority,
       property: task.property,
       status: task.status,
-      taskType: "housekeeping" as const
+      taskType: "housekeeping" as const,
+      assignedTo: task.assignedTo,
+      description: task.description
     })),
     ...maintenanceTasks.map(task => ({
       id: task.id.toString(),
@@ -37,7 +41,9 @@ export const combineTasks = (
       priority: task.priority,
       property: task.property,
       status: task.status,
-      taskType: "maintenance" as const
+      taskType: "maintenance" as const,
+      assignedTo: task.assignee,
+      description: task.description
     }))
   ];
 };

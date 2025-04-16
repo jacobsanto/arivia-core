@@ -1,29 +1,56 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+
+export interface InventoryItemDB {
+  id: string;
+  name: string;
+  description: string;
+  category_id: string;
+  min_quantity: number;
+  unit: string;
+  created_at: string;
+  updated_at: string;
+}
 
 export interface InventoryItem {
   id: string;
   name: string;
+  description: string;
   category: string;
   location: string;
   current_stock: number;
   min_level: number;
+  unit: string;
   vendor_ids: string[];
   created_at?: string;
   updated_at?: string;
 }
 
-export interface InventoryUsage {
-  id: string;
-  date: string;
-  property: string;
-  item: string;
-  category: string;
-  quantity: number;
-  reported_by: string;
-  created_at?: string;
-}
+const mapDbItemToClientItem = (dbItem: InventoryItemDB): InventoryItem => {
+  return {
+    id: dbItem.id,
+    name: dbItem.name,
+    description: dbItem.description || '',
+    category: dbItem.category_id,
+    location: 'Main Storage',
+    current_stock: 0,
+    min_level: dbItem.min_quantity,
+    unit: dbItem.unit,
+    vendor_ids: [],
+    created_at: dbItem.created_at,
+    updated_at: dbItem.updated_at
+  };
+};
+
+const mapClientItemToDbItem = (clientItem: Partial<InventoryItem>): Partial<InventoryItemDB> => {
+  return {
+    name: clientItem.name,
+    description: clientItem.description,
+    category_id: clientItem.category,
+    min_quantity: clientItem.min_level,
+    unit: clientItem.unit
+  };
+};
 
 export const inventoryService = {
   async getInventoryItems(): Promise<InventoryItem[]> {
@@ -35,20 +62,7 @@ export const inventoryService = {
 
       if (error) throw error;
       
-      // Map DB column names to our interface properties
-      const items: InventoryItem[] = (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category || '',
-        location: item.location || 'main',
-        current_stock: item.current_stock || 0,
-        min_level: item.min_level || 0,
-        vendor_ids: item.vendor_ids || [],
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      
-      return items;
+      return (data || []).map(mapDbItemToClientItem);
     } catch (error: any) {
       console.error('Error fetching inventory items:', error);
       toast.error('Failed to load inventory items', {
@@ -67,98 +81,52 @@ export const inventoryService = {
         .maybeSingle();
 
       if (error) throw error;
-      
       if (!data) return null;
       
-      // Map DB column names to our interface properties
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category || '',
-        location: data.location || 'main',
-        current_stock: data.current_stock || 0,
-        min_level: data.min_level || 0,
-        vendor_ids: data.vendor_ids || [],
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
+      return mapDbItemToClientItem(data);
     } catch (error: any) {
       console.error(`Error fetching inventory item with id ${id}:`, error);
       return null;
     }
   },
 
-  async getInventoryItemsByLocation(location: string): Promise<InventoryItem[]> {
+  async getInventoryItemsByCategory(categoryId: string): Promise<InventoryItem[]> {
     try {
       const { data, error } = await supabase
         .from('inventory_items')
         .select('*')
-        .eq('location', location)
+        .eq('category_id', categoryId)
         .order('name');
 
       if (error) throw error;
       
-      // Map DB column names to our interface properties
-      const items: InventoryItem[] = (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category || '',
-        location: item.location || location,
-        current_stock: item.current_stock || 0,
-        min_level: item.min_level || 0,
-        vendor_ids: item.vendor_ids || [],
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      
-      return items;
+      return (data || []).map(mapDbItemToClientItem);
     } catch (error: any) {
-      console.error(`Error fetching inventory items for location ${location}:`, error);
+      console.error(`Error fetching inventory items for category ${categoryId}:`, error);
       return [];
     }
   },
 
-  async getInventoryItemsByCategory(category: string): Promise<InventoryItem[]> {
+  async searchInventoryItems(query: string): Promise<InventoryItem[]> {
     try {
       const { data, error } = await supabase
         .from('inventory_items')
         .select('*')
-        .eq('category', category)
+        .ilike('name', `%${query}%`)
         .order('name');
 
       if (error) throw error;
       
-      // Map DB column names to our interface properties
-      const items: InventoryItem[] = (data || []).map(item => ({
-        id: item.id,
-        name: item.name,
-        category: item.category || category,
-        location: item.location || 'main',
-        current_stock: item.current_stock || 0,
-        min_level: item.min_level || 0,
-        vendor_ids: item.vendor_ids || [],
-        created_at: item.created_at,
-        updated_at: item.updated_at
-      }));
-      
-      return items;
+      return (data || []).map(mapDbItemToClientItem);
     } catch (error: any) {
-      console.error(`Error fetching inventory items for category ${category}:`, error);
+      console.error(`Error searching inventory items with query ${query}:`, error);
       return [];
     }
   },
 
   async addInventoryItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>): Promise<InventoryItem | null> {
     try {
-      // Map our interface properties to DB column names
-      const dbItem = {
-        name: item.name,
-        category: item.category,
-        location: item.location,
-        current_stock: item.current_stock,
-        min_level: item.min_level,
-        vendor_ids: item.vendor_ids
-      };
+      const dbItem = mapClientItemToDbItem(item);
       
       const { data, error } = await supabase
         .from('inventory_items')
@@ -169,18 +137,7 @@ export const inventoryService = {
       if (error) throw error;
       toast.success('Inventory item added successfully');
       
-      // Map DB response back to our interface
-      return {
-        id: data.id,
-        name: data.name,
-        category: data.category || '',
-        location: data.location || 'main',
-        current_stock: data.current_stock || 0,
-        min_level: data.min_level || 0,
-        vendor_ids: data.vendor_ids || [],
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
+      return mapDbItemToClientItem(data);
     } catch (error: any) {
       console.error('Error adding inventory item:', error);
       toast.error('Failed to add inventory item', {
@@ -275,12 +232,11 @@ export const inventoryService = {
     try {
       const { data, error } = await supabase
         .from('inventory_items')
-        .select('category');
+        .select('category_id');
 
       if (error) throw error;
       
-      // Extract unique categories
-      const categories = new Set(data.map(item => item.category));
+      const categories = new Set(data.map(item => item.category_id));
       return Array.from(categories).sort();
     } catch (error: any) {
       console.error('Error fetching unique categories:', error);
@@ -296,7 +252,6 @@ export const inventoryService = {
 
       if (error) throw error;
       
-      // Extract unique locations
       const locations = new Set(data.map(item => item.location));
       return Array.from(locations).sort();
     } catch (error: any) {

@@ -82,7 +82,14 @@ export const chatService = {
         .order('created_at');
 
       if (error) throw error;
-      return data || [];
+      
+      // Ensure correct type mapping
+      const messages: ChatMessage[] = (data || []).map(msg => ({
+        ...msg,
+        channel_id: msg.channel_id || channelId // Ensure channel_id is present
+      }));
+      
+      return messages;
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
@@ -91,7 +98,7 @@ export const chatService = {
 
   async sendChannelMessage(message: { channel_id: string; user_id?: string; content: string; is_read?: boolean }): Promise<ChatMessage | null> {
     try {
-      // Convert user_id to sender_id for compatibility with the table structure
+      // Create a properly structured message for the database
       const dbMessage = {
         content: message.content,
         sender_id: message.user_id || '',
@@ -106,7 +113,15 @@ export const chatService = {
         .single();
 
       if (error) throw error;
-      return data;
+      
+      // Transform response to match ChatMessage interface
+      const chatMessage: ChatMessage = {
+        ...data,
+        channel_id: message.channel_id, // Ensure channel_id is present
+        user_id: message.user_id
+      };
+      
+      return chatMessage;
     } catch (error: any) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message', {

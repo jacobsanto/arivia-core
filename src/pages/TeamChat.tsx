@@ -5,7 +5,7 @@ import { Menu } from "lucide-react";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatArea from "@/components/chat/ChatArea";
-import { channels, directMessages, emojis } from "@/components/chat/ChatData";
+import { channels, directMessages, emojis, EmojiData } from "@/components/chat/ChatData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const TeamChat = () => {
@@ -84,7 +84,7 @@ const TeamChat = () => {
           handleChangeMessage={handleChangeMessage}
           handleSendMessage={handleSendMessage}
           toggleSidebar={toggleSidebar}
-          emojis={emojis}
+          emojis={emojis as EmojiData[]}
           onAddReaction={addReaction}
           reactionMessageId={reactionMessageId}
           setReactionMessageId={setReactionMessageId}
