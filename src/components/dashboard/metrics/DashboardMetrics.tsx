@@ -1,9 +1,9 @@
 
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MetricCard } from "./MetricCard";
-import { MetricCardContainer } from "./MetricCardContainer";
-import { createMetricCards } from "./createMetricCards";
+import MetricCard from "./MetricCard";
+import MetricCardContainer from "./MetricCardContainer";
+import createMetricCards from "./createMetricCards";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface DashboardMetricsProps {
