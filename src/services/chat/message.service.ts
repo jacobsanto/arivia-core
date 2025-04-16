@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
 
+// Define a clear interface for database messages to avoid any circular references
 interface DbChatMessage {
   id: string;
   content: string;
@@ -25,7 +26,7 @@ export const messageService = {
 
       if (error) throw error;
       
-      // Map the database result to the expected format
+      // Map the database result to the expected format using the explicitly typed interface
       return (data as DbChatMessage[] || []).map(msg => ({
         id: msg.id,
         channel_id: channelId,
