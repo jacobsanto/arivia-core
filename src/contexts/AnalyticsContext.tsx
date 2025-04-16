@@ -1,8 +1,10 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback } from 'react';
 import { TimeFilter } from '@/utils/dateRangeUtils';
+import { analyticsService } from '@/services/analytics/analytics.service';
+import { getDateRangeForTimeFilter } from '@/utils/dateRangeUtils';
 
-export type PropertyFilter = 'all' | 'Villa Caldera' | 'Villa Sunset' | 'Villa Oceana' | 'Villa Paradiso' | 'Villa Azure';
+export type PropertyFilter = 'all' | string;
 export type TimeRangeFilter = TimeFilter;
 
 interface AnalyticsContextType {
@@ -14,25 +16,60 @@ interface AnalyticsContextType {
   setDateRange: (range: { from?: Date, to?: Date }) => void;
   timeRangeFilter: TimeRangeFilter;
   setTimeRangeFilter: (filter: TimeRangeFilter) => void;
+  financialData: any[];
+  occupancyData: any[];
+  propertiesList: string[];
   isLoading: boolean;
-  refreshData: () => void;
+  refreshData: () => Promise<void>;
 }
 
 const AnalyticsContext = createContext<AnalyticsContextType | undefined>(undefined);
 
 export const AnalyticsProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [selectedProperty, setSelectedProperty] = useState<PropertyFilter>('all');
-  const [selectedYear, setSelectedYear] = useState<string>('2025');
-  const [dateRange, setDateRange] = useState<{ from?: Date, to?: Date }>({});
+  const [selectedYear, setSelectedYear] = useState<string>(new Date().getFullYear().toString());
+  const [dateRange, setDateRange] = useState<{ from?: Date, to?: Date }>(getDateRangeForTimeFilter('month'));
   const [timeRangeFilter, setTimeRangeFilter] = useState<TimeRangeFilter>('month');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [financialData, setFinancialData] = useState<any[]>([]);
+  const [occupancyData, setOccupancyData] = useState<any[]>([]);
+  const [propertiesList, setPropertiesList] = useState<string[]>([]);
   
-  const refreshData = () => {
+  const loadData = useCallback(async () => {
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const [financialReports, occupancyReports, properties] = await Promise.all([
+        analyticsService.getFinancialReports(dateRange),
+        analyticsService.getOccupancyReports(dateRange),
+        analyticsService.getPropertiesList()
+      ]);
+      
+      // Set data
+      setFinancialData(financialReports);
+      setOccupancyData(occupancyReports);
+      setPropertiesList(properties);
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  };
+    }
+  }, [dateRange]);
+  
+  // Initial data load
+  React.useEffect(() => {
+    loadData();
+  }, [loadData]);
+  
+  // Update date range when time filter changes
+  React.useEffect(() => {
+    if (timeRangeFilter !== 'custom') {
+      setDateRange(getDateRangeForTimeFilter(timeRangeFilter));
+    }
+  }, [timeRangeFilter]);
+  
+  const refreshData = useCallback(async () => {
+    await loadData();
+  }, [loadData]);
   
   return (
     <AnalyticsContext.Provider value={{
@@ -44,6 +81,9 @@ export const AnalyticsProvider: React.FC<{ children: ReactNode }> = ({ children 
       setDateRange,
       timeRangeFilter,
       setTimeRangeFilter,
+      financialData,
+      occupancyData,
+      propertiesList,
       isLoading,
       refreshData
     }}>

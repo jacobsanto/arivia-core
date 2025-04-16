@@ -9,11 +9,12 @@ export * from './exportUtils';
 export { 
   refreshDashboardData,
   setupAutoRefresh,
-  prepareRefreshData
+  getRefreshStatus
 } from './refreshUtils';
 export {
   fetchDashboardData,
   fetchPropertiesData,
   fetchHousekeepingTasks,
-  fetchMaintenanceTasks
+  fetchMaintenanceTasks,
+  TaskRecord
 } from './dataFetchUtils';

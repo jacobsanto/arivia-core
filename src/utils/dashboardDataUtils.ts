@@ -1,24 +1,37 @@
 
-import { financialData, revenueByPropertyData, expenseAnalysisData } from "@/components/reports/analytics/financialData";
-import { occupancyData, monthlyOccupancyData } from "@/components/reports/analytics/occupancyData";
+// This file has been refactored and replaced by proper utilities in src/services/analytics and src/utils/dashboard
+// Importing from new location for backward compatibility
 import { DashboardData } from "@/hooks/useDashboard";
+import { fetchDashboardData } from "@/utils/dashboard/dataFetchUtils";
+import { analyticsService } from "@/services/analytics/analytics.service";
 
-export const getDashboardFinancialData = (selectedProperty: string = "all") => {
-  // Filter financial data based on property selection
-  const filteredFinancialData = selectedProperty === "all"
-    ? financialData
-    : financialData.filter(data => data.property === selectedProperty);
+// Legacy function to maintain backward compatibility
+export const getDashboardData = async (
+  selectedProperty: string = "all", 
+  dateRange: { from: Date; to: Date }
+): Promise<DashboardData> => {
+  return fetchDashboardData(selectedProperty, dateRange);
+};
 
+// Legacy functions providing financial data
+export const getDashboardFinancialData = async (
+  selectedProperty: string = "all",
+  dateRange?: { from?: Date; to?: Date }
+) => {
+  const financialData = await analyticsService.getFinancialReports(dateRange);
+  const filteredData = analyticsService.formatFinancialReportData(
+    financialData, 
+    selectedProperty
+  );
+  
   // Calculate totals and averages
-  const totalRevenue = filteredFinancialData.reduce((sum, item) => sum + item.revenue, 0);
-  const totalExpenses = filteredFinancialData.reduce((sum, item) => sum + item.expenses, 0);
+  const totalRevenue = filteredData.reduce((sum, item) => sum + item.revenue, 0);
+  const totalExpenses = filteredData.reduce((sum, item) => sum + item.expenses, 0);
   const totalProfit = totalRevenue - totalExpenses;
   const averageMargin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
 
   return {
-    financialData: filteredFinancialData,
-    revenueByPropertyData,
-    expenseAnalysisData,
+    financialData: filteredData,
     totalRevenue,
     totalExpenses,
     totalProfit,
@@ -26,29 +39,28 @@ export const getDashboardFinancialData = (selectedProperty: string = "all") => {
   };
 };
 
-export const getDashboardOccupancyData = (selectedProperty: string = "all") => {
-  // Filter occupancy data based on property selection
-  const filteredOccupancyData = selectedProperty === "all" 
-    ? occupancyData
-    : occupancyData.filter(data => data.property === selectedProperty);
-
-  // Filter monthly occupancy data based on property selection
-  const filteredMonthlyData = selectedProperty === "all"
-    ? monthlyOccupancyData
-    : monthlyOccupancyData.filter(data => data.property === selectedProperty);
+// Legacy functions providing occupancy data
+export const getDashboardOccupancyData = async (
+  selectedProperty: string = "all",
+  dateRange?: { from?: Date; to?: Date }
+) => {
+  const occupancyData = await analyticsService.getOccupancyReports(dateRange);
+  const filteredData = analyticsService.formatOccupancyReportData(
+    occupancyData, 
+    selectedProperty
+  );
 
   // Calculate averages
-  const totalBookings = filteredOccupancyData.reduce((sum, item) => sum + item.bookings, 0);
-  const avgOccupancyRate = filteredOccupancyData.length > 0
-    ? Math.round(filteredOccupancyData.reduce((sum, item) => sum + item.occupancyRate, 0) / filteredOccupancyData.length)
+  const totalBookings = filteredData.reduce((sum, item) => sum + item.bookings, 0);
+  const avgOccupancyRate = filteredData.length > 0
+    ? Math.round(filteredData.reduce((sum, item) => sum + item.occupancy_rate, 0) / filteredData.length)
     : 0;
-  const avgStayDuration = filteredOccupancyData.length > 0 && filteredOccupancyData.some(item => item.averageStay)
-    ? (filteredOccupancyData.reduce((sum, item) => sum + (item.averageStay || 0), 0) / filteredOccupancyData.length).toFixed(1)
+  const avgStayDuration = filteredData.length > 0 && filteredData.some(item => item.average_stay)
+    ? (filteredData.reduce((sum, item) => sum + (item.average_stay || 0), 0) / filteredData.length).toFixed(1)
     : "N/A";
 
   return {
-    occupancyData: filteredOccupancyData,
-    monthlyOccupancyData: filteredMonthlyData,
+    occupancyData: filteredData,
     totalBookings,
     avgOccupancyRate,
     avgStayDuration
@@ -56,7 +68,7 @@ export const getDashboardOccupancyData = (selectedProperty: string = "all") => {
 };
 
 /**
- * Generate mock dashboard data as a fallback when database is empty
+ * Generate default dashboard data as a fallback when database is empty
  * This is useful during development or when setting up a new instance
  */
 export const getDefaultDashboardData = (): DashboardData => {

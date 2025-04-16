@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { DashboardData } from "@/hooks/useDashboard";
 import { toastService } from "@/services/toast";
+import { analyticsService } from "@/services/analytics/analytics.service";
 
 /**
  * Fetches properties data from Supabase
@@ -41,7 +42,7 @@ export const fetchPropertiesData = async (selectedProperty: string) => {
  * Fetches housekeeping tasks data from Supabase
  */
 export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateStr: string | null, toDateStr: string | null) => {
-  let tasksQuery = supabase.from('housekeeping_tasks').select('id, status, due_date');
+  let tasksQuery = supabase.from('housekeeping_tasks').select('id, status, due_date, title, property_id, priority, assigned_to, description');
   
   // Apply property filter if not 'all'
   if (selectedProperty !== 'all') {
@@ -78,7 +79,7 @@ export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateS
  * Fetches maintenance tasks data from Supabase
  */
 export const fetchMaintenanceTasks = async (selectedProperty: string, fromDateStr: string | null, toDateStr: string | null) => {
-  let maintenanceQuery = supabase.from('maintenance_tasks').select('id, status, priority, due_date');
+  let maintenanceQuery = supabase.from('maintenance_tasks').select('id, status, priority, due_date, title, property_id, location, description, assigned_to');
   
   // Apply property filter if not 'all'
   if (selectedProperty !== 'all') {
@@ -115,29 +116,43 @@ export const fetchMaintenanceTasks = async (selectedProperty: string, fromDateSt
 export const fetchTodayRevenue = async () => {
   let revenueToday = 0;
   try {
-    // Example: query a financial_reports table for today's revenue
+    // Query the financial_reports table for today's revenue
     const today = format(new Date(), 'yyyy-MM-dd');
     const { data: financialData } = await supabase
       .from('financial_reports')
       .select('revenue')
       .eq('date', today)
-      .single();
+      .maybeSingle();
     
     revenueToday = financialData?.revenue || 0;
+    
+    // If no financial data exists for today, calculate an estimate from bookings
+    if (!financialData) {
+      const { data: bookingsData } = await supabase
+        .from('bookings')
+        .select('total_price')
+        .eq('check_in_date', today);
+        
+      revenueToday = bookingsData?.reduce((sum, booking) => sum + booking.total_price, 0) || 0;
+    }
   } catch (finError) {
     console.log('No financial data available for today:', finError);
-    // Fallback to a calculated value if no financial data exists
   }
   
   return revenueToday;
 };
 
-// Define a simple type for task records to avoid infinite type instantiation
-type TaskRecord = {
+// Define a type for task records to avoid infinite type instantiation
+export type TaskRecord = {
   id: string;
   status: string;
   due_date: string;
   priority?: string;
+  title: string;
+  property_id?: string;
+  description?: string;
+  assigned_to?: string;
+  location?: string;
   [key: string]: any;
 };
 
@@ -178,6 +193,16 @@ export const fetchDashboardData = async (
     // Calculate revenue for today
     const revenueToday = await fetchTodayRevenue();
     
+    // Fetch average rating
+    let avgRating = 0;
+    try {
+      // In a real app, this would come from a reviews table or similar
+      // For now, we'll use a placeholder value
+      avgRating = 4.8;
+    } catch (err) {
+      console.log('No ratings data available:', err);
+    }
+    
     // Assemble the dashboard data object
     return {
       properties: propertiesResult.stats,
@@ -188,7 +213,7 @@ export const fetchDashboardData = async (
       maintenanceTasks: maintenanceResult.maintenanceData || [],
       quickStats: {
         occupancyRate,
-        avgRating: 4.8, // This would ideally come from a reviews table
+        avgRating,
         revenueToday,
         pendingCheckouts: tasksResult.stats.pending // Or a more specific metric if available
       }

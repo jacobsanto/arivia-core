@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { startOfDay, endOfDay, addDays } from "date-fns";
 import { toastService } from "@/services/toast";
-import { fetchDashboardData } from "@/utils/dashboard/dataFetchUtils";
+import { fetchDashboardData, TaskRecord } from "@/utils/dashboard/dataFetchUtils";
 import { refreshDashboardData } from "@/utils/dashboard";
 
 export interface DashboardData {
@@ -24,26 +25,9 @@ export interface DashboardData {
     critical: number;
     standard: number;
   };
-  upcomingTasks?: Array<{
-    id: string;
-    status: string;
-    due_date: string;
-    priority?: string;
-    [key: string]: any;
-  }>;
-  housekeepingTasks?: Array<{
-    id: string;
-    status: string;
-    due_date: string;
-    [key: string]: any;
-  }>;
-  maintenanceTasks?: Array<{
-    id: string;
-    status: string;
-    priority: string;
-    due_date: string;
-    [key: string]: any;
-  }>;
+  upcomingTasks?: TaskRecord[];
+  housekeepingTasks?: TaskRecord[];
+  maintenanceTasks?: TaskRecord[];
   quickStats?: {
     occupancyRate: number;
     avgRating: number;
