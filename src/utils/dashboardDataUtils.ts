@@ -53,3 +53,4 @@ export const getDashboardOccupancyData = (selectedProperty: string = "all") => {
     avgStayDuration
   };
 };
+

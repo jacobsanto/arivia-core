@@ -76,3 +76,4 @@ export const formatAnalyticsDataForReport = (data: any[], type: string): any[] =
       return data;
   }
 };
+

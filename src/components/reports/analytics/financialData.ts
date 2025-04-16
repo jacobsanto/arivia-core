@@ -12,3 +12,4 @@ export const formatFinancialReportData = (data: any[], property: string) => {
   }
   return data.filter(item => item.property === property);
 };
+

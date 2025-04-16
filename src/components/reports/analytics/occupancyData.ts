@@ -1,3 +1,4 @@
+
 // This file will be replaced by real data from the database
 
 export const occupancyData = [];
@@ -10,3 +11,4 @@ export const formatOccupancyReportData = (data: any[], property: string) => {
   }
   return data.filter(item => item.property === property);
 };
+

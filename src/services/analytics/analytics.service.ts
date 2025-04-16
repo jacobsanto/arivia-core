@@ -153,3 +153,4 @@ export const analyticsService = {
     return data.filter(item => item.property === property);
   }
 };
+

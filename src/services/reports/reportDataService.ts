@@ -1,6 +1,7 @@
 
 import { DateRange } from '@/components/reports/DateRangeSelector';
 import { isWithinInterval, parseISO, startOfDay } from 'date-fns';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define interfaces for our report data
 export interface PropertyReportData {
@@ -59,3 +60,4 @@ class ReportDataService {
 }
 
 export const reportDataService = new ReportDataService();
+

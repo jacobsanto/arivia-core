@@ -1,3 +1,4 @@
+
 // This file will be replaced by real data from the database
 
 export const propertyReports = [];
@@ -10,3 +11,4 @@ export const barColors = {
   rejected: "#f43f5e",
   approved: "#22c55e"
 };
+
