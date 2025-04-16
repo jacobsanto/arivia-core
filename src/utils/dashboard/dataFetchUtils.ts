@@ -137,12 +137,12 @@ export const fetchTodayRevenue = async () => {
  */
 export const fetchDashboardData = async (
   selectedProperty: string,
-  dateRange: { from: Date | null, to: Date | null }
+  dateRange: { from: Date; to: Date }
 ): Promise<DashboardData> => {
   try {
     // Get the date range in the format needed for queries
-    const fromDateStr = dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : null;
-    const toDateStr = dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : null;
+    const fromDateStr = format(dateRange.from, 'yyyy-MM-dd');
+    const toDateStr = format(dateRange.to, 'yyyy-MM-dd');
     
     // Fetch all required data in parallel
     const [propertiesResult, tasksResult, maintenanceResult] = await Promise.all([
@@ -153,7 +153,10 @@ export const fetchDashboardData = async (
     
     // Get upcoming tasks (combine both task types)
     const now = new Date();
-    const upcomingTasks = [...(tasksResult.tasksData || []), ...(maintenanceResult.maintenanceData || [])]
+    const upcomingTasks = [
+      ...(tasksResult.tasksData || []), 
+      ...(maintenanceResult.maintenanceData || [])
+    ]
       .filter(task => new Date(task.due_date) >= now && task.status !== 'completed')
       .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
       .slice(0, 5);

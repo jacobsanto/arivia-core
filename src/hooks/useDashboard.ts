@@ -53,7 +53,13 @@ export const useDashboard = () => {
     setError(null);
     
     try {
-      const data = await fetchDashboardData(selectedProperty, dateRange);
+      // Make sure both from and to exist before calling fetchDashboardData
+      const safeRange = {
+        from: dateRange.from || new Date(),
+        to: dateRange.to || new Date()
+      };
+      
+      const data = await fetchDashboardData(selectedProperty, safeRange);
       setDashboardData(data);
       setLastRefreshed(new Date());
       return data;
