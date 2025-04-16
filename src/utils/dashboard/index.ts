@@ -11,3 +11,9 @@ export {
   setupAutoRefresh,
   prepareRefreshData
 } from './refreshUtils';
+export {
+  fetchDashboardData,
+  fetchPropertiesData,
+  fetchHousekeepingTasks,
+  fetchMaintenanceTasks
+} from './dataFetchUtils';
