@@ -50,6 +50,7 @@ export const useDashboard = () => {
       return new Promise<void>((resolve, reject) => {
         setTimeout(() => {
           try {
+            // When data is successfully loaded
             setDashboardData({
               properties: {
                 total: 15,

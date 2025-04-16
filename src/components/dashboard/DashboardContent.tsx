@@ -15,10 +15,14 @@ import { CalendarClock, CalendarDays } from "lucide-react";
 
 interface DashboardContentProps {
   dashboardData: any;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
-  dashboardData
+  dashboardData,
+  isLoading = false,
+  error = null
 }) => {
   const [housekeepingTasks, setHousekeepingTasks] = useState<Task[]>(initialHousekeepingTasks);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(initialMaintenanceTasks);
@@ -36,7 +40,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   return (
     <div className="space-y-6 px-2 md:px-4">
       {/* Stats Cards */}
-      <DashboardMetrics data={dashboardData} />
+      <DashboardMetrics 
+        data={dashboardData} 
+        isLoading={isLoading}
+        error={error}
+      />
       
       {/* Separator */}
       <Separator className="my-6" />

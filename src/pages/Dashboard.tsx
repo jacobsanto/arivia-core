@@ -75,10 +75,16 @@ const Dashboard: React.FC = () => {
     return isMobile ? (
       <MobileDashboard 
         dashboardData={dashboardData} 
-        onRefresh={handleRefresh} 
+        onRefresh={handleRefresh}
+        isLoading={isLoading}
+        error={error} 
       />
     ) : (
-      <DashboardContent dashboardData={dashboardData} />
+      <DashboardContent 
+        dashboardData={dashboardData} 
+        isLoading={isLoading}
+        error={error}
+      />
     );
   }, [dashboardData, isMobile, isLoading, error, handleRefresh]);
 
