@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMessageStorage } from "./useMessageStorage";
-import { useTypingIndicator } from "./useTypingIndicator";
+import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator"; // Updated import path
 import { useMessageReactions } from "./useMessageReactions";
 import { Message, MessageReaction } from "./useChatTypes";
 
