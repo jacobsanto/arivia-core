@@ -14,9 +14,9 @@ export const messageService = {
 
       if (error) throw error;
       
-      // Fix: Use type assertion to break recursive type inference
-      const messages = (data || []) as ChatMessageDB[];
-      return messages.map(msg => ({
+      // Break recursive type inference with explicit typing
+      // Use the proper ChatMessageDB type that's defined in chat.types.ts
+      return ((data || []) as unknown as ChatMessageDB[]).map(msg => ({
         id: msg.id,
         channel_id: channelId,
         user_id: msg.sender_id,
