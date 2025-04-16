@@ -1,6 +1,7 @@
 
 import { addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
+// Updated TimeFilter to include all values used throughout the app
 export type TimeFilter = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom' | 'last7' | 'last30' | 'last90' | 'last12months';
 
 /**

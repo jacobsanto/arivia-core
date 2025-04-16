@@ -13,6 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { SwipeableList } from "@/components/ui/swipeable-list";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { TimeFilter } from "@/utils/dateRangeUtils";
+
 const maintenanceCompletionData = [{
   name: 'Villa Caldera',
   completed: 24,
@@ -101,8 +103,9 @@ const barColors = {
   approved: '#4ade80',
   pending: '#f59e0b'
 };
+
 const MaintenanceReporting = () => {
-  const [dateRange, setDateRange] = useState('month'); // week, month, quarter, year
+  const [dateRange, setDateRange] = useState<TimeFilter>('month'); // Using TimeFilter type
   const [customDateRange, setCustomDateRange] = useState({
     from: undefined,
     to: undefined
@@ -113,6 +116,7 @@ const MaintenanceReporting = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [propertyFilter, setPropertyFilter] = useState('all');
   const isMobile = useIsMobile();
+
   const getCurrentData = () => {
     let filteredData;
     switch (activeTab) {
@@ -137,21 +141,25 @@ const MaintenanceReporting = () => {
     }
     return filteredData;
   };
+
   const handleDateRangeChange = (range: any) => {
     setCustomDateRange(range);
     if (range.from && range.to) {
       setDateRange('custom');
     }
   };
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
     }, 1200);
   };
+
   const handlePropertyChange = (property: string) => {
     setPropertyFilter(property);
   };
+
   return <div className="space-y-6 overflow-hidden">
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         <ReportingHeader dateRange={dateRange} setDateRange={setDateRange} isLoading={isLoading || isRefreshing} />
@@ -220,6 +228,7 @@ const MaintenanceReporting = () => {
       </div>
     </div>;
 };
+
 const PropertyMaintenanceReport = ({
   isMobile,
   data = maintenanceCompletionData,
@@ -356,6 +365,7 @@ const PropertyMaintenanceReport = ({
         </div>}
     </div>;
 };
+
 const TechnicianReport = ({
   isMobile,
   data = maintenanceTechData,
@@ -466,6 +476,7 @@ const TechnicianReport = ({
         </Card>}
     </div>;
 };
+
 const MaintenanceTypeReport = ({
   data = maintenanceTypeData,
   isLoading = false
@@ -525,4 +536,5 @@ const MaintenanceTypeReport = ({
       </Card>
     </div>;
 };
+
 export default MaintenanceReporting;

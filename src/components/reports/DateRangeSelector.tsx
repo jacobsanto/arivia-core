@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DateRange as DayPickerDateRange } from "react-day-picker";
 
-// Update DateRange to match the react-day-picker's DateRange structure
-export interface DateRange extends DayPickerDateRange {
-  // This will inherit from react-day-picker's DateRange where 'to' is optional
+// Updated DateRange to make from and to both optional to match usage across components
+export interface DateRange {
+  from?: Date;
+  to?: Date;
 }
 
 interface DateRangeSelectorProps {
@@ -54,10 +55,7 @@ export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
       <PopoverContent className="w-auto p-0 z-50" align="start" side="bottom">
         <Calendar 
           mode="range" 
-          selected={{
-            from: value.from,
-            to: value.to
-          }} 
+          selected={value}  
           onSelect={range => {
             onChange(range || { from: undefined, to: undefined });
           }} 
