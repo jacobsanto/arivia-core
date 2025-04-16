@@ -33,24 +33,61 @@ interface FilterOptions {
 }
 
 class ReportDataService {
-  // These methods will be connected to the database instead of using placeholder data
-  
   // Get property data filtered by date range
   async getPropertyData(filters: FilterOptions): Promise<PropertyReportData[]> {
-    await this.simulateApiDelay();
-    return [];
+    try {
+      await this.simulateApiDelay();
+      
+      // In a real implementation, we would fetch data from Supabase
+      // Example:
+      /*
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .select('property_id, status, created_at')
+        .gte('created_at', filters.dateRange.from?.toISOString() || '')
+        .lte('created_at', filters.dateRange.to?.toISOString() || '');
+      
+      if (error) throw error;
+      
+      // Process the data here...
+      */
+      
+      // For now, return empty array since we cleared the mock data
+      return [];
+    } catch (error) {
+      console.error('Error fetching property report data:', error);
+      return [];
+    }
   }
   
   // Get staff data filtered by date range
   async getStaffData(filters: FilterOptions): Promise<StaffReportData[]> {
-    await this.simulateApiDelay();
-    return [];
+    try {
+      await this.simulateApiDelay();
+      
+      // In a real implementation, this would fetch from Supabase
+      
+      // For now, return empty array since we cleared the mock data
+      return [];
+    } catch (error) {
+      console.error('Error fetching staff report data:', error);
+      return [];
+    }
   }
   
   // Get time analysis data filtered by date range
   async getTimeAnalysisData(filters: FilterOptions): Promise<TimeAnalysisData[]> {
-    await this.simulateApiDelay();
-    return [];
+    try {
+      await this.simulateApiDelay();
+      
+      // In a real implementation, this would fetch from Supabase
+      
+      // For now, return empty array since we cleared the mock data
+      return [];
+    } catch (error) {
+      console.error('Error fetching time analysis data:', error);
+      return [];
+    }
   }
   
   // Helper method to simulate API delay
@@ -60,4 +97,3 @@ class ReportDataService {
 }
 
 export const reportDataService = new ReportDataService();
-

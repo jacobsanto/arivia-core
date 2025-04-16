@@ -1,19 +1,24 @@
 
 import { BaseService } from "../base/base.service";
 import { toastService } from "../toast/toast.service";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Report {
   id: string;
   name: string;
   type: 'task' | 'maintenance' | 'inventory' | 'custom';
   filters?: Record<string, any>;
-  dateRange?: {
-    startDate: string | null;
-    endDate: string | null;
+  date_range?: {
+    start_date: string | null;
+    end_date: string | null;
   };
-  createdAt: string;
-  createdBy?: string;
-  lastRun?: string;
+  created_at: string;
+  created_by?: string;
+  last_run?: string;
+  frequency?: string;
+  recipients?: string[];
+  next_scheduled?: string;
+  status?: 'active' | 'paused' | 'archived';
 }
 
 /**
@@ -31,23 +36,35 @@ export class ReportService extends BaseService<Report> {
    */
   async createReport(report: Partial<Report>): Promise<Report> {
     try {
-      // Generate a report ID
-      const reportId = `report_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      const { data: user } = await supabase.auth.getUser();
       
-      const newReport = await this.create({
+      if (!user.user) {
+        throw new Error("User not authenticated");
+      }
+      
+      const reportData = {
         ...report,
-        id: reportId,
-        createdAt: new Date().toISOString(),
-      } as Report);
+        created_by: user.user.id,
+        status: 'active'
+      };
+      
+      const { data, error } = await supabase
+        .from('reports')
+        .insert(reportData)
+        .select()
+        .single();
+      
+      if (error) throw error;
       
       toastService.success('Report Saved', {
         description: `Your report "${report.name}" has been saved.`
       });
       
-      return newReport;
-    } catch (error) {
+      return data;
+    } catch (error: any) {
+      console.error('Error saving report:', error);
       toastService.error('Error Saving Report', {
-        description: 'There was an error saving your report. Please try again.'
+        description: error.message || 'There was an error saving your report. Please try again.'
       });
       throw error;
     }
@@ -58,21 +75,22 @@ export class ReportService extends BaseService<Report> {
    */
   async generateReport(reportConfig: Partial<Report>): Promise<any> {
     try {
-      // In a real app, this would call an API to generate the report
       console.log('Generating report with config:', reportConfig);
       
-      // Simulate report generation
+      // In a future implementation, this would call a Supabase Edge Function
+      // to generate the report data
+      
+      // For now, we'll return a placeholder
       const reportData = {
         generatedAt: new Date().toISOString(),
         config: reportConfig,
-        // Example data would come from the API in a real app
         data: []
       };
       
       return reportData;
-    } catch (error) {
+    } catch (error: any) {
       toastService.error('Error Generating Report', {
-        description: 'There was an error generating your report. Please try again.'
+        description: error.message || 'There was an error generating your report. Please try again.'
       });
       throw error;
     }
@@ -83,10 +101,19 @@ export class ReportService extends BaseService<Report> {
    */
   async getReportsByType(type: Report['type']): Promise<Report[]> {
     try {
-      const reports = await this.getAll();
-      return reports.filter(report => report.type === type);
-    } catch (error) {
+      const { data, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('type', type)
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error: any) {
       console.error('Error fetching reports:', error);
+      toastService.error('Error Fetching Reports', {
+        description: error.message || 'There was an error loading reports. Please try again.'
+      });
       return [];
     }
   }
@@ -96,16 +123,63 @@ export class ReportService extends BaseService<Report> {
    */
   async scheduleReport(reportId: string, schedule: any): Promise<void> {
     try {
-      // In a real app, this would call an API to schedule the report
-      console.log(`Scheduling report ${reportId} with config:`, schedule);
+      const { frequency, recipients, nextDate } = schedule;
+      
+      const { error } = await supabase
+        .from('reports')
+        .update({
+          frequency,
+          recipients,
+          next_scheduled: nextDate
+        })
+        .eq('id', reportId);
+      
+      if (error) throw error;
       
       toastService.success('Report Scheduled', {
         description: 'Your report has been scheduled and will be sent according to your settings.'
       });
-    } catch (error) {
+    } catch (error: any) {
       toastService.error('Error Scheduling Report', {
-        description: 'There was an error scheduling your report. Please try again.'
+        description: error.message || 'There was an error scheduling your report. Please try again.'
       });
+      throw error;
+    }
+  }
+  
+  /**
+   * Send a report now
+   */
+  async sendReportNow(reportId: string): Promise<void> {
+    try {
+      const { data: report, error: fetchError } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('id', reportId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      if (!report) {
+        throw new Error('Report not found');
+      }
+      
+      // Update the last_run timestamp
+      const { error: updateError } = await supabase
+        .from('reports')
+        .update({
+          last_run: new Date().toISOString()
+        })
+        .eq('id', reportId);
+      
+      if (updateError) throw updateError;
+      
+      // In a real application, here we would send the report via email
+      // using a Supabase Edge Function
+      
+      return;
+    } catch (error: any) {
+      console.error('Error sending report:', error);
       throw error;
     }
   }

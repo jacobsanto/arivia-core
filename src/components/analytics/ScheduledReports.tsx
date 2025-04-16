@@ -6,42 +6,7 @@ import { useReports } from "@/hooks/useReports";
 import { ReportFormDialog } from "./reports/ReportFormDialog";
 import { ReportTable } from "./reports/ReportTable";
 import { ReportStatistics } from "./reports/ReportStatistics";
-
-interface ScheduledReport {
-  id: string;
-  name: string;
-  frequency: string;
-  recipients: string;
-  lastSent: string;
-  nextScheduled: string;
-}
-
-const scheduledReports: ScheduledReport[] = [
-  {
-    id: "1",
-    name: "Monthly Revenue Summary",
-    frequency: "Monthly",
-    recipients: "management@example.com",
-    lastSent: "2025-03-01",
-    nextScheduled: "2025-04-01",
-  },
-  {
-    id: "2",
-    name: "Weekly Occupancy Report",
-    frequency: "Weekly",
-    recipients: "operations@example.com",
-    lastSent: "2025-03-29",
-    nextScheduled: "2025-04-05",
-  },
-  {
-    id: "3",
-    name: "Staff Performance Review",
-    frequency: "Monthly",
-    recipients: "hr@example.com",
-    lastSent: "2025-03-15",
-    nextScheduled: "2025-04-15",
-  },
-];
+import { supabase } from "@/integrations/supabase/client";
 
 export const ScheduledReports = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -57,18 +22,45 @@ export const ScheduledReports = () => {
   });
   
   // Use our reports hook
-  const { reports, loadReports, sendReportNow } = useReports('task');
+  const { reports, loadReports, sendReportNow, isAuthenticated } = useReports('custom');
+  
+  // Transform reports to match the component's expected format
+  const formattedReports = reports.map(report => ({
+    id: report.id,
+    name: report.name,
+    frequency: report.frequency || 'Monthly',
+    recipients: Array.isArray(report.recipients) ? report.recipients.join(', ') : 'No recipients',
+    lastSent: report.last_run ? new Date(report.last_run).toLocaleDateString() : 'Never',
+    nextScheduled: report.next_scheduled ? new Date(report.next_scheduled).toLocaleDateString() : 'Not scheduled'
+  }));
   
   useEffect(() => {
-    loadReports();
-  }, []);
+    if (isAuthenticated) {
+      loadReports();
+    }
+  }, [isAuthenticated]);
 
-  const handleDeleteReport = (id: string) => {
-    // In a real app this would make an API call
-    toastService.info("Report deleted successfully");
+  const handleDeleteReport = async (id: string) => {
+    try {
+      // Call Supabase to delete the report
+      const { error } = await supabase
+        .from('reports')
+        .update({ status: 'archived' })
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      // Refresh reports list
+      await loadReports();
+      toastService.success("Report deleted successfully");
+    } catch (error: any) {
+      toastService.error("Error deleting report", {
+        description: error.message || "An unknown error occurred"
+      });
+    }
   };
 
-  const handleSendNow = async (report: ScheduledReport) => {
+  const handleSendNow = async (report: any) => {
     try {
       setSendingReportId(report.id);
       
@@ -83,10 +75,6 @@ export const ScheduledReports = () => {
       // Call the send report function
       await sendReportNow(report.id);
       
-      // Show a success message
-      toastService.success(`Report sent successfully`, {
-        description: `${report.name} has been sent to ${report.recipients}.`
-      });
     } catch (error) {
       toastService.error(`Failed to send report`, {
         description: `There was an error sending ${report.name}. Please try again.`
@@ -96,21 +84,67 @@ export const ScheduledReports = () => {
     }
   };
 
-  const handleEditReport = (report: ScheduledReport) => {
+  const handleEditReport = (report: any) => {
     setIsEditMode(true);
     setEditReportId(report.id);
     setReportName(report.name);
     setReportFrequency(report.frequency);
-    setReportRecipients(report.recipients);
+    setReportRecipients(Array.isArray(report.recipients) ? report.recipients.join(', ') : '');
     setIsDialogOpen(true);
   };
 
-  const handleSaveReport = () => {
-    // In a real app this would make an API call
-    if (isEditMode && editReportId) {
-      toastService.success("Report updated successfully");
-    } else {
-      toastService.success("New scheduled report created");
+  const handleSaveReport = async () => {
+    if (!reportName.trim()) {
+      toastService.error("Report name is required");
+      return;
+    }
+    
+    try {
+      const recipientsList = reportRecipients
+        .split(',')
+        .map(email => email.trim())
+        .filter(email => email);
+      
+      if (isEditMode && editReportId) {
+        // Update existing report
+        const { error } = await supabase
+          .from('reports')
+          .update({
+            name: reportName,
+            frequency: reportFrequency,
+            recipients: recipientsList
+          })
+          .eq('id', editReportId);
+        
+        if (error) throw error;
+        
+        toastService.success("Report updated successfully");
+      } else {
+        // Creating a new report
+        const { error } = await supabase
+          .from('reports')
+          .insert({
+            name: reportName,
+            type: 'custom',
+            frequency: reportFrequency,
+            recipients: recipientsList,
+            date_range: {
+              start_date: dateRange.from?.toISOString() || null,
+              end_date: dateRange.to?.toISOString() || null
+            }
+          });
+        
+        if (error) throw error;
+        
+        toastService.success("New scheduled report created");
+      }
+      
+      // Refresh reports list
+      await loadReports();
+    } catch (error: any) {
+      toastService.error("Error saving report", {
+        description: error.message || "An unknown error occurred"
+      });
     }
     
     // Close dialog and reset form
@@ -140,14 +174,14 @@ export const ScheduledReports = () => {
       </div>
       
       <ReportTable 
-        reports={scheduledReports}
+        reports={formattedReports}
         sendingReportId={sendingReportId}
         onSendNow={handleSendNow}
         onEdit={handleEditReport}
         onDelete={handleDeleteReport}
       />
       
-      <ReportStatistics activeReportsCount={scheduledReports.length} />
+      <ReportStatistics activeReportsCount={formattedReports.length} />
       
       <ReportFormDialog 
         isOpen={isDialogOpen}

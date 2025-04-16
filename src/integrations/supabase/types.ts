@@ -723,6 +723,51 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          created_by: string
+          date_range: Json | null
+          filters: Json | null
+          frequency: string | null
+          id: string
+          last_run: string | null
+          name: string
+          next_scheduled: string | null
+          recipients: string[] | null
+          status: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          date_range?: Json | null
+          filters?: Json | null
+          frequency?: string | null
+          id?: string
+          last_run?: string | null
+          name: string
+          next_scheduled?: string | null
+          recipients?: string[] | null
+          status?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          date_range?: Json | null
+          filters?: Json | null
+          frequency?: string | null
+          id?: string
+          last_run?: string | null
+          name?: string
+          next_scheduled?: string | null
+          recipients?: string[] | null
+          status?: string | null
+          type?: string
+        }
+        Relationships: []
+      }
       system_settings: {
         Row: {
           category: string
