@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { DateRange } from "@/components/reports/DateRangeSelector";
-import { formatDateRangeDisplay } from '@/utils/dateRangeUtils';
+import { formatDateRange } from '@/utils/dateRangeUtils';
 import { Calendar } from "lucide-react";
 
 interface DateRangeDisplayProps {
@@ -17,7 +17,7 @@ const DateRangeDisplay: React.FC<DateRangeDisplayProps> = ({
 }) => {
   const displayText = () => {
     if (dateRange.from && dateRange.to) {
-      return formatDateRangeDisplay(dateRange.from, dateRange.to);
+      return formatDateRange(dateRange.from, dateRange.to);
     }
     return "All time";
   };

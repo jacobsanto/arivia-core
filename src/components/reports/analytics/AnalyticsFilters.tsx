@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DateRangeSelector, DateRange } from '@/components/reports/DateRangeSelector';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PropertyFilter, TimeRangeFilter, useAnalytics } from '@/contexts/AnalyticsContext';
 import { format } from 'date-fns';
-import { formatDateRangeDisplay, getDateRangeDescription } from '@/utils/dateRangeUtils';
+import { formatDateRange, getDateRangeDescription } from '@/utils/dateRangeUtils';
 
 export const AnalyticsFilters: React.FC = () => {
   const isMobile = useIsMobile();

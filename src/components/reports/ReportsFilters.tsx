@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from '@/components/ui/badge';
 import { DateRangeSelector, DateRange } from '@/components/reports/DateRangeSelector';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatDateRangeDisplay } from '@/utils/dateRangeUtils';
+import { formatDateRange } from '@/utils/dateRangeUtils';
 import { format } from 'date-fns';
 
 interface ReportsFiltersProps {
@@ -26,7 +26,7 @@ export const ReportsFilters: React.FC<ReportsFiltersProps> = ({ dateRange, setDa
       if (isMobile) {
         return `${format(dateRange.from, 'MM/dd')} - ${format(dateRange.to, 'MM/dd')}`;
       }
-      return formatDateRangeDisplay(dateRange.from, dateRange.to);
+      return formatDateRange(dateRange.from, dateRange.to);
     }
     return "All Time";
   };

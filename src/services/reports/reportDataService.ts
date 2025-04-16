@@ -5,10 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 // Define data structure interfaces for consistency
 export interface PropertyReportData {
   property: string;
+  name?: string; // Alias for property
   taskCount: number;
   completionRate: number;
   averageTime: number;
   rating: number;
+  completed: number;
+  rejected: number;
+  approved: number;
 }
 
 export interface StaffReportData {
@@ -17,13 +21,19 @@ export interface StaffReportData {
   tasksAssigned: number;
   completionRate: number;
   averageTime: number;
+  rating: number;
+  completed: number; // Alias for tasksCompleted
+  avgTime: number; // Alias for averageTime
 }
 
 export interface TimeAnalysisData {
   timeframe: string;
+  name?: string; // Alias for timeframe
   averageCompletionTime: number;
   taskCount: number;
   onTimePercentage: number;
+  avgTime: number; // Alias for averageCompletionTime
+  tasks: number; // Alias for taskCount
 }
 
 export interface ReportFilters {
@@ -49,24 +59,36 @@ class ReportDataService {
       const mockData: PropertyReportData[] = [
         {
           property: "Villa Caldera",
+          name: "Villa Caldera",
           taskCount: 48,
           completionRate: 92,
           averageTime: 45,
-          rating: 4.8
+          rating: 4.8,
+          completed: 48,
+          rejected: 4,
+          approved: 44
         },
         {
           property: "Villa Oceana",
+          name: "Villa Oceana",
           taskCount: 36,
           completionRate: 88,
           averageTime: 51,
-          rating: 4.5
+          rating: 4.5,
+          completed: 36,
+          rejected: 6,
+          approved: 30
         },
         {
           property: "Villa Sunset",
+          name: "Villa Sunset",
           taskCount: 42,
           completionRate: 95,
           averageTime: 38,
-          rating: 4.9
+          rating: 4.9,
+          completed: 42,
+          rejected: 2,
+          approved: 40
         }
       ];
       
@@ -91,21 +113,30 @@ class ReportDataService {
           tasksCompleted: 45,
           tasksAssigned: 48,
           completionRate: 93.8,
-          averageTime: 42
+          averageTime: 42,
+          rating: 4.8,
+          completed: 45,
+          avgTime: 42
         },
         {
           name: "Alex D.",
           tasksCompleted: 32,
           tasksAssigned: 36,
           completionRate: 88.9,
-          averageTime: 53
+          averageTime: 53,
+          rating: 4.5,
+          completed: 32,
+          avgTime: 53
         },
         {
           name: "Sophie T.",
           tasksCompleted: 39,
           tasksAssigned: 42,
           completionRate: 92.9,
-          averageTime: 37
+          averageTime: 37,
+          rating: 4.7,
+          completed: 39,
+          avgTime: 37
         }
       ];
       
@@ -127,21 +158,30 @@ class ReportDataService {
       const mockData: TimeAnalysisData[] = [
         {
           timeframe: "Morning",
+          name: "Morning",
           averageCompletionTime: 42,
           taskCount: 65,
-          onTimePercentage: 94
+          onTimePercentage: 94,
+          avgTime: 42,
+          tasks: 65
         },
         {
           timeframe: "Afternoon",
+          name: "Afternoon",
           averageCompletionTime: 48,
           taskCount: 72,
-          onTimePercentage: 88
+          onTimePercentage: 88,
+          avgTime: 48,
+          tasks: 72
         },
         {
           timeframe: "Evening",
+          name: "Evening",
           averageCompletionTime: 53,
           taskCount: 45,
-          onTimePercentage: 82
+          onTimePercentage: 82,
+          avgTime: 53,
+          tasks: 45
         }
       ];
       

@@ -8,7 +8,7 @@ import { ReportingHeader } from './reporting/ReportingHeader';
 import { DateRangeSelector } from '@/components/reports/DateRangeSelector';
 import { ReportActionButtons } from './reporting/ReportActionButtons';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { getDateRangeForTimeFilter } from '@/utils/dateRangeUtils';
+import { getDateRangeForTimeFilter, TimeFilter } from '@/utils/dateRangeUtils';
 import { 
   reportDataService, 
   PropertyReportData, 
@@ -18,7 +18,7 @@ import {
 import { toastService } from '@/services/toast/toast.service';
 
 const TaskReporting = () => {
-  const [dateRange, setDateRange] = useState('month'); // week, month, quarter, year
+  const [dateRange, setDateRange] = useState<TimeFilter>('month'); // week, month, quarter, year
   const [customDateRange, setCustomDateRange] = useState({
     from: getDateRangeForTimeFilter('month').from,
     to: getDateRangeForTimeFilter('month').to

@@ -3,11 +3,11 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Calendar, Loader2 } from "lucide-react";
-import { getDateRangeDescription } from "@/utils/dateRangeUtils";
+import { getDateRangeDescription, TimeFilter } from "@/utils/dateRangeUtils";
 
 interface ReportingHeaderProps {
-  dateRange: string;
-  setDateRange: (range: string) => void;
+  dateRange: TimeFilter;
+  setDateRange: (range: TimeFilter) => void;
   isLoading?: boolean;
 }
 

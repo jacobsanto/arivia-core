@@ -1,7 +1,7 @@
 
 import { addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
-export type TimeFilter = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+export type TimeFilter = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom' | 'last7' | 'last30' | 'last90' | 'last12months';
 
 /**
  * Get date range based on time filter
@@ -34,6 +34,26 @@ export const getDateRangeForTimeFilter = (filter: TimeFilter): { from: Date; to:
       return {
         from: startOfYear(now),
         to: endOfYear(now)
+      };
+    case 'last7':
+      return {
+        from: subDays(now, 7),
+        to: now
+      };
+    case 'last30':
+      return {
+        from: subDays(now, 30),
+        to: now
+      };
+    case 'last90':
+      return {
+        from: subDays(now, 90),
+        to: now
+      };
+    case 'last12months':
+      return {
+        from: subDays(now, 365),
+        to: now
       };
     case 'custom':
     default:
@@ -79,4 +99,41 @@ export const formatDateRange = (from?: Date, to?: Date): string => {
   }
   
   return `${from!.toLocaleDateString()} - ${to!.toLocaleDateString()}`;
+};
+
+/**
+ * Format date range for display with more context
+ */
+export const formatDateRangeDisplay = (from: Date, to: Date): string => {
+  return `${from.toLocaleDateString()} - ${to.toLocaleDateString()}`;
+};
+
+/**
+ * Get a description for a time filter
+ */
+export const getDateRangeDescription = (filter: TimeFilter): string => {
+  switch (filter) {
+    case 'day':
+      return 'Today';
+    case 'week':
+      return 'This Week';
+    case 'month':
+      return 'This Month';
+    case 'quarter':
+      return 'This Quarter';
+    case 'year':
+      return 'This Year';
+    case 'last7':
+      return 'Last 7 Days';
+    case 'last30':
+      return 'Last 30 Days';
+    case 'last90':
+      return 'Last 90 Days';
+    case 'last12months':
+      return 'Last 12 Months';
+    case 'custom':
+      return 'Custom Period';
+    default:
+      return 'All Time';
+  }
 };
