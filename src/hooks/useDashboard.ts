@@ -10,19 +10,25 @@ export interface DashboardData {
   properties: {
     total: number;
     occupied: number;
-    maintenance: number;
-    available: number;
+    vacant: number;
+    maintenance?: number;
+    available?: number;
   };
   tasks: {
     total: number;
     completed: number;
-    inProgress: number;
     pending: number;
+    inProgress?: number;
   };
-  upcomingTasks: Array<any>;
-  housekeepingTasks: Array<any>;
-  maintenanceTasks: Array<any>;
-  quickStats: {
+  maintenance: {
+    total: number;
+    critical: number;
+    standard: number;
+  };
+  upcomingTasks?: Array<any>;
+  housekeepingTasks?: Array<any>;
+  maintenanceTasks?: Array<any>;
+  quickStats?: {
     occupancyRate: number;
     avgRating: number;
     revenueToday: number;
@@ -50,19 +56,25 @@ export const useDashboard = () => {
       return new Promise<void>((resolve, reject) => {
         setTimeout(() => {
           try {
-            // When data is successfully loaded
+            // Create mock data that matches the createMetricCards expectations
             setDashboardData({
               properties: {
                 total: 15,
                 occupied: 9,
+                vacant: 4,
                 maintenance: 2,
                 available: 4
               },
               tasks: {
                 total: 24,
                 completed: 12,
-                inProgress: 8,
-                pending: 4
+                pending: 4,
+                inProgress: 8
+              },
+              maintenance: {
+                total: 14,
+                critical: 3,
+                standard: 11
               },
               upcomingTasks: initialHousekeepingTasks.slice(0, 5),
               housekeepingTasks: initialHousekeepingTasks,

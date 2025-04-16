@@ -24,8 +24,11 @@ interface DashboardData {
 const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
   const cards: Array<Omit<MetricCardProps, 'swipeable'>> = [];
   
-  // Only add the property card if properties data exists
-  if (data.properties) {
+  // Only add the property card if properties data exists and has valid values
+  if (data.properties && 
+      typeof data.properties.total === 'number' && 
+      typeof data.properties.occupied === 'number' && 
+      typeof data.properties.vacant === 'number') {
     cards.push({
       title: "Properties",
       value: `${data.properties.total}`,
@@ -44,8 +47,11 @@ const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<M
     });
   }
 
-  // Only add the tasks card if tasks data exists
-  if (data.tasks) {
+  // Only add the tasks card if tasks data exists and has valid values
+  if (data.tasks && 
+      typeof data.tasks.total === 'number' && 
+      typeof data.tasks.completed === 'number' && 
+      typeof data.tasks.pending === 'number') {
     cards.push({
       title: "Tasks",
       value: `${data.tasks.total}`,
@@ -60,8 +66,11 @@ const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<M
     });
   }
 
-  // Only add the maintenance card if maintenance data exists
-  if (data.maintenance) {
+  // Only add the maintenance card if maintenance data exists and has valid values
+  if (data.maintenance && 
+      typeof data.maintenance.total === 'number' && 
+      typeof data.maintenance.critical === 'number' && 
+      typeof data.maintenance.standard === 'number') {
     cards.push({
       title: "Maintenance",
       value: `${data.maintenance.total}`,

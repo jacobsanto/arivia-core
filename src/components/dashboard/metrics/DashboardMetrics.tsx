@@ -56,11 +56,25 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
     );
   }
   
-  // Only create metric cards if we have data
-  const hasData = Boolean(
-    data.properties || data.tasks || data.maintenance
-  );
+  // Check if we have valid data for any of the metrics
+  const hasPropertiesData = data?.properties && 
+    typeof data.properties.total === 'number' &&
+    typeof data.properties.occupied === 'number' &&
+    typeof data.properties.vacant === 'number';
+    
+  const hasTasksData = data?.tasks && 
+    typeof data.tasks.total === 'number' &&
+    typeof data.tasks.completed === 'number' &&
+    typeof data.tasks.pending === 'number';
+    
+  const hasMaintenanceData = data?.maintenance && 
+    typeof data.maintenance.total === 'number' &&
+    typeof data.maintenance.critical === 'number' &&
+    typeof data.maintenance.standard === 'number';
   
+  const hasData = hasPropertiesData || hasTasksData || hasMaintenanceData;
+  
+  // Only create metric cards if we have data
   const metricCards = hasData ? createMetricCards(data, isMobile) : [];
   
   if (!hasData || metricCards.length === 0) {
