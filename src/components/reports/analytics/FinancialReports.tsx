@@ -122,6 +122,7 @@ export const FinancialReports: React.FC = () => {
         </CardHeader>
         <CardContent>
           <PerformanceMetricsChart 
+            title={getFinancialOverviewTitle()}
             data={chartData} 
             height={300} 
             type="multi-line" 
@@ -169,6 +170,7 @@ export const FinancialReports: React.FC = () => {
             </CardHeader>
             <CardContent>
               <PerformanceMetricsChart 
+                title="Profitability by Property"
                 data={propertyComparisonData}
                 height={300}
                 hideLegend={isMobile}
