@@ -94,20 +94,19 @@ export const chatService = {
 
       if (error) throw error;
       
-      // Convert database response to ChatMessage format explicitly
-      // Break the recursive type reference by using explicit mapping
-      return (data || []).map((msg) => {
-        const chatMessage: ChatMessage = {
-          id: msg.id,
-          channel_id: channelId,
-          user_id: msg.sender_id,
-          content: msg.content,
-          is_read: msg.is_read,
-          created_at: msg.created_at,
-          updated_at: msg.updated_at
-        };
-        return chatMessage;
-      });
+      // Fix: Use type assertion to break recursive type inference
+      // Cast the data array to any first, then map to the specific interface
+      const messages = (data || []) as any[];
+      return messages.map(msg => ({
+        id: msg.id,
+        channel_id: channelId,
+        user_id: msg.sender_id,
+        content: msg.content,
+        is_read: msg.is_read,
+        created_at: msg.created_at,
+        updated_at: msg.updated_at,
+        reactions: msg.reactions || {}
+      }));
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
