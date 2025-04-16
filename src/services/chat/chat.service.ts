@@ -95,7 +95,7 @@ export const chatService = {
       if (error) throw error;
       
       // Map DB format to our interface
-      const messages: ChatMessage[] = (data || []).map(msg => ({
+      return (data || []).map((msg: ChatMessageDB) => ({
         id: msg.id,
         channel_id: channelId, // Ensure channel_id is always set
         user_id: msg.sender_id,
@@ -105,7 +105,6 @@ export const chatService = {
         updated_at: msg.updated_at
       }));
       
-      return messages;
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];

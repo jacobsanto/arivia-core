@@ -92,18 +92,20 @@ const mapDbToMaintenanceTask = (db: MaintenanceTaskDB): MaintenanceTask => {
   };
 };
 
-const mapMaintenanceTaskToDb = (task: Partial<MaintenanceTask>): Partial<MaintenanceTaskDB> => {
-  return {
-    title: task.title,
-    property_id: task.property,
-    status: task.status,
-    priority: task.priority,
-    due_date: task.dueDate,
-    assigned_to: task.assignee,
-    description: task.description,
-    location: task.location,
-    required_tools: task.requiredTools ? task.requiredTools.join(',') : undefined
-  };
+const mapMaintenanceTaskToDb = (task: Partial<MaintenanceTask>): Record<string, any> => {
+  const result: Record<string, any> = {};
+  
+  if (task.title !== undefined) result.title = task.title;
+  if (task.property !== undefined) result.property_id = task.property;
+  if (task.status !== undefined) result.status = task.status;
+  if (task.priority !== undefined) result.priority = task.priority;
+  if (task.dueDate !== undefined) result.due_date = task.dueDate;
+  if (task.assignee !== undefined) result.assigned_to = task.assignee;
+  if (task.description !== undefined) result.description = task.description;
+  if (task.location !== undefined) result.location = task.location;
+  if (task.requiredTools !== undefined) result.required_tools = task.requiredTools.join(',');
+  
+  return result;
 };
 
 const mapDbToHousekeepingTask = (db: HousekeepingTaskDB): HousekeepingTask => {
@@ -124,18 +126,20 @@ const mapDbToHousekeepingTask = (db: HousekeepingTaskDB): HousekeepingTask => {
   };
 };
 
-const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Partial<HousekeepingTaskDB> => {
-  return {
-    title: task.title,
-    property_id: task.property,
-    status: task.status,
-    priority: task.priority,
-    due_date: task.dueDate,
-    assigned_to: task.assignedTo,
-    description: task.description,
-    approval_status: task.approvalStatus,
-    rejection_reason: task.rejectionReason
-  };
+const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Record<string, any> => {
+  const result: Record<string, any> = {};
+  
+  if (task.title !== undefined) result.title = task.title;
+  if (task.property !== undefined) result.property_id = task.property;
+  if (task.status !== undefined) result.status = task.status;
+  if (task.priority !== undefined) result.priority = task.priority;
+  if (task.dueDate !== undefined) result.due_date = task.dueDate;
+  if (task.assignedTo !== undefined) result.assigned_to = task.assignedTo;
+  if (task.description !== undefined) result.description = task.description;
+  if (task.approvalStatus !== undefined) result.approval_status = task.approvalStatus;
+  if (task.rejectionReason !== undefined) result.rejection_reason = task.rejectionReason;
+  
+  return result;
 };
 
 export const tasksService = {
@@ -177,6 +181,11 @@ export const tasksService = {
   async addMaintenanceTask(task: Omit<MaintenanceTask, 'id' | 'created_at' | 'updated_at'>): Promise<MaintenanceTask | null> {
     try {
       const dbTask = mapMaintenanceTaskToDb(task);
+      
+      // Ensure required fields are present
+      if (!dbTask.title) throw new Error('Task title is required');
+      if (!dbTask.property_id) throw new Error('Property is required');
+      if (!dbTask.due_date) throw new Error('Due date is required');
       
       const { data, error } = await supabase
         .from('maintenance_tasks')
@@ -274,6 +283,11 @@ export const tasksService = {
   async addHousekeepingTask(task: Omit<HousekeepingTask, 'id' | 'created_at' | 'updated_at'>): Promise<HousekeepingTask | null> {
     try {
       const dbTask = mapHousekeepingTaskToDb(task);
+      
+      // Ensure required fields are present
+      if (!dbTask.title) throw new Error('Task title is required');
+      if (!dbTask.property_id) throw new Error('Property is required');
+      if (!dbTask.due_date) throw new Error('Due date is required');
       
       const { data, error } = await supabase
         .from('housekeeping_tasks')

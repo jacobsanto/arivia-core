@@ -44,6 +44,7 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     id: task.id || `maintenance-${Math.random().toString(36).substr(2, 9)}`,
     title: task.title,
     property: task.property,
+    type: "Maintenance",
     status: (task.status as TaskStatus) || "Pending",
     priority: (task.priority as "Low" | "Medium" | "High") || "Medium",
     dueDate: dueDateString,

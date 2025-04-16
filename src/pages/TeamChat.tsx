@@ -5,7 +5,7 @@ import { Menu } from "lucide-react";
 import { useChatMessages } from "@/hooks/useChatMessages";
 import ChatSidebar from "@/components/chat/ChatSidebar";
 import ChatArea from "@/components/chat/ChatArea";
-import { channels, directMessages, emojis, EmojiData } from "@/components/chat/ChatData";
+import { channels, directMessages, emojis } from "@/components/chat/ChatData";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const TeamChat = () => {
@@ -40,7 +40,7 @@ const TeamChat = () => {
     }
   };
 
-  // Convert EmojiData array to string array for compatibility with ChatArea component
+  // Convert emojis to just the symbols array for compatibility with ChatArea component
   const emojiSymbols = emojis.map(emoji => emoji.symbol);
 
   return (

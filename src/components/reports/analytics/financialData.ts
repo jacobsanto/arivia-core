@@ -20,6 +20,24 @@ export const financialData = [
   }
 ];
 
+// Mock data for revenue by property
+export const revenueByPropertyData = [
+  { property: "Villa Caldera", revenue: 75000 },
+  { property: "Villa Sunset", revenue: 62000 },
+  { property: "Villa Oceana", revenue: 88000 },
+  { property: "Villa Paradiso", revenue: 53000 },
+  { property: "Villa Azure", revenue: 67000 }
+];
+
+// Mock data for expense analysis
+export const expenseAnalysisData = [
+  { category: "Cleaning", amount: 12000 },
+  { category: "Maintenance", amount: 8500 },
+  { category: "Utilities", amount: 15000 },
+  { category: "Management", amount: 20000 },
+  { category: "Other", amount: 5500 }
+];
+
 // Helper function to format data for charts
 export const formatFinancialReportData = (data: any[], property: string) => {
   if (property === "all") {
