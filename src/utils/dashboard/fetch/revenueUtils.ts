@@ -4,12 +4,15 @@ import { format } from "date-fns";
 
 /**
  * Calculates revenue for today
+ * @returns A promise that resolves to the total revenue for today
  */
 export const fetchTodayRevenue = async (): Promise<number> => {
-  let revenueToday = 0;
+  let revenueToday: number = 0;
   try {
     // Query the financial_reports table for today's revenue
     const today = format(new Date(), 'yyyy-MM-dd');
+    
+    // Use explicit type for the database query result
     const { data: financialData, error } = await supabase
       .from('financial_reports')
       .select('revenue')
