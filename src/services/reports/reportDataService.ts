@@ -1,99 +1,158 @@
 
-import { DateRange } from '@/components/reports/DateRangeSelector';
-import { isWithinInterval, parseISO, startOfDay } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
+import { toastService } from "@/services/toast/toast.service";
+import { supabase } from "@/integrations/supabase/client";
 
-// Define interfaces for our report data
+// Define data structure interfaces for consistency
 export interface PropertyReportData {
-  name: string;
-  completed: number;
-  rejected: number;
-  approved: number;
-  date: string; // ISO string for the date
+  property: string;
+  taskCount: number;
+  completionRate: number;
+  averageTime: number;
+  rating: number;
 }
 
 export interface StaffReportData {
   name: string;
-  completed: number;
-  avgTime: number;
-  rating: number;
-  dates: string[]; // ISO strings for dates of activity
+  tasksCompleted: number;
+  tasksAssigned: number;
+  completionRate: number;
+  averageTime: number;
 }
 
 export interface TimeAnalysisData {
-  name: string; // Day of week
-  tasks: number;
-  avgTime: number;
-  date: string; // ISO string for the date
+  timeframe: string;
+  averageCompletionTime: number;
+  taskCount: number;
+  onTimePercentage: number;
 }
 
-interface FilterOptions {
-  dateRange: DateRange;
-  property?: string;
+export interface ReportFilters {
+  dateRange?: { from?: Date; to?: Date };
+  propertyId?: string;
+  staffId?: string;
+  taskType?: string;
 }
 
+/**
+ * Report Data Service
+ * 
+ * Provides standardized access to data for reports
+ */
 class ReportDataService {
-  // Get property data filtered by date range
-  async getPropertyData(filters: FilterOptions): Promise<PropertyReportData[]> {
+  /**
+   * Get property-based report data
+   */
+  async getPropertyData(filters: ReportFilters = {}): Promise<PropertyReportData[]> {
     try {
-      await this.simulateApiDelay();
+      // For now using mock data
+      // In production, this would query Supabase with filters
+      const mockData: PropertyReportData[] = [
+        {
+          property: "Villa Caldera",
+          taskCount: 48,
+          completionRate: 92,
+          averageTime: 45,
+          rating: 4.8
+        },
+        {
+          property: "Villa Oceana",
+          taskCount: 36,
+          completionRate: 88,
+          averageTime: 51,
+          rating: 4.5
+        },
+        {
+          property: "Villa Sunset",
+          taskCount: 42,
+          completionRate: 95,
+          averageTime: 38,
+          rating: 4.9
+        }
+      ];
       
-      // In a real implementation, we would fetch data from Supabase
-      // Example:
-      /*
-      const { data, error } = await supabase
-        .from('housekeeping_tasks')
-        .select('property_id, status, created_at')
-        .gte('created_at', filters.dateRange.from?.toISOString() || '')
-        .lte('created_at', filters.dateRange.to?.toISOString() || '');
-      
-      if (error) throw error;
-      
-      // Process the data here...
-      */
-      
-      // For now, return empty array since we cleared the mock data
-      return [];
-    } catch (error) {
-      console.error('Error fetching property report data:', error);
+      return mockData;
+    } catch (error: any) {
+      console.error('Error getting property report data:', error);
+      toastService.error('Error loading property data');
       return [];
     }
   }
   
-  // Get staff data filtered by date range
-  async getStaffData(filters: FilterOptions): Promise<StaffReportData[]> {
+  /**
+   * Get staff-based report data
+   */
+  async getStaffData(filters: ReportFilters = {}): Promise<StaffReportData[]> {
     try {
-      await this.simulateApiDelay();
+      // For now using mock data
+      // In production, this would query Supabase with filters
+      const mockData: StaffReportData[] = [
+        {
+          name: "Maria K.",
+          tasksCompleted: 45,
+          tasksAssigned: 48,
+          completionRate: 93.8,
+          averageTime: 42
+        },
+        {
+          name: "Alex D.",
+          tasksCompleted: 32,
+          tasksAssigned: 36,
+          completionRate: 88.9,
+          averageTime: 53
+        },
+        {
+          name: "Sophie T.",
+          tasksCompleted: 39,
+          tasksAssigned: 42,
+          completionRate: 92.9,
+          averageTime: 37
+        }
+      ];
       
-      // In a real implementation, this would fetch from Supabase
-      
-      // For now, return empty array since we cleared the mock data
-      return [];
-    } catch (error) {
-      console.error('Error fetching staff report data:', error);
+      return mockData;
+    } catch (error: any) {
+      console.error('Error getting staff report data:', error);
+      toastService.error('Error loading staff data');
       return [];
     }
   }
   
-  // Get time analysis data filtered by date range
-  async getTimeAnalysisData(filters: FilterOptions): Promise<TimeAnalysisData[]> {
+  /**
+   * Get time analysis data
+   */
+  async getTimeAnalysisData(filters: ReportFilters = {}): Promise<TimeAnalysisData[]> {
     try {
-      await this.simulateApiDelay();
+      // For now using mock data
+      // In production, this would query Supabase with filters
+      const mockData: TimeAnalysisData[] = [
+        {
+          timeframe: "Morning",
+          averageCompletionTime: 42,
+          taskCount: 65,
+          onTimePercentage: 94
+        },
+        {
+          timeframe: "Afternoon",
+          averageCompletionTime: 48,
+          taskCount: 72,
+          onTimePercentage: 88
+        },
+        {
+          timeframe: "Evening",
+          averageCompletionTime: 53,
+          taskCount: 45,
+          onTimePercentage: 82
+        }
+      ];
       
-      // In a real implementation, this would fetch from Supabase
-      
-      // For now, return empty array since we cleared the mock data
-      return [];
-    } catch (error) {
-      console.error('Error fetching time analysis data:', error);
+      return mockData;
+    } catch (error: any) {
+      console.error('Error getting time analysis data:', error);
+      toastService.error('Error loading time analysis data');
       return [];
     }
-  }
-  
-  // Helper method to simulate API delay
-  private async simulateApiDelay() {
-    return new Promise(resolve => setTimeout(resolve, 500 + Math.random() * 500));
   }
 }
 
+// Export a singleton instance
 export const reportDataService = new ReportDataService();

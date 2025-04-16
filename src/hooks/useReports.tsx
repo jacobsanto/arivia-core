@@ -59,15 +59,6 @@ export const useReports = (reportType: Report["type"] = "task") => {
     }
     
     try {
-      // Ensure report has the required fields
-      if (!reportData.created_by) {
-        const { data } = await supabase.auth.getUser();
-        if (!data.user) {
-          throw new Error('User not authenticated');
-        }
-        reportData.created_by = data.user.id;
-      }
-      
       const newReport = await reportService.createReport({
         ...reportData,
         type: reportType,

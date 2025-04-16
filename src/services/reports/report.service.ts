@@ -57,7 +57,7 @@ export class ReportService extends BaseService<Report> {
         name: report.name, // name is required
         type: report.type, // type is required
         created_by: user.user.id, // created_by is required
-        status: 'active',
+        status: report.status || 'active',
         filters: report.filters || {},
         date_range: report.date_range || null,
         frequency: report.frequency || null,

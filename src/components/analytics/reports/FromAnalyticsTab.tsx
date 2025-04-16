@@ -8,12 +8,27 @@ import { AnalyticsDashboard } from '@/components/analytics/AnalyticsDashboard';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatAnalyticsDataForReport } from '@/services/reports/analyticsToReportConverter';
 import { ReportPreview } from '@/components/reports/ReportPreview';
+import { toastService } from '@/services/toast/toast.service';
+import { supabase } from '@/integrations/supabase/client';
 
 export const FromAnalyticsTab: React.FC = () => {
   const [selectedChart, setSelectedChart] = useState('financial');
   const [reportData, setReportData] = useState<any[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
   const { selectedProperty, dateRange } = useAnalytics();
-  const { generateReport } = useReports('custom');
+  const { createReport } = useReports('custom');
+  
+  // Get the user ID for report creation
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data.user) {
+        setUserId(data.user.id);
+      }
+    };
+    
+    getUserId();
+  }, []);
   
   // Sample data for demonstration
   const financialData = [
@@ -40,6 +55,40 @@ export const FromAnalyticsTab: React.FC = () => {
       setReportData(formatAnalyticsDataForReport(occupancyData, 'occupancy'));
     }
   }, [selectedChart]);
+  
+  const handleCreateReport = async () => {
+    if (!userId) {
+      toastService.error("Authentication required", {
+        description: "Please login to create reports"
+      });
+      return;
+    }
+    
+    try {
+      const reportName = `${selectedChart === 'financial' ? 'Financial Performance' : 'Occupancy Trends'} Report`;
+      
+      await createReport({
+        name: reportName,
+        type: 'custom',
+        filters: {
+          chartType: selectedChart,
+          property: selectedProperty
+        },
+        date_range: {
+          start_date: dateRange.from?.toISOString() || null,
+          end_date: dateRange.to?.toISOString() || null
+        }
+      });
+      
+      toastService.success("Report created", {
+        description: `${reportName} has been created successfully`
+      });
+    } catch (error: any) {
+      toastService.error("Failed to create report", {
+        description: error.message || "An unknown error occurred"
+      });
+    }
+  };
   
   return (
     <Card>
@@ -97,16 +146,7 @@ export const FromAnalyticsTab: React.FC = () => {
         </Tabs>
         
         <div className="flex justify-end">
-          <Button onClick={() => {
-            generateReport({
-              name: `${selectedChart === 'financial' ? 'Financial Performance' : 'Occupancy Trends'} Report`,
-              type: 'custom',
-              filters: {
-                chartType: selectedChart,
-                property: selectedProperty
-              }
-            });
-          }}>
+          <Button onClick={handleCreateReport}>
             Create Report
           </Button>
         </div>
