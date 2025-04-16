@@ -23,22 +23,28 @@ export function useMessageReactions({
     try {
       const updatedMessages = messages.map(msg => {
         if (msg.id === messageId) {
-          const currentReactions = { ...msg.reactions } || {};
+          // Create a copy of the reactions or initialize if undefined
+          const currentReactions = { ...(msg.reactions || {}) };
           
+          // Get the users for this emoji or initialize as empty array
           const usersForEmoji = currentReactions[emoji] || [];
           const username = user.name || "Unknown";
           
+          // Find if the user has already reacted with this emoji
           const userIndex = usersForEmoji.indexOf(username);
           
           if (userIndex >= 0) {
+            // Remove user's reaction
             currentReactions[emoji] = [
               ...usersForEmoji.slice(0, userIndex),
               ...usersForEmoji.slice(userIndex + 1)
             ];
+            // If no users left for this emoji, remove the emoji entry
             if (currentReactions[emoji].length === 0) {
               delete currentReactions[emoji];
             }
           } else {
+            // Add user's reaction
             currentReactions[emoji] = [...usersForEmoji, username];
           }
           

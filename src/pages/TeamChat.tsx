@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -9,6 +8,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
+import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 
 const TeamChat = () => {
   // State
@@ -23,6 +23,7 @@ const TeamChat = () => {
   // Hooks
   const isMobile = useIsMobile();
   const { user } = useUser();
+  const { typingStatus, handleTyping, clearTyping } = useTypingIndicator();
   
   // Use our chat hook to manage messages
   const {
@@ -111,15 +112,9 @@ const TeamChat = () => {
     sendMessage();
   };
 
-  // Simple typing indicator for demonstration
-  const [typingStatus, setTypingStatus] = useState("");
-  
   const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
-    
-    // Simple typing simulation
-    setTypingStatus("typing...");
-    setTimeout(() => setTypingStatus(""), 3000);
+    handleTyping();
   };
 
   // For reactions

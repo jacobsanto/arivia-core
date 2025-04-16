@@ -1,8 +1,10 @@
 
-import React, { useState, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import React from "react";
 import { Message } from "@/hooks/useChatTypes";
 import MessageContent from "./message/MessageContent";
+import MessageAvatar from "./message/MessageAvatar";
+import MessageTimestamp from "./message/MessageTimestamp";
+import { useMessageHover } from "@/hooks/chat/useMessageHover";
 
 interface ChatMessageProps {
   message: Message;
@@ -23,96 +25,39 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   showEmojiPicker,
   setShowEmojiPicker,
 }) => {
-  // Track mouse events with local state for better reliability
-  const [isHoveringMessage, setIsHoveringMessage] = useState(false);
-  const [isHoveringPicker, setIsHoveringPicker] = useState(false);
-  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
-  const [leaveTimer, setLeaveTimer] = useState<NodeJS.Timeout | null>(null);
+  // Use our custom hook for hover management
+  const {
+    isHoveringMessage,
+    setIsHoveringMessage,
+    handleMessageMouseEnter: baseHandleMessageMouseEnter,
+    handleMessageMouseLeave: baseHandleMessageMouseLeave,
+    handlePickerMouseEnter,
+    handlePickerMouseLeave
+  } = useMessageHover();
   
-  // Clean up timers when component unmounts
-  useEffect(() => {
-    return () => {
-      if (hoverTimer) clearTimeout(hoverTimer);
-      if (leaveTimer) clearTimeout(leaveTimer);
-    };
-  }, [hoverTimer, leaveTimer]);
-  
-  // Handle showing reaction picker with delay to prevent flickering
+  // Create specific handlers for this message
   const handleMessageMouseEnter = () => {
-    // Don't show reaction picker for own messages
-    if (message.isCurrentUser) {
-      return;
-    }
-    
-    setIsHoveringMessage(true);
-    
-    // Clear any existing leave timer
-    if (leaveTimer) {
-      clearTimeout(leaveTimer);
-      setLeaveTimer(null);
-    }
-    
-    // Set a short delay before showing picker to prevent flickering
-    const timer = setTimeout(() => {
-      setReactionMessageId(message.id);
-      setShowEmojiPicker(true);
-    }, 300);
-    
-    setHoverTimer(timer);
+    baseHandleMessageMouseEnter(
+      message.id,
+      message.isCurrentUser,
+      setReactionMessageId,
+      setShowEmojiPicker
+    );
   };
   
-  // Handle mouse leaving message bubble
   const handleMessageMouseLeave = () => {
-    setIsHoveringMessage(false);
-    
-    // Clear any existing hover timer
-    if (hoverTimer) {
-      clearTimeout(hoverTimer);
-      setHoverTimer(null);
-    }
-    
-    // Only hide picker if not hovering over the picker itself after a short delay
-    const timer = setTimeout(() => {
-      if (!isHoveringPicker) {
-        setShowEmojiPicker(false);
-      }
-    }, 300);
-    
-    setLeaveTimer(timer);
+    baseHandleMessageMouseLeave(setShowEmojiPicker);
   };
   
-  // Handle mouse entering reaction picker
-  const handlePickerMouseEnter = () => {
-    setIsHoveringPicker(true);
-    
-    // Clear any existing leave timer
-    if (leaveTimer) {
-      clearTimeout(leaveTimer);
-      setLeaveTimer(null);
-    }
-  };
-  
-  // Handle mouse leaving reaction picker
-  const handlePickerMouseLeave = () => {
-    setIsHoveringPicker(false);
-    
-    // Only hide if not hovering over the message after a short delay
-    const timer = setTimeout(() => {
-      if (!isHoveringMessage) {
-        setShowEmojiPicker(false);
-      }
-    }, 300);
-    
-    setLeaveTimer(timer);
-  };
-  
-  // Handle emoji selection
   const handleEmojiClick = (emoji: string, e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    
-    // Add the reaction
     onAddReaction(message.id, emoji);
+  };
+
+  const messagePickerHandler = {
+    handlePickerMouseEnter: () => handlePickerMouseEnter(),
+    handlePickerMouseLeave: () => handlePickerMouseLeave(setShowEmojiPicker)
   };
 
   return (
@@ -124,10 +69,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           message.isCurrentUser ? "flex-row-reverse" : "flex-row"
         }`}
       >
-        <Avatar className={`h-8 w-8 ${message.isCurrentUser ? "ml-2" : "mr-2"}`}>
-          <AvatarImage src={message.avatar} alt={message.sender} />
-          <AvatarFallback>{message.sender[0]}</AvatarFallback>
-        </Avatar>
+        <MessageAvatar 
+          sender={message.sender} 
+          avatar={message.avatar} 
+          isCurrentUser={message.isCurrentUser} 
+        />
+        
         <div>
           <MessageContent
             message={message}
@@ -139,21 +86,13 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             handleEmojiClick={handleEmojiClick}
             reactionMessageId={reactionMessageId}
             showEmojiPicker={showEmojiPicker}
-            handlePickerMouseEnter={handlePickerMouseEnter}
-            handlePickerMouseLeave={handlePickerMouseLeave}
+            {...messagePickerHandler}
           />
-          <div
-            className={`flex text-xs text-muted-foreground mt-1 ${
-              message.isCurrentUser ? "justify-end" : "justify-start"
-            }`}
-          >
-            <span>
-              {new Date(message.timestamp).toLocaleTimeString("en-US", {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
+          
+          <MessageTimestamp 
+            timestamp={message.timestamp}
+            isCurrentUser={message.isCurrentUser}
+          />
         </div>
       </div>
     </div>
