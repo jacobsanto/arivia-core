@@ -35,8 +35,7 @@ export const fetchTodayRevenue = async (): Promise<number> => {
     
     // Check if we got financial data
     if (financialResult.data) {
-      const financialData = financialResult.data as FinancialReportData;
-      revenueToday = financialData.revenue || 0;
+      revenueToday = (financialResult.data as FinancialReportData).revenue || 0;
     } else {
       // If no financial data exists for today, calculate an estimate from bookings
       const bookingsResult = await supabase
@@ -50,9 +49,11 @@ export const fetchTodayRevenue = async (): Promise<number> => {
       }
         
       // Calculate total from bookings
-      const bookingsData = bookingsResult.data as BookingData[];
-      if (bookingsData && bookingsData.length > 0) {
-        revenueToday = bookingsData.reduce((sum, booking) => sum + booking.total_price, 0);
+      if (bookingsResult.data && bookingsResult.data.length > 0) {
+        revenueToday = (bookingsResult.data as BookingData[]).reduce(
+          (sum, booking) => sum + booking.total_price, 
+          0
+        );
       }
     }
   } catch (error) {
