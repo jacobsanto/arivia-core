@@ -8,18 +8,18 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-// Channel and DM types updated to match what's used in TeamChat.tsx
+// Channel and DM types
 export interface Channel {
   id: string;
   name: string;
   unreadCount: number;
+  status: "online" | "offline" | "away"; // For consistency with DirectMessage
 }
 
 export interface DirectMessage {
   id: string;
   name: string;
   avatar: string;
-  online: boolean;
   unreadCount: number;
   status: "online" | "offline" | "away";
 }
@@ -30,7 +30,7 @@ interface ChatSidebarProps {
   activeChat: string;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  handleSelectChat: (chat: string) => void;
+  handleSelectChat: (chatId: string, chatName: string, type: 'general' | 'direct') => void;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
 }
@@ -84,8 +84,7 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       : "hover:bg-secondary/50"
                   }`}
                   onClick={() => {
-                    handleSelectChat(dm.name);
-                    if (isMobile) toggleSidebar();
+                    handleSelectChat(dm.id, dm.name, 'direct');
                   }}
                 >
                   <Avatar className="h-8 w-8 relative">
@@ -127,11 +126,17 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       : "hover:bg-secondary/50"
                   }`}
                   onClick={() => {
-                    handleSelectChat(channel.name);
-                    if (isMobile) toggleSidebar();
+                    handleSelectChat(channel.id, channel.name, 'general');
                   }}
                 >
                   <span className="text-sm font-medium">#{channel.name}</span>
+                  
+                  {/* Unread indicator */}
+                  {channel.unreadCount > 0 && (
+                    <span className="bg-primary text-primary-foreground text-xs rounded-full px-2 py-0.5 ml-auto">
+                      {channel.unreadCount}
+                    </span>
+                  )}
                 </div>
               ))}
             </div>

@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ChatChannel } from './chat.types';
+import { ChatChannel, GENERAL_CHAT_CHANNEL_ID } from './chat.types';
 
 export const channelService = {
   async getChannels(): Promise<ChatChannel[]> {
@@ -19,6 +19,45 @@ export const channelService = {
         description: error.message
       });
       return [];
+    }
+  },
+
+  async getOrCreateGeneralChannel(): Promise<ChatChannel | null> {
+    try {
+      // First, check if a general channel exists
+      const { data, error } = await supabase
+        .from('chat_channels')
+        .select('*')
+        .eq('id', GENERAL_CHAT_CHANNEL_ID)
+        .single();
+
+      if (!error && data) {
+        return data;
+      }
+
+      // If not, create the general channel
+      const channel = {
+        id: GENERAL_CHAT_CHANNEL_ID,
+        name: 'General',
+        description: 'Public chat for all users',
+        is_property_specific: false
+      };
+
+      const { data: newChannel, error: createError } = await supabase
+        .from('chat_channels')
+        .insert(channel)
+        .select()
+        .single();
+
+      if (createError) throw createError;
+      
+      return newChannel;
+    } catch (error: any) {
+      console.error('Error with general channel:', error);
+      toast.error('Failed to access general chat', {
+        description: error.message
+      });
+      return null;
     }
   },
 

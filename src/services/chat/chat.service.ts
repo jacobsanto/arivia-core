@@ -6,15 +6,14 @@ import {
   ChatChannel,
   ChatMessage,
   DirectMessage,
-  ChatMessageDB
+  GENERAL_CHAT_CHANNEL_ID
 } from './chat.types';
 
 // Re-export types
 export type { 
   ChatChannel,
   ChatMessage,
-  DirectMessage,
-  ChatMessageDB
+  DirectMessage
 };
 
 // Create a consolidated service
@@ -22,6 +21,7 @@ export const chatService = {
   // Channels
   getChannels: channelService.getChannels,
   createChannel: channelService.createChannel,
+  getOrCreateGeneralChannel: channelService.getOrCreateGeneralChannel,
   
   // Messages
   getChannelMessages: messageService.getChannelMessages,
@@ -31,5 +31,9 @@ export const chatService = {
   // Direct Messages
   getDirectMessages: directMessageService.getDirectMessages,
   sendDirectMessage: directMessageService.sendDirectMessage,
-  markDirectMessageAsRead: directMessageService.markDirectMessageAsRead
+  markDirectMessageAsRead: directMessageService.markDirectMessageAsRead,
+  getUnreadMessageCounts: directMessageService.getUnreadMessageCounts
 };
+
+// Export the general channel ID
+export { GENERAL_CHAT_CHANNEL_ID };

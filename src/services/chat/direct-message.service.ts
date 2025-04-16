@@ -4,20 +4,47 @@ import { toast } from 'sonner';
 import { DirectMessage } from './chat.types';
 
 export const directMessageService = {
-  async getDirectMessages(userId: string, otherId: string): Promise<DirectMessage[]> {
+  async getDirectMessages(currentUserId: string, otherUserId: string): Promise<DirectMessage[]> {
     try {
       const { data, error } = await supabase
         .from('direct_messages')
         .select('*')
-        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-        .or(`sender_id.eq.${otherId},recipient_id.eq.${otherId}`)
+        .or(`sender_id.eq.${currentUserId},recipient_id.eq.${currentUserId}`)
+        .or(`sender_id.eq.${otherUserId},recipient_id.eq.${otherUserId}`)
         .order('created_at');
 
       if (error) throw error;
       return data || [];
     } catch (error: any) {
-      console.error(`Error fetching direct messages between ${userId} and ${otherId}:`, error);
+      console.error(`Error fetching direct messages between ${currentUserId} and ${otherUserId}:`, error);
       return [];
+    }
+  },
+
+  async getUnreadMessageCounts(userId: string): Promise<Record<string, number>> {
+    try {
+      // Get all unread messages for this user
+      const { data, error } = await supabase
+        .from('direct_messages')
+        .select('sender_id, id')
+        .eq('recipient_id', userId)
+        .eq('is_read', false);
+
+      if (error) throw error;
+
+      // Count messages by sender
+      const unreadCounts: Record<string, number> = {};
+      if (data) {
+        data.forEach((msg) => {
+          const senderId = msg.sender_id;
+          unreadCounts[senderId] = (unreadCounts[senderId] || 0) + 1;
+        });
+      }
+
+      return unreadCounts;
+    } catch (error: any) {
+      console.error('Error fetching unread message counts:', error);
+      return {};
     }
   },
 

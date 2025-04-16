@@ -1,9 +1,9 @@
 
 import React from "react";
-import { Message } from "@/hooks/useChatTypes";
 import ChatHeader from "./header/ChatHeader";
 import MessageList from "./messages/MessageList";
 import MessageInput from "./input/MessageInput";
+import { Message } from "@/hooks/useChat";
 
 interface ChatAreaProps {
   activeChat: string;
@@ -20,6 +20,7 @@ interface ChatAreaProps {
   setReactionMessageId: (id: number | null) => void;
   showEmojiPicker: boolean;
   setShowEmojiPicker: (show: boolean) => void;
+  isLoading?: boolean;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -37,6 +38,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   setReactionMessageId,
   showEmojiPicker,
   setShowEmojiPicker,
+  isLoading = false,
 }) => {
   return (
     <div className="flex-1 border rounded-lg flex flex-col overflow-hidden">
@@ -56,6 +58,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         setShowEmojiPicker={setShowEmojiPicker}
         typingStatus={typingStatus}
         activeChat={activeChat}
+        isLoading={isLoading}
       />
       
       <MessageInput 

@@ -1,6 +1,4 @@
 
-import { supabase } from '@/integrations/supabase/client';
-
 export interface ChatChannel {
   id: string;
   name: string;
@@ -31,14 +29,5 @@ export interface DirectMessage {
   created_at?: string;
 }
 
-// Define database structure interfaces to avoid type mismatches
-export interface ChatMessageDB {
-  id: string;
-  content: string;
-  sender_id: string;
-  channel_id?: string;
-  is_read: boolean;
-  created_at: string;
-  updated_at: string;
-  reactions?: Record<string, any>;
-}
+// Define a general chat channel ID that will be used for the public chat
+export const GENERAL_CHAT_CHANNEL_ID = "general-chat";
