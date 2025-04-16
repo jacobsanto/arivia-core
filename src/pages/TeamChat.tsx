@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -30,7 +29,8 @@ const TeamChat = () => {
     loading,
     messageInput,
     setMessageInput,
-    sendMessage
+    sendMessage,
+    addReaction
   } = useChat(chatType, activeChatId);
   
   // Load channels and users for DMs

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
@@ -22,7 +21,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   const [messageInput, setMessageInput] = useState<string>("");
   const { user } = useUser();
 
-  // Load initial messages
   useEffect(() => {
     if (!user) return;
     
@@ -30,15 +28,13 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
       setLoading(true);
       try {
         if (chatType === 'general') {
-          // Get general chat messages
           const generalChannel = await chatService.getOrCreateGeneralChannel();
           if (generalChannel) {
             const channelMessages = await chatService.getChannelMessages(generalChannel.id);
             
-            // Convert to UI message format
             const uiMessages = channelMessages.map(msg => ({
               id: msg.id,
-              sender: msg.user_id === user.id ? user.name : "Other User", // This would need to be improved with user profiles
+              sender: msg.user_id === user.id ? user.name : "Other User",
               avatar: msg.user_id === user.id ? (user.avatar || "/placeholder.svg") : "/placeholder.svg",
               content: msg.content,
               timestamp: msg.created_at || new Date().toISOString(),
@@ -49,25 +45,22 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
             setMessages(uiMessages);
           }
         } else if (chatType === 'direct' && recipientId) {
-          // Get direct messages between current user and recipient
           const directMessages = await chatService.getDirectMessages(user.id, recipientId);
           
-          // Mark all messages from recipient as read
           directMessages.forEach(msg => {
             if (msg.sender_id === recipientId && !msg.is_read) {
               chatService.markDirectMessageAsRead(msg.id);
             }
           });
           
-          // Convert to UI message format
           const uiMessages = directMessages.map(msg => ({
             id: msg.id,
-            sender: msg.sender_id === user.id ? user.name : "Other User", // This would need to be improved
+            sender: msg.sender_id === user.id ? user.name : "Other User",
             avatar: msg.sender_id === user.id ? (user.avatar || "/placeholder.svg") : "/placeholder.svg",
             content: msg.content,
             timestamp: msg.created_at || new Date().toISOString(),
             isCurrentUser: msg.sender_id === user.id,
-            reactions: {} // DMs don't have reactions in this implementation
+            reactions: {}
           }));
           
           setMessages(uiMessages);
@@ -83,14 +76,12 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     loadMessages();
   }, [user, chatType, recipientId]);
 
-  // Set up real-time message subscription
   useEffect(() => {
     if (!user) return;
     
     let channel;
     
     if (chatType === 'general') {
-      // Subscribe to the general channel
       channel = supabase
         .channel('public:chat_messages')
         .on('postgres_changes', 
@@ -98,11 +89,10 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
           (payload) => {
             const newMsg = payload.new as any;
             
-            // Only add message if it's not from current user (those are added immediately on send)
             if (newMsg.sender_id !== user.id) {
               const uiMessage = {
                 id: newMsg.id,
-                sender: "Other User", // This would need to be improved
+                sender: "Other User",
                 avatar: "/placeholder.svg",
                 content: newMsg.content,
                 timestamp: newMsg.created_at,
@@ -116,7 +106,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
         )
         .subscribe();
     } else if (chatType === 'direct' && recipientId) {
-      // Subscribe to direct messages
       channel = supabase
         .channel('public:direct_messages')
         .on('postgres_changes', 
@@ -124,20 +113,17 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
           (payload) => {
             const newMsg = payload.new as any;
             
-            // Only add if it's a message between current user and recipient
             if ((newMsg.sender_id === user.id && newMsg.recipient_id === recipientId) ||
                 (newMsg.sender_id === recipientId && newMsg.recipient_id === user.id)) {
               
-              // If we received the message, mark it as read
               if (newMsg.sender_id === recipientId) {
                 chatService.markDirectMessageAsRead(newMsg.id);
               }
               
-              // Only add if not from current user (those are added immediately)
               if (newMsg.sender_id !== user.id) {
                 const uiMessage = {
                   id: newMsg.id,
-                  sender: "Other User", // This would need to be improved
+                  sender: "Other User",
                   avatar: "/placeholder.svg",
                   content: newMsg.content,
                   timestamp: newMsg.created_at,
@@ -153,7 +139,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
         .subscribe();
     }
     
-    // Clean up subscription
     return () => {
       if (channel) {
         supabase.removeChannel(channel);
@@ -165,7 +150,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     if (!user || !messageInput.trim()) return;
     
     try {
-      // Add optimistic message to UI immediately
       const tempId = `temp-${Date.now()}`;
       const optimisticMessage = {
         id: tempId,
@@ -181,7 +165,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
       setMessageInput("");
       
       if (chatType === 'general') {
-        // Send to general channel
         const result = await chatService.sendChannelMessage({
           channel_id: GENERAL_CHAT_CHANNEL_ID,
           user_id: user.id,
@@ -189,12 +172,10 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
         });
         
         if (!result) {
-          // Remove optimistic message on failure
           setMessages(prev => prev.filter(m => m.id !== tempId));
           toast.error("Failed to send message");
         }
       } else if (chatType === 'direct' && recipientId) {
-        // Send direct message
         const result = await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
@@ -203,7 +184,6 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
         });
         
         if (!result) {
-          // Remove optimistic message on failure
           setMessages(prev => prev.filter(m => m.id !== tempId));
           toast.error("Failed to send message");
         }
@@ -211,8 +191,51 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     } catch (error) {
       console.error("Failed to send message:", error);
       toast.error("Failed to send message");
-      // Remove optimistic message on error
       setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
+    }
+  };
+
+  const addReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
+    
+    try {
+      const updatedMessages = messages.map(msg => {
+        if (msg.id === messageId) {
+          const currentReactions = { ...msg.reactions } || {};
+          
+          const usersForEmoji = currentReactions[emoji] || [];
+          const username = user.name || "Unknown";
+          
+          const userIndex = usersForEmoji.indexOf(username);
+          
+          if (userIndex >= 0) {
+            currentReactions[emoji] = [
+              ...usersForEmoji.slice(0, userIndex),
+              ...usersForEmoji.slice(userIndex + 1)
+            ];
+            if (currentReactions[emoji].length === 0) {
+              delete currentReactions[emoji];
+            }
+          } else {
+            currentReactions[emoji] = [...usersForEmoji, username];
+          }
+          
+          return {
+            ...msg,
+            reactions: currentReactions
+          };
+        }
+        return msg;
+      });
+      
+      setMessages(updatedMessages);
+      
+      if (chatType === 'general') {
+        await chatService.addReaction(messageId, emoji, user.id);
+      }
+    } catch (error) {
+      console.error('Error adding reaction:', error);
+      toast.error('Failed to add reaction');
     }
   };
 
@@ -221,6 +244,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     loading,
     messageInput,
     setMessageInput,
-    sendMessage
+    sendMessage,
+    addReaction
   };
 }

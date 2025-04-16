@@ -7,9 +7,9 @@ import { ChatMessage } from './chat.types';
 interface DbMessage {
   id: string;
   content: string;
-  channel_id: string;
+  channel_id: string | null;
   sender_id: string;
-  is_read: boolean;
+  is_read: boolean | null;
   reactions: Record<string, string[]> | null;
   created_at: string;
   updated_at: string;
@@ -32,7 +32,7 @@ export const messageService = {
         channel_id: channelId,
         user_id: msg.sender_id,
         content: msg.content,
-        is_read: msg.is_read,
+        is_read: msg.is_read || false,
         created_at: msg.created_at,
         updated_at: msg.updated_at,
         reactions: msg.reactions || {}
@@ -50,7 +50,8 @@ export const messageService = {
         content: message.content,
         sender_id: message.user_id || '',
         channel_id: message.channel_id,
-        is_read: message.is_read || false
+        is_read: message.is_read || false,
+        reactions: {}
       };
       
       const { data, error } = await supabase
@@ -68,10 +69,10 @@ export const messageService = {
           channel_id: message.channel_id,
           user_id: message.user_id,
           content: data.content,
-          is_read: data.is_read,
+          is_read: data.is_read || false,
           created_at: data.created_at,
           updated_at: data.updated_at,
-          reactions: {}
+          reactions: data.reactions || {}
         };
       }
       
@@ -96,6 +97,65 @@ export const messageService = {
       return true;
     } catch (error: any) {
       console.error(`Error marking message ${messageId} as read:`, error);
+      return false;
+    }
+  },
+  
+  async addReaction(messageId: string, emoji: string, userId: string): Promise<boolean> {
+    try {
+      // First get the current message to access its reactions
+      const { data: message, error: fetchError } = await supabase
+        .from('chat_messages')
+        .select('reactions')
+        .eq('id', messageId)
+        .single();
+      
+      if (fetchError) throw fetchError;
+      
+      // Get current reactions or initialize empty object
+      const currentReactions = message?.reactions as Record<string, string[]> || {};
+      
+      // Get users who reacted with this emoji or initialize empty array
+      const usersForEmoji = currentReactions[emoji] || [];
+      
+      // Check if user already reacted with this emoji
+      const userIndex = usersForEmoji.indexOf(userId);
+      
+      let updatedUsers;
+      if (userIndex >= 0) {
+        // Remove user from the emoji's users (toggle off)
+        updatedUsers = [
+          ...usersForEmoji.slice(0, userIndex),
+          ...usersForEmoji.slice(userIndex + 1)
+        ];
+      } else {
+        // Add user to the emoji's users (toggle on)
+        updatedUsers = [...usersForEmoji, userId];
+      }
+      
+      // Create updated reactions object
+      const updatedReactions = {
+        ...currentReactions,
+        [emoji]: updatedUsers
+      };
+      
+      // Remove empty reaction arrays
+      Object.keys(updatedReactions).forEach(key => {
+        if (updatedReactions[key].length === 0) {
+          delete updatedReactions[key];
+        }
+      });
+      
+      // Update the message with new reactions
+      const { error: updateError } = await supabase
+        .from('chat_messages')
+        .update({ reactions: updatedReactions })
+        .eq('id', messageId);
+      
+      if (updateError) throw updateError;
+      return true;
+    } catch (error: any) {
+      console.error(`Error updating reaction for message ${messageId}:`, error);
       return false;
     }
   }

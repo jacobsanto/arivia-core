@@ -94,30 +94,43 @@ export type Database = {
       }
       chat_messages: {
         Row: {
+          channel_id: string | null
           content: string
           created_at: string
           id: string
           is_read: boolean | null
+          reactions: Json | null
           sender_id: string
           updated_at: string
         }
         Insert: {
+          channel_id?: string | null
           content: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          reactions?: Json | null
           sender_id: string
           updated_at?: string
         }
         Update: {
+          channel_id?: string | null
           content?: string
           created_at?: string
           id?: string
           is_read?: boolean | null
+          reactions?: Json | null
           sender_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "chat_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "chat_messages_sender_id_fkey"
             columns: ["sender_id"]
