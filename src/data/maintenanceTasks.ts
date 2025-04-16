@@ -1,5 +1,5 @@
 
-// Placeholder for maintenance tasks data until we fully implement the database
+// This file will be replaced by real data from the database
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 
 export const initialTasks: MaintenanceTask[] = [];

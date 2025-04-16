@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -5,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { inventoryData } from "@/data/inventoryData";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const StockLevels = () => {
   const [location, setLocation] = useState("all");
@@ -12,7 +15,7 @@ const StockLevels = () => {
   const isMobile = useIsMobile();
 
   const filteredItems = inventoryData.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = item.name?.toLowerCase().includes(search.toLowerCase());
     const matchesLocation = location === "all" || item.location === location;
     return matchesSearch && matchesLocation;
   });
@@ -56,43 +59,53 @@ const StockLevels = () => {
         </div>
       </div>
 
-      <div className="border rounded-md overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Item Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead className="text-right">Current Stock</TableHead>
-              <TableHead className="text-right">Min. Level</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredItems.map((item) => (
-              <TableRow key={`${item.id}-${item.location}`}>
-                <TableCell className="font-medium">{item.name}</TableCell>
-                <TableCell>{item.category}</TableCell>
-                <TableCell>
-                  {isMobile 
-                    ? item.location.replace('villa_', 'V. ')
-                    : item.location === "main" ? "Main Storage" : 
-                      item.location === "villa_caldera" ? "Villa Caldera" :
-                      item.location === "villa_oceana" ? "Villa Oceana" :
-                      item.location === "villa_azure" ? "Villa Azure" :
-                      item.location === "villa_sunset" ? "Villa Sunset" :
-                      "Villa Paradiso"}
-                </TableCell>
-                <TableCell className="text-right">{item.currentStock}</TableCell>
-                <TableCell className="text-right">{item.minLevel}</TableCell>
-                <TableCell className="text-center">
-                  {getStockStatusBadge(item.currentStock, item.minLevel)}
-                </TableCell>
+      {filteredItems.length > 0 ? (
+        <div className="border rounded-md overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Item Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Location</TableHead>
+                <TableHead className="text-right">Current Stock</TableHead>
+                <TableHead className="text-right">Min. Level</TableHead>
+                <TableHead className="text-center">Status</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {filteredItems.map((item) => (
+                <TableRow key={`${item.id}-${item.location}`}>
+                  <TableCell className="font-medium">{item.name}</TableCell>
+                  <TableCell>{item.category}</TableCell>
+                  <TableCell>
+                    {isMobile 
+                      ? item.location.replace('villa_', 'V. ')
+                      : item.location === "main" ? "Main Storage" : 
+                        item.location === "villa_caldera" ? "Villa Caldera" :
+                        item.location === "villa_oceana" ? "Villa Oceana" :
+                        item.location === "villa_azure" ? "Villa Azure" :
+                        item.location === "villa_sunset" ? "Villa Sunset" :
+                        "Villa Paradiso"}
+                  </TableCell>
+                  <TableCell className="text-right">{item.currentStock}</TableCell>
+                  <TableCell className="text-right">{item.minLevel}</TableCell>
+                  <TableCell className="text-center">
+                    {getStockStatusBadge(item.currentStock, item.minLevel)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <Alert className="bg-muted/50">
+          <InfoIcon className="h-4 w-4" />
+          <AlertTitle>No inventory data</AlertTitle>
+          <AlertDescription>
+            No inventory items found. Add items to begin tracking inventory.
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };

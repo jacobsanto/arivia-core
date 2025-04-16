@@ -6,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { inventoryUsageData } from "@/data/inventoryData";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const InventoryUsage = () => {
   const [period, setPeriod] = useState("week");
@@ -62,39 +64,49 @@ const InventoryUsage = () => {
 
         <TabsContent value="usage" className="mt-6">
           <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Property</TableHead>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead className="text-right">Quantity</TableHead>
-                    <TableHead>Reported By</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredData.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{item.date}</TableCell>
-                      <TableCell>
-                        {item.property === "villa_caldera" ? "Villa Caldera" :
-                         item.property === "villa_oceana" ? "Villa Oceana" :
-                         item.property === "villa_azure" ? "Villa Azure" :
-                         item.property === "villa_sunset" ? "Villa Sunset" :
-                         "Villa Paradiso"}
-                      </TableCell>
-                      <TableCell>{item.item}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{item.category}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">{item.quantity}</TableCell>
-                      <TableCell>{item.reportedBy}</TableCell>
+            <CardContent className="p-6">
+              {filteredData.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Property</TableHead>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead className="text-right">Quantity</TableHead>
+                      <TableHead>Reported By</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredData.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>{item.date}</TableCell>
+                        <TableCell>
+                          {item.property === "villa_caldera" ? "Villa Caldera" :
+                          item.property === "villa_oceana" ? "Villa Oceana" :
+                          item.property === "villa_azure" ? "Villa Azure" :
+                          item.property === "villa_sunset" ? "Villa Sunset" :
+                          "Villa Paradiso"}
+                        </TableCell>
+                        <TableCell>{item.item}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{item.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{item.quantity}</TableCell>
+                        <TableCell>{item.reportedBy}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <Alert className="bg-muted/50">
+                  <InfoIcon className="h-4 w-4" />
+                  <AlertTitle>No usage data</AlertTitle>
+                  <AlertDescription>
+                    No inventory usage has been recorded for the selected period and property.
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -106,36 +118,13 @@ const InventoryUsage = () => {
                 <CardTitle>Most Used Items</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Toilet Paper</span>
-                    <div className="flex items-center">
-                      <div className="bg-blue-500 h-2 w-32 rounded-full"></div>
-                      <span className="ml-2">127 units</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Hand Towels</span>
-                    <div className="flex items-center">
-                      <div className="bg-blue-500 h-2 w-24 rounded-full"></div>
-                      <span className="ml-2">98 units</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Bath Soap</span>
-                    <div className="flex items-center">
-                      <div className="bg-blue-500 h-2 w-20 rounded-full"></div>
-                      <span className="ml-2">82 units</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Laundry Detergent</span>
-                    <div className="flex items-center">
-                      <div className="bg-blue-500 h-2 w-16 rounded-full"></div>
-                      <span className="ml-2">64 units</span>
-                    </div>
-                  </div>
-                </div>
+                <Alert className="bg-muted/50">
+                  <InfoIcon className="h-4 w-4" />
+                  <AlertTitle>No analytics data</AlertTitle>
+                  <AlertDescription>
+                    Start recording inventory usage to generate analytics.
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
             
@@ -144,36 +133,13 @@ const InventoryUsage = () => {
                 <CardTitle>Property Consumption</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span>Villa Oceana</span>
-                    <div className="flex items-center">
-                      <div className="bg-green-500 h-2 w-28 rounded-full"></div>
-                      <span className="ml-2">245 items</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Villa Caldera</span>
-                    <div className="flex items-center">
-                      <div className="bg-green-500 h-2 w-24 rounded-full"></div>
-                      <span className="ml-2">210 items</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Villa Sunset</span>
-                    <div className="flex items-center">
-                      <div className="bg-green-500 h-2 w-20 rounded-full"></div>
-                      <span className="ml-2">180 items</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span>Villa Azure</span>
-                    <div className="flex items-center">
-                      <div className="bg-green-500 h-2 w-16 rounded-full"></div>
-                      <span className="ml-2">145 items</span>
-                    </div>
-                  </div>
-                </div>
+                <Alert className="bg-muted/50">
+                  <InfoIcon className="h-4 w-4" />
+                  <AlertTitle>No consumption data</AlertTitle>
+                  <AlertDescription>
+                    Property consumption data will appear here once inventory usage is recorded.
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
           </div>

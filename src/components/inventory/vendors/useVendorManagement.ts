@@ -3,39 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import { VendorStatus, Vendor } from "../orders/OrderUtils";
 import { useInventory } from "@/contexts/InventoryContext";
 
-// Sample vendor data - in a real app this would come from a database
-const initialVendors: Vendor[] = [
-  {
-    id: "1",
-    name: "Office Supplies Co.",
-    email: "orders@officesupplies.com",
-    phone: "555-123-4567",
-    categories: ["Office Supplies", "Paper Products"],
-    address: "123 Business Ave, Suite 101",
-    notes: "Preferred supplier for paper products",
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Cleaning Solutions Inc.",
-    email: "sales@cleaningsolutions.com",
-    phone: "555-987-6543",
-    categories: ["Cleaning Supplies"],
-    address: "456 Industrial Blvd",
-    notes: "Eco-friendly products available",
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Hospitality Essentials",
-    email: "orders@hospitalityessentials.com",
-    phone: "555-567-8901",
-    categories: ["Guest Amenities", "Toiletries"],
-    address: "789 Hospitality Way",
-    notes: "Bulk discounts available",
-    status: "inactive",
-  },
-];
+const initialVendors: Vendor[] = [];
 
 export const useVendorManagement = () => {
   const [vendors, setVendors] = useState<Vendor[]>(initialVendors);

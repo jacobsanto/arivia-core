@@ -1,13 +1,16 @@
 
-// Mock task utilities for development purposes
+// This file will be replaced by real data processing utilities
 import { Task, TaskStatus } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 import { CombinedTask } from "./agendaUtils";
 
+// These utilities now return empty or default values until connected to real data
 export const getRandomStatus = () => 'pending';
 export const getRandomPriority = () => 'normal';
 export const getRandomAssignee = () => 'Unassigned';
-export const getTimeDisplay = (date: Date) => '12:00 PM';
+export const getTimeDisplay = (date: Date) => {
+  return date ? date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+};
 
 export const createMockHousekeepingTask = (task: CombinedTask): Task => {
   // Convert the task.dueDate to string if it's a Date object
@@ -26,11 +29,7 @@ export const createMockHousekeepingTask = (task: CombinedTask): Task => {
     description: task.description || "",
     approvalStatus: "Pending",
     photos: [],
-    checklist: [
-      { id: 1, title: "Clean bathroom", completed: false },
-      { id: 2, title: "Change linens", completed: false },
-      { id: 3, title: "Vacuum floors", completed: false },
-    ]
+    checklist: []
   };
 };
 
@@ -44,7 +43,7 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
   const now = new Date().toISOString();
 
   return {
-    id: parseInt(task.id) || Math.floor(Math.random() * 10000), // Convert string ID to number
+    id: parseInt(task.id) || Math.floor(Math.random() * 10000),
     title: task.title,
     property: task.property,
     type: "Maintenance",
@@ -55,15 +54,12 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     description: task.description || "",
     location: task.property,
     specialInstructions: "",
-    requiredTools: ["Screwdriver", "Wrench"],
-    instructions: [
-      { id: 1, title: "Check AC filter", completed: false },
-      { id: 2, title: "Test thermostat", completed: false }
-    ],
+    requiredTools: [],
+    instructions: [],
     beforePhotos: [],
     afterPhotos: [],
-    beforeVideos: [], // Added missing property
-    afterVideos: [], // Added missing property
-    createdAt: now, // Added missing property
+    beforeVideos: [],
+    afterVideos: [],
+    createdAt: now,
   };
 };

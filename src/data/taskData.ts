@@ -1,5 +1,3 @@
 
-// Placeholder for task data until we fully implement the database
-import { Task } from "@/types/taskTypes";
-
-export const initialTasks: Task[] = [];
+// This file will be replaced by real data from the database
+export const initialTasks = [];
