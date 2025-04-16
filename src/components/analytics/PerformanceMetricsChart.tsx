@@ -1,28 +1,37 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { LineChart, BarChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { SaveAsReportButton } from '../reports/analytics/SaveAsReportButton';
+
 interface DataKey {
   key: string;
   name: string;
   color: string;
 }
+
 interface PerformanceMetricsChartProps {
   title: string;
   description?: string;
   type: 'line' | 'bar' | 'multi-line';
   data: any[];
   dataKeys: DataKey[];
+  height?: number;
+  hideLegend?: boolean;
 }
+
 export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = ({
   title,
   description,
   type,
   data,
-  dataKeys
+  dataKeys,
+  height = 300,
+  hideLegend = false
 }) => {
   const isMobile = useIsMobile();
+  
   const getChartDataType = (): 'financial' | 'occupancy' | 'performance' | 'task' | 'activity' => {
     if (title.toLowerCase().includes('financial') || title.toLowerCase().includes('revenue')) {
       return 'financial';
@@ -40,7 +49,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
   const renderChart = () => {
     switch (type) {
       case 'line':
-        return <ResponsiveContainer width="100%" height={300}>
+        return <ResponsiveContainer width="100%" height={height}>
             <LineChart data={data} margin={{
             top: 20,
             right: 30,
@@ -55,14 +64,14 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
               fontSize: isMobile ? 10 : 12
             }} />
               <Tooltip />
-              <Legend />
+              {!hideLegend && <Legend />}
               {dataKeys.map(dk => <Line key={dk.key} type="monotone" dataKey={dk.key} name={dk.name} stroke={dk.color} activeDot={{
               r: 8
             }} />)}
             </LineChart>
           </ResponsiveContainer>;
       case 'bar':
-        return <ResponsiveContainer width="100%" height={300}>
+        return <ResponsiveContainer width="100%" height={height}>
             <BarChart data={data} margin={{
             top: 20,
             right: 30,
@@ -77,12 +86,12 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
               fontSize: isMobile ? 10 : 12
             }} />
               <Tooltip />
-              <Legend />
+              {!hideLegend && <Legend />}
               {dataKeys.map(dk => <Bar key={dk.key} dataKey={dk.key} name={dk.name} fill={dk.color} />)}
             </BarChart>
           </ResponsiveContainer>;
       case 'multi-line':
-        return <ResponsiveContainer width="100%" height={300}>
+        return <ResponsiveContainer width="100%" height={height}>
             <LineChart data={data} margin={{
             top: 20,
             right: 30,
@@ -97,7 +106,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
               fontSize: isMobile ? 10 : 12
             }} />
               <Tooltip />
-              <Legend />
+              {!hideLegend && <Legend />}
               {dataKeys.map(dk => <Line key={dk.key} type="monotone" dataKey={dk.key} name={dk.name} stroke={dk.color} />)}
             </LineChart>
           </ResponsiveContainer>;

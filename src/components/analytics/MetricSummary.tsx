@@ -1,11 +1,17 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 interface MetricSummaryProps {
   title: string;
   value: string | number;
   change?: {
+    value: number;
+    isPositive: boolean;
+  };
+  trend?: {
     value: number;
     isPositive: boolean;
   };
@@ -14,15 +20,20 @@ interface MetricSummaryProps {
   variant?: 'default' | 'accent' | 'success' | 'warning' | 'info';
   size?: 'sm' | 'md' | 'lg';
 }
+
 export const MetricSummary: React.FC<MetricSummaryProps> = ({
   title,
   value,
   change,
+  trend,
   icon,
   description,
   variant = 'default',
   size = 'md'
 }) => {
+  // Use trend prop if provided, otherwise use change
+  const trendData = trend || change;
+
   const getVariantStyles = () => {
     switch (variant) {
       case 'accent':
@@ -37,6 +48,7 @@ export const MetricSummary: React.FC<MetricSummaryProps> = ({
         return "";
     }
   };
+  
   const getSizeStyles = () => {
     switch (size) {
       case 'sm':
@@ -47,6 +59,7 @@ export const MetricSummary: React.FC<MetricSummaryProps> = ({
         return "p-4";
     }
   };
+  
   return <Card className={cn("overflow-hidden", getVariantStyles())}>
       <CardContent className={cn("flex justify-between items-start", getSizeStyles())}>
         <div>
@@ -60,9 +73,9 @@ export const MetricSummary: React.FC<MetricSummaryProps> = ({
         <div className="flex flex-col items-end">
           {icon && <div className="text-muted-foreground mb-1">{icon}</div>}
           
-          {change && <div className={cn("flex items-center text-xs font-medium", change.isPositive ? "text-green-500" : "text-red-500")}>
-              {change.isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
-              {change.value}%
+          {trendData && <div className={cn("flex items-center text-xs font-medium", trendData.isPositive ? "text-green-500" : "text-red-500")}>
+              {trendData.isPositive ? <ArrowUp className="h-3 w-3 mr-1" /> : <ArrowDown className="h-3 w-3 mr-1" />}
+              {trendData.value}%
             </div>}
         </div>
       </CardContent>

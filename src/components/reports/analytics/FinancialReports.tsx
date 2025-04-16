@@ -121,7 +121,16 @@ export const FinancialReports: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <PerformanceMetricsChart data={chartData} height={300} />
+          <PerformanceMetricsChart 
+            data={chartData} 
+            height={300} 
+            type="multi-line" 
+            dataKeys={[
+              { key: 'revenue', name: 'Revenue', color: '#4CAF50' },
+              { key: 'expenses', name: 'Expenses', color: '#F44336' },
+              { key: 'profit', name: 'Profit', color: '#2196F3' }
+            ]}
+          />
         </CardContent>
       </Card>
 
@@ -160,9 +169,15 @@ export const FinancialReports: React.FC = () => {
             </CardHeader>
             <CardContent>
               <PerformanceMetricsChart 
-                data={propertyComparisonData} 
+                data={propertyComparisonData}
                 height={300}
                 hideLegend={isMobile}
+                type="bar"
+                dataKeys={[
+                  { key: 'revenue', name: 'Revenue', color: '#4CAF50' },
+                  { key: 'expenses', name: 'Expenses', color: '#F44336' },
+                  { key: 'profit', name: 'Profit', color: '#2196F3' }
+                ]}
               />
             </CardContent>
           </Card>

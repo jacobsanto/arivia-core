@@ -1,8 +1,8 @@
 
 // This file has been refactored and replaced by proper utilities in src/services/analytics and src/utils/dashboard
 // Importing from new location for backward compatibility
-import { DashboardData } from "@/hooks/useDashboard";
-import { fetchDashboardData } from "@/utils/dashboard/dataFetchUtils";
+import { DashboardData } from "@/utils/dashboard/types";
+import { fetchDashboardData } from "@/utils/dashboard/fetch/dashboardDataFetcher";
 import { analyticsService } from "@/services/analytics/analytics.service";
 
 // Legacy function to maintain backward compatibility
