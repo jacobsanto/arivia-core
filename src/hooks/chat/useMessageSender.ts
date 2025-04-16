@@ -1,0 +1,75 @@
+
+import { useState } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { chatService } from "@/services/chat/chat.service";
+import { toast } from "sonner";
+import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
+import { Message } from "../useChatTypes";
+
+interface UseMessageSenderProps {
+  chatType: 'general' | 'direct';
+  recipientId?: string;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+}
+
+export function useMessageSender({ 
+  chatType, 
+  recipientId, 
+  messages, 
+  setMessages 
+}: UseMessageSenderProps) {
+  const [messageInput, setMessageInput] = useState<string>("");
+  const { user } = useUser();
+
+  const sendMessage = async () => {
+    if (!user || !messageInput.trim()) return;
+    
+    try {
+      const tempId = `temp-${Date.now()}`;
+      const optimisticMessage = {
+        id: tempId,
+        sender: user.name,
+        avatar: user.avatar || "/placeholder.svg",
+        content: messageInput.trim(),
+        timestamp: new Date().toISOString(),
+        isCurrentUser: true,
+        reactions: {}
+      };
+      
+      setMessages(prev => [...prev, optimisticMessage]);
+      setMessageInput("");
+      
+      if (chatType === 'general') {
+        const result = await chatService.sendChannelMessage({
+          channel_id: GENERAL_CHAT_CHANNEL_ID,
+          user_id: user.id,
+          content: messageInput.trim()
+        });
+        
+        if (!result) {
+          setMessages(prev => prev.filter(m => m.id !== tempId));
+          toast.error("Failed to send message");
+        }
+      } else if (chatType === 'direct' && recipientId) {
+        const result = await chatService.sendDirectMessage({
+          sender_id: user.id,
+          recipient_id: recipientId,
+          content: messageInput.trim(),
+          is_read: false
+        });
+        
+        if (!result) {
+          setMessages(prev => prev.filter(m => m.id !== tempId));
+          toast.error("Failed to send message");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      toast.error("Failed to send message");
+      setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
+    }
+  };
+
+  return { messageInput, setMessageInput, sendMessage };
+}
