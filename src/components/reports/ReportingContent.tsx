@@ -27,7 +27,7 @@ export const ReportingContent: React.FC<ReportingContentProps> = ({
     if (isScheduledAuth) {
       loadScheduledReports();
     }
-  }, [isScheduledAuth]);
+  }, [isScheduledAuth, loadScheduledReports]);
   
   return (
     <SwipeableTabsProvider>

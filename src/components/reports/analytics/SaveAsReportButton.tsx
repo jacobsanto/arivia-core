@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label';
 import { PropertyFilter, useAnalytics } from '@/contexts/AnalyticsContext';
 import { toastService } from '@/services/toast/toast.service';
 import { useReports } from '@/hooks/useReports';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SaveAsReportButtonProps {
   chartTitle: string;
@@ -50,6 +51,12 @@ export const SaveAsReportButton: React.FC<SaveAsReportButtonProps> = ({
     setIsSaving(true);
     
     try {
+      // Get user data for created_by
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error("User not authenticated");
+      }
+      
       // Create the report with the analytics data
       await createReport({
         name: reportName,
@@ -58,10 +65,11 @@ export const SaveAsReportButton: React.FC<SaveAsReportButtonProps> = ({
           property: selectedProperty,
           chartType: dataType
         },
-        dateRange: {
-          startDate: dateRange.from?.toISOString() || null,
-          endDate: dateRange.to?.toISOString() || null,
-        }
+        date_range: {
+          start_date: dateRange.from?.toISOString() || null,
+          end_date: dateRange.to?.toISOString() || null,
+        },
+        created_by: userData.user.id
       });
       
       toastService.success('Report saved successfully', {

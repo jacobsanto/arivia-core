@@ -53,11 +53,25 @@ export const useReports = (reportType: Report["type"] = "task") => {
       return null;
     }
     
+    if (!reportData.name) {
+      toastService.error('Report name is required');
+      return null;
+    }
+    
     try {
+      // Ensure report has the required fields
+      if (!reportData.created_by) {
+        const { data } = await supabase.auth.getUser();
+        if (!data.user) {
+          throw new Error('User not authenticated');
+        }
+        reportData.created_by = data.user.id;
+      }
+      
       const newReport = await reportService.createReport({
         ...reportData,
         type: reportType,
-        date_range: {
+        date_range: reportData.date_range || {
           start_date: dateRange.from?.toISOString() || null,
           end_date: dateRange.to?.toISOString() || null,
         }
@@ -79,7 +93,7 @@ export const useReports = (reportType: Report["type"] = "task") => {
       const result = await reportService.generateReport({
         ...reportConfig,
         type: reportType,
-        date_range: {
+        date_range: reportConfig.date_range || {
           start_date: dateRange.from?.toISOString() || null,
           end_date: dateRange.to?.toISOString() || null,
         }

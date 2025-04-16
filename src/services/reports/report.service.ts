@@ -2,6 +2,7 @@
 import { BaseService } from "../base/base.service";
 import { toastService } from "../toast/toast.service";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 export interface Report {
   id: string;
@@ -13,7 +14,7 @@ export interface Report {
     end_date: string | null;
   };
   created_at: string;
-  created_by?: string;
+  created_by: string;
   last_run?: string;
   frequency?: string;
   recipients?: string[];
@@ -42,6 +43,15 @@ export class ReportService extends BaseService<Report> {
         throw new Error("User not authenticated");
       }
       
+      // Ensure name and type are provided
+      if (!report.name) {
+        throw new Error("Report name is required");
+      }
+      
+      if (!report.type) {
+        throw new Error("Report type is required");
+      }
+      
       const reportData = {
         ...report,
         created_by: user.user.id,
@@ -60,7 +70,7 @@ export class ReportService extends BaseService<Report> {
         description: `Your report "${report.name}" has been saved.`
       });
       
-      return data;
+      return data as Report;
     } catch (error: any) {
       console.error('Error saving report:', error);
       toastService.error('Error Saving Report', {
@@ -108,7 +118,7 @@ export class ReportService extends BaseService<Report> {
         .eq('status', 'active');
       
       if (error) throw error;
-      return data || [];
+      return data as Report[];
     } catch (error: any) {
       console.error('Error fetching reports:', error);
       toastService.error('Error Fetching Reports', {

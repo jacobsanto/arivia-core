@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useReports } from '@/hooks/useReports';
 import { toastService } from '@/services/toast/toast.service';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AnalyticsToReportDialogProps {
   isOpen: boolean;
@@ -41,6 +42,12 @@ export const AnalyticsToReportDialog: React.FC<AnalyticsToReportDialogProps> = (
     setIsSaving(true);
     
     try {
+      // Get user data for created_by
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        throw new Error("User not authenticated");
+      }
+      
       await createReport({
         name: reportName,
         type: 'custom',
@@ -51,10 +58,11 @@ export const AnalyticsToReportDialog: React.FC<AnalyticsToReportDialogProps> = (
           frequency: frequency,
           data: data
         },
-        dateRange: {
-          startDate: dateRange.from?.toISOString() || null,
-          endDate: dateRange.to?.toISOString() || null
-        }
+        date_range: {
+          start_date: dateRange.from?.toISOString() || null,
+          end_date: dateRange.to?.toISOString() || null
+        },
+        created_by: userData.user.id
       });
       
       toastService.success('Report created', {

@@ -16,7 +16,8 @@ export const convertAnalyticsToReport = (
   metric: AnalyticsMetric, 
   reportName: string,
   selectedProperty: string,
-  dateRange: { from?: Date; to?: Date }
+  dateRange: { from?: Date; to?: Date },
+  userId: string
 ): Partial<Report> => {
   // Generate a standardized report structure from analytics data
   const report: Partial<Report> = {
@@ -28,10 +29,11 @@ export const convertAnalyticsToReport = (
       dateFrom: dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : undefined,
       dateTo: dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : undefined
     },
-    dateRange: {
-      startDate: dateRange.from?.toISOString() || null,
-      endDate: dateRange.to?.toISOString() || null,
+    date_range: {
+      start_date: dateRange.from?.toISOString() || null,
+      end_date: dateRange.to?.toISOString() || null,
     },
+    created_by: userId
   };
   
   return report;
@@ -76,4 +78,3 @@ export const formatAnalyticsDataForReport = (data: any[], type: string): any[] =
       return data;
   }
 };
-

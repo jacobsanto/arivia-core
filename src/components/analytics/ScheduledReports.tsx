@@ -100,6 +100,11 @@ export const ScheduledReports = () => {
     }
     
     try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        throw new Error("User not authenticated");
+      }
+      
       const recipientsList = reportRecipients
         .split(',')
         .map(email => email.trim())
@@ -131,7 +136,8 @@ export const ScheduledReports = () => {
             date_range: {
               start_date: dateRange.from?.toISOString() || null,
               end_date: dateRange.to?.toISOString() || null
-            }
+            },
+            created_by: user.user.id
           });
         
         if (error) throw error;
