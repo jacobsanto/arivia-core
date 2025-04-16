@@ -16,5 +16,5 @@ export {
   fetchPropertiesData,
   fetchHousekeepingTasks,
   fetchMaintenanceTasks,
-  TaskRecord
+  type TaskRecord
 } from './dataFetchUtils';

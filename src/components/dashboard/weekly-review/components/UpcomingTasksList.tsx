@@ -1,18 +1,10 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-
-interface Task {
-  id: string;
-  title: string;
-  priority: "low" | "medium" | "high";
-  type: string;
-  dueDate: string;
-  property: string;
-}
+import { TaskRecord } from "@/utils/dashboard";
 
 interface UpcomingTasksListProps {
-  tasks: Task[];
+  tasks: TaskRecord[];
 }
 
 export const UpcomingTasksList: React.FC<UpcomingTasksListProps> = ({ tasks }) => {
@@ -32,17 +24,17 @@ export const UpcomingTasksList: React.FC<UpcomingTasksListProps> = ({ tasks }) =
             <p className="font-medium">{task.title}</p>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Badge variant={task.priority === "high" ? "destructive" : task.priority === "medium" ? "default" : "outline"}>
-                {task.priority}
+                {task.priority || 'low'}
               </Badge>
-              <span className="text-xs">{task.type}</span>
+              <span className="text-xs">{task.location || 'General'}</span>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm font-medium">{task.dueDate}</p>
-            <p className="text-xs text-muted-foreground">{task.property}</p>
+            <p className="text-sm font-medium">{task.due_date}</p>
+            <p className="text-xs text-muted-foreground">{task.property_id || 'All properties'}</p>
           </div>
         </div>
       ))}
     </div>
   );
-};
+}

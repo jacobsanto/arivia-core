@@ -143,7 +143,7 @@ export const fetchTodayRevenue = async () => {
 };
 
 // Define a type for task records to avoid infinite type instantiation
-export type TaskRecord = {
+export interface TaskRecord {
   id: string;
   status: string;
   due_date: string;
@@ -154,7 +154,7 @@ export type TaskRecord = {
   assigned_to?: string;
   location?: string;
   [key: string]: any;
-};
+}
 
 /**
  * Fetch and assemble complete dashboard data
