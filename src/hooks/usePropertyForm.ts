@@ -57,7 +57,12 @@ export const usePropertyForm = (propertyId?: string, initialData?: Partial<Prope
       return data;
     } else {
       // For existing properties, update in database
-      await propertyService.updateProperty(propertyId, data);
+      // Make sure we're sending a complete data object
+      const completeData = { 
+        name: "Untitled Property", // Default name as required property
+        ...data
+      };
+      await propertyService.updateProperty(propertyId, completeData as PropertyFormValues);
       return data;
     }
   };

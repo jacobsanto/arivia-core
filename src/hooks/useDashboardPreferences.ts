@@ -51,7 +51,9 @@ export const useDashboardPreferences = () => {
       if (error) throw error;
       
       if (data) {
-        setPreferences(data.setting_value as DashboardPreferences);
+        // Cast the JSON data to the correct type
+        const savedPrefs = data.setting_value as unknown as DashboardPreferences;
+        setPreferences(savedPrefs);
       }
     } catch (error) {
       console.error('Error loading dashboard preferences:', error);
@@ -68,7 +70,7 @@ export const useDashboardPreferences = () => {
         .upsert({
           user_id: userId,
           setting_key: 'dashboard_preferences',
-          setting_value: prefs
+          setting_value: prefs as any // Cast to any to satisfy Supabase JSON type
         }, {
           onConflict: 'user_id,setting_key'
         });

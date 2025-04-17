@@ -6,7 +6,7 @@ import { offlineManager } from '@/utils/offlineManager';
 const STORAGE_KEY_PREFIX = 'task_draft_';
 
 interface TaskDraft {
-  id?: string;
+  id: string;
   title: string;
   type: string;
   dueDate?: string;
@@ -43,8 +43,9 @@ export class TaskDraftService {
       
       // Create the full draft object
       const taskDraft: TaskDraft = {
-        ...draftData,
+        ...draftData as any, // Cast partial as required fields will be set below
         id: draftId,
+        title: draftData.title || "Untitled Draft",
         type: taskType,
         lastUpdated: Date.now()
       };
@@ -62,7 +63,7 @@ export class TaskDraftService {
             .upsert({
               user_id: userData.user.id,
               setting_key: `task_draft_${draftId}`,
-              setting_value: taskDraft
+              setting_value: taskDraft as any // Cast to any for Supabase JSON type
             }, {
               onConflict: 'user_id,setting_key'
             });
@@ -110,9 +111,10 @@ export class TaskDraftService {
           if (error) throw error;
           
           if (data) {
-            // Cache in localStorage for future quick access
-            localStorage.setItem(`${STORAGE_KEY_PREFIX}${draftId}`, JSON.stringify(data.setting_value));
-            return data.setting_value as TaskDraft;
+            // Cast the JSON data to the correct type and cache in localStorage
+            const draftData = data.setting_value as unknown as TaskDraft;
+            localStorage.setItem(`${STORAGE_KEY_PREFIX}${draftId}`, JSON.stringify(draftData));
+            return draftData;
           }
         }
       }
@@ -162,12 +164,12 @@ export class TaskDraftService {
             // Add database drafts not already in local storage
             data.forEach(item => {
               const draftId = item.setting_key.replace('task_draft_', '');
-              const draft = item.setting_value as TaskDraft;
+              const draftData = item.setting_value as unknown as TaskDraft;
               
-              const existingIndex = drafts.findIndex(d => d.id === draft.id);
+              const existingIndex = drafts.findIndex(d => d.id === draftData.id);
               if (existingIndex === -1) {
-                if (!taskType || draft.type === taskType) {
-                  drafts.push(draft);
+                if (!taskType || draftData.type === taskType) {
+                  drafts.push(draftData);
                 }
               }
             });

@@ -1,91 +1,69 @@
 
-import React from "react";
-import { BuildingIcon, ClipboardCheck, Wrench } from "lucide-react";
-import { MetricCardProps } from "./MetricCard";
+import { StarIcon, TrendingUpIcon, TrendingDownIcon } from 'lucide-react';
 
-interface DashboardData {
-  properties?: {
-    total: number;
-    occupied: number;
-    vacant: number;
-  };
-  tasks?: {
-    total: number;
-    completed: number;
-    pending: number;
-  };
-  maintenance?: {
-    total: number;
-    critical: number;
-    standard: number;
-  };
-}
-
-const createMetricCards = (data: DashboardData, isMobile: boolean): Array<Omit<MetricCardProps, 'swipeable'>> => {
-  const cards: Array<Omit<MetricCardProps, 'swipeable'>> = [];
+export const createMetricCards = (data: any, favoriteMetrics: string[] = []) => {
+  if (!data) return [];
   
-  // Only add the property card if properties data exists and has valid values
-  if (data.properties && 
-      typeof data.properties.total === 'number' && 
-      typeof data.properties.occupied === 'number' && 
-      typeof data.properties.vacant === 'number') {
-    cards.push({
-      title: "Properties",
-      value: `${data.properties.total}`,
-      description: isMobile ? "Managed properties" : "Total properties under management",
-      icon: <BuildingIcon className="h-4 w-4" />,
-      footer: {
-        text: isMobile ? "Occupancy details" : "Occupied vs Vacant properties",
-        occupied: data.properties.occupied || 0,
-        vacant: data.properties.vacant || 0,
-      },
-      trend: {
-        value: 5,
-        isPositive: true
-      },
-      variant: 'accent' as const
-    });
-  }
-
-  // Only add the tasks card if tasks data exists and has valid values
-  if (data.tasks && 
-      typeof data.tasks.total === 'number' && 
-      typeof data.tasks.completed === 'number' && 
-      typeof data.tasks.pending === 'number') {
-    cards.push({
-      title: "Tasks",
-      value: `${data.tasks.total}`,
-      description: isMobile ? "Scheduled tasks" : "Total tasks in system",
-      icon: <ClipboardCheck className="h-4 w-4" />,
-      footer: {
-        text: isMobile ? "Status details" : "Completed vs Pending tasks",
-        completed: data.tasks.completed || 0,
-        pending: data.tasks.pending || 0,
-      },
-      variant: 'default' as const
-    });
-  }
-
-  // Only add the maintenance card if maintenance data exists and has valid values
-  if (data.maintenance && 
-      typeof data.maintenance.total === 'number' && 
-      typeof data.maintenance.critical === 'number' && 
-      typeof data.maintenance.standard === 'number') {
-    cards.push({
-      title: "Maintenance",
-      value: `${data.maintenance.total}`,
-      description: isMobile ? "Maint. tasks" : "Maintenance tasks",
-      icon: <Wrench className="h-4 w-4" />,
-      footer: {
-        text: isMobile ? "Priority details" : "Critical vs Standard issues",
-        critical: data.maintenance.critical || 0,
-        standard: data.maintenance.standard || 0,
-      },
-      variant: 'warning' as const
-    });
-  }
-
-  return cards;
+  return [
+    {
+      id: 'occupancy-rate',
+      title: 'Occupancy Rate',
+      value: `${data.occupancy_rate || 0}%`,
+      change: data.occupancy_change || 0,
+      changeLabel: 'vs. last period',
+      trend: (data.occupancy_change || 0) >= 0 ? 'up' : 'down',
+      icon: TrendingUpIcon,
+      isFavorite: favoriteMetrics.includes('occupancy-rate')
+    },
+    {
+      id: 'revenue',
+      title: 'Revenue',
+      value: `€${data.revenue?.toLocaleString() || 0}`,
+      change: data.revenue_change || 0,
+      changeLabel: 'vs. last period',
+      trend: (data.revenue_change || 0) >= 0 ? 'up' : 'down',
+      icon: TrendingUpIcon,
+      isFavorite: favoriteMetrics.includes('revenue')
+    },
+    {
+      id: 'tasks-completed',
+      title: 'Tasks Completed',
+      value: data.tasks?.completed || 0,
+      change: data.tasks_completion_rate || 0,
+      changeLabel: 'completion rate',
+      trend: (data.tasks_completion_rate || 0) >= 75 ? 'up' : 'down',
+      icon: StarIcon,
+      isFavorite: favoriteMetrics.includes('tasks-completed')
+    },
+    {
+      id: 'maintenance-issues',
+      title: 'Maintenance Issues',
+      value: data.maintenance?.total || 0,
+      change: data.maintenance?.critical || 0,
+      changeLabel: 'critical issues',
+      trend: (data.maintenance?.critical || 0) > 0 ? 'down' : 'up',
+      icon: TrendingDownIcon,
+      isFavorite: favoriteMetrics.includes('maintenance-issues')
+    },
+    {
+      id: 'available-properties',
+      title: 'Available Properties',
+      value: data.properties?.vacant || 0,
+      change: data.properties?.total || 0,
+      changeLabel: 'total properties',
+      trend: 'neutral',
+      icon: StarIcon,
+      isFavorite: favoriteMetrics.includes('available-properties')
+    },
+    {
+      id: 'upcoming-checkins',
+      title: 'Upcoming Check-ins',
+      value: data.check_ins || 0,
+      change: data.check_ins_change || 0,
+      changeLabel: 'vs. last week',
+      trend: (data.check_ins_change || 0) >= 0 ? 'up' : 'down',
+      icon: TrendingUpIcon,
+      isFavorite: favoriteMetrics.includes('upcoming-checkins')
+    }
+  ];
 };
-
-export default createMetricCards;

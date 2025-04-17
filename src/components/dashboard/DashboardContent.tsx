@@ -17,12 +17,16 @@ interface DashboardContentProps {
   dashboardData: any;
   isLoading?: boolean;
   error?: string | null;
+  favoriteMetrics?: string[];
+  onToggleFavorite?: (metricId: string) => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
   dashboardData,
   isLoading = false,
-  error = null
+  error = null,
+  favoriteMetrics = [],
+  onToggleFavorite
 }) => {
   const [housekeepingTasks, setHousekeepingTasks] = useState<Task[]>(initialHousekeepingTasks);
   const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(initialMaintenanceTasks);
@@ -44,6 +48,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         data={dashboardData} 
         isLoading={isLoading}
         error={error}
+        favoriteMetrics={favoriteMetrics}
+        onToggleFavorite={onToggleFavorite}
       />
       
       {/* Separator */}

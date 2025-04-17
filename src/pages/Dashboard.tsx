@@ -56,7 +56,8 @@ const Dashboard: React.FC = () => {
     isSaving,
     lastSaved,
     updateSelectedProperty,
-    updateDateRange
+    updateDateRange,
+    toggleFavoriteMetric
   } = useDashboardPreferences();
   
   const isMobile = useIsMobile();
@@ -114,10 +115,10 @@ const Dashboard: React.FC = () => {
         isLoading={isLoading}
         error={error}
         favoriteMetrics={preferences.favoriteMetrics}
-        onToggleFavorite={/* This would need to be implemented */}
+        onToggleFavorite={toggleFavoriteMetric}
       />
     );
-  }, [dashboardData, isMobile, isLoading, error, handleRefresh, preferences.favoriteMetrics]);
+  }, [dashboardData, isMobile, isLoading, error, handleRefresh, preferences.favoriteMetrics, toggleFavoriteMetric]);
 
   return (
     <>

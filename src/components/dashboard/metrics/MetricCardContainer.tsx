@@ -1,73 +1,59 @@
 
-import React, { useState } from "react";
-import { SwipeIndicator } from "@/components/ui/swipe-indicator";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MetricCardProps } from "./MetricCard";
+import React from 'react';
+import MetricCard from './MetricCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface MetricCardContainerProps {
-  cards: Array<Omit<MetricCardProps, 'swipeable'>>;
-  renderCard: (card: Omit<MetricCardProps, 'swipeable'>, index: number) => React.ReactNode;
+  cards: any[];
+  isLoading?: boolean;
+  error?: string | null;
+  onToggleFavorite?: (metricId: string) => void;
 }
 
-const MetricCardContainer: React.FC<MetricCardContainerProps> = ({ 
+export const MetricCardContainer: React.FC<MetricCardContainerProps> = ({
   cards,
-  renderCard
+  isLoading = false,
+  error = null,
+  onToggleFavorite
 }) => {
-  const isMobile = useIsMobile();
-  const [currentPage, setCurrentPage] = useState(0);
-  const cardsPerPage = isMobile ? 2 : 3;
-  
-  const totalPages = Math.ceil(cards.length / cardsPerPage);
-  
-  const visibleCards = isMobile 
-    ? cards.slice(currentPage * cardsPerPage, (currentPage * cardsPerPage) + cardsPerPage)
-    : cards;
-    
-  const handleSwipe = (direction: 'left' | 'right') => {
-    if (direction === 'left' && currentPage < totalPages - 1) {
-      setCurrentPage(prev => prev + 1);
-    } else if (direction === 'right' && currentPage > 0) {
-      setCurrentPage(prev => prev - 1);
-    }
-  };
-  
-  return (
-    <div className="relative">
-      <div className={`grid gap-3 md:gap-6 ${isMobile ? 'grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3'}`}>
-        {visibleCards.map((card, index) => renderCard(card, index))}
+  // Show skeletons when loading
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="bg-card rounded-lg p-4 shadow-sm flex flex-col h-full">
+            <Skeleton className="h-4 w-1/3 mb-2" />
+            <Skeleton className="h-8 w-1/2 mb-4" />
+            <div className="mt-auto">
+              <Skeleton className="h-2 w-full mb-1" />
+              <Skeleton className="h-2 w-4/5" />
+            </div>
+          </div>
+        ))}
       </div>
-      
-      {isMobile && totalPages > 1 && (
-        <div className="flex justify-center mt-2 gap-1">
-          {Array.from({ length: totalPages }).map((_, i) => (
-            <div 
-              key={`indicator-${i}`} 
-              className={`h-1.5 rounded-full transition-all ${currentPage === i ? 'w-4 bg-primary' : 'w-1.5 bg-muted'}`}
-            />
-          ))}
-        </div>
-      )}
-      
-      {isMobile && (
-        <>
-          {currentPage > 0 && (
-            <SwipeIndicator 
-              direction="right" 
-              visible={true}
-              className="top-1/2 -translate-y-1/2 left-1"
-            />
-          )}
-          {currentPage < totalPages - 1 && (
-            <SwipeIndicator 
-              direction="left" 
-              visible={true}
-              className="top-1/2 -translate-y-1/2 right-1" 
-            />
-          )}
-        </>
-      )}
+    );
+  }
+  
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive">
+        <h3 className="font-medium">Error loading metrics</h3>
+        <p className="text-sm">{error}</p>
+      </div>
+    );
+  }
+  
+  // Show the metric cards
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      {cards.map((card) => (
+        <MetricCard 
+          key={card.id} 
+          metric={card} 
+          onToggleFavorite={onToggleFavorite ? () => onToggleFavorite(card.id) : undefined}
+        />
+      ))}
     </div>
   );
 };
-
-export default MetricCardContainer;
