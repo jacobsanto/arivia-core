@@ -1,16 +1,12 @@
 
-import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { 
   useMessageLoader, 
   useRealtimeMessages, 
   useMessageSender, 
-  useMessageReactions 
+  useTypingIndicator
 } from "./chat";
-import { Message } from "./useChatTypes";
-import { useTypingIndicator } from "./chat/useTypingIndicator";
-
-export type { Message };
+import { useMessageReactions } from "./useMessageReactions";
 
 export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   // Use the extracted hook for message loading
@@ -37,7 +33,12 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   });
   
   // Use the extracted hook for message reactions
-  const { addReaction } = useMessageReactions({ chatType, messages, setMessages, isOffline });
+  const { addReaction } = useMessageReactions({ 
+    chatType, 
+    messages, 
+    setMessages, 
+    isOffline 
+  });
 
   return {
     messages,

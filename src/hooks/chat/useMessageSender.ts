@@ -4,8 +4,7 @@ import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
 import { Message } from "../useChatTypes";
-import { v4 as uuidv4 } from 'uuid';
-import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
+import { v4 as uuidv4 } from "uuid";
 
 interface UseMessageSenderProps {
   chatType: 'general' | 'direct';
@@ -13,7 +12,7 @@ interface UseMessageSenderProps {
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
   clearTyping: () => void;
-  isOffline?: boolean;
+  isOffline: boolean;
 }
 
 export function useMessageSender({
@@ -22,74 +21,65 @@ export function useMessageSender({
   messages,
   setMessages,
   clearTyping,
-  isOffline = false
+  isOffline
 }: UseMessageSenderProps) {
-  const [messageInput, setMessageInput] = useState("");
+  const [messageInput, setMessageInput] = useState('');
   const { user } = useUser();
 
   const sendMessage = async () => {
     if (!messageInput.trim() || !user) return;
     
-    const now = new Date().toISOString();
-    const tempId = uuidv4();
+    const timestamp = new Date().toISOString();
+    const messageId = uuidv4();
     
-    // Create local message object
-    const newUiMessage: Message = {
-      id: tempId,
-      sender: user.name || user.email || "You",
+    // Create a UI message that will be displayed immediately 
+    const uiMessage: Message = {
+      id: messageId,
+      sender: user.name || "You",
       avatar: user.avatar || "/placeholder.svg",
-      content: messageInput.trim(),
-      timestamp: now,
+      content: messageInput,
+      timestamp,
       isCurrentUser: true,
       reactions: {}
     };
     
-    // Add message to UI immediately for better UX
-    setMessages(prev => [...prev, newUiMessage]);
-    setMessageInput("");
+    // Always update local state first for responsive UI
+    setMessages(prev => [...prev, uiMessage]);
+    
+    // Clear input and typing indicator
+    setMessageInput('');
     clearTyping();
     
-    // Don't try to send to server if offline
+    // If offline, don't try to send to server
     if (isOffline) {
-      toast.info("You're in offline mode", {
-        description: "Messages will not be sent to the server"
+      toast.info("Message saved locally", {
+        description: "You're in offline mode. Messages will be sent when connection is restored."
       });
       return;
     }
     
     try {
-      // Send to server
       if (chatType === 'general') {
         await chatService.sendChannelMessage({
-          channel_id: GENERAL_CHAT_CHANNEL_ID,
-          user_id: user.id,
-          content: messageInput.trim(),
-          is_read: true
+          channel_id: "general",
+          content: messageInput,
+          sender_id: user.id,
+          is_read: true,
         });
       } else if (chatType === 'direct' && recipientId) {
         await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
-          content: messageInput.trim(),
-          is_read: false
+          content: messageInput,
+          is_read: false,
         });
       }
-      
-      // No need to update UI again since we already added the local message
     } catch (error) {
       console.error("Failed to send message:", error);
       
-      // Mark message as failed in the UI
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === tempId 
-            ? { ...msg, content: `${msg.content} (Failed to send)`, failed: true } 
-            : msg
-        )
-      );
-      
-      toast.error("Failed to send message", {
-        description: "Please check your connection and try again"
+      // Show error toast without removing the local message
+      toast.error("Failed to send message to server", {
+        description: "Message is visible to you but may not be delivered."
       });
     }
   };
