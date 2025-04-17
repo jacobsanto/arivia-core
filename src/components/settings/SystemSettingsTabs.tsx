@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, Mail, Wrench, Plug, Shield, PaintBucket, Bell } from "lucide-react";
@@ -11,7 +10,7 @@ import SecuritySettings from "./sections/SecuritySettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import NotificationSettings from "./sections/NotificationSettings";
 import SettingsSectionBadge from "./SettingsSectionBadge";
-import { settingsService } from "@/services/settings/settings.service";
+import { settingsService, SettingsCategory } from "@/services/settings/settings.service";
 
 const SystemSettingsTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
@@ -55,14 +54,14 @@ const SystemSettingsTabs: React.FC = () => {
     const loadSettingsStatus = async () => {
       try {
         const categories = [
-          { key: 'general', category: 'general' },
-          { key: 'users', category: 'user-management' },
-          { key: 'email', category: 'email' },
-          { key: 'maintenance', category: 'maintenance' },
-          { key: 'integrations', category: 'integration' },
-          { key: 'security', category: 'security' },
-          { key: 'appearance', category: 'appearance' },
-          { key: 'notifications', category: 'notifications' }
+          { key: 'general', category: 'general' as SettingsCategory },
+          { key: 'users', category: 'user-management' as SettingsCategory },
+          { key: 'email', category: 'email' as SettingsCategory },
+          { key: 'maintenance', category: 'maintenance' as SettingsCategory },
+          { key: 'integrations', category: 'integration' as SettingsCategory },
+          { key: 'security', category: 'security' as SettingsCategory },
+          { key: 'appearance', category: 'appearance' as SettingsCategory },
+          { key: 'notifications', category: 'notifications' as SettingsCategory }
         ];
 
         const newStatus = { ...settingsStatus };
