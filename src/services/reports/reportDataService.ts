@@ -54,11 +54,15 @@ class ReportDataService {
    */
   async getPropertyData(filters: ReportFilters = {}): Promise<PropertyReportData[]> {
     try {
-      // Return empty array for now - no mock data
+      // In a real implementation, we would fetch data from Supabase here
+      // For now, just return an empty array
       return [];
     } catch (error: any) {
       console.error('Error getting property report data:', error);
-      toastService.error('Error loading property data');
+      // Don't show toast for network errors - they could happen when offline
+      if (!(error.message && error.message.includes('Failed to fetch'))) {
+        toastService.error('Error loading property data');
+      }
       return [];
     }
   }
@@ -68,11 +72,14 @@ class ReportDataService {
    */
   async getStaffData(filters: ReportFilters = {}): Promise<StaffReportData[]> {
     try {
-      // Return empty array for now - no mock data
+      // Return empty array - no mock data
       return [];
     } catch (error: any) {
       console.error('Error getting staff report data:', error);
-      toastService.error('Error loading staff data');
+      // Don't show toast for network errors - they could happen when offline
+      if (!(error.message && error.message.includes('Failed to fetch'))) {
+        toastService.error('Error loading staff data');
+      }
       return [];
     }
   }
@@ -82,11 +89,14 @@ class ReportDataService {
    */
   async getTimeAnalysisData(filters: ReportFilters = {}): Promise<TimeAnalysisData[]> {
     try {
-      // Return empty array for now - no mock data
+      // Return empty array - no mock data
       return [];
     } catch (error: any) {
       console.error('Error getting time analysis data:', error);
-      toastService.error('Error loading time analysis data');
+      // Don't show toast for network errors - they could happen when offline
+      if (!(error.message && error.message.includes('Failed to fetch'))) {
+        toastService.error('Error loading time analysis data');
+      }
       return [];
     }
   }

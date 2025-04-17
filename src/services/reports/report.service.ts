@@ -118,19 +118,40 @@ export class ReportService extends BaseService<Report> {
    */
   async getReportsByType(type: Report['type']): Promise<Report[]> {
     try {
+      // Check for network connectivity first to prevent unnecessary errors
+      if (!navigator.onLine) {
+        console.log('Device is offline, returning empty reports array');
+        return [];
+      }
+
       const { data, error } = await supabase
         .from('reports')
         .select('*')
         .eq('type', type)
         .eq('status', 'active');
       
-      if (error) throw error;
+      if (error) {
+        // Only throw for non-network errors
+        if (!error.message.includes('Failed to fetch')) {
+          throw error;
+        } else {
+          console.warn('Network error while fetching reports, returning empty array');
+          return [];
+        }
+      }
+      
       return data as Report[];
     } catch (error: any) {
+      // Only log the error but don't show toast for network errors
       console.error('Error fetching reports:', error);
-      toastService.error('Error Fetching Reports', {
-        description: error.message || 'There was an error loading reports. Please try again.'
-      });
+      
+      // Don't show toast messages for network errors
+      if (!(error.message && error.message.includes('Failed to fetch'))) {
+        toastService.error('Error Fetching Reports', {
+          description: error.message || 'There was an error loading reports. Please try again.'
+        });
+      }
+      
       return [];
     }
   }

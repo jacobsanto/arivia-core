@@ -10,10 +10,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobileReports from '@/components/reports/MobileReports';
 import { DateRange } from '@/components/reports/DateRangeSelector';
 import { AnalyticsProvider } from '@/contexts/AnalyticsContext';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon, WifiOff } from "lucide-react";
 
 const Reports = () => {
   // Initialize the reports hook for task reports
-  const { reports, isLoading, loadReports } = useReports('task');
+  const { reports, isLoading, loadReports, networkError } = useReports('task');
   const [activeView, setActiveView] = useState('reporting'); // reporting, analytics
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
@@ -24,6 +26,18 @@ const Reports = () => {
   useEffect(() => {
     // Load reports when the component mounts
     loadReports();
+    
+    // Add event listeners for online/offline status
+    const handleOnline = () => {
+      console.log("App is online, reloading reports");
+      loadReports();
+    };
+    
+    window.addEventListener('online', handleOnline);
+    
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
   }, []);
 
   const handleCreateReport = () => {
@@ -42,11 +56,27 @@ const Reports = () => {
     });
   };
 
+  // Render network error alert
+  const renderNetworkError = () => {
+    if (!networkError) return null;
+    
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <WifiOff className="h-4 w-4" />
+        <AlertTitle>Network connection issue</AlertTitle>
+        <AlertDescription>
+          Unable to load reports due to connectivity issues. Please check your internet connection and try again.
+        </AlertDescription>
+      </Alert>
+    );
+  };
+
   // Render mobile UI
   if (isMobile) {
     return (
       <AnalyticsProvider>
         <div className="container max-w-7xl mx-auto p-2">
+          {renderNetworkError()}
           <MobileReports 
             dateRange={dateRange}
             setDateRange={setDateRange}
@@ -62,6 +92,7 @@ const Reports = () => {
   return (
     <div className="w-full max-w-full overflow-hidden">
       <div className="container max-w-7xl mx-auto p-2 md:p-4 space-y-6">
+        {renderNetworkError()}
         <ReportsHeader 
           activeView={activeView}
           setActiveView={setActiveView}
