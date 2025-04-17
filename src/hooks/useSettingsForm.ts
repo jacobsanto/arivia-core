@@ -24,17 +24,16 @@ export function useSettingsForm<T extends Record<string, any>>({
   const [isDirty, setIsDirty] = useState(false);
   
   // Get settings from the database
-  // Cast defaultValues to meet the type requirement of useSystemSettings
   const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
     category,
-    defaultValues as T
+    defaultValues as unknown as T
   );
   
   // Create form with validation
   const form = useForm<T>({
     resolver: zodResolver(schema),
     // Use settings if available, otherwise fallback to default values
-    defaultValues: settings || (defaultValues as T),
+    defaultValues: settings as unknown as DefaultValues<T>,
   });
   
   // Track form changes
@@ -56,7 +55,7 @@ export function useSettingsForm<T extends Record<string, any>>({
         ...defaultValues,
         ...settings,
       };
-      form.reset(mergedSettings as T);
+      form.reset(mergedSettings as unknown as DefaultValues<T>);
     }
   }, [settings, isLoading, form, defaultValues]);
   
@@ -74,7 +73,7 @@ export function useSettingsForm<T extends Record<string, any>>({
       const success = await saveSettings(cleanData);
       
       if (success) {
-        form.reset(cleanData);
+        form.reset(cleanData as unknown as DefaultValues<T>);
         setIsDirty(false);
         
         toast.success("Settings saved successfully");
@@ -93,7 +92,7 @@ export function useSettingsForm<T extends Record<string, any>>({
   
   // Reset form to the last saved values
   const resetForm = () => {
-    form.reset(settings as T);
+    form.reset(settings as unknown as DefaultValues<T>);
     setIsDirty(false);
     
     toast.info("Settings reset", {
