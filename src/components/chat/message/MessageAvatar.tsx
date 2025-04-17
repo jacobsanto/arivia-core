@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AvatarComponent from "@/components/auth/avatar/AvatarComponent";
 
 interface MessageAvatarProps {
   sender: string;
@@ -10,10 +10,11 @@ interface MessageAvatarProps {
 
 const MessageAvatar: React.FC<MessageAvatarProps> = ({ sender, avatar, isCurrentUser }) => {
   return (
-    <Avatar className={`h-8 w-8 ${isCurrentUser ? "ml-2" : "mr-2"}`}>
-      <AvatarImage src={avatar} alt={sender} />
-      <AvatarFallback>{sender[0]}</AvatarFallback>
-    </Avatar>
+    <AvatarComponent
+      user={{ name: sender, avatar, id: "", email: "", role: "user" }}
+      size="sm"
+      className={`h-8 w-8 ${isCurrentUser ? "ml-2" : "mr-2"}`}
+    />
   );
 };
 

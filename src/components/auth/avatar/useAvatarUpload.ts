@@ -11,11 +11,12 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { updateUserAvatar } = useUser();
+  const { updateUserAvatar, refreshProfile } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>(user.avatar || "/placeholder.svg");
   const previousAvatarRef = useRef<string>(user.avatar || "/placeholder.svg");
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   // Add timestamp to avatar URL for cache busting only when needed
   const getAvatarUrl = (url: string | undefined) => {
@@ -41,6 +42,9 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    setUploadError(null);
+    
     try {
       setIsUploading(true);
 
@@ -55,7 +59,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
       // Upload to Supabase Storage
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
-      const fileName = `avatar.${fileExt}`;
+      const fileName = `avatar-${Date.now()}.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
       
       console.log("Attempting to upload to bucket 'avatars' at path:", filePath);
@@ -99,11 +103,18 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);
+        
+        // Refresh user profile to ensure all components have the latest data
+        setTimeout(() => {
+          refreshProfile().catch(console.error);
+        }, 500);
       }
     } catch (error) {
       console.error("Error uploading avatar:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      setUploadError(errorMessage);
       toast.error("Failed to upload avatar", {
-        description: error instanceof Error ? error.message : "An unknown error occurred"
+        description: errorMessage
       });
     } finally {
       setIsUploading(false);
@@ -115,6 +126,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
     isUploading,
     isDialogOpen,
     setIsDialogOpen,
-    handleFileChange
+    handleFileChange,
+    uploadError
   };
 };

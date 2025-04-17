@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -17,7 +18,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   isOpen,
   onClose
 }) => {
-  const { user, logout } = useUser();
+  const { user, logout, refreshProfile } = useUser();
   const { canAccess } = usePermissions();
   
   if (!user) return null;
@@ -32,6 +33,13 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   const handleLinkClick = () => {
     onClose();
   };
+
+  // Attempt to refresh profile when sidebar opens
+  React.useEffect(() => {
+    if (isOpen && user) {
+      refreshProfile().catch(console.error);
+    }
+  }, [isOpen, user, refreshProfile]);
   
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -45,7 +53,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
         <div className="flex items-center justify-center py-6 border-b border-sidebar-border">
           <div className="flex flex-col items-center">
             <div className="mb-2">
-              <AvatarUpload user={user} size="md" editable={false} />
+              <AvatarUpload user={user} size="md" editable={true} />
             </div>
             <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
             <span className="text-xs px-2 py-1 bg-sidebar-accent rounded-full mt-1 text-sidebar-accent-foreground">

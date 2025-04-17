@@ -2,23 +2,24 @@
 import React from "react";
 import { User } from "@/types/auth";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import { Camera } from "lucide-react";
-import AvatarDisplay from "./AvatarDisplay";
-import AvatarUploadDialog from "./AvatarUploadDialog";
 import { useAvatarUpload } from "./useAvatarUpload";
+import AvatarUploadDialog from "./AvatarUploadDialog";
+import AvatarComponent from "./AvatarComponent";
 
 interface AvatarUploadProps {
   user: User;
   size?: "sm" | "md" | "lg";
   onAvatarChange?: (url: string) => void;
   editable?: boolean;
+  className?: string;
 }
 
 const AvatarUpload: React.FC<AvatarUploadProps> = ({
   user,
   size = "md",
   onAvatarChange,
-  editable = true
+  editable = true,
+  className = ""
 }) => {
   const {
     avatarUrl,
@@ -32,17 +33,25 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   });
   
   if (!editable) {
-    return <AvatarDisplay user={{...user, avatar: avatarUrl}} size={size} />;
+    return (
+      <AvatarComponent
+        user={{...user, avatar: avatarUrl}}
+        size={size}
+        className={className}
+      />
+    );
   }
   
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <div className="relative cursor-pointer group">
-          <AvatarDisplay user={{...user, avatar: avatarUrl}} size={size} />
-          <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1 group-hover:bg-primary/10 transition-colors">
-            <Camera className="h-4 w-4 text-muted-foreground" />
-          </div>
+          <AvatarComponent
+            user={{...user, avatar: avatarUrl}}
+            size={size}
+            editable={true}
+            className={className}
+          />
         </div>
       </DialogTrigger>
       <AvatarUploadDialog 

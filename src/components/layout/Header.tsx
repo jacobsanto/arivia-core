@@ -24,9 +24,11 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   useEffect(() => {
     if (!user) return;
+    
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
         refreshProfile().then(updated => {
@@ -37,7 +39,9 @@ const Header: React.FC<HeaderProps> = ({
       }
     }, 5 * 60 * 1000); // 5 minutes
 
+    // Initial refresh
     refreshProfile();
+    
     return () => clearInterval(intervalId);
   }, [user, refreshProfile]);
 
@@ -45,8 +49,25 @@ const Header: React.FC<HeaderProps> = ({
     logout();
     navigate("/login");
   };
+  
+  const handleManualRefresh = async () => {
+    if (!user || isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      const updated = await refreshProfile();
+      if (updated) {
+        console.log("Profile manually refreshed");
+      }
+    } catch (error) {
+      console.error("Failed to refresh profile:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
-  return <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
+  return (
+    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         {/* Logo on the left */}
         <div className="flex items-center">
@@ -61,7 +82,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="relative hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
+              <Button variant="outline" asChild>
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
               </Button>
@@ -83,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
+              <Button variant="outline" asChild>
                 <MessageSquare className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
@@ -120,9 +141,9 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => navigate("/profile")}>Profile</DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/settings")}>Settings</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => refreshProfile()}>
-                <RefreshCw className="mr-2 h-4 w-4" />
-                <span>Refresh Profile</span>
+              <DropdownMenuItem onClick={handleManualRefresh} disabled={isRefreshing}>
+                <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span>{isRefreshing ? "Refreshing..." : "Refresh Profile"}</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
@@ -133,7 +154,8 @@ const Header: React.FC<HeaderProps> = ({
           </DropdownMenu>
         </div>
       </div>
-    </header>;
+    </header>
+  );
 };
 
 interface NotificationItemProps {
