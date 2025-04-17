@@ -7,74 +7,50 @@ import {
   CardHeader,
   CardTitle 
 } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
-  metric: {
-    id: string;
-    title: string;
-    value: string | number;
-    change?: number;
-    changeLabel?: string;
-    trend: 'up' | 'down' | 'neutral';
-    icon?: React.ElementType;
-    isFavorite?: boolean;
+  title: string;
+  value: string | number;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+    text: string;
   };
+  icon: React.ReactNode;
+  color: string;
   onToggleFavorite?: () => void;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ metric, onToggleFavorite }) => {
-  const {
-    title,
-    value,
-    change,
-    changeLabel,
-    trend,
-    icon: Icon,
-    isFavorite
-  } = metric;
-
+const MetricCard: React.FC<MetricCardProps> = ({ 
+  title, 
+  value, 
+  trend, 
+  icon, 
+  color,
+  onToggleFavorite
+}) => {
   return (
-    <Card>
-      <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
-        <div>
+    <Card className="overflow-hidden">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
           <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          {icon && <div className={`p-2 rounded-full ${color}`}>{icon}</div>}
         </div>
-        {onToggleFavorite && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-6 w-6"
-            onClick={onToggleFavorite}
-          >
-            <Star 
-              className={cn(
-                "h-4 w-4", 
-                isFavorite ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-              )} 
-            />
-            <span className="sr-only">
-              {isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            </span>
-          </Button>
-        )}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        {change !== undefined && changeLabel && (
-          <CardDescription className="pt-1 flex items-center">
-            {Icon && <Icon className="h-3 w-3 mr-1" />}
-            <span
+        {trend && (
+          <CardDescription className="flex items-center mt-1">
+            <span 
               className={cn({
-                'text-success': trend === 'up',
-                'text-destructive': trend === 'down'
+                'text-emerald-600': trend.isPositive,
+                'text-red-600': !trend.isPositive
               })}
             >
-              {typeof change === 'number' && (change >= 0 ? '+' : '')}{change}
+              {trend.isPositive ? '↑' : '↓'} {trend.value}%
             </span>
-            <span className="ml-1">{changeLabel}</span>
+            <span className="ml-1">{trend.text}</span>
           </CardDescription>
         )}
       </CardContent>
