@@ -1,5 +1,6 @@
 
 import { Check, Gauge, Home, Users } from "lucide-react";
+import React from "react";
 
 export interface MetricCardProps {
   title: string;
@@ -19,19 +20,19 @@ export const createMetricCards = (data: any, filter: any[] = []): MetricCardProp
     {
       title: "Total Properties",
       value: data.properties.total,
-      icon: Home && <Home className="h-5 w-5" />,
+      icon: React.createElement(Home, { className: "h-5 w-5" }),
       color: "bg-blue-100 text-blue-700"
     },
     {
       title: "Occupied Properties",
       value: data.properties.occupied,
-      icon: Users && <Users className="h-5 w-5" />,
+      icon: React.createElement(Users, { className: "h-5 w-5" }),
       color: "bg-green-100 text-green-700"
     },
     {
       title: "Vacant Properties",
       value: data.properties.vacant,
-      icon: Home && <Home className="h-5 w-5" />,
+      icon: React.createElement(Home, { className: "h-5 w-5" }),
       color: "bg-amber-100 text-amber-700"
     }
   ] : [];
@@ -41,7 +42,7 @@ export const createMetricCards = (data: any, filter: any[] = []): MetricCardProp
     {
       title: "Total Tasks",
       value: data.tasks.total,
-      icon: Check && <Check className="h-5 w-5" />,
+      icon: React.createElement(Check, { className: "h-5 w-5" }),
       color: "bg-purple-100 text-purple-700"
     },
     {
@@ -52,13 +53,13 @@ export const createMetricCards = (data: any, filter: any[] = []): MetricCardProp
         isPositive: true,
         text: "from last week"
       },
-      icon: Check && <Check className="h-5 w-5" />,
+      icon: React.createElement(Check, { className: "h-5 w-5" }),
       color: "bg-green-100 text-green-700"
     },
     {
       title: "Pending Tasks",
       value: data.tasks.pending,
-      icon: Check && <Check className="h-5 w-5" />,
+      icon: React.createElement(Check, { className: "h-5 w-5" }),
       color: "bg-amber-100 text-amber-700"
     }
   ] : [];
@@ -68,19 +69,19 @@ export const createMetricCards = (data: any, filter: any[] = []): MetricCardProp
     {
       title: "Total Maintenance",
       value: data.maintenance.total,
-      icon: Gauge && <Gauge className="h-5 w-5" />,
+      icon: React.createElement(Gauge, { className: "h-5 w-5" }),
       color: "bg-sky-100 text-sky-700"
     },
     {
       title: "Critical Issues",
       value: data.maintenance.critical,
-      icon: Gauge && <Gauge className="h-5 w-5" />,
+      icon: React.createElement(Gauge, { className: "h-5 w-5" }),
       color: "bg-red-100 text-red-700"
     },
     {
       title: "Standard Maintenance",
       value: data.maintenance.standard,
-      icon: Gauge && <Gauge className="h-5 w-5" />,
+      icon: React.createElement(Gauge, { className: "h-5 w-5" }),
       color: "bg-blue-100 text-blue-700"
     }
   ] : [];

@@ -29,5 +29,5 @@ export interface DirectMessage {
   created_at?: string;
 }
 
-// Define a general chat channel ID that will be used for the public chat
-export const GENERAL_CHAT_CHANNEL_ID = "general-chat";
+// Define a general chat channel ID using a proper UUID format
+export const GENERAL_CHAT_CHANNEL_ID = "00000000-0000-0000-0000-000000000000";

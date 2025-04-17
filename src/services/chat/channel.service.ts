@@ -35,7 +35,7 @@ export const channelService = {
         return data;
       }
 
-      // If not, create the general channel
+      // If not, create the general channel with the proper UUID
       const channel = {
         id: GENERAL_CHAT_CHANNEL_ID,
         name: 'General',
