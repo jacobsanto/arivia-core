@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
+import { useSystemSettings } from "@/hooks/useSystemSettings";
 
 const userManagementSchema = z.object({
   allowUserRegistration: z.boolean(),
@@ -21,24 +22,56 @@ const userManagementSchema = z.object({
 type UserManagementFormValues = z.infer<typeof userManagementSchema>;
 
 const UserManagementSettings: React.FC = () => {
+  // Define default values for the form
+  const defaultValues: UserManagementFormValues = {
+    allowUserRegistration: false,
+    defaultUserRole: "property_manager",
+    passwordMinLength: 12,
+    passwordRequireNumbers: true,
+    passwordRequireSymbols: true,
+    sessionTimeout: 120,
+  };
+
+  // Use system settings hook to interact with the database
+  const { settings, updateSettings, saveSettings, isLoading, isSaving } = useSystemSettings<UserManagementFormValues>(
+    'user-management',
+    defaultValues
+  );
+
   const form = useForm<UserManagementFormValues>({
     resolver: zodResolver(userManagementSchema),
-    defaultValues: {
-      allowUserRegistration: false,
-      defaultUserRole: "property_manager",
-      passwordMinLength: 12,
-      passwordRequireNumbers: true,
-      passwordRequireSymbols: true,
-      sessionTimeout: 120,
-    },
+    defaultValues: settings, // Use settings from the database
   });
 
-  function onSubmit(data: UserManagementFormValues) {
-    toast.success("User management settings updated", {
-      description: "Your changes have been saved."
-    });
-    console.log("User management settings saved:", data);
+  // Update form values when settings are loaded from database
+  useEffect(() => {
+    if (!isLoading) {
+      form.reset(settings);
+    }
+  }, [form, settings, isLoading]);
+
+  // Handle form submission
+  async function onSubmit(data: UserManagementFormValues) {
+    try {
+      await saveSettings(data);
+      toast.success("User management settings updated", {
+        description: "Your changes have been saved."
+      });
+    } catch (error) {
+      console.error("Failed to save user management settings:", error);
+      toast.error("Failed to save settings", {
+        description: "Please try again."
+      });
+    }
   }
+
+  // Reset form to database values
+  const handleReset = () => {
+    form.reset(settings);
+    toast.info("Form reset", {
+      description: "Settings reverted to last saved values."
+    });
+  };
 
   return (
     <Form {...form}>
@@ -46,6 +79,10 @@ const UserManagementSettings: React.FC = () => {
         <SettingsCard 
           title="User Management" 
           description="Configure user registration and access settings"
+          isLoading={isLoading}
+          isSaving={isSaving}
+          onSave={form.handleSubmit(onSubmit)}
+          onReset={handleReset}
         >
           <div className="space-y-6">
             <FormField

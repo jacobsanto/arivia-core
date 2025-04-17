@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Settings, Users, Mail, Wrench, Plug, Shield, PaintBucket, Bell } from "lucide-react";
 import GeneralSettings from "./sections/GeneralSettings";
@@ -10,86 +11,122 @@ import SecuritySettings from "./sections/SecuritySettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import NotificationSettings from "./sections/NotificationSettings";
 import SettingsSectionBadge from "./SettingsSectionBadge";
+import { settingsService } from "@/services/settings/settings.service";
+
 const SystemSettingsTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
-
-  // In a real app, this data would come from API or context
-  const settingsStatus = {
+  const [settingsStatus, setSettingsStatus] = useState({
     general: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 2, 30, 14, 25)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     users: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 3, 2, 9, 45)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     email: {
-      status: "needs-attention" as const,
-      lastUpdated: new Date(2025, 3, 10, 11, 20)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     maintenance: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 3, 11, 15, 10)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     integrations: {
-      status: "not-configured" as const
-      // Note: No lastUpdated for not-configured status
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     security: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 3, 5, 10, 30)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     appearance: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 3, 1, 16, 45)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     },
     notifications: {
-      status: "configured" as const,
-      lastUpdated: new Date(2025, 3, 9, 14, 15)
+      status: "not-configured" as const,
+      lastUpdated: undefined
     }
-  };
+  });
+
+  // Load settings status on component mount
+  useEffect(() => {
+    const loadSettingsStatus = async () => {
+      try {
+        const categories = [
+          { key: 'general', category: 'general' },
+          { key: 'users', category: 'user-management' },
+          { key: 'email', category: 'email' },
+          { key: 'maintenance', category: 'maintenance' },
+          { key: 'integrations', category: 'integration' },
+          { key: 'security', category: 'security' },
+          { key: 'appearance', category: 'appearance' },
+          { key: 'notifications', category: 'notifications' }
+        ];
+
+        const newStatus = { ...settingsStatus };
+        
+        // Load status for each settings category
+        for (const { key, category } of categories) {
+          try {
+            const data = await settingsService.getSettings(category);
+            
+            // If we have data, the category is configured
+            if (data && Object.keys(data).length > 0) {
+              newStatus[key] = {
+                status: 'configured',
+                lastUpdated: new Date()
+              };
+            }
+          } catch (error) {
+            console.error(`Error loading ${category} settings status:`, error);
+          }
+        }
+        
+        setSettingsStatus(newStatus);
+      } catch (error) {
+        console.error('Failed to load settings status:', error);
+      }
+    };
+
+    loadSettingsStatus();
+  }, []);
+
   return <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
       <div className="overflow-auto">
         <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 w-full">
           <TabsTrigger value="general" className="flex items-center justify-center gap-2">
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">General</span>
-            
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center justify-center gap-2">
             <Users className="h-4 w-4" />
             <span className="hidden sm:inline">Users</span>
-            
           </TabsTrigger>
           <TabsTrigger value="email" className="flex items-center justify-center gap-2">
             <Mail className="h-4 w-4" />
             <span className="hidden sm:inline">Email</span>
-            
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="flex items-center justify-center gap-2">
             <Wrench className="h-4 w-4" />
             <span className="hidden sm:inline">Maintenance</span>
-            
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center justify-center gap-2">
             <Plug className="h-4 w-4" />
             <span className="hidden sm:inline">Integrations</span>
-            
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center justify-center gap-2">
             <Shield className="h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
-            
           </TabsTrigger>
           <TabsTrigger value="appearance" className="flex items-center justify-center gap-2">
             <PaintBucket className="h-4 w-4" />
             <span className="hidden sm:inline">Appearance</span>
-            
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center justify-center gap-2">
             <Bell className="h-4 w-4" />
             <span className="hidden sm:inline">Notifications</span>
-            
           </TabsTrigger>
         </TabsList>
       </div>
@@ -129,8 +166,7 @@ const SystemSettingsTabs: React.FC = () => {
       <TabsContent value="integrations" className="space-y-4">
         <div className="flex justify-between items-center mb-2">
           <h2 className="text-xl font-semibold">Integration Settings</h2>
-          <SettingsSectionBadge status={settingsStatus.integrations.status}
-        /* Pass undefined for lastUpdated since it doesn't exist in this object */ lastUpdated={undefined} />
+          <SettingsSectionBadge status={settingsStatus.integrations.status} lastUpdated={settingsStatus.integrations.lastUpdated} />
         </div>
         <IntegrationSettings />
       </TabsContent>

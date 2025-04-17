@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -9,7 +8,8 @@ export type SettingsCategory =
   | 'security' 
   | 'integration' 
   | 'maintenance'
-  | 'user-management';
+  | 'user-management'
+  | 'notifications';
 
 export interface SystemSettings {
   id: string;
