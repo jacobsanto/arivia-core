@@ -1,11 +1,8 @@
 
 import { useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
-import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
-import { chatService } from "@/services/chat/chat.service";
+import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
-import { toast } from "sonner";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
@@ -23,111 +20,82 @@ export function useRealtimeMessages({
   const { user } = useUser();
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !recipientId) return;
+
+    // Set up real-time listeners based on chat type
+    const table = chatType === 'general' ? 'chat_messages' : 'direct_messages';
+    const column = chatType === 'general' ? 'channel_id' : 'recipient_id';
     
-    let channel;
-    let subscriptionAttempts = 0;
-    const maxAttempts = 3;
-    
-    const setupRealtimeSubscription = () => {
-      if (subscriptionAttempts >= maxAttempts) {
-        console.warn(`Failed to establish realtime connection after ${maxAttempts} attempts`);
-        return;
-      }
-      
-      subscriptionAttempts++;
-      
-      try {
+    // Create a channel for this specific chat
+    const channel = supabase
+      .channel(`chat-${chatType}-${recipientId}`)
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table,
+        filter: `${column}=eq.${recipientId}`
+      }, (payload) => {
+        // Don't show messages from ourselves (we already added them)
+        const senderId = chatType === 'general' 
+          ? payload.new.sender_id 
+          : payload.new.sender_id;
+          
+        if (senderId === user.id) return;
+        
+        // Format message from payload
+        let newMessage: Message;
+        
         if (chatType === 'general') {
-          channel = supabase
-            .channel('public:chat_messages')
-            .on('postgres_changes', 
-              { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `channel_id=eq.${GENERAL_CHAT_CHANNEL_ID}` },
-              (payload) => {
-                const newMsg = payload.new as any;
-                
-                if (newMsg.sender_id !== user.id) {
-                  const uiMessage = {
-                    id: newMsg.id,
-                    sender: "Other User",
-                    avatar: "/placeholder.svg",
-                    content: newMsg.content,
-                    timestamp: newMsg.created_at,
-                    isCurrentUser: false,
-                    reactions: newMsg.reactions || {}
-                  };
-                  
-                  setMessages(prev => [...prev, uiMessage]);
-                }
-              }
-            )
-            .subscribe((status) => {
-              if (status !== 'SUBSCRIBED' && status !== 'TIMED_OUT') {
-                console.warn(`Realtime subscription status: ${status}`);
-                if (status === 'CHANNEL_ERROR') {
-                  // Wait and try again
-                  setTimeout(() => setupRealtimeSubscription(), 2000);
-                }
-              }
-            });
-        } else if (chatType === 'direct' && recipientId) {
-          channel = supabase
-            .channel('public:direct_messages')
-            .on('postgres_changes', 
-              { event: 'INSERT', schema: 'public', table: 'direct_messages' },
-              (payload) => {
-                const newMsg = payload.new as any;
-                
-                if ((newMsg.sender_id === user.id && newMsg.recipient_id === recipientId) ||
-                    (newMsg.sender_id === recipientId && newMsg.recipient_id === user.id)) {
-                  
-                  if (newMsg.sender_id === recipientId) {
-                    chatService.markDirectMessageAsRead(newMsg.id).catch(err => {
-                      console.warn("Failed to mark message as read:", err);
-                    });
-                  }
-                  
-                  if (newMsg.sender_id !== user.id) {
-                    const uiMessage = {
-                      id: newMsg.id,
-                      sender: "Other User",
-                      avatar: "/placeholder.svg",
-                      content: newMsg.content,
-                      timestamp: newMsg.created_at,
-                      isCurrentUser: false,
-                      reactions: {}
-                    };
-                    
-                    setMessages(prev => [...prev, uiMessage]);
-                  }
-                }
-              }
-            )
-            .subscribe((status) => {
-              if (status !== 'SUBSCRIBED' && status !== 'TIMED_OUT') {
-                console.warn(`Realtime subscription status: ${status}`);
-                if (status === 'CHANNEL_ERROR') {
-                  // Wait and try again
-                  setTimeout(() => setupRealtimeSubscription(), 2000);
-                }
-              }
-            });
+          newMessage = {
+            id: payload.new.id,
+            sender: "Unknown User", // We'll need to fetch user details separately
+            avatar: "/placeholder.svg",
+            content: payload.new.content,
+            timestamp: payload.new.created_at,
+            isCurrentUser: false,
+            reactions: payload.new.reactions || {}
+          };
+        } else {
+          newMessage = {
+            id: payload.new.id,
+            sender: "Direct Message", // We'll need to fetch user details separately
+            avatar: "/placeholder.svg",
+            content: payload.new.content,
+            timestamp: payload.new.created_at,
+            isCurrentUser: false,
+            reactions: {}
+          };
         }
-      } catch (error) {
-        console.error("Error setting up realtime subscription:", error);
-      }
-    };
-    
-    setupRealtimeSubscription();
-    
+        
+        // Try to fetch user details
+        const fetchSenderDetails = async () => {
+          try {
+            const { data } = await supabase
+              .from('profiles')
+              .select('name, avatar')
+              .eq('id', senderId)
+              .single();
+              
+            if (data) {
+              newMessage.sender = data.name || "Unknown User";
+              newMessage.avatar = data.avatar || "/placeholder.svg";
+            }
+          } catch (error) {
+            console.warn("Could not fetch sender details", error);
+          }
+          
+          setMessages(prev => [...prev, newMessage]);
+        };
+        
+        fetchSenderDetails();
+      })
+      .subscribe();
+      
+    // Clean up subscription
     return () => {
-      if (channel) {
-        try {
-          supabase.removeChannel(channel);
-        } catch (error) {
-          console.warn("Error removing channel:", error);
-        }
-      }
+      supabase.removeChannel(channel);
     };
-  }, [user, chatType, recipientId, setMessages]);
+  }, [user, recipientId, chatType, setMessages]);
+
+  return; // This hook doesn't return any values
 }

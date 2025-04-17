@@ -1,10 +1,9 @@
 
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { Message } from "../useChatTypes";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
-import { Message } from "../useChatTypes";
-import { v4 as uuidv4 } from "uuid";
 
 interface UseMessageSenderProps {
   chatType: 'general' | 'direct';
@@ -15,72 +14,93 @@ interface UseMessageSenderProps {
   isOffline: boolean;
 }
 
-export function useMessageSender({
-  chatType,
-  recipientId,
-  messages,
+export function useMessageSender({ 
+  chatType, 
+  recipientId, 
+  messages, 
   setMessages,
   clearTyping,
   isOffline
 }: UseMessageSenderProps) {
-  const [messageInput, setMessageInput] = useState('');
+  const [messageInput, setMessageInput] = useState("");
   const { user } = useUser();
 
   const sendMessage = async () => {
-    if (!messageInput.trim() || !user) return;
-    
-    const timestamp = new Date().toISOString();
-    const messageId = uuidv4();
-    
-    // Create a UI message that will be displayed immediately 
-    const uiMessage: Message = {
-      id: messageId,
+    if (!messageInput.trim() || !user) {
+      return;
+    }
+
+    // Create a temporary message to show immediately
+    const tempId = `temp-${Date.now()}`;
+    const tempMessage: Message = {
+      id: tempId,
       sender: user.name || "You",
       avatar: user.avatar || "/placeholder.svg",
-      content: messageInput,
-      timestamp,
+      content: messageInput.trim(),
+      timestamp: new Date().toISOString(),
       isCurrentUser: true,
       reactions: {}
     };
+
+    // Add the message to the list
+    setMessages(prev => [...prev, tempMessage]);
     
-    // Always update local state first for responsive UI
-    setMessages(prev => [...prev, uiMessage]);
-    
-    // Clear input and typing indicator
-    setMessageInput('');
+    // Clear the input
+    setMessageInput("");
     clearTyping();
-    
-    // If offline, don't try to send to server
+
+    // If offline, just show a toast and don't try to send to server
     if (isOffline) {
-      toast.info("Message saved locally", {
-        description: "You're in offline mode. Messages will be sent when connection is restored."
-      });
+      toast.warning("Message saved locally. Will sync when online.");
       return;
     }
-    
+
     try {
       if (chatType === 'general') {
-        await chatService.sendChannelMessage({
-          channel_id: "general",
-          content: messageInput,
+        // Send to channel
+        const sentMessage = await chatService.sendChannelMessage({
+          channel_id: recipientId || '',
           user_id: user.id,
-          is_read: true,
+          content: tempMessage.content
         });
+        
+        // Replace the temp message with the real one if we got a response
+        if (sentMessage) {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === tempId ? {
+                ...msg,
+                id: sentMessage.id,
+                timestamp: sentMessage.created_at || msg.timestamp
+              } : msg
+            )
+          );
+        }
       } else if (chatType === 'direct' && recipientId) {
-        await chatService.sendDirectMessage({
+        // Send direct message
+        const directMessage = await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
-          content: messageInput,
-          is_read: false,
+          content: tempMessage.content,
+          is_read: false
         });
+        
+        // Replace the temp message if we got a response
+        if (directMessage) {
+          setMessages(prev => 
+            prev.map(msg => 
+              msg.id === tempId ? {
+                ...msg,
+                id: directMessage.id,
+                timestamp: directMessage.created_at || msg.timestamp
+              } : msg
+            )
+          );
+        }
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
-      
-      // Show error toast without removing the local message
-      toast.error("Failed to send message to server", {
-        description: "Message is visible to you but may not be delivered."
-      });
+      console.error("Error sending message:", error);
+      toast.error("Failed to send message");
     }
   };
 
