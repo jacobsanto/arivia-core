@@ -30,7 +30,7 @@ const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
           </div>
           <FormControl>
             <Switch
-              checked={field.value}
+              checked={Boolean(field.value)}
               onCheckedChange={field.onChange}
             />
           </FormControl>
