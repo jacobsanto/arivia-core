@@ -7,7 +7,7 @@ export function useSystemSettings<T extends Record<string, any>>(
   category: SettingsCategory,
   defaultValues: T
 ) {
-  const [settings, setSettings] = useState<T>(defaultValues);
+  const [settings, setSettings] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -17,13 +17,15 @@ export function useSystemSettings<T extends Record<string, any>>(
     try {
       const data = await settingsService.getSettings(category);
       // Merge with default values to ensure all expected fields exist
-      const mergedSettings = { ...defaultValues, ...data };
+      const mergedSettings = { ...defaultValues, ...data } as T;
       setSettings(mergedSettings);
     } catch (error) {
       console.error('Failed to load settings:', error);
       toast.error("Failed to load settings", {
         description: "Using default values"
       });
+      // Set default values in case of error
+      setSettings(defaultValues);
     } finally {
       setIsLoading(false);
     }
@@ -33,10 +35,14 @@ export function useSystemSettings<T extends Record<string, any>>(
     loadSettings();
   }, [loadSettings]);
 
-  const saveSettings = async (newSettings: Partial<T>) => {
+  const saveSettings = async (newSettings: T) => {
     setIsSaving(true);
     try {
-      const updatedSettings = { ...settings, ...newSettings };
+      // Combine current settings with new settings to ensure all fields are preserved
+      const updatedSettings = settings 
+        ? { ...settings, ...newSettings } 
+        : { ...defaultValues, ...newSettings };
+        
       const success = await settingsService.saveSettings(category, updatedSettings);
       
       if (success) {
@@ -53,5 +59,10 @@ export function useSystemSettings<T extends Record<string, any>>(
     }
   };
 
-  return { settings, updateSettings: saveSettings, saveSettings, isLoading, isSaving };
+  return { 
+    settings: settings || defaultValues, 
+    saveSettings, 
+    isLoading, 
+    isSaving 
+  };
 }
