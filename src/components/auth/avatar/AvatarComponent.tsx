@@ -67,6 +67,7 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
   
   const handleClick = (e: React.MouseEvent) => {
     if (editable && onAvatarClick) {
+      e.preventDefault();
       e.stopPropagation();
       onAvatarClick();
     }

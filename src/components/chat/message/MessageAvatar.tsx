@@ -12,7 +12,13 @@ interface MessageAvatarProps {
 const MessageAvatar: React.FC<MessageAvatarProps> = ({ sender, avatar, isCurrentUser }) => {
   return (
     <AvatarComponent
-      user={{ name: sender, avatar, id: "", email: "", role: "user" as UserRole }}
+      user={{ 
+        name: sender, 
+        avatar, 
+        id: "", 
+        email: "", 
+        role: "user" as UserRole 
+      }}
       size="sm"
       className={`h-8 w-8 ${isCurrentUser ? "ml-2" : "mr-2"}`}
     />

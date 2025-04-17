@@ -50,7 +50,11 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <button type="button" className="bg-transparent border-0 p-0 m-0 cursor-pointer">
+        <button 
+          type="button" 
+          className="bg-transparent border-0 p-0 m-0 cursor-pointer"
+          aria-label="Change profile picture"
+        >
           <AvatarComponent
             user={{...user, avatar: avatarUrl}}
             size={size}
