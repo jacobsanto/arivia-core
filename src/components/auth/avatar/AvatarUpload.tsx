@@ -43,15 +43,20 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     );
   }
   
+  const handleAvatarClick = () => {
+    setIsDialogOpen(true);
+  };
+  
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <div className="relative cursor-pointer group">
+        <div className="cursor-pointer group">
           <AvatarComponent
             user={{...user, avatar: avatarUrl}}
             size={size}
             editable={true}
             className={className}
+            onAvatarClick={handleAvatarClick}
           />
         </div>
       </DialogTrigger>

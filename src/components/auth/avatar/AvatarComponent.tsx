@@ -83,7 +83,7 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
     <div className="relative">
       {isLoading && (
         <div className={`${sizeClasses[size]} ${className} absolute top-0 left-0 flex items-center justify-center`}>
-          <Skeleton className={`h-full w-full rounded-full`} />
+          <Skeleton className="h-full w-full rounded-full" />
         </div>
       )}
       

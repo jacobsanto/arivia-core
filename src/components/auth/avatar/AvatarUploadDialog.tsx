@@ -1,10 +1,9 @@
 
 import React from "react";
 import { User } from "@/types/auth";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, UserCircle2, AlertCircle } from "lucide-react";
-import { getInitials } from "./AvatarDisplay";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import AvatarComponent from "./AvatarComponent";
 
