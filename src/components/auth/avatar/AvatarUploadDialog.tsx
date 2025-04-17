@@ -53,12 +53,12 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
               {isUploading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Uploading...
+                  <span>Uploading...</span>
                 </>
               ) : (
                 <>
                   <UserCircle2 className="h-4 w-4" />
-                  Choose Image
+                  <span>Choose Image</span>
                 </>
               )}
             </Button>

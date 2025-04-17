@@ -93,13 +93,15 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
         className={`${sizeClasses[size]} ${className} ${editable ? 'cursor-pointer' : ''}`}
         onClick={handleClick}
       >
-        <AvatarImage 
-          src={avatarUrl || ""}
-          alt={user.name || "User"} 
-          className="object-cover object-center" 
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-        />
+        {avatarUrl ? (
+          <AvatarImage 
+            src={avatarUrl}
+            alt={user.name || "User"} 
+            className="object-cover object-center" 
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        ) : null}
         <AvatarFallback className={size === "lg" ? "text-lg" : ""}>
           {getInitials(user.name || "User")}
         </AvatarFallback>
