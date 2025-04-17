@@ -5,10 +5,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 
 interface MessageReactionsProps {
   reactions: Record<string, string[]>;
+  onEmojiClick?: (emoji: string, e: React.MouseEvent) => void;
   isOffline?: boolean;
 }
 
-const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions, isOffline = false }) => {
+const MessageReactions: React.FC<MessageReactionsProps> = ({ 
+  reactions, 
+  onEmojiClick,
+  isOffline = false 
+}) => {
   if (!reactions || Object.keys(reactions).length === 0) {
     return null;
   }
@@ -21,7 +26,8 @@ const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions, isOfflin
             <TooltipTrigger asChild>
               <Badge
                 variant="secondary"
-                className="px-2 py-0 text-xs flex items-center gap-1 cursor-default"
+                className="px-2 py-0 text-xs flex items-center gap-1 cursor-default hover:bg-secondary/80"
+                onClick={onEmojiClick ? (e) => onEmojiClick(emoji, e) : undefined}
               >
                 <span>{emoji}</span>
                 <span className="text-xs">{users.length}</span>

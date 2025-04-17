@@ -52,7 +52,8 @@ const TeamChat = () => {
       try {
         // Check connection to Supabase
         try {
-          const { data, error } = await supabase.from('_heartbeats').select('*').limit(1);
+          // Use a simple ping to check connection instead of _heartbeats table
+          const { data, error } = await supabase.from('chat_channels').select('count').limit(1);
           if (error) throw error;
           setIsConnected(true);
           setLoadError(null);
