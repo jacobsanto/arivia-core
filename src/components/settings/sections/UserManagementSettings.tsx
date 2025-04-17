@@ -1,41 +1,22 @@
 
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
-
-const userManagementSchema = z.object({
-  allowUserRegistration: z.boolean(),
-  defaultUserRole: z.string(),
-  passwordMinLength: z.number().min(8).max(32),
-  passwordRequireNumbers: z.boolean(),
-  passwordRequireSymbols: z.boolean(),
-  sessionTimeout: z.number().min(10).max(1440),
-});
-
-type UserManagementFormValues = z.infer<typeof userManagementSchema>;
+import { Separator } from "@/components/ui/separator";
+import RegistrationSettings from "./user-management/RegistrationSettings";
+import PasswordSettings from "./user-management/PasswordSettings";
+import SessionSettings from "./user-management/SessionSettings";
+import { userManagementSchema, UserManagementFormValues, defaultUserManagementValues } from "./user-management/types";
 
 const UserManagementSettings: React.FC = () => {
-  // Define default values for the form
-  const defaultValues: UserManagementFormValues = {
-    allowUserRegistration: false,
-    defaultUserRole: "property_manager",
-    passwordMinLength: 12,
-    passwordRequireNumbers: true,
-    passwordRequireSymbols: true,
-    sessionTimeout: 120,
-  };
-
   // Use system settings hook to interact with the database
-  const { settings, updateSettings, saveSettings, isLoading, isSaving } = useSystemSettings<UserManagementFormValues>(
+  const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<UserManagementFormValues>(
     'user-management',
-    defaultValues
+    defaultUserManagementValues
   );
 
   const form = useForm<UserManagementFormValues>({
@@ -85,127 +66,39 @@ const UserManagementSettings: React.FC = () => {
           onReset={handleReset}
         >
           <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="allowUserRegistration"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Allow User Registration</FormLabel>
-                    <FormDescription>
-                      Enable to allow users to create their own accounts
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <div>
+              <h3 className="text-lg font-medium">Registration</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure how users can register for the system
+              </p>
+              <div className="mt-3">
+                <RegistrationSettings form={form} />
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="defaultUserRole"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Default Role</FormLabel>
-                  <FormControl>
-                    <Input {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Default role assigned to new users
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <Separator />
 
-            <FormField
-              control={form.control}
-              name="passwordMinLength"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Minimum Password Length</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Minimum characters required for passwords (8-32)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <h3 className="text-lg font-medium">Password Requirements</h3>
+              <p className="text-sm text-muted-foreground">
+                Set password complexity requirements
+              </p>
+              <div className="mt-3">
+                <PasswordSettings form={form} />
+              </div>
+            </div>
 
-            <FormField
-              control={form.control}
-              name="passwordRequireNumbers"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Numbers</FormLabel>
-                    <FormDescription>
-                      Passwords must contain at least one number
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <Separator />
 
-            <FormField
-              control={form.control}
-              name="passwordRequireSymbols"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Require Symbols</FormLabel>
-                    <FormDescription>
-                      Passwords must contain at least one special character
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="sessionTimeout"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Session Timeout (minutes)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    How long before an inactive session expires (10-1440 minutes)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div>
+              <h3 className="text-lg font-medium">Session Management</h3>
+              <p className="text-sm text-muted-foreground">
+                Configure session timeouts and behavior
+              </p>
+              <div className="mt-3">
+                <SessionSettings form={form} />
+              </div>
+            </div>
           </div>
         </SettingsCard>
       </form>
