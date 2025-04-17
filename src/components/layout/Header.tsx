@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Bell, MessageSquare, LogOut, RefreshCw, Menu } from "lucide-react";
+import { Bell, MessageSquare, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
@@ -8,9 +8,12 @@ import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
+import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
+
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
 }
+
 const Header: React.FC<HeaderProps> = ({
   onMobileMenuToggle
 }) => {
@@ -21,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+
   useEffect(() => {
     if (!user) return;
     const intervalId = setInterval(() => {
@@ -36,10 +40,12 @@ const Header: React.FC<HeaderProps> = ({
     refreshProfile();
     return () => clearInterval(intervalId);
   }, [user, refreshProfile]);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
   return <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         {/* Logo on the left */}
@@ -98,10 +104,15 @@ const Header: React.FC<HeaderProps> = ({
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
-                {user && user.role === 'superadmin' && <Badge variant="outline" className="text-xs border-sidebar-foreground text-sidebar-foreground">
+              <Button variant="outline" className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground flex items-center gap-2">
+                {user && (
+                  <AvatarUpload user={user} size="sm" editable={false} />
+                )}
+                {user && user.role === 'superadmin' && (
+                  <Badge variant="outline" className="text-xs border-sidebar-foreground text-sidebar-foreground">
                     {ROLE_DETAILS[user.role].title}
-                  </Badge>}
+                  </Badge>
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -124,11 +135,13 @@ const Header: React.FC<HeaderProps> = ({
       </div>
     </header>;
 };
+
 interface NotificationItemProps {
   title: string;
   message: string;
   time: string;
 }
+
 const NotificationItem = ({
   title,
   message,
@@ -140,12 +153,14 @@ const NotificationItem = ({
       <div className="text-xs text-muted-foreground mt-1">{time}</div>
     </div>;
 };
+
 interface MessageItemProps {
   name: string;
   message: string;
   time: string;
   avatar: string;
 }
+
 const MessageItem = ({
   name,
   message,
@@ -165,4 +180,5 @@ const MessageItem = ({
       </div>
     </div>;
 };
+
 export default Header;

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -29,8 +28,8 @@ const Sidebar = () => {
       
       <div className="flex items-center justify-center mb-6">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
-            <AvatarUpload user={user} size="sm" editable={false} />
+          <div className="mb-2">
+            <AvatarUpload user={user} size="md" editable={false} />
           </div>
           <p className="font-semibold text-base">{user.name}</p>
           <span className="text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1 font-semibold text-sm">
