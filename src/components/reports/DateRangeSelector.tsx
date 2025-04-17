@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { DateRange as DayPickerDateRange } from "react-day-picker";
+import { TimeFilter } from '@/utils/dateRangeUtils';
 
 // Use our own DateRange interface with optional properties that works with our application
 export interface DateRange {
@@ -19,12 +20,16 @@ interface DateRangeSelectorProps {
   value: DateRange;
   onChange: (range: DateRange) => void;
   className?: string;
+  timeFilter?: TimeFilter;
+  onTimeFilterChange?: (filter: TimeFilter) => void;
 }
 
 export const DateRangeSelector: React.FC<DateRangeSelectorProps> = ({
   value,
   onChange,
-  className
+  className,
+  timeFilter,
+  onTimeFilterChange
 }) => {
   const isMobile = useIsMobile();
 
