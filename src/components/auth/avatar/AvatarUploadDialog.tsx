@@ -49,19 +49,21 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
           </p>
           
           <label className="relative">
-            <Button disabled={isUploading} variant="outline" type="button" className="flex gap-2">
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Uploading...</span>
-                </>
-              ) : (
-                <>
-                  <UserCircle2 className="h-4 w-4" />
-                  <span>Choose Image</span>
-                </>
-              )}
-            </Button>
+            <div className="w-full">
+              <Button disabled={isUploading} variant="outline" type="button" className="flex gap-2">
+                {isUploading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <UserCircle2 className="h-4 w-4" />
+                    <span>Choose Image</span>
+                  </>
+                )}
+              </Button>
+            </div>
             <input 
               type="file" 
               accept="image/*" 

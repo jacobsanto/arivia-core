@@ -54,13 +54,13 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
           type="button" 
           className="bg-transparent border-0 p-0 m-0 cursor-pointer"
           aria-label="Change profile picture"
+          onClick={handleAvatarClick}
         >
           <AvatarComponent
             user={{...user, avatar: avatarUrl}}
             size={size}
             editable={true}
             className={className}
-            onAvatarClick={handleAvatarClick}
           />
         </button>
       </DialogTrigger>
