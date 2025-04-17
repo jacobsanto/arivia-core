@@ -5,32 +5,38 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
-interface FinancialOverviewChartProps {
-  title: string;
-  description: string;
+interface BookingsChartProps {
   chartData: any[];
+  propertyName: string;
 }
 
-export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({ 
-  title, 
-  description, 
-  chartData 
+export const BookingsChart: React.FC<BookingsChartProps> = ({ 
+  chartData, 
+  propertyName 
 }) => {
   const isEmpty = !chartData || chartData.length === 0;
   
+  const title = propertyName === 'all' ? 
+    'Bookings Overview' : 
+    `${propertyName} Bookings`;
+    
+  const description = propertyName === 'all' ? 
+    'Monthly bookings and revenue across all properties' : 
+    `Monthly bookings and revenue for ${propertyName}`;
+    
   return (
-    <Card className="w-full">
+    <Card>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent>
         {isEmpty ? (
           <Alert className="bg-muted/50">
             <InfoIcon className="h-4 w-4" />
-            <AlertTitle>No financial data available</AlertTitle>
+            <AlertTitle>No booking data available</AlertTitle>
             <AlertDescription>
-              Financial data will appear here once it's recorded. Please select a different time period or add financial records.
+              Booking data will appear here once it's recorded. Please select a different time period or add booking records.
             </AlertDescription>
           </Alert>
         ) : (
@@ -49,12 +55,12 @@ export const FinancialOverviewChart: React.FC<FinancialOverviewChartProps> = ({
               >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="revenue" name="Revenue" fill="#22c55e" />
-                <Bar dataKey="expenses" name="Expenses" fill="#f43f5e" />
-                <Bar dataKey="profit" name="Profit" fill="#3b82f6" />
+                <Bar yAxisId="left" dataKey="bookings" name="Bookings" fill="#8884d8" />
+                <Bar yAxisId="right" dataKey="revenue" name="Revenue" fill="#82ca9d" />
               </BarChart>
             </ResponsiveContainer>
           </div>

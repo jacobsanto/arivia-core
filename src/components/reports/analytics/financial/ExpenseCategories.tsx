@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { CardContent } from "@/components/ui/card";
-import { CardWithHeader } from "@/components/ui/card-with-header";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface ExpenseCategoriesProps {
   expenseCategoriesData: any[];
@@ -10,52 +11,60 @@ interface ExpenseCategoriesProps {
 }
 
 export const ExpenseCategories: React.FC<ExpenseCategoriesProps> = ({ 
-  expenseCategoriesData,
-  propertyName
+  expenseCategoriesData, 
+  propertyName 
 }) => {
-  const isAllProperties = propertyName === 'all';
+  const isEmpty = !expenseCategoriesData || expenseCategoriesData.length === 0;
+  const colors = ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'];
   
-  // Colors for pie chart segments
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658'];
-  
+  const title = propertyName === 'all' ? 
+    'Expense Categories' : 
+    `${propertyName} Expense Categories`;
+    
+  const description = propertyName === 'all' ? 
+    'Breakdown of expenses by category across all properties' : 
+    `Breakdown of expenses by category for ${propertyName}`;
+    
   return (
-    <CardWithHeader
-      title="Expense Categories"
-      description={isAllProperties 
-        ? 'Expense distribution across all properties' 
-        : `Expense distribution for ${propertyName}`}
-    >
-      <div className="h-[300px]">
-        {expenseCategoriesData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <Pie
-                data={expenseCategoriesData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                nameKey="name"
-              >
-                {expenseCategoriesData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Legend layout="vertical" verticalAlign="middle" align="right" />
-            </PieChart>
-          </ResponsiveContainer>
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isEmpty ? (
+          <Alert className="bg-muted/50">
+            <InfoIcon className="h-4 w-4" />
+            <AlertTitle>No expense category data</AlertTitle>
+            <AlertDescription>
+              Expense category breakdown will appear here once financial data is recorded.
+            </AlertDescription>
+          </Alert>
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-muted-foreground">
-              <p>No expense data available</p>
-            </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={expenseCategoriesData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {expenseCategoriesData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value) => `€${value}`} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
           </div>
         )}
-      </div>
-    </CardWithHeader>
+      </CardContent>
+    </Card>
   );
 };

@@ -1,74 +1,111 @@
 
-// Helper functions for financial data transformation
+// Helper functions for processing financial data
 
 /**
- * Filter data based on selected property and transform for charts
+ * Filters and formats chart data based on the selected property
  */
-export const getFilteredChartData = (financialData: any[], selectedProperty: string) => {
-  let filteredData = financialData;
-  
-  if (selectedProperty !== 'all') {
-    filteredData = filteredData.filter(item => item.property === selectedProperty);
+export const getFilteredChartData = (financialData: any[] = [], selectedProperty: string = 'all') => {
+  // If there's no data, return empty array
+  if (!financialData || financialData.length === 0) {
+    return [];
   }
   
-  // Transform for the chart
-  return filteredData.map(item => ({
-    name: item.month,
-    revenue: item.revenue,
-    expenses: item.expenses,
-    profit: item.profit
-  }));
-};
-
-/**
- * Group data by property for comparison
- */
-export const getProfitabilityByPropertyData = (financialData: any[]) => {
-  const propertyData: Record<string, { revenue: number, expenses: number, profit: number }> = {};
-  
-  financialData.forEach(item => {
-    if (!propertyData[item.property]) {
-      propertyData[item.property] = { revenue: 0, expenses: 0, profit: 0 };
-    }
-    
-    propertyData[item.property].revenue += item.revenue;
-    propertyData[item.property].expenses += item.expenses;
-    propertyData[item.property].profit += item.profit;
-  });
-  
-  return Object.entries(propertyData).map(([property, data]) => ({
-    name: property,
-    ...data
-  }));
-};
-
-/**
- * Calculate expense categories
- */
-export const getExpenseCategories = (financialData: any[], selectedProperty: string) => {
-  const categories: Record<string, number> = {};
-  let totalExpenses = 0;
-  
-  // Filter by property if needed
-  const relevantData = selectedProperty === 'all' 
-    ? financialData 
+  // Filter data if a specific property is selected
+  const filteredData = selectedProperty === 'all'
+    ? financialData
     : financialData.filter(item => item.property === selectedProperty);
   
-  // Group expenses by category
-  relevantData.forEach(item => {
-    if (!item.category || item.category === 'revenue') return;
-    
-    if (!categories[item.category]) {
-      categories[item.category] = 0;
+  // Group by month
+  const groupedByMonth = filteredData.reduce((acc: any, curr: any) => {
+    if (!acc[curr.month]) {
+      acc[curr.month] = {
+        month: curr.month,
+        revenue: 0,
+        expenses: 0,
+        profit: 0
+      };
     }
     
-    categories[item.category] += item.expenses;
-    totalExpenses += item.expenses;
-  });
+    acc[curr.month].revenue += curr.revenue;
+    acc[curr.month].expenses += curr.expenses;
+    acc[curr.month].profit += curr.profit;
+    
+    return acc;
+  }, {});
   
-  // Convert to percentage
-  return Object.entries(categories).map(([name, value]) => ({
-    name,
-    value: totalExpenses > 0 ? Math.round((value / totalExpenses) * 100) : 0
-  }));
+  // Convert to array and sort by month
+  return Object.values(groupedByMonth).sort((a: any, b: any) => {
+    const [aYear, aMonth] = a.month.split('-').map(Number);
+    const [bYear, bMonth] = b.month.split('-').map(Number);
+    
+    if (aYear !== bYear) return aYear - bYear;
+    return aMonth - bMonth;
+  });
+};
+
+/**
+ * Gets profitability data for each property
+ */
+export const getProfitabilityByPropertyData = (financialData: any[] = []) => {
+  // If there's no data, return empty array
+  if (!financialData || financialData.length === 0) {
+    return [];
+  }
+  
+  // Group by property
+  const groupedByProperty = financialData.reduce((acc: any, curr: any) => {
+    if (!acc[curr.property]) {
+      acc[curr.property] = {
+        name: curr.property,
+        revenue: 0,
+        expenses: 0,
+        profit: 0
+      };
+    }
+    
+    acc[curr.property].revenue += curr.revenue;
+    acc[curr.property].expenses += curr.expenses;
+    acc[curr.property].profit += curr.profit;
+    
+    return acc;
+  }, {});
+  
+  // Convert to array and sort by profit
+  return Object.values(groupedByProperty).sort((a: any, b: any) => b.profit - a.profit);
+};
+
+/**
+ * Gets expense categories data
+ */
+export const getExpenseCategories = (financialData: any[] = [], selectedProperty: string = 'all') => {
+  // If there's no data, return empty array
+  if (!financialData || financialData.length === 0) {
+    return [];
+  }
+  
+  // Filter by property if needed
+  const filteredData = selectedProperty === 'all'
+    ? financialData
+    : financialData.filter(item => item.property === selectedProperty);
+  
+  // Create categories
+  const categoryTotals = filteredData.reduce((acc: any, curr: any) => {
+    const category = curr.category || 'Uncategorized';
+    
+    if (!acc[category]) {
+      acc[category] = {
+        name: category,
+        value: 0
+      };
+    }
+    
+    acc[category].value += curr.expenses;
+    
+    return acc;
+  }, {});
+  
+  // Convert to array and sort by value
+  return Object.values(categoryTotals)
+    .filter((cat: any) => cat.value > 0)
+    .sort((a: any, b: any) => b.value - a.value);
 };

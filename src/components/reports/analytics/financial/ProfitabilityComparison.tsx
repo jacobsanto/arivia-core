@@ -1,8 +1,9 @@
 
 import React from 'react';
-import { CardWithHeader } from "@/components/ui/card-with-header";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface ProfitabilityComparisonProps {
   propertyComparisonData: any[];
@@ -11,53 +12,50 @@ interface ProfitabilityComparisonProps {
 export const ProfitabilityComparison: React.FC<ProfitabilityComparisonProps> = ({ 
   propertyComparisonData 
 }) => {
-  const isMobile = useIsMobile();
+  const isEmpty = !propertyComparisonData || propertyComparisonData.length === 0;
   
   return (
-    <CardWithHeader
-      title="Profitability by Property"
-      description="Revenue and expenses comparison"
-    >
-      <div className="h-[300px]">
-        {propertyComparisonData.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={propertyComparisonData}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="name" 
-                tick={{ fontSize: isMobile ? 10 : 12 }}
-                height={40}
-                tickMargin={5}
-                interval={0}
-                textAnchor="middle"
-              />
-              <YAxis tick={{ fontSize: isMobile ? 10 : 12 }} />
-              <Tooltip 
-                formatter={(value) => `$${value.toLocaleString()}`}
-                labelFormatter={(label) => `Property: ${label}`}
-              />
-              {!isMobile && <Legend />}
-              <Bar dataKey="revenue" name="Revenue" fill="#4CAF50" />
-              <Bar dataKey="expenses" name="Expenses" fill="#F44336" />
-              <Bar dataKey="profit" name="Profit" fill="#2196F3" />
-            </BarChart>
-          </ResponsiveContainer>
+    <Card>
+      <CardHeader>
+        <CardTitle>Property Profitability</CardTitle>
+        <CardDescription>
+          Comparison of profit by property
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isEmpty ? (
+          <Alert className="bg-muted/50">
+            <InfoIcon className="h-4 w-4" />
+            <AlertTitle>No profitability data</AlertTitle>
+            <AlertDescription>
+              Property profitability comparison will appear here once financial data is recorded.
+            </AlertDescription>
+          </Alert>
         ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center text-muted-foreground">
-              <p>No profitability data available</p>
-            </div>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={propertyComparisonData}
+                layout="vertical"
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={100} />
+                <Tooltip formatter={(value) => `€${value}`} />
+                <Bar dataKey="profit" fill="#3b82f6">
+                  <LabelList dataKey="profit" position="right" formatter={(value) => `€${value}`} />
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         )}
-      </div>
-    </CardWithHeader>
+      </CardContent>
+    </Card>
   );
 };
