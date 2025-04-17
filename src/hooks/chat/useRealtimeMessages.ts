@@ -25,10 +25,11 @@ export function useRealtimeMessages({
     // Set up real-time listeners based on chat type
     const table = chatType === 'general' ? 'chat_messages' : 'direct_messages';
     const column = chatType === 'general' ? 'channel_id' : 'recipient_id';
+    const channelName = `chat-${chatType}-${recipientId}`;
     
     // Create a channel for this specific chat
     const channel = supabase
-      .channel(`chat-${chatType}-${recipientId}`)
+      .channel(channelName)
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
@@ -36,36 +37,20 @@ export function useRealtimeMessages({
         filter: `${column}=eq.${recipientId}`
       }, (payload) => {
         // Don't show messages from ourselves (we already added them)
-        const senderId = chatType === 'general' 
-          ? payload.new.sender_id 
-          : payload.new.sender_id;
+        const senderId = payload.new.sender_id;
           
         if (senderId === user.id) return;
         
         // Format message from payload
-        let newMessage: Message;
-        
-        if (chatType === 'general') {
-          newMessage = {
-            id: payload.new.id,
-            sender: "Unknown User", // We'll need to fetch user details separately
-            avatar: "/placeholder.svg",
-            content: payload.new.content,
-            timestamp: payload.new.created_at,
-            isCurrentUser: false,
-            reactions: payload.new.reactions || {}
-          };
-        } else {
-          newMessage = {
-            id: payload.new.id,
-            sender: "Direct Message", // We'll need to fetch user details separately
-            avatar: "/placeholder.svg",
-            content: payload.new.content,
-            timestamp: payload.new.created_at,
-            isCurrentUser: false,
-            reactions: {}
-          };
-        }
+        let newMessage: Message = {
+          id: payload.new.id,
+          sender: "User", // Will be updated with user details
+          avatar: "/placeholder.svg",
+          content: payload.new.content,
+          timestamp: payload.new.created_at,
+          isCurrentUser: false,
+          reactions: chatType === 'general' ? (payload.new.reactions || {}) : {}
+        };
         
         // Try to fetch user details
         const fetchSenderDetails = async () => {
@@ -80,22 +65,27 @@ export function useRealtimeMessages({
               newMessage.sender = data.name || "Unknown User";
               newMessage.avatar = data.avatar || "/placeholder.svg";
             }
+            
+            setMessages(prev => [...prev, newMessage]);
           } catch (error) {
             console.warn("Could not fetch sender details", error);
+            setMessages(prev => [...prev, newMessage]);
           }
-          
-          setMessages(prev => [...prev, newMessage]);
         };
         
         fetchSenderDetails();
-      })
-      .subscribe();
+      });
+      
+    // Subscribe to the channel
+    channel.subscribe((status) => {
+      if (status !== 'SUBSCRIBED') {
+        console.warn(`Failed to subscribe to ${channelName}:`, status);
+      }
+    });
       
     // Clean up subscription
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user, recipientId, chatType, setMessages]);
-
-  return; // This hook doesn't return any values
 }

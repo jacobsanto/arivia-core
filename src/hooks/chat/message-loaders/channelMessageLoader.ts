@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
 import { Message } from "../../useChatTypes";
@@ -10,12 +9,14 @@ export async function loadChannelMessages(
   setIsOffline: (value: boolean) => void
 ): Promise<Message[]> {
   try {
+    // First ensure a general channel exists
     const generalChannel = await chatService.getOrCreateGeneralChannel();
     
     if (!generalChannel) {
       throw new Error("Could not get general channel");
     }
     
+    // Then load messages for that channel
     const channelMessages = await chatService.getChannelMessages(generalChannel.id);
     
     // Check if we have any messages - it's normal to have none initially

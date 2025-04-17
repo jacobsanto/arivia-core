@@ -4,6 +4,7 @@ import { Message } from "../useChatTypes";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
 import { offlineManager } from "@/utils/offlineManager";
+import { useUser } from "@/contexts/UserContext";
 
 interface UseMessageReactionsProps {
   chatType: 'general' | 'direct';
@@ -21,8 +22,14 @@ export function useMessageReactions({
   const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [reactionError, setReactionError] = useState<Error | null>(null);
+  const { user } = useUser();
   
   const addReaction = async (messageId: string, emoji: string) => {
+    if (!user) {
+      toast.error("You must be logged in to add reactions");
+      return;
+    }
+
     // Reset error state
     setReactionError(null);
     
@@ -39,10 +46,10 @@ export function useMessageReactions({
           const currentUserReactions = [...(reactions[emoji] || [])];
           
           // Toggle the reaction
-          const hasReacted = currentUserReactions.includes('currentUser');
+          const hasReacted = currentUserReactions.includes(user.id);
           const updatedEmoji = hasReacted
-            ? currentUserReactions.filter(u => u !== 'currentUser')
-            : [...currentUserReactions, 'currentUser'];
+            ? currentUserReactions.filter(u => u !== user.id)
+            : [...currentUserReactions, user.id];
           
           const updatedReactions = {
             ...reactions,
@@ -92,7 +99,7 @@ export function useMessageReactions({
       }
       
       // Send to server for general chat
-      await chatService.addReaction(messageId, emoji, 'currentUser');
+      await chatService.addReaction(messageId, emoji, user.id);
     } catch (error) {
       console.error("Failed to add reaction:", error);
       setReactionError(error instanceof Error ? error : new Error("Failed to add reaction"));

@@ -69,12 +69,13 @@ export function useMessageSender({
     }
 
     try {
-      if (chatType === 'general') {
+      if (chatType === 'general' && recipientId) {
         // Send to channel
         const sentMessage = await chatService.sendChannelMessage({
-          channel_id: recipientId || '',
+          channel_id: recipientId,
           user_id: user.id,
-          content: tempMessage.content
+          content: tempMessage.content,
+          is_read: false
         });
         
         // Replace the temp message with the real one if we got a response
@@ -120,7 +121,8 @@ export function useMessageSender({
         prev.map(msg => 
           msg.id === tempId ? {
             ...msg,
-            error: true
+            error: true,
+            errorMessage: error instanceof Error ? error.message : "Network error"
           } : msg
         )
       );
