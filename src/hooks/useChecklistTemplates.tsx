@@ -3,6 +3,7 @@ import { useState } from "react";
 import { ChecklistTemplate, ChecklistTemplateFormValues } from "../types/checklistTypes";
 import { initialChecklistTemplates } from "../data/checklistTemplateData";
 import { toastService } from "@/services/toast";
+import { v4 as uuidv4 } from "uuid";
 
 export const useChecklistTemplates = () => {
   const [templates, setTemplates] = useState<ChecklistTemplate[]>(initialChecklistTemplates);
@@ -24,9 +25,8 @@ export const useChecklistTemplates = () => {
   };
 
   const handleCreateTemplate = (data: ChecklistTemplateFormValues) => {
-    // Generate a new unique ID as string
-    const maxId = Math.max(0, ...templates.map(t => parseInt(t.id))) + 1;
-    const newId = maxId.toString();
+    // Generate a new unique ID
+    const newId = uuidv4();
 
     const newTemplate: ChecklistTemplate = {
       id: newId,
