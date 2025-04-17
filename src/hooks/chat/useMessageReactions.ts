@@ -1,71 +1,91 @@
 
-import { useUser } from "@/contexts/UserContext";
+import { useState } from "react";
+import { Message } from "../useChatTypes";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
-import { Message } from "../useChatTypes";
 
 interface UseMessageReactionsProps {
   chatType: 'general' | 'direct';
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  isOffline?: boolean;
 }
 
-export function useMessageReactions({ 
-  chatType, 
-  messages, 
-  setMessages 
+export function useMessageReactions({
+  chatType,
+  messages,
+  setMessages,
+  isOffline = false
 }: UseMessageReactionsProps) {
-  const { user } = useUser();
-
+  const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
   const addReaction = async (messageId: string, emoji: string) => {
-    if (!user) return;
-    
-    try {
-      const updatedMessages = messages.map(msg => {
+    // Update UI immediately for better experience
+    setMessages(prevMessages => 
+      prevMessages.map(msg => {
         if (msg.id === messageId) {
-          // Create a copy of the reactions or initialize if undefined
-          const currentReactions = { ...(msg.reactions || {}) };
+          const reactions = msg.reactions || {};
+          const currentUserReactions = [...(reactions[emoji] || [])];
           
-          // Get the users for this emoji or initialize as empty array
-          const usersForEmoji = currentReactions[emoji] || [];
-          const username = user.name || "Unknown";
+          // Toggle the reaction
+          const hasReacted = currentUserReactions.includes('currentUser');
+          const updatedEmoji = hasReacted
+            ? currentUserReactions.filter(u => u !== 'currentUser')
+            : [...currentUserReactions, 'currentUser'];
           
-          // Find if the user has already reacted with this emoji
-          const userIndex = usersForEmoji.indexOf(username);
+          const updatedReactions = {
+            ...reactions,
+            [emoji]: updatedEmoji
+          };
           
-          if (userIndex >= 0) {
-            // Remove user's reaction
-            currentReactions[emoji] = [
-              ...usersForEmoji.slice(0, userIndex),
-              ...usersForEmoji.slice(userIndex + 1)
-            ];
-            // If no users left for this emoji, remove the emoji entry
-            if (currentReactions[emoji].length === 0) {
-              delete currentReactions[emoji];
-            }
-          } else {
-            // Add user's reaction
-            currentReactions[emoji] = [...usersForEmoji, username];
+          // Remove empty reaction arrays
+          if (updatedEmoji.length === 0) {
+            delete updatedReactions[emoji];
           }
           
           return {
             ...msg,
-            reactions: currentReactions
+            reactions: updatedReactions
           };
         }
         return msg;
+      })
+    );
+    
+    // Reset UI state
+    setShowEmojiPicker(false);
+    setReactionMessageId(null);
+
+    // Don't try to send to server if offline
+    if (isOffline) {
+      toast.info("You're in offline mode", {
+        description: "Reactions will not be sent to the server"
       });
-      
-      setMessages(updatedMessages);
-      
-      if (chatType === 'general') {
-        await chatService.addReaction(messageId, emoji, user.id);
-      }
+      return;
+    }
+    
+    if (chatType === 'direct') {
+      // Direct messages don't support reactions yet
+      return;
+    }
+    
+    try {
+      // Send to server
+      await chatService.addReaction(messageId, emoji, 'currentUser');
     } catch (error) {
-      console.error('Error adding reaction:', error);
-      toast.error('Failed to add reaction');
+      console.error("Failed to add reaction:", error);
+      toast.error("Failed to save reaction", {
+        description: "Please check your connection"
+      });
     }
   };
 
-  return { addReaction };
+  return {
+    reactionMessageId, 
+    setReactionMessageId,
+    showEmojiPicker, 
+    setShowEmojiPicker,
+    addReaction
+  };
 }

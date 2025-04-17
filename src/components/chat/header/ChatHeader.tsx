@@ -1,50 +1,51 @@
 
 import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Menu, User, Users, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatHeaderProps {
   activeChat: string;
   activeTab: string;
   toggleSidebar: () => void;
+  isOffline?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   activeChat,
   activeTab,
   toggleSidebar,
+  isOffline = false,
 }) => {
   const isMobile = useIsMobile();
-
+  
+  const Icon = activeTab === "direct" ? User : Users;
+  
   return (
-    <div className="border-b px-4 py-3 flex items-center justify-between">
-      {isMobile && (
-        <Button variant="ghost" size="sm" onClick={toggleSidebar} className="mr-2">
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-      )}
-      
-      <div className="font-medium">
-        {activeTab === "direct" ? (
-          <div className="flex items-center space-x-2">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src="/placeholder.svg" alt={activeChat} />
-              <AvatarFallback>{activeChat[0]}</AvatarFallback>
-            </Avatar>
-            <span>{activeChat}</span>
-          </div>
+    <div className="flex items-center justify-between border-b p-4">
+      <div className="flex items-center gap-3">
+        {isMobile && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={toggleSidebar}
+            aria-label="Open sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        )}
+        <Icon className="h-5 w-5 text-muted-foreground" />
+        <h3 className="font-medium">
+          {activeTab === "direct" ? "" : "#"}
+          {activeChat}
+        </h3>
+        {isOffline ? (
+          <WifiOff size={16} className="text-amber-600" />
         ) : (
-          <span>#{activeChat}</span>
+          <Wifi size={16} className="text-green-600" />
         )}
       </div>
-      
-      {!isMobile && (
-        <Button variant="ghost" size="sm" onClick={toggleSidebar}>
-          <Menu className="h-4 w-4" />
-        </Button>
-      )}
     </div>
   );
 };

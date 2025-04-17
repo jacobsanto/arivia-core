@@ -5,6 +5,7 @@ import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
 import { Message } from "@/hooks/useChatTypes";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WifiOff, Wifi, AlertCircle } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
@@ -17,6 +18,7 @@ interface MessageListProps {
   typingStatus: string;
   activeChat: string;
   isLoading?: boolean;
+  isOffline?: boolean;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -30,6 +32,7 @@ const MessageList: React.FC<MessageListProps> = ({
   typingStatus,
   activeChat,
   isLoading = false,
+  isOffline = false,
 }) => {
   if (isLoading) {
     return (
@@ -53,8 +56,18 @@ const MessageList: React.FC<MessageListProps> = ({
     <ScrollArea className="flex-1 p-6">
       <div className="space-y-6">
         {messages.length === 0 ? (
-          <div className="flex justify-center items-center h-40">
-            <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+          <div className="flex flex-col justify-center items-center h-40 gap-2">
+            {isOffline ? (
+              <>
+                <WifiOff className="h-10 w-10 text-amber-500" />
+                <p className="text-muted-foreground">You are in offline mode. Messages cannot be loaded.</p>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-10 w-10 text-blue-500" />
+                <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+              </>
+            )}
           </div>
         ) : (
           messages.map((msg) => (
@@ -72,8 +85,16 @@ const MessageList: React.FC<MessageListProps> = ({
         )}
       </div>
       
-      {/* Typing indicator */}
-      <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />
+      {/* Typing indicator - only show when online */}
+      {!isOffline && <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />}
+      
+      {/* Offline indicator at bottom of messages */}
+      {isOffline && messages.length > 0 && (
+        <div className="flex items-center justify-center gap-2 mt-4 text-sm text-amber-600">
+          <WifiOff className="h-4 w-4" />
+          <span>Offline mode - showing cached messages</span>
+        </div>
+      )}
     </ScrollArea>
   );
 };

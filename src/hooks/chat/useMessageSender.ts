@@ -3,85 +3,100 @@ import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
-import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
 import { Message } from "../useChatTypes";
+import { v4 as uuidv4 } from 'uuid';
+import { GENERAL_CHAT_CHANNEL_ID } from "@/services/chat/chat.types";
 
 interface UseMessageSenderProps {
   chatType: 'general' | 'direct';
   recipientId?: string;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
-  clearTyping?: () => void;
+  clearTyping: () => void;
+  isOffline?: boolean;
 }
 
-export function useMessageSender({ 
-  chatType, 
-  recipientId, 
-  messages, 
+export function useMessageSender({
+  chatType,
+  recipientId,
+  messages,
   setMessages,
-  clearTyping
+  clearTyping,
+  isOffline = false
 }: UseMessageSenderProps) {
-  const [messageInput, setMessageInput] = useState<string>("");
-  const [sendingInProgress, setSendingInProgress] = useState<boolean>(false);
+  const [messageInput, setMessageInput] = useState("");
   const { user } = useUser();
 
   const sendMessage = async () => {
-    if (!user || !messageInput.trim() || sendingInProgress) return;
+    if (!messageInput.trim() || !user) return;
+    
+    const now = new Date().toISOString();
+    const tempId = uuidv4();
+    
+    // Create local message object
+    const newUiMessage: Message = {
+      id: tempId,
+      sender: user.name || user.email || "You",
+      avatar: user.avatar || "/placeholder.svg",
+      content: messageInput.trim(),
+      timestamp: now,
+      isCurrentUser: true,
+      reactions: {}
+    };
+    
+    // Add message to UI immediately for better UX
+    setMessages(prev => [...prev, newUiMessage]);
+    setMessageInput("");
+    clearTyping();
+    
+    // Don't try to send to server if offline
+    if (isOffline) {
+      toast.info("You're in offline mode", {
+        description: "Messages will not be sent to the server"
+      });
+      return;
+    }
     
     try {
-      setSendingInProgress(true);
-      const tempId = `temp-${Date.now()}`;
-      const optimisticMessage = {
-        id: tempId,
-        sender: user.name || user.email.split('@')[0],
-        avatar: user.avatar || "/placeholder.svg",
-        content: messageInput.trim(),
-        timestamp: new Date().toISOString(),
-        isCurrentUser: true,
-        reactions: {}
-      };
-      
-      setMessages(prev => [...prev, optimisticMessage]);
-      const currentMessage = messageInput.trim();
-      setMessageInput("");
-      
-      // Clear typing indicator if provided
-      if (clearTyping) {
-        clearTyping();
-      }
-      
+      // Send to server
       if (chatType === 'general') {
-        const result = await chatService.sendChannelMessage({
+        await chatService.sendChannelMessage({
           channel_id: GENERAL_CHAT_CHANNEL_ID,
           user_id: user.id,
-          content: currentMessage
+          content: messageInput.trim(),
+          is_read: true
         });
-        
-        if (!result) {
-          setMessages(prev => prev.filter(m => m.id !== tempId));
-          toast.error("Failed to send message");
-        }
       } else if (chatType === 'direct' && recipientId) {
-        const result = await chatService.sendDirectMessage({
+        await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
-          content: currentMessage,
+          content: messageInput.trim(),
           is_read: false
         });
-        
-        if (!result) {
-          setMessages(prev => prev.filter(m => m.id !== tempId));
-          toast.error("Failed to send message");
-        }
       }
+      
+      // No need to update UI again since we already added the local message
     } catch (error) {
       console.error("Failed to send message:", error);
-      toast.error("Failed to send message");
-      setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
-    } finally {
-      setSendingInProgress(false);
+      
+      // Mark message as failed in the UI
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempId 
+            ? { ...msg, content: `${msg.content} (Failed to send)`, failed: true } 
+            : msg
+        )
+      );
+      
+      toast.error("Failed to send message", {
+        description: "Please check your connection and try again"
+      });
     }
   };
 
-  return { messageInput, setMessageInput, sendMessage, sendingInProgress };
+  return {
+    messageInput,
+    setMessageInput,
+    sendMessage
+  };
 }

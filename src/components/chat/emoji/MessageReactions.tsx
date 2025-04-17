@@ -1,35 +1,42 @@
 
 import React from "react";
-import { MessageReaction } from "@/hooks/useChatTypes";
-import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface MessageReactionsProps {
-  reactions: MessageReaction;
-  onEmojiClick: (emoji: string, e: React.MouseEvent) => void;
+  reactions: Record<string, string[]>;
+  isOffline?: boolean;
 }
 
-const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions, onEmojiClick }) => {
-  // Return early if no reactions
+const MessageReactions: React.FC<MessageReactionsProps> = ({ reactions, isOffline = false }) => {
   if (!reactions || Object.keys(reactions).length === 0) {
     return null;
   }
 
   return (
-    <div className="flex flex-wrap mt-1 gap-1">
+    <div className="flex flex-wrap gap-1 mt-1">
       {Object.entries(reactions).map(([emoji, users]) => (
-        <motion.button
-          key={emoji}
-          className="bg-muted hover:bg-secondary text-secondary-foreground rounded-full px-2 py-0.5 text-xs flex items-center gap-1 border border-border/40"
-          onClick={(e) => onEmojiClick(emoji, e)}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          title={`${users.join(", ")}`}
-        >
-          <span>{emoji}</span>
-          <span className="font-semibold">{users.length}</span>
-        </motion.button>
+        <TooltipProvider key={emoji}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant="secondary"
+                className="px-2 py-0 text-xs flex items-center gap-1 cursor-default"
+              >
+                <span>{emoji}</span>
+                <span className="text-xs">{users.length}</span>
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              {isOffline 
+                ? 'Reaction details unavailable in offline mode'
+                : users.length === 1
+                  ? `${users[0]} reacted with ${emoji}`
+                  : `${users.length} users reacted with ${emoji}`
+              }
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ))}
     </div>
   );

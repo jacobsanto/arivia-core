@@ -4,6 +4,8 @@ import ChatHeader from "./header/ChatHeader";
 import MessageList from "./messages/MessageList";
 import MessageInput from "./input/MessageInput";
 import { Message } from "@/hooks/useChat";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Wifi, WifiOff } from "lucide-react";
 
 interface ChatAreaProps {
   activeChat: string;
@@ -21,6 +23,7 @@ interface ChatAreaProps {
   showEmojiPicker: boolean;
   setShowEmojiPicker: (show: boolean) => void;
   isLoading?: boolean;
+  isOffline?: boolean;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -39,14 +42,25 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   showEmojiPicker,
   setShowEmojiPicker,
   isLoading = false,
+  isOffline = false,
 }) => {
   return (
     <div className="flex-1 border rounded-lg flex flex-col overflow-hidden">
       <ChatHeader 
         activeChat={activeChat} 
         activeTab={activeTab} 
-        toggleSidebar={toggleSidebar} 
+        toggleSidebar={toggleSidebar}
+        isOffline={isOffline} 
       />
+      
+      {isOffline && (
+        <div className="bg-amber-50 px-4 py-2 flex items-center gap-2">
+          <WifiOff size={16} className="text-amber-600" />
+          <span className="text-amber-800 text-sm">
+            Offline mode - messages will not be sent to the server
+          </span>
+        </div>
+      )}
       
       <MessageList 
         messages={messages}
@@ -59,6 +73,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         typingStatus={typingStatus}
         activeChat={activeChat}
         isLoading={isLoading}
+        isOffline={isOffline}
       />
       
       <MessageInput 
@@ -66,6 +81,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         activeChat={activeChat}
         handleChangeMessage={handleChangeMessage}
         handleSendMessage={handleSendMessage}
+        isOffline={isOffline}
       />
     </div>
   );

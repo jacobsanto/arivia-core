@@ -15,9 +15,7 @@ export const channelService = {
       return data || [];
     } catch (error: any) {
       console.error('Error fetching chat channels:', error);
-      toast.error('Failed to load chat channels', {
-        description: error.message
-      });
+      // Don't toast here, we'll handle it at the component level
       return [];
     }
   },
@@ -54,9 +52,7 @@ export const channelService = {
       return newChannel;
     } catch (error: any) {
       console.error('Error with general channel:', error);
-      toast.error('Failed to access general chat', {
-        description: error.message
-      });
+      // Don't toast here, we'll handle it at the component level
       return null;
     }
   },

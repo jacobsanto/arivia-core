@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useUserPresence } from "@/hooks/chat/useUserPresence";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FALLBACK_GENERAL_CHANNEL } from "@/services/chat/chat.types"; 
 
 const TeamChat = () => {
   // State
@@ -22,6 +24,8 @@ const TeamChat = () => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
   const [chatType, setChatType] = useState<'general' | 'direct'>('general');
+  const [isConnected, setIsConnected] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   
   // Hooks
   const isMobile = useIsMobile();
@@ -33,6 +37,7 @@ const TeamChat = () => {
   const {
     messages,
     loading,
+    isOffline,
     messageInput,
     setMessageInput,
     sendMessage,
@@ -45,75 +50,152 @@ const TeamChat = () => {
       if (!user) return;
       
       try {
+        // Check connection to Supabase
+        try {
+          const { data, error } = await supabase.from('_heartbeats').select('*').limit(1);
+          if (error) throw error;
+          setIsConnected(true);
+          setLoadError(null);
+        } catch (connectionError) {
+          setIsConnected(false);
+          setLoadError("Connection to server failed. Using offline mode.");
+          console.warn("Connection error:", connectionError);
+          
+          // Set offline mode with fallback data
+          const fallbackChannel = {
+            id: FALLBACK_GENERAL_CHANNEL.id,
+            name: FALLBACK_GENERAL_CHANNEL.name,
+            status: "offline" as const,
+            unreadCount: 0
+          };
+          
+          setChannels([fallbackChannel]);
+          
+          // Default to General channel in offline mode
+          setActiveChatId(FALLBACK_GENERAL_CHANNEL.id);
+          setActiveChat(FALLBACK_GENERAL_CHANNEL.name);
+          setChatType('general');
+          
+          // Ensure user sees an appropriate message - don't continue loading
+          return;
+        }
+        
         // Load channels
-        const channelsData = await chatService.getChannels();
-        
-        // Make sure general channel exists
-        const generalChannel = await chatService.getOrCreateGeneralChannel();
-        
-        if (generalChannel) {
-          // Add to channels if not already there
-          const channelExists = channelsData.some(ch => ch.id === generalChannel.id);
+        try {
+          const channelsData = await chatService.getChannels();
           
-          const allChannels = channelExists ? channelsData : [generalChannel, ...channelsData];
-          
-          // Convert to Channel format for sidebar
-          const typedChannels: Channel[] = allChannels.map(channel => ({
-            id: channel.id,
-            name: channel.name,
-            status: "offline", // Channels don't have online status
-            unreadCount: 0 // For now, we're not tracking unread counts for channels
-          }));
-          
-          setChannels(typedChannels);
-          
-          // Set General as the active chat by default
-          if (activeChatId === "" && generalChannel) {
-            setActiveChatId(generalChannel.id);
-            setActiveChat(generalChannel.name);
-            setChatType('general');
+          // Make sure general channel exists
+          let generalChannel;
+          try {
+            generalChannel = await chatService.getOrCreateGeneralChannel();
+          } catch (error) {
+            console.error("Error getting general channel:", error);
+            // Fall back to local general channel definition
+            generalChannel = FALLBACK_GENERAL_CHANNEL;
           }
+          
+          if (generalChannel) {
+            // Add to channels if not already there
+            const channelExists = channelsData.some(ch => ch.id === generalChannel.id);
+            
+            const allChannels = channelExists ? channelsData : [generalChannel, ...channelsData];
+            
+            // Convert to Channel format for sidebar
+            const typedChannels: Channel[] = allChannels.map(channel => ({
+              id: channel.id,
+              name: channel.name,
+              status: "offline" as const, // Channels don't have online status
+              unreadCount: 0 // For now, we're not tracking unread counts for channels
+            }));
+            
+            setChannels(typedChannels);
+            
+            // Set General as the active chat by default
+            if (activeChatId === "" && generalChannel) {
+              setActiveChatId(generalChannel.id);
+              setActiveChat(generalChannel.name);
+              setChatType('general');
+            }
+          }
+        } catch (error) {
+          console.error("Failed to load channels:", error);
+          toast.error("Failed to load channels", {
+            description: "Using offline mode for channels"
+          });
+          
+          // Set fallback channels
+          const fallbackChannel = {
+            id: FALLBACK_GENERAL_CHANNEL.id,
+            name: FALLBACK_GENERAL_CHANNEL.name,
+            status: "offline" as const,
+            unreadCount: 0
+          };
+          
+          setChannels([fallbackChannel]);
+          
+          // Default to General channel
+          setActiveChatId(FALLBACK_GENERAL_CHANNEL.id);
+          setActiveChat(FALLBACK_GENERAL_CHANNEL.name);
+          setChatType('general');
         }
         
-        // Load real user data from profiles
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, name, avatar')
-          .neq('id', user.id); // Don't include current user
-        
-        if (profilesError) {
-          throw profilesError;
-        }
-        
-        if (profiles) {
-          // Get unread counts for direct messages
-          const unreadCounts = await chatService.getUnreadMessageCounts(user.id);
+        // Load user profiles for direct messages
+        try {
+          // Load real user data from profiles
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, name, avatar')
+            .neq('id', user.id); // Don't include current user
           
-          const userProfiles: DirectMessage[] = profiles.map(profile => ({
-            id: profile.id,
-            name: profile.name || 'Unknown User',
-            avatar: profile.avatar || '/placeholder.svg',
-            status: getUserStatus(profile.id),
-            unreadCount: unreadCounts[profile.id] || 0
-          }));
+          if (profilesError) {
+            throw profilesError;
+          }
           
-          setDirectMessages(userProfiles);
+          if (profiles) {
+            // Get unread counts for direct messages
+            let unreadCounts: Record<string, number> = {};
+            try {
+              unreadCounts = await chatService.getUnreadMessageCounts(user.id);
+            } catch (error) {
+              console.warn("Failed to get unread counts:", error);
+            }
+            
+            const userProfiles: DirectMessage[] = profiles.map(profile => ({
+              id: profile.id,
+              name: profile.name || 'Unknown User',
+              avatar: profile.avatar || '/placeholder.svg',
+              status: getUserStatus(profile.id),
+              unreadCount: unreadCounts[profile.id] || 0
+            }));
+            
+            setDirectMessages(userProfiles);
+          }
+        } catch (error) {
+          console.error("Failed to load user profiles:", error);
+          toast.error("Failed to load user profiles", {
+            description: "Direct messaging may be limited"
+          });
+          
+          // Use empty direct messages list
+          setDirectMessages([]);
         }
       } catch (error) {
-        toast.error("Failed to load chat data");
-        console.error(error);
+        setLoadError("Failed to load chat data. Using offline mode.");
+        console.error("General load error:", error);
       }
     }
     
     loadChannelsAndUsers();
     
-    // Set up an interval to refresh user status every minute
+    // Set up an interval to refresh user status and unread counts every minute
     const intervalId = setInterval(() => {
-      loadChannelsAndUsers();
+      if (isConnected) {
+        loadChannelsAndUsers();
+      }
     }, 60000);
     
     return () => clearInterval(intervalId);
-  }, [user, getUserStatus]);
+  }, [user, getUserStatus, isConnected]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -157,6 +239,23 @@ const TeamChat = () => {
         </p>
       </div>
       
+      {/* Connection Status Alert */}
+      {!isConnected && (
+        <Alert variant="warning" className="mb-4">
+          <AlertTitle>Offline Mode</AlertTitle>
+          <AlertDescription>
+            You are currently offline. Messages will be displayed but not sent to the server.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {loadError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{loadError}</AlertDescription>
+        </Alert>
+      )}
+      
       <div className="flex flex-1 gap-4 h-full">
         {/* Mobile Sidebar Toggle */}
         <div className="md:hidden absolute top-4 right-4 z-20">
@@ -199,6 +298,7 @@ const TeamChat = () => {
           showEmojiPicker={showEmojiPicker}
           setShowEmojiPicker={setShowEmojiPicker}
           isLoading={loading}
+          isOffline={isOffline}
         />
       </div>
     </div>

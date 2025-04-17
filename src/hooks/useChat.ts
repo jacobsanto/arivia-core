@@ -14,10 +14,12 @@ export type { Message };
 
 export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   // Use the extracted hook for message loading
-  const { messages, setMessages, loading } = useMessageLoader(chatType, recipientId);
+  const { messages, setMessages, loading, isOffline } = useMessageLoader(chatType, recipientId);
   
-  // Set up realtime message subscriptions
-  useRealtimeMessages({ chatType, recipientId, messages, setMessages });
+  // Set up realtime message subscriptions - only if online
+  if (!isOffline) {
+    useRealtimeMessages({ chatType, recipientId, messages, setMessages });
+  }
   
   // Use typing indicator
   const { typingStatus, handleTyping, clearTyping } = useTypingIndicator(
@@ -30,15 +32,17 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     recipientId, 
     messages, 
     setMessages,
-    clearTyping 
+    clearTyping,
+    isOffline 
   });
   
   // Use the extracted hook for message reactions
-  const { addReaction } = useMessageReactions({ chatType, messages, setMessages });
+  const { addReaction } = useMessageReactions({ chatType, messages, setMessages, isOffline });
 
   return {
     messages,
     loading,
+    isOffline,
     messageInput,
     setMessageInput,
     sendMessage,
