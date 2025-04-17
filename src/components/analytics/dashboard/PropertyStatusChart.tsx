@@ -10,15 +10,11 @@ interface PropertyStatusChartProps {
 }
 
 export const PropertyStatusChart: React.FC<PropertyStatusChartProps> = ({ propertyFilter = "all" }) => {
-  // Placeholder data - in real app would come from your API
-  const propertyStatusData = [
-    { name: "Occupied", value: 3, color: "#22c55e" },
-    { name: "Available", value: 1, color: "#3b82f6" },
-    { name: "Maintenance", value: 1, color: "#f59e0b" }
-  ];
-
-  // Show empty state if property-specific view is chosen
-  const showEmptyState = propertyFilter !== "all";
+  // Empty state - no data
+  const isEmpty = true;
+  
+  // Show empty state if property-specific view is chosen or if we're in empty state
+  const showEmptyState = propertyFilter !== "all" || isEmpty;
 
   return (
     <Card>
@@ -30,9 +26,13 @@ export const PropertyStatusChart: React.FC<PropertyStatusChartProps> = ({ proper
         {showEmptyState ? (
           <Alert className="bg-muted/50">
             <InfoIcon className="h-4 w-4" />
-            <AlertTitle>Single property selected</AlertTitle>
+            <AlertTitle>
+              {propertyFilter !== "all" ? "Single property selected" : "No property data"}
+            </AlertTitle>
             <AlertDescription>
-              Property status breakdown is available when viewing all properties.
+              {propertyFilter !== "all" 
+                ? "Property status breakdown is available when viewing all properties."
+                : "Property status breakdown will appear here when properties are added."}
             </AlertDescription>
           </Alert>
         ) : (
@@ -40,7 +40,7 @@ export const PropertyStatusChart: React.FC<PropertyStatusChartProps> = ({ proper
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={propertyStatusData}
+                  data={[]}
                   cx="50%"
                   cy="50%"
                   labelLine={false}
@@ -49,7 +49,7 @@ export const PropertyStatusChart: React.FC<PropertyStatusChartProps> = ({ proper
                   fill="#8884d8"
                   dataKey="value"
                 >
-                  {propertyStatusData.map((entry, index) => (
+                  {[].map((entry: any, index: number) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
