@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { SettingsCategory } from '@/services/settings/settings.service';
 import { z } from 'zod';
+import { DefaultValues } from 'react-hook-form';
 
 interface UseSettingsFormProps<T extends Record<string, any>> {
   category: SettingsCategory;
-  defaultValues: T;
+  defaultValues: DefaultValues<T>; // Changed to use DefaultValues from react-hook-form
   schema: z.ZodType<T>;
   onAfterSave?: (data: T) => void;
 }
@@ -25,13 +26,13 @@ export function useSettingsForm<T extends Record<string, any>>({
   // Get settings from the database
   const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
     category,
-    defaultValues
+    defaultValues as T // We need this cast since useSystemSettings expects T
   );
   
   // Create form with validation
   const form = useForm<T>({
     resolver: zodResolver(schema),
-    defaultValues: settings,
+    defaultValues: settings as DefaultValues<T>, // Cast settings to DefaultValues<T>
   });
   
   // Track form changes
@@ -46,7 +47,7 @@ export function useSettingsForm<T extends Record<string, any>>({
   // Update form when settings are loaded
   useEffect(() => {
     if (!isLoading) {
-      form.reset(settings);
+      form.reset(settings as DefaultValues<T>); // Cast settings to DefaultValues<T>
     }
   }, [settings, isLoading, form]);
   
@@ -56,7 +57,7 @@ export function useSettingsForm<T extends Record<string, any>>({
       const success = await saveSettings(data);
       
       if (success) {
-        form.reset(data);
+        form.reset(data as DefaultValues<T>); // Cast data to DefaultValues<T>
         setIsDirty(false);
         
         toast.success("Settings saved successfully", {
@@ -76,7 +77,7 @@ export function useSettingsForm<T extends Record<string, any>>({
   
   // Reset form to the last saved values
   const resetForm = () => {
-    form.reset(settings);
+    form.reset(settings as DefaultValues<T>); // Cast settings to DefaultValues<T>
     setIsDirty(false);
     
     toast.info("Settings reset", {
