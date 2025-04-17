@@ -65,8 +65,9 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
     setAvatarUrl(null);
   };
   
-  const handleAvatarClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (editable && onAvatarClick) {
+      e.stopPropagation();
       onAvatarClick();
     }
   };
@@ -89,7 +90,7 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
       
       <Avatar 
         className={`${sizeClasses[size]} ${className} ${editable ? 'cursor-pointer' : ''}`}
-        onClick={handleAvatarClick}
+        onClick={handleClick}
       >
         <AvatarImage 
           src={avatarUrl || ""}

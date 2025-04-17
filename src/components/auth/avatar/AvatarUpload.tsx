@@ -50,7 +50,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <div className="cursor-pointer group">
+        <button className="bg-transparent border-0 p-0 m-0 cursor-pointer">
           <AvatarComponent
             user={{...user, avatar: avatarUrl}}
             size={size}
@@ -58,7 +58,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
             className={className}
             onAvatarClick={handleAvatarClick}
           />
-        </div>
+        </button>
       </DialogTrigger>
       <AvatarUploadDialog 
         user={user}
