@@ -3,7 +3,7 @@ import React from "react";
 import ChatHeader from "./header/ChatHeader";
 import MessageList from "./messages/MessageList";
 import MessageInput from "./input/MessageInput";
-import { Message } from "@/hooks/useChat";
+import { Message } from "@/hooks/useChatTypes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wifi, WifiOff } from "lucide-react";
 

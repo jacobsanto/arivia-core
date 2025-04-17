@@ -22,11 +22,25 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
       setLoading(true);
       try {
         if (chatType === 'general') {
-          const generalChannel = await chatService.getOrCreateGeneralChannel();
-          if (generalChannel) {
-            const channelMessages = await chatService.getChannelMessages(generalChannel.id);
+          try {
+            const generalChannel = await chatService.getOrCreateGeneralChannel();
+            
+            if (!generalChannel) {
+              throw new Error("Could not get general channel");
+            }
             
             if (!isMounted) return;
+            
+            const channelMessages = await chatService.getChannelMessages(generalChannel.id);
+            
+            // Check if we have any messages - it's normal to have none initially
+            if (channelMessages.length === 0) {
+              console.log("No messages found in general channel, showing empty state");
+              setMessages([]);
+              setIsOffline(false);
+              setLoading(false);
+              return;
+            }
             
             // Get user profiles for all message senders
             const userIds = [...new Set(channelMessages.map(msg => msg.user_id))].filter(Boolean);
@@ -40,7 +54,7 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
                   .select('id, name, avatar')
                   .in('id', userIds);
                   
-                if (profiles) {
+                if (profiles && profiles.length > 0) {
                   userProfiles = profiles.reduce((acc, profile) => {
                     acc[profile.id] = { 
                       name: profile.name || 'Unknown User', 
@@ -48,9 +62,11 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
                     };
                     return acc;
                   }, {} as Record<string, { name: string, avatar: string }>);
+                } else {
+                  console.log("No user profiles found for message senders");
                 }
               } catch (error) {
-                console.warn('Failed to load user profiles, using default values');
+                console.warn('Failed to load user profiles, using default values', error);
               }
             }
             
@@ -70,7 +86,8 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
             
             setMessages(uiMessages);
             setIsOffline(false);
-          } else {
+          } catch (error) {
+            console.error("Error loading general channel messages:", error);
             // Fallback for offline mode or when channel creation fails
             setIsOffline(true);
             const fallbackMessages = FALLBACK_MESSAGES.map(msg => ({
@@ -91,6 +108,15 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
             
             if (!isMounted) return;
             
+            // Handle empty direct messages
+            if (directMessages.length === 0) {
+              console.log("No direct messages found between users");
+              setMessages([]);
+              setIsOffline(false);
+              setLoading(false);
+              return;
+            }
+            
             // Mark messages as read
             directMessages.forEach(msg => {
               if (msg.sender_id === recipientId && !msg.is_read) {
@@ -107,7 +133,7 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
                 .select('id, name, avatar')
                 .in('id', [user.id, recipientId]);
               
-              if (profiles) {
+              if (profiles && profiles.length > 0) {
                 userProfiles = profiles.reduce((acc, profile) => {
                   acc[profile.id] = {
                     name: profile.name || 'Unknown User',
@@ -115,9 +141,11 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
                   };
                   return acc;
                 }, {} as Record<string, { name: string, avatar: string }>);
+              } else {
+                console.log("No user profiles found for direct message participants");
               }
             } catch (error) {
-              console.warn('Failed to load user profiles, using default values');
+              console.warn('Failed to load user profiles, using default values', error);
             }
             
             const uiMessages = directMessages.map(msg => {
@@ -139,6 +167,7 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
             setMessages(uiMessages);
             setIsOffline(false);
           } catch (error) {
+            console.error("Error loading direct messages:", error);
             setIsOffline(true);
             setMessages([{
               id: 'offline-1',

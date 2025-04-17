@@ -33,7 +33,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   });
   
   // Use the extracted hook for message reactions
-  const { addReaction } = useMessageReactions({ 
+  const { addReaction, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker } = useMessageReactions({ 
     chatType, 
     messages, 
     setMessages, 
@@ -48,6 +48,10 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     setMessageInput,
     sendMessage,
     addReaction,
+    reactionMessageId,
+    setReactionMessageId,
+    showEmojiPicker,
+    setShowEmojiPicker,
     typingStatus,
     handleTyping,
     clearTyping

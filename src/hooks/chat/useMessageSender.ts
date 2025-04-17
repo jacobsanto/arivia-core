@@ -63,7 +63,7 @@ export function useMessageSender({
         await chatService.sendChannelMessage({
           channel_id: "general",
           content: messageInput,
-          sender_id: user.id,
+          user_id: user.id,
           is_read: true,
         });
       } else if (chatType === 'direct' && recipientId) {
