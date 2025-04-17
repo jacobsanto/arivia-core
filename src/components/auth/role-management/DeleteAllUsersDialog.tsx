@@ -36,7 +36,7 @@ const DeleteAllUsersDialog: React.FC<DeleteAllUsersDialogProps> = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-destructive" />
-            Delete All Users
+            <span>Delete All Users</span>
           </DialogTitle>
           <DialogDescription>
             This action will permanently delete all {userCount} users in the system except your account.
@@ -65,7 +65,7 @@ const DeleteAllUsersDialog: React.FC<DeleteAllUsersDialogProps> = ({
             className="flex items-center gap-2"
           >
             {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isDeleting ? "Deleting All Users..." : "Delete All Users"}
+            <span>{isDeleting ? "Deleting All Users..." : "Delete All Users"}</span>
           </Button>
         </DialogFooter>
       </DialogContent>
