@@ -1,41 +1,41 @@
 
 import { useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
-import { supabase } from "@/integrations/supabase/client";
 
 export function useConnectionStatus() {
   const [isConnected, setIsConnected] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { user } = useUser();
-
+  
+  // Check initial connection status
   useEffect(() => {
-    async function checkConnection() {
-      if (!user) return;
-      
-      try {
-        // Use a simple ping to check connection
-        const { data, error } = await supabase.from('chat_channels').select('count').limit(1);
-        if (error) throw error;
+    const checkConnection = () => {
+      if (navigator.onLine) {
         setIsConnected(true);
         setLoadError(null);
-      } catch (connectionError) {
-        console.warn("Connection error:", connectionError);
+      } else {
         setIsConnected(false);
-        setLoadError("Connection to server failed. Using offline mode.");
+        setLoadError("You are currently offline. Please check your internet connection.");
       }
-    }
+    };
     
+    // Check immediately
     checkConnection();
     
-    // Set up an interval to check connection every minute
-    const intervalId = setInterval(() => {
-      if (user) {
-        checkConnection();
-      }
-    }, 60000);
+    // Listen for changes in connection status
+    window.addEventListener('online', () => {
+      setIsConnected(true);
+      setLoadError(null);
+    });
     
-    return () => clearInterval(intervalId);
-  }, [user]);
-
+    window.addEventListener('offline', () => {
+      setIsConnected(false);
+      setLoadError("You are currently offline. Please check your internet connection.");
+    });
+    
+    return () => {
+      window.removeEventListener('online', checkConnection);
+      window.removeEventListener('offline', checkConnection);
+    };
+  }, []);
+  
   return { isConnected, loadError, setLoadError };
 }

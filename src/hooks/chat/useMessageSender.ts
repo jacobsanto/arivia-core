@@ -4,6 +4,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
+import { offlineManager } from "@/utils/offlineManager";
 
 interface UseMessageSenderProps {
   chatType: 'general' | 'direct';
@@ -23,12 +24,16 @@ export function useMessageSender({
   isOffline
 }: UseMessageSenderProps) {
   const [messageInput, setMessageInput] = useState("");
+  const [sendError, setSendError] = useState<Error | null>(null);
   const { user } = useUser();
 
   const sendMessage = async () => {
     if (!messageInput.trim() || !user) {
       return;
     }
+
+    // Reset error state
+    setSendError(null);
 
     // Create a temporary message to show immediately
     const tempId = `temp-${Date.now()}`;
@@ -49,9 +54,17 @@ export function useMessageSender({
     setMessageInput("");
     clearTyping();
 
-    // If offline, just show a toast and don't try to send to server
+    // If offline, store for later sync
     if (isOffline) {
-      toast.warning("Message saved locally. Will sync when online.");
+      offlineManager.storeOfflineData('message', 'create', {
+        chatType,
+        recipientId,
+        content: tempMessage.content,
+        sender_id: user.id
+      });
+      toast.info("Message saved for later sending", {
+        description: "Will be sent when you reconnect"
+      });
       return;
     }
 
@@ -100,13 +113,28 @@ export function useMessageSender({
       }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      setSendError(error instanceof Error ? error : new Error("Failed to send message"));
+      
+      // Mark message as failed
+      setMessages(prev => 
+        prev.map(msg => 
+          msg.id === tempId ? {
+            ...msg,
+            error: true
+          } : msg
+        )
+      );
+      
+      toast.error("Failed to send message", {
+        description: error instanceof Error ? error.message : "Network error"
+      });
     }
   };
 
   return {
     messageInput,
     setMessageInput,
-    sendMessage
+    sendMessage,
+    sendError
   };
 }

@@ -17,7 +17,7 @@ interface ChatAreaProps {
   handleSendMessage: (e: React.FormEvent) => void;
   toggleSidebar: () => void;
   emojis: string[];
-  onAddReaction: (messageId: string, emoji: string) => void;
+  onAddReaction: (emoji: string, messageId: string) => void;
   reactionMessageId: string | null;
   setReactionMessageId: (id: string | null) => void;
   showEmojiPicker: boolean;

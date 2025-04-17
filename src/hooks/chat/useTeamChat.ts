@@ -5,15 +5,19 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
+import { useChatError } from "@/hooks/chat/useChatError";
 
 export function useTeamChat() {
   // State
   const [activeTab, setActiveTab] = useState("direct");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   // Hooks
   const isMobile = useIsMobile();
   const { user } = useUser();
+  const { addError, removeError, errors } = useChatError();
   
   // Use our new hook for channel and users data
   const {
@@ -27,11 +31,17 @@ export function useTeamChat() {
     handleSelectChat
   } = useChannelAndUsers();
   
+  // Handle connection errors
+  if (loadError && errors.length === 0) {
+    addError('connection', loadError);
+  }
+  
   // Use our chat hook to manage messages
   const {
     messages,
     loading,
     isOffline,
+    error,
     messageInput,
     setMessageInput,
     sendMessage,
@@ -40,6 +50,11 @@ export function useTeamChat() {
     handleTyping,
     clearTyping
   } = useChat(chatType, activeChatId);
+
+  // Handle chat errors
+  if (error && errors.length === 0) {
+    addError('general', error);
+  }
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -54,6 +69,12 @@ export function useTeamChat() {
   const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
     handleTyping();
+  };
+
+  const handleEmojiClick = (emoji: string, messageId: string) => {
+    addReaction(messageId, emoji);
+    setReactionMessageId(null);
+    setShowEmojiPicker(false);
   };
 
   // Extract just the emoji symbols
@@ -73,9 +94,10 @@ export function useTeamChat() {
     loading,
     isOffline,
     typingStatus,
-    reactionMessageId: null,
-    showEmojiPicker: false,
+    reactionMessageId,
+    showEmojiPicker,
     emojiSymbols,
+    errors,
 
     // Actions
     setActiveTab,
@@ -83,8 +105,9 @@ export function useTeamChat() {
     handleSelectChat,
     handleSendMessage,
     handleChangeMessage,
-    addReaction,
-    setReactionMessageId: () => {},
-    setShowEmojiPicker: () => {}
+    addReaction: handleEmojiClick,
+    setReactionMessageId,
+    setShowEmojiPicker,
+    removeError
   };
 }

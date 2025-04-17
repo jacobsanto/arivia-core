@@ -14,8 +14,15 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
   const { user } = useUser();
 
   useEffect(() => {
-    // Don't load messages if we don't have a user or recipient
-    if (!user || !recipientId) {
+    // Don't load messages if we don't have a user
+    if (!user) {
+      setMessages([]);
+      setLoading(false);
+      return;
+    }
+    
+    // Don't load direct messages if we don't have a recipientId
+    if (chatType === 'direct' && !recipientId) {
       setMessages([]);
       setLoading(false);
       return;
@@ -34,7 +41,7 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
         if (chatType === 'general') {
           loadedMessages = await loadChannelMessages(user, setIsOffline);
         } else if (chatType === 'direct') {
-          loadedMessages = await loadDirectMessages(user, recipientId, setIsOffline);
+          loadedMessages = await loadDirectMessages(user, recipientId!, setIsOffline);
         }
         
         setMessages(loadedMessages);

@@ -7,6 +7,7 @@ import ChatArea from "@/components/chat/ChatArea";
 import ConnectionAlerts from "@/components/chat/status/ConnectionAlerts";
 import { useTeamChat } from "@/hooks/chat/useTeamChat";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const TeamChat = () => {
   const isMobile = useIsMobile();
@@ -27,6 +28,7 @@ const TeamChat = () => {
     reactionMessageId,
     showEmojiPicker,
     emojiSymbols,
+    errors,
 
     // Actions
     setActiveTab,
@@ -36,7 +38,8 @@ const TeamChat = () => {
     handleChangeMessage,
     addReaction,
     setReactionMessageId,
-    setShowEmojiPicker
+    setShowEmojiPicker,
+    removeError
   } = useTeamChat();
 
   return (
@@ -48,7 +51,12 @@ const TeamChat = () => {
         </p>
       </div>
       
-      <ConnectionAlerts isConnected={isConnected} loadError={loadError} />
+      <ConnectionAlerts 
+        isConnected={isConnected} 
+        loadError={loadError} 
+        errors={errors}
+        onDismissError={removeError}
+      />
       
       <div className="flex flex-1 gap-4 h-full">
         {/* Mobile Sidebar Toggle */}
@@ -88,7 +96,7 @@ const TeamChat = () => {
           handleSendMessage={handleSendMessage}
           toggleSidebar={toggleSidebar}
           emojis={emojiSymbols}
-          onAddReaction={addReaction}
+          onAddReaction={(emoji, messageId) => addReaction(emoji, messageId)}
           reactionMessageId={reactionMessageId}
           setReactionMessageId={setReactionMessageId}
           showEmojiPicker={showEmojiPicker}

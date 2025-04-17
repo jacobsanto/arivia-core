@@ -4,11 +4,13 @@ export interface MessageReaction {
 }
 
 export interface Message {
-  id: string; // Changed from number to string to match the database
+  id: string; 
   sender: string;
   avatar: string;
   content: string;
   timestamp: string;
   isCurrentUser: boolean;
   reactions?: MessageReaction;
+  error?: boolean;
+  errorMessage?: string;
 }

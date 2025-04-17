@@ -5,6 +5,8 @@ export { useMessageSender } from './useMessageSender';
 export { useTypingIndicator } from './useTypingIndicator';
 export { useChannelAndUsers } from './useChannelAndUsers';
 export { useUserPresence } from './useUserPresence';
+export { useMessageReactions } from './useMessageReactions';
+export { useChatError } from './useChatError';
 
 // Export channel loader hooks
 export { useConnectionStatus } from './channel-loaders/useConnectionStatus';
