@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -28,32 +28,82 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Save } from "lucide-react";
 import { cleaningTaskFormSchema, CleaningTaskFormValues } from "@/types/taskTypes";
+import { useTaskDrafts } from "@/hooks/task-drafts/useTaskDrafts";
+import { Badge } from "@/components/ui/badge";
 
 interface CleaningTaskFormProps {
   onSubmit: (data: CleaningTaskFormValues) => void;
   onCancel: () => void;
   initialValues?: Partial<CleaningTaskFormValues>;
+  draftId?: string;
 }
 
 const CleaningTaskForm: React.FC<CleaningTaskFormProps> = ({
   onSubmit,
   onCancel,
   initialValues,
+  draftId,
 }) => {
   const form = useForm<CleaningTaskFormValues>({
     resolver: zodResolver(cleaningTaskFormSchema),
-    defaultValues: {
-      title: initialValues?.title || "",
-      property: initialValues?.property || "",
-      roomType: initialValues?.roomType || "",
-      dueDate: initialValues?.dueDate || undefined,
-      assignedTo: initialValues?.assignedTo || "",
-      priority: initialValues?.priority || "Medium",
-      description: initialValues?.description || "",
+    defaultValues: initialValues || {
+      title: "",
+      property: "",
+      roomType: "",
+      dueDate: undefined,
+      assignedTo: "",
+      priority: "Medium",
+      description: "",
     },
   });
+
+  // Initialize task drafts hook
+  const {
+    drafts,
+    currentDraftId,
+    autosaveDraft,
+    saveDraft,
+    loadDraft,
+  } = useTaskDrafts({
+    taskType: 'housekeeping',
+    autosaveInterval: 3000,
+    notifyOnAutosave: false
+  });
+
+  // Watch form values for autosave
+  const formValues = form.watch();
+  
+  // Effect for autosaving
+  useEffect(() => {
+    const formData = form.getValues();
+    if (Object.keys(formData).length > 0 && formData.title) {
+      autosaveDraft({
+        ...formData,
+        id: currentDraftId || draftId
+      });
+    }
+  }, [formValues, autosaveDraft, currentDraftId, draftId]);
+  
+  // Load draft if draftId is provided
+  useEffect(() => {
+    const loadDraftData = async () => {
+      if (draftId) {
+        const draftData = await loadDraft(draftId);
+        if (draftData) {
+          // Update form with draft data
+          Object.entries(draftData).forEach(([key, value]) => {
+            if (key !== 'id' && key !== 'lastUpdated' && key !== 'type') {
+              form.setValue(key as any, value);
+            }
+          });
+        }
+      }
+    };
+    
+    loadDraftData();
+  }, [draftId, loadDraft, form]);
 
   const propertyOptions = [
     { label: "Villa Caldera", value: "Villa Caldera" },
@@ -78,13 +128,49 @@ const CleaningTaskForm: React.FC<CleaningTaskFormProps> = ({
     { label: "Ana Rodriguez", value: "Ana Rodriguez" },
   ];
 
-  const handleSubmit = form.handleSubmit((data) => {
+  const handleSubmit = form.handleSubmit(async (data) => {
+    // Save one last time before submitting
+    await saveDraft({
+      ...data,
+      id: currentDraftId || draftId
+    });
+    
     onSubmit(data);
   });
+  
+  // Manual save handler
+  const handleManualSave = async () => {
+    const formData = form.getValues();
+    await saveDraft({
+      ...formData,
+      id: currentDraftId || draftId
+    });
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-lg font-medium">Task Details</h3>
+          
+          {currentDraftId && (
+            <Badge variant="outline" className="text-xs">
+              Draft Saving Enabled
+            </Badge>
+          )}
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleManualSave}
+            className="flex items-center gap-1"
+          >
+            <Save className="h-4 w-4" />
+            Save Draft
+          </Button>
+        </div>
+        
         <FormField
           control={form.control}
           name="title"

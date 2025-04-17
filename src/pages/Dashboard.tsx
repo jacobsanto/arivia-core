@@ -1,13 +1,16 @@
+
 import React, { useMemo, Suspense, useCallback } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import MobileDashboard from "@/components/dashboard/MobileDashboard";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useDashboardPreferences } from "@/hooks/useDashboardPreferences";
 import { Helmet } from "react-helmet-async";
-import { Loader2, AlertTriangle } from "lucide-react";
+import { Loader2, AlertTriangle, Save } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { DateRange } from "@/components/reports/DateRangeSelector";
 
 // Loader component for better UX during loading states
 const DashboardLoader: React.FC = () => (
@@ -39,8 +42,6 @@ const DashboardErrorFallback: React.FC<{
 
 const Dashboard: React.FC = () => {
   const {
-    selectedProperty,
-    dateRange,
     dashboardData,
     handlePropertyChange,
     handleDateRangeChange,
@@ -49,12 +50,41 @@ const Dashboard: React.FC = () => {
     error
   } = useDashboard();
   
+  // Use the new preferences hook
+  const { 
+    preferences,
+    isSaving,
+    lastSaved,
+    updateSelectedProperty,
+    updateDateRange
+  } = useDashboardPreferences();
+  
   const isMobile = useIsMobile();
 
   // Optimize refresh callback with useCallback
   const handleRefresh = useCallback(() => {
     return refreshDashboard();
   }, [refreshDashboard]);
+
+  // Convert stored preferences date range for dashboard
+  const convertedDateRange: DateRange = useMemo(() => {
+    return {
+      from: preferences.dateRange.from ? new Date(preferences.dateRange.from) : undefined,
+      to: preferences.dateRange.to ? new Date(preferences.dateRange.to) : undefined
+    };
+  }, [preferences.dateRange]);
+
+  // Handle property change with preference saving
+  const handlePropertyChangeWithSave = useCallback((property: string) => {
+    updateSelectedProperty(property);
+    handlePropertyChange(property);
+  }, [updateSelectedProperty, handlePropertyChange]);
+
+  // Handle date range change with preference saving
+  const handleDateRangeChangeWithSave = useCallback((range: DateRange) => {
+    updateDateRange(range);
+    handleDateRangeChange(range);
+  }, [updateDateRange, handleDateRangeChange]);
 
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
@@ -83,9 +113,11 @@ const Dashboard: React.FC = () => {
         dashboardData={dashboardData} 
         isLoading={isLoading}
         error={error}
+        favoriteMetrics={preferences.favoriteMetrics}
+        onToggleFavorite={/* This would need to be implemented */}
       />
     );
-  }, [dashboardData, isMobile, isLoading, error, handleRefresh]);
+  }, [dashboardData, isMobile, isLoading, error, handleRefresh, preferences.favoriteMetrics]);
 
   return (
     <>
@@ -93,11 +125,24 @@ const Dashboard: React.FC = () => {
         <title>Dashboard - Arivia Villas</title>
       </Helmet>
       <div className="space-y-6 pb-8">
+        {isSaving && (
+          <div className="flex items-center justify-end text-xs text-muted-foreground">
+            <Save className="h-3 w-3 mr-1 animate-pulse" />
+            <span>Saving preferences...</span>
+          </div>
+        )}
+        
+        {lastSaved && !isSaving && (
+          <div className="flex items-center justify-end text-xs text-muted-foreground">
+            <span>Preferences saved at {lastSaved.toLocaleTimeString()}</span>
+          </div>
+        )}
+        
         <DashboardHeader 
-          selectedProperty={selectedProperty}
-          onPropertyChange={handlePropertyChange}
-          dateRange={dateRange}
-          onDateRangeChange={handleDateRangeChange}
+          selectedProperty={preferences.selectedProperty}
+          onPropertyChange={handlePropertyChangeWithSave}
+          dateRange={convertedDateRange}
+          onDateRangeChange={handleDateRangeChangeWithSave}
           refreshDashboardContent={handleRefresh}
           dashboardData={dashboardData}
           isLoading={isLoading}
