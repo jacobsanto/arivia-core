@@ -30,3 +30,6 @@ export const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
     />
   );
 };
+
+// Add default export
+export default DashboardMetrics;

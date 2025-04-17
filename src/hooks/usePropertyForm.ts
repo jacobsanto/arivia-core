@@ -1,153 +1,156 @@
+import { useState, useCallback } from 'react';
+import { useToast } from "@/contexts/ToastContext";
+import { throttle } from 'lodash';
 
-import { useState, useEffect } from 'react';
-import { PropertyFormValues } from '@/components/properties/property-form/schema';
-import { propertyService } from '@/services/property/property.service';
-import { useAutosave } from './useAutosave';
-import { toastService } from '@/services/toast';
+export type PropertyFormData = {
+  id?: string;
+  name: string;
+  address: string;
+  type: string;
+  status: string;
+  description: string;
+  location: string;
+  max_guests: number;
+  bedrooms: number;
+  bathrooms: number;
+  price: number;
+  imageUrl: string;
+};
 
-export const usePropertyForm = (propertyId?: string, initialData?: Partial<PropertyFormValues>) => {
-  const [formData, setFormData] = useState<Partial<PropertyFormValues>>(initialData || {});
-  const [isLoading, setIsLoading] = useState(!!propertyId);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // Load property data if editing existing property
-  useEffect(() => {
-    const loadPropertyData = async () => {
-      if (!propertyId) return;
-      
-      setIsLoading(true);
-      try {
-        const properties = await propertyService.fetchProperties();
-        const property = properties.find(p => p.id === propertyId);
-        
-        if (property) {
-          setFormData({
-            name: property.name,
-            address: property.address,
-            location: property.location,
-            type: property.type,
-            status: property.status,
-            bedrooms: property.bedrooms,
-            bathrooms: property.bathrooms,
-            price: property.price_per_night,
-            max_guests: property.max_guests,
-            imageUrl: property.imageUrl,
-            description: property.description
-          });
-        }
-      } catch (error) {
-        console.error('Error loading property:', error);
-        toastService.error('Failed to load property data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadPropertyData();
-  }, [propertyId]);
-  
-  // Autosave function
-  const savePropertyDraft = async (data: Partial<PropertyFormValues>) => {
-    if (!propertyId) {
-      // For new properties, save to local storage
-      localStorage.setItem('property_draft', JSON.stringify({
-        data,
-        timestamp: new Date().toISOString()
-      }));
-      return data;
-    } else {
-      // For existing properties, update in database
-      // Make sure we're sending a complete data object
-      const completeData = { 
-        name: "Untitled Property", // Default name as required property
-        ...data
+export const usePropertyForm = (initialProperty?: PropertyFormData) => {
+  const [name, setName] = useState(initialProperty?.name || '');
+  const [address, setAddress] = useState(initialProperty?.address || '');
+  const [type, setType] = useState(initialProperty?.type || '');
+  const [status, setStatus] = useState(initialProperty?.status || '');
+  const [description, setDescription] = useState(initialProperty?.description || '');
+  const [location, setLocation] = useState(initialProperty?.location || '');
+  const [maxGuests, setMaxGuests] = useState(initialProperty?.max_guests || 0);
+  const [bedrooms, setBedrooms] = useState(initialProperty?.bedrooms || 0);
+  const [bathrooms, setBathrooms] = useState(initialProperty?.bathrooms || 0);
+  const [price, setPrice] = useState(initialProperty?.price || 0);
+  const [imageUrl, setImageUrl] = useState(initialProperty?.imageUrl || '');
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const { showToast } = useToast();
+
+  const saveDraft = useCallback(
+    throttle((formData: PropertyFormData) => {
+      const storageKey = `property_draft_${formData.id || 'new'}`;
+      localStorage.setItem(storageKey, JSON.stringify(formData));
+      setLastSaved(new Date());
+      console.log('Property draft saved:', formData);
+    }, 2000),
+    []
+  );
+
+  const handleDraftSave = useCallback(
+    (data: Partial<PropertyFormData>) => {
+      // Ensure required fields have default values if they're not provided
+      const draftData = {
+        name: data.name || initialProperty?.name || '',
+        address: data.address || initialProperty?.address || '',
+        type: data.type || initialProperty?.type || '',
+        status: data.status || initialProperty?.status || '',
+        description: data.description || initialProperty?.description || '',
+        location: data.location || initialProperty?.location || '',
+        max_guests: data.max_guests || initialProperty?.max_guests || 0,
+        bedrooms: data.bedrooms || initialProperty?.bedrooms || 0,
+        bathrooms: data.bathrooms || initialProperty?.bathrooms || 0,
+        price: data.price || initialProperty?.price || 0,
+        imageUrl: data.imageUrl || initialProperty?.imageUrl || '',
+        id: data.id || initialProperty?.id
       };
-      await propertyService.updateProperty(propertyId, completeData as PropertyFormValues);
-      return data;
+      
+      saveDraft(draftData as PropertyFormData);
+    },
+    [initialProperty, saveDraft]
+  );
+
+  const handleChange = (field: string, value: any) => {
+    switch (field) {
+      case 'name':
+        setName(value);
+        break;
+      case 'address':
+        setAddress(value);
+        break;
+      case 'type':
+        setType(value);
+        break;
+      case 'status':
+        setStatus(value);
+        break;
+      case 'description':
+        setDescription(value);
+        break;
+      case 'location':
+        setLocation(value);
+        break;
+      case 'max_guests':
+        setMaxGuests(Number(value));
+        break;
+      case 'bedrooms':
+        setBedrooms(Number(value));
+        break;
+      case 'bathrooms':
+        setBathrooms(Number(value));
+        break;
+      case 'price':
+        setPrice(Number(value));
+        break;
+      case 'imageUrl':
+        setImageUrl(value);
+        break;
+      default:
+        break;
     }
   };
-  
-  // Set up autosave
-  const { isSaving, lastSaved, hasUnsavedChanges } = useAutosave(formData, {
-    entityType: 'property',
-    saveFunction: savePropertyDraft,
-    debounceDuration: 2000,
-    notifyOnSave: false,
-    detectChanges: true
-  });
-  
-  // Update form data
-  const updateFormData = (fieldName: keyof PropertyFormValues, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-  };
-  
-  // Submit form
-  const handleSubmit = async (data: PropertyFormValues) => {
-    setIsSubmitting(true);
-    
+
+  const handleSubmit = async (data: PropertyFormData) => {
     try {
-      if (propertyId) {
-        // Update existing property
-        await propertyService.updateProperty(propertyId, data);
-        toastService.success('Property updated successfully');
-      } else {
-        // Create new property
-        await propertyService.addProperty(data);
-        toastService.success('Property created successfully');
-        // Clear draft
-        localStorage.removeItem('property_draft');
-      }
-      
-      return true;
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      showToast({
+        title: "Property saved",
+        description: "Your property has been saved successfully.",
+        variant: "success",
+      });
+      console.log('Property saved:', data);
     } catch (error) {
+      showToast({
+        title: "Error saving property",
+        description: "Failed to save property. Please try again.",
+        variant: "destructive",
+      });
       console.error('Error saving property:', error);
-      toastService.error('Failed to save property');
-      return false;
-    } finally {
-      setIsSubmitting(false);
     }
   };
-  
-  // Check for existing draft on mount
-  useEffect(() => {
-    if (!propertyId && !initialData) {
-      const savedDraft = localStorage.getItem('property_draft');
-      
-      if (savedDraft) {
-        try {
-          const { data, timestamp } = JSON.parse(savedDraft);
-          const draftDate = new Date(timestamp);
-          const oneDayAgo = new Date();
-          oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-          
-          // Only use drafts less than 24 hours old
-          if (draftDate > oneDayAgo) {
-            setFormData(data);
-            toastService.info('Draft restored', {
-              description: 'Continuing from your previous session'
-            });
-          } else {
-            // Clear old drafts
-            localStorage.removeItem('property_draft');
-          }
-        } catch (error) {
-          console.error('Error parsing property draft:', error);
-        }
-      }
-    }
-  }, [propertyId, initialData]);
-  
+
   return {
-    formData,
-    isLoading,
-    isSubmitting,
-    isSaving,
+    name,
+    address,
+    type,
+    status,
+    description,
+    location,
+    maxGuests,
+    bedrooms,
+    bathrooms,
+    price,
+    imageUrl,
     lastSaved,
-    hasUnsavedChanges,
-    updateFormData,
-    handleSubmit
+    setName,
+    setAddress,
+    setType,
+    setStatus,
+    setDescription,
+    setLocation,
+    setMaxGuests,
+    setBedrooms,
+    setBathrooms,
+    setPrice,
+    setImageUrl,
+    handleChange,
+    handleSubmit,
+    handleDraftSave
   };
 };

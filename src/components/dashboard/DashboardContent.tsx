@@ -1,6 +1,6 @@
 
 import React, { memo, useEffect } from "react";
-import { DashboardMetrics } from "@/components/dashboard/metrics";
+import DashboardMetrics from "@/components/dashboard/metrics"; // Use default export
 import TasksSchedule from "@/components/dashboard/TasksSchedule";
 import DailyAgenda from "@/components/dashboard/DailyAgenda";
 import { useState } from "react";
