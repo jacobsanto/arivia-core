@@ -1,28 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadAttachments } from './message/attachment.service';
-import { transformToMessage } from './message/transform.service';
-
-// Define a simplified database message interface to avoid deep type instantiation
-interface DbMessage {
-  id: string;
-  content: string;
-  channel_id: string | null;
-  sender_id: string;
-  is_read: boolean | null;
-  reactions: Record<string, string[]> | null;
-  created_at: string;
-  updated_at: string;
-  attachments?: Array<{
-    id: string;
-    type: string;
-    url: string;
-    name: string;
-  }>;
-}
+import { transformToMessage, DbMessage } from './message/transform.service';
 
 export const messageService = {
   async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
@@ -82,7 +63,7 @@ export const messageService = {
       
       // Transform response to match ChatMessage interface
       if (data) {
-        return transformToMessage(data, message.channel_id);
+        return transformToMessage(data as DbMessage, message.channel_id);
       }
       
       return null;

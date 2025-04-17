@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { DirectMessage } from './chat.types';
-import { v4 as uuidv4 } from 'uuid';
+import { uploadAttachments } from './message/attachment.service';
+import { transformToDirectMessage, DbDirectMessage } from './direct-message/transform.service';
 
 export const directMessageService = {
   async getDirectMessages(userId: string, otherUserId: string): Promise<DirectMessage[]> {
@@ -14,7 +15,7 @@ export const directMessageService = {
         
       if (error) throw error;
       
-      return data || [];
+      return (data || []).map(msg => transformToDirectMessage(msg as DbDirectMessage));
     } catch (error: any) {
       console.error(`Error fetching direct messages between ${userId} and ${otherUserId}:`, error);
       return [];
@@ -34,63 +35,30 @@ export const directMessageService = {
     }>;
   }): Promise<DirectMessage | null> {
     try {
-      let attachmentUrls: Array<{
-        id: string;
-        type: string;
-        url: string;
-        name: string;
-      }> = [];
-
       // Upload attachments if any
-      if (message.attachments && message.attachments.length > 0) {
-        // Process each file and upload
-        for (const attachment of message.attachments) {
-          // Generate a unique file path
-          const fileExt = attachment.name.split('.').pop();
-          const fileName = `${uuidv4()}.${fileExt}`;
-          const filePath = `direct/${message.sender_id}_${message.recipient_id}/${fileName}`;
-          
-          // Upload to Supabase Storage
-          const { data: uploadData, error: uploadError } = await supabase
-            .storage
-            .from('chat-attachments')
-            .upload(filePath, attachment.file);
-            
-          if (uploadError) {
-            console.error("Error uploading file:", uploadError);
-            continue;
-          }
-          
-          // Get public URL for the uploaded file
-          const { data: { publicUrl } } = supabase
-            .storage
-            .from('chat-attachments')
-            .getPublicUrl(filePath);
-            
-          attachmentUrls.push({
-            id: attachment.id,
-            type: attachment.type,
-            url: publicUrl,
-            name: attachment.name
-          });
-        }
-      }
+      const attachmentUrls = await uploadAttachments(
+        message.attachments || [], 
+        `direct/${message.sender_id}_${message.recipient_id}/`
+      );
+      
+      // Create a properly structured message for the database
+      const dbMessage = {
+        sender_id: message.sender_id,
+        recipient_id: message.recipient_id,
+        content: message.content,
+        is_read: message.is_read,
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined
+      };
       
       const { data, error } = await supabase
         .from('direct_messages')
-        .insert({
-          sender_id: message.sender_id,
-          recipient_id: message.recipient_id,
-          content: message.content,
-          is_read: message.is_read,
-          attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined
-        })
+        .insert(dbMessage)
         .select()
         .single();
         
       if (error) throw error;
       
-      return data;
+      return data ? transformToDirectMessage(data as DbDirectMessage) : null;
     } catch (error: any) {
       console.error(`Error sending direct message:`, error);
       return null;

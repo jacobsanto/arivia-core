@@ -61,7 +61,8 @@ export async function loadDirectMessages(
         content: msg.content,
         timestamp: msg.created_at || new Date().toISOString(),
         isCurrentUser: isSender,
-        reactions: {}
+        reactions: {},
+        attachments: msg.attachments
       };
     });
     
