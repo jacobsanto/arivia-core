@@ -22,6 +22,7 @@ export function useSettingsForm<T extends Record<string, any>>({
   onAfterSave,
 }: UseSettingsFormProps<T>) {
   const [isDirty, setIsDirty] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   
   // Get settings from the database
   const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
@@ -29,15 +30,29 @@ export function useSettingsForm<T extends Record<string, any>>({
     defaultValues as unknown as T
   );
   
-  // Create form with validation
+  // Create form with validation, but don't initialize with values yet
   const form = useForm<T>({
     resolver: zodResolver(schema),
-    // Use settings if available, otherwise fallback to default values
-    defaultValues: settings as unknown as DefaultValues<T>,
+    defaultValues: defaultValues as unknown as DefaultValues<T>,
   });
   
-  // Track form changes
+  // Initialize form once settings are loaded
   useEffect(() => {
+    if (!isLoading && settings && !isInitialized) {
+      // Merge with default values to ensure all fields exist
+      const mergedSettings = {
+        ...defaultValues,
+        ...settings,
+      };
+      form.reset(mergedSettings as unknown as DefaultValues<T>);
+      setIsInitialized(true);
+    }
+  }, [settings, isLoading, form, defaultValues, isInitialized]);
+  
+  // Track form changes, but only after initialization
+  useEffect(() => {
+    if (!isInitialized) return;
+    
     const subscription = form.watch(() => {
       const formValues = form.getValues();
       const hasChanges = JSON.stringify(formValues) !== JSON.stringify(settings);
@@ -45,19 +60,7 @@ export function useSettingsForm<T extends Record<string, any>>({
     });
     
     return () => subscription.unsubscribe();
-  }, [form, settings]);
-  
-  // Update form when settings are loaded
-  useEffect(() => {
-    if (!isLoading && settings) {
-      // Merge with default values to ensure all fields exist
-      const mergedSettings = {
-        ...defaultValues,
-        ...settings,
-      };
-      form.reset(mergedSettings as unknown as DefaultValues<T>);
-    }
-  }, [settings, isLoading, form, defaultValues]);
+  }, [form, settings, isInitialized]);
   
   // Handle form submission
   const onSubmit = async (data: T) => {
@@ -92,12 +95,14 @@ export function useSettingsForm<T extends Record<string, any>>({
   
   // Reset form to the last saved values
   const resetForm = () => {
-    form.reset(settings as unknown as DefaultValues<T>);
-    setIsDirty(false);
-    
-    toast.info("Settings reset", {
-      description: "Changes have been reverted to last saved values"
-    });
+    if (settings) {
+      form.reset(settings as unknown as DefaultValues<T>);
+      setIsDirty(false);
+      
+      toast.info("Settings reset", {
+        description: "Changes have been reverted to last saved values"
+      });
+    }
   };
   
   return {
@@ -107,6 +112,7 @@ export function useSettingsForm<T extends Record<string, any>>({
     isDirty,
     onSubmit,
     resetForm,
-    settings
+    settings,
+    isInitialized
   };
 }
