@@ -26,7 +26,8 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
     isUploading,
     isDialogOpen,
     setIsDialogOpen,
-    handleFileChange
+    handleFileChange,
+    uploadError
   } = useAvatarUpload({
     user,
     onAvatarChange
@@ -59,6 +60,7 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
         avatarUrl={avatarUrl}
         isUploading={isUploading}
         onFileChange={handleFileChange}
+        uploadError={uploadError}
       />
     </Dialog>
   );

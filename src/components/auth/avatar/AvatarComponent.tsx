@@ -65,6 +65,12 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
     setAvatarUrl(null);
   };
   
+  const handleAvatarClick = () => {
+    if (editable && onAvatarClick) {
+      onAvatarClick();
+    }
+  };
+  
   if (!user) {
     return (
       <Avatar className={`${sizeClasses[size]} ${className}`}>
@@ -83,7 +89,7 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
       
       <Avatar 
         className={`${sizeClasses[size]} ${className} ${editable ? 'cursor-pointer' : ''}`}
-        onClick={editable ? onAvatarClick : undefined}
+        onClick={handleAvatarClick}
       >
         <AvatarImage 
           src={avatarUrl || ""}
