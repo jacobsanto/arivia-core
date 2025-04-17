@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { settingsService, SettingsCategory } from '@/services/settings/settings.service';
 import { toast } from 'sonner';
 
@@ -11,47 +11,47 @@ export function useSystemSettings<T extends Record<string, any>>(
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Load settings from database
+  const loadSettings = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const data = await settingsService.getSettings(category);
+      // Merge with default values to ensure all expected fields exist
+      const mergedSettings = { ...defaultValues, ...data };
+      setSettings(mergedSettings);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+      toast.error("Failed to load settings", {
+        description: "Using default values"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [category, defaultValues]);
+
   useEffect(() => {
-    const loadSettings = async () => {
-      setIsLoading(true);
-      try {
-        const data = await settingsService.getSettings(category);
-        // Merge with default values to ensure all expected fields exist
-        setSettings({ ...defaultValues, ...data });
-      } catch (error) {
-        console.error('Failed to load settings:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     loadSettings();
-  }, [category]);
+  }, [loadSettings]);
 
-  const updateSettings = async (newSettings: Partial<T>) => {
-    const updatedSettings = { ...settings, ...newSettings };
-    setSettings(updatedSettings);
-    return updatedSettings;
-  };
-
-  const saveSettings = async (newSettings?: Partial<T>) => {
+  const saveSettings = async (newSettings: Partial<T>) => {
     setIsSaving(true);
     try {
-      const settingsToSave = newSettings ? await updateSettings(newSettings) : settings;
-      const success = await settingsService.saveSettings(category, settingsToSave);
+      const updatedSettings = { ...settings, ...newSettings };
+      const success = await settingsService.saveSettings(category, updatedSettings);
       
       if (success) {
-        toast.success('Settings saved successfully');
+        setSettings(updatedSettings);
+        return true;
       }
-      return success;
+      return false;
     } catch (error) {
       console.error('Failed to save settings:', error);
-      toast.error('Failed to save settings');
+      toast.error("Failed to save settings");
       return false;
     } finally {
       setIsSaving(false);
     }
   };
 
-  return { settings, updateSettings, saveSettings, isLoading, isSaving };
+  return { settings, updateSettings: saveSettings, saveSettings, isLoading, isSaving };
 }

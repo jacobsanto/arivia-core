@@ -10,7 +10,7 @@ import { DefaultValues } from 'react-hook-form';
 
 interface UseSettingsFormProps<T extends Record<string, any>> {
   category: SettingsCategory;
-  defaultValues: DefaultValues<T>; // Changed to use DefaultValues from react-hook-form
+  defaultValues: DefaultValues<T>;
   schema: z.ZodType<T>;
   onAfterSave?: (data: T) => void;
 }
@@ -26,62 +26,76 @@ export function useSettingsForm<T extends Record<string, any>>({
   // Get settings from the database
   const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
     category,
-    defaultValues as T // We need this cast since useSystemSettings expects T
+    defaultValues
   );
   
   // Create form with validation
   const form = useForm<T>({
     resolver: zodResolver(schema),
-    defaultValues: settings as DefaultValues<T>, // Cast settings to DefaultValues<T>
+    defaultValues: settings || defaultValues,
   });
   
   // Track form changes
   useEffect(() => {
     const subscription = form.watch(() => {
-      setIsDirty(form.formState.isDirty);
+      const formValues = form.getValues();
+      const hasChanges = JSON.stringify(formValues) !== JSON.stringify(settings);
+      setIsDirty(hasChanges);
     });
     
     return () => subscription.unsubscribe();
-  }, [form]);
+  }, [form, settings]);
   
   // Update form when settings are loaded
   useEffect(() => {
-    if (!isLoading) {
-      form.reset(settings as DefaultValues<T>); // Cast settings to DefaultValues<T>
+    if (!isLoading && settings) {
+      // Merge with default values to ensure all fields exist
+      const mergedSettings = {
+        ...defaultValues,
+        ...settings,
+      };
+      form.reset(mergedSettings);
     }
-  }, [settings, isLoading, form]);
+  }, [settings, isLoading, form, defaultValues]);
   
   // Handle form submission
   const onSubmit = async (data: T) => {
     try {
-      const success = await saveSettings(data);
+      // Clean up empty string values to null
+      const cleanData = Object.fromEntries(
+        Object.entries(data).map(([key, value]) => [
+          key,
+          value === "" ? null : value
+        ])
+      ) as T;
+
+      const success = await saveSettings(cleanData);
       
       if (success) {
-        form.reset(data as DefaultValues<T>); // Cast data to DefaultValues<T>
+        form.reset(cleanData);
         setIsDirty(false);
         
-        toast.success("Settings saved successfully", {
-          description: "Your settings have been updated."
-        });
+        toast.success("Settings saved successfully");
         
         if (onAfterSave) {
-          onAfterSave(data);
+          onAfterSave(cleanData);
         }
       }
     } catch (error: any) {
+      console.error('Failed to save settings:', error);
       toast.error("Failed to save settings", {
-        description: error.message || "An unknown error occurred."
+        description: error.message || "An unknown error occurred"
       });
     }
   };
   
   // Reset form to the last saved values
   const resetForm = () => {
-    form.reset(settings as DefaultValues<T>); // Cast settings to DefaultValues<T>
+    form.reset(settings);
     setIsDirty(false);
     
     toast.info("Settings reset", {
-      description: "Changes have been reverted to last saved values."
+      description: "Changes have been reverted to last saved values"
     });
   };
   
