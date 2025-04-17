@@ -1,6 +1,7 @@
+
 import { useState, useCallback } from 'react';
-import { useToast } from "@/contexts/ToastContext";
 import { throttle } from 'lodash';
+import { useToast } from "@/components/ui/use-toast"; // Fix the import path
 
 export type PropertyFormData = {
   id?: string;
@@ -30,7 +31,7 @@ export const usePropertyForm = (initialProperty?: PropertyFormData) => {
   const [price, setPrice] = useState(initialProperty?.price || 0);
   const [imageUrl, setImageUrl] = useState(initialProperty?.imageUrl || '');
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const { showToast } = useToast();
+  const { toast } = useToast(); // Use toast instead of showToast
 
   const saveDraft = useCallback(
     throttle((formData: PropertyFormData) => {
@@ -109,14 +110,14 @@ export const usePropertyForm = (initialProperty?: PropertyFormData) => {
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      showToast({
+      toast({
         title: "Property saved",
         description: "Your property has been saved successfully.",
         variant: "success",
       });
       console.log('Property saved:', data);
     } catch (error) {
-      showToast({
+      toast({
         title: "Error saving property",
         description: "Failed to save property. Please try again.",
         variant: "destructive",

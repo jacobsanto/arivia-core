@@ -75,7 +75,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   const hasData = hasPropertiesData || hasTasksData || hasMaintenanceData;
   
   // Only create metric cards if we have data
-  const metricCards = hasData ? createMetricCards(data, isMobile) : [];
+  const metricCards = hasData ? createMetricCards(data, []) : [];
   
   if (!hasData || metricCards.length === 0) {
     return (

@@ -1,6 +1,6 @@
 
 import React from "react";
-import { DashboardMetrics } from "@/components/dashboard/metrics";
+import DashboardMetrics from "@/components/dashboard/metrics"; // Import default export
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarClock, LayoutDashboard, CalendarDays } from "lucide-react";
