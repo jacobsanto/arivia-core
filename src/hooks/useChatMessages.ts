@@ -19,9 +19,7 @@ export const useChatMessages = (activeChat: string) => {
   const { messages, setMessages } = useMessageStorage(activeChat);
   const { typingStatus, handleTyping, clearTyping } = useTypingIndicator(activeChat);
   
-  // Fix the error by passing only one parameter to useMessageReactions
-  // The hook was being called with both `messages` and `setMessages` when it expects
-  // an object with those properties
+  // Fix the error by passing chatType along with messages and setMessages
   const { 
     reactionMessageId, 
     setReactionMessageId, 
@@ -29,6 +27,7 @@ export const useChatMessages = (activeChat: string) => {
     setShowEmojiPicker, 
     addReaction: addReactionToMessage 
   } = useMessageReactions({
+    chatType: 'general', // Add the required chatType property
     messages, 
     setMessages
   });
