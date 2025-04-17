@@ -1,12 +1,9 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import SettingsCard from "../SettingsCard";
-import { useSystemSettings } from "@/hooks/useSystemSettings";
+import { useSettingsForm } from "@/hooks/useSettingsForm";
+import SettingsLayout from "@/components/settings/SettingsLayout";
+import SettingsSection from "@/components/settings/SettingsSection";
 import { EmailSettingsFormValues, defaultEmailValues, emailSettingsSchema } from "./email/types";
 import ProviderSettings from "./email/ProviderSettings";
 import SmtpSettings from "./email/SmtpSettings";
@@ -15,53 +12,50 @@ import NotificationSettings from "./email/NotificationSettings";
 import EmailConnectionTester from "./email/EmailConnectionTester";
 
 const EmailSettings: React.FC = () => {
-  const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<EmailSettingsFormValues>(
-    'email',
-    defaultEmailValues
-  );
-
-  const form = useForm<EmailSettingsFormValues>({
-    resolver: zodResolver(emailSettingsSchema),
-    defaultValues: settings,
+  const {
+    form,
+    isLoading,
+    isSaving,
+    isDirty,
+    onSubmit,
+    resetForm
+  } = useSettingsForm<EmailSettingsFormValues>({
+    category: 'email',
+    defaultValues: defaultEmailValues,
+    schema: emailSettingsSchema
   });
 
-  // Update form when settings are loaded
-  React.useEffect(() => {
-    if (!isLoading) {
-      form.reset(settings);
-    }
-  }, [form, settings, isLoading]);
-
-  function onSubmit(data: EmailSettingsFormValues) {
-    saveSettings(data);
-  }
-
   return (
-    <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <SettingsCard 
-            title="Email Configuration" 
-            description="Configure email settings for system notifications"
-            isLoading={isLoading}
-            isSaving={isSaving}
-            onSave={form.handleSubmit(onSubmit)}
-          >
-            <div className="space-y-6">
-              <ProviderSettings form={form} />
-              
-              <SmtpSettings form={form} />
-              
-              <SenderSettings form={form} />
-              
-              <NotificationSettings form={form} />
-              
-              <EmailConnectionTester />
-            </div>
-          </SettingsCard>
-        </form>
-      </Form>
-    </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsLayout
+          title="Email Configuration"
+          description="Configure email settings for system notifications"
+          isLoading={isLoading}
+          isSaving={isSaving}
+          isDirty={isDirty}
+          onSave={form.handleSubmit(onSubmit)}
+          onReset={resetForm}
+          actions={<EmailConnectionTester />}
+        >
+          <SettingsSection title="Email Provider" description="Select your email delivery service">
+            <ProviderSettings form={form} />
+          </SettingsSection>
+          
+          <SettingsSection title="SMTP Settings" description="Configure your SMTP server details">
+            <SmtpSettings form={form} />
+          </SettingsSection>
+          
+          <SettingsSection title="Sender Information" description="Configure the sender information for outgoing emails">
+            <SenderSettings form={form} />
+          </SettingsSection>
+          
+          <SettingsSection title="Email Notifications" description="Control when emails are sent">
+            <NotificationSettings form={form} />
+          </SettingsSection>
+        </SettingsLayout>
+      </form>
+    </Form>
   );
 };
 

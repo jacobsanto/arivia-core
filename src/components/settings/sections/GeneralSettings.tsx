@@ -1,17 +1,13 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { useSystemSettings } from "@/hooks/useSystemSettings";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useSettingsForm } from "@/hooks/useSettingsForm";
+import SettingsLayout from "@/components/settings/SettingsLayout";
+import SettingsSection from "@/components/settings/SettingsSection";
 
 // Define validation schema
 const generalSettingsSchema = z.object({
@@ -40,55 +36,32 @@ const GeneralSettings: React.FC = () => {
     timeZone: "Europe/Athens",
   };
 
-  const { settings, saveSettings, isLoading } = useSystemSettings<GeneralSettingsFormValues>(
-    'general',
-    defaultValues
-  );
-
-  const form = useForm<GeneralSettingsFormValues>({
-    resolver: zodResolver(generalSettingsSchema),
-    defaultValues: settings,
-    values: settings,
+  const {
+    form,
+    isLoading,
+    isSaving,
+    isDirty,
+    onSubmit,
+    resetForm
+  } = useSettingsForm<GeneralSettingsFormValues>({
+    category: 'general',
+    defaultValues,
+    schema: generalSettingsSchema
   });
 
-  // Update form values when settings are loaded
-  React.useEffect(() => {
-    if (!isLoading) {
-      Object.keys(settings).forEach(key => {
-        form.setValue(key as keyof GeneralSettingsFormValues, 
-          settings[key as keyof GeneralSettingsFormValues]);
-      });
-    }
-  }, [settings, isLoading, form]);
-
-  async function onSubmit(data: GeneralSettingsFormValues) {
-    const success = await saveSettings(data);
-    if (success) {
-      form.reset(data);
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <Card className="w-full">
-        <CardContent className="pt-6 flex justify-center">
-          <LoadingSpinner />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>General Settings</CardTitle>
-        <CardDescription>
-          Configure basic system settings and preferences
-        </CardDescription>
-      </CardHeader>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}>
-          <CardContent className="space-y-4">
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsLayout
+          title="General Settings"
+          description="Configure basic system settings and preferences"
+          isLoading={isLoading}
+          isSaving={isSaving}
+          isDirty={isDirty}
+          onSave={form.handleSubmit(onSubmit)}
+          onReset={resetForm}
+        >
+          <SettingsSection>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
@@ -266,18 +239,10 @@ const GeneralSettings: React.FC = () => {
                 </FormItem>
               )}
             />
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button variant="outline" type="button" onClick={() => form.reset(settings)}>
-              Reset
-            </Button>
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              Save Changes
-            </Button>
-          </CardFooter>
-        </form>
-      </Form>
-    </Card>
+          </SettingsSection>
+        </SettingsLayout>
+      </form>
+    </Form>
   );
 };
 

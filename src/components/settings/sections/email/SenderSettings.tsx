@@ -1,8 +1,8 @@
 
 import React from "react";
-import { FormField, FormItem, FormLabel, FormDescription, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { EmailSettingsFormValues } from "./types";
 
 interface SenderSettingsProps {
@@ -11,18 +11,22 @@ interface SenderSettingsProps {
 
 const SenderSettings: React.FC<SenderSettingsProps> = ({ form }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
         control={form.control}
         name="fromEmail"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>From Email</FormLabel>
+            <FormLabel>From Email Address</FormLabel>
             <FormControl>
-              <Input placeholder="no-reply@arivia-villas.com" {...field} />
+              <Input 
+                type="email"
+                placeholder="no-reply@arivia-villas.com" 
+                {...field} 
+              />
             </FormControl>
             <FormDescription>
-              Email address that will appear in the "From" field
+              Email address that will appear as the sender
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -36,10 +40,13 @@ const SenderSettings: React.FC<SenderSettingsProps> = ({ form }) => {
           <FormItem>
             <FormLabel>From Name</FormLabel>
             <FormControl>
-              <Input placeholder="Arivia Villas" {...field} />
+              <Input 
+                placeholder="Arivia Villas" 
+                {...field} 
+              />
             </FormControl>
             <FormDescription>
-              Name that will appear in the "From" field
+              Name that will appear as the sender
             </FormDescription>
             <FormMessage />
           </FormItem>
