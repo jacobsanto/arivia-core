@@ -18,6 +18,12 @@ export interface ChatMessage {
   is_read?: boolean;
   created_at?: string;
   updated_at?: string;
+  attachments?: Array<{
+    id: string;
+    type: string;
+    url: string;
+    name: string;
+  }>;
 }
 
 export interface DirectMessage {
@@ -27,6 +33,12 @@ export interface DirectMessage {
   content: string;
   is_read: boolean;
   created_at?: string;
+  attachments?: Array<{
+    id: string;
+    type: string;
+    url: string;
+    name: string;
+  }>;
 }
 
 // Define a general chat channel ID using a proper UUID format

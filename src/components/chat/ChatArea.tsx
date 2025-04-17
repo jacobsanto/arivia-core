@@ -6,6 +6,7 @@ import MessageInput from "./input/MessageInput";
 import { Message } from "@/hooks/useChatTypes";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Wifi, WifiOff } from "lucide-react";
+import { Attachment } from "@/hooks/chat/useMessageSender";
 
 interface ChatAreaProps {
   activeChat: string;
@@ -24,6 +25,18 @@ interface ChatAreaProps {
   setShowEmojiPicker: (show: boolean) => void;
   isLoading?: boolean;
   isOffline?: boolean;
+  // New props for file and emoji functionality
+  attachments?: Attachment[];
+  fileInputRef?: React.RefObject<HTMLInputElement>;
+  imageInputRef?: React.RefObject<HTMLInputElement>;
+  handleFileSelect?: (files: FileList) => void;
+  handleImageSelect?: (files: FileList) => void;
+  handleFileClick?: () => void;
+  handleImageClick?: () => void;
+  removeAttachment?: (id: string) => void;
+  showMessageEmojiPicker?: boolean;
+  toggleMessageEmojiPicker?: () => void;
+  handleEmojiSelect?: (emoji: string) => void;
 }
 
 const ChatArea: React.FC<ChatAreaProps> = ({
@@ -43,6 +56,18 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   setShowEmojiPicker,
   isLoading = false,
   isOffline = false,
+  // New props
+  attachments = [],
+  fileInputRef,
+  imageInputRef,
+  handleFileSelect,
+  handleImageSelect,
+  handleFileClick,
+  handleImageClick,
+  removeAttachment,
+  showMessageEmojiPicker = false,
+  toggleMessageEmojiPicker,
+  handleEmojiSelect,
 }) => {
   return (
     <div className="flex-1 border rounded-lg flex flex-col overflow-hidden">
@@ -76,13 +101,28 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         isOffline={isOffline}
       />
       
-      <MessageInput 
-        message={message}
-        activeChat={activeChat}
-        handleChangeMessage={handleChangeMessage}
-        handleSendMessage={handleSendMessage}
-        isOffline={isOffline}
-      />
+      {fileInputRef && imageInputRef && handleFileSelect && handleImageSelect && 
+       handleFileClick && handleImageClick && removeAttachment && toggleMessageEmojiPicker && 
+       handleEmojiSelect && (
+        <MessageInput 
+          message={message}
+          activeChat={activeChat}
+          handleChangeMessage={handleChangeMessage}
+          handleSendMessage={handleSendMessage}
+          isOffline={isOffline}
+          attachments={attachments}
+          fileInputRef={fileInputRef}
+          imageInputRef={imageInputRef}
+          handleFileSelect={handleFileSelect}
+          handleImageSelect={handleImageSelect}
+          handleFileClick={handleFileClick}
+          handleImageClick={handleImageClick}
+          removeAttachment={removeAttachment}
+          showEmojiPicker={showMessageEmojiPicker}
+          toggleEmojiPicker={toggleMessageEmojiPicker}
+          handleEmojiSelect={handleEmojiSelect}
+        />
+      )}
     </div>
   );
 };

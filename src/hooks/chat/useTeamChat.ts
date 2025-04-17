@@ -48,7 +48,19 @@ export function useTeamChat() {
     addReaction,
     typingStatus,
     handleTyping,
-    clearTyping
+    clearTyping,
+    // New functions from enhanced useChat
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    showEmojiPicker: showMessageEmojiPicker,
+    toggleEmojiPicker: toggleMessageEmojiPicker,
+    handleEmojiSelect
   } = useChat(chatType, activeChatId);
 
   // Handle chat errors
@@ -78,7 +90,7 @@ export function useTeamChat() {
   };
 
   // Extract just the emoji symbols
-  const emojiSymbols = ["👍", "❤️", "😊", "🎉", "😂", "🤔"];
+  const emojiSymbols = ["👍", "❤️", "😊", "🎉", "😂", "🤔", "👏", "🙏", "🔥", "⭐", "😍", "😎", "🤩", "😢", "😡", "🤯", "🤝", "👋", "✅", "❌"];
 
   return {
     // State
@@ -98,6 +110,11 @@ export function useTeamChat() {
     showEmojiPicker,
     emojiSymbols,
     errors,
+    // New state
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    showMessageEmojiPicker,
 
     // Actions
     setActiveTab,
@@ -108,6 +125,14 @@ export function useTeamChat() {
     addReaction: handleEmojiClick,
     setReactionMessageId,
     setShowEmojiPicker,
-    removeError
+    removeError,
+    // New actions
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    toggleMessageEmojiPicker,
+    handleEmojiSelect
   };
 }

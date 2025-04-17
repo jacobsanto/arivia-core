@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Define a simplified database message interface to avoid deep type instantiation
 interface DbMessage {
@@ -13,6 +14,12 @@ interface DbMessage {
   reactions: Record<string, string[]> | null;
   created_at: string;
   updated_at: string;
+  attachments?: Array<{
+    id: string;
+    type: string;
+    url: string;
+    name: string;
+  }>;
 }
 
 export const messageService = {
@@ -35,7 +42,8 @@ export const messageService = {
         is_read: msg.is_read || false,
         created_at: msg.created_at,
         updated_at: msg.updated_at,
-        reactions: msg.reactions || {}
+        reactions: msg.reactions || {},
+        attachments: msg.attachments || []
       }));
     } catch (error: any) {
       console.error(`Error fetching messages for channel ${channelId}:`, error);
@@ -43,15 +51,69 @@ export const messageService = {
     }
   },
 
-  async sendChannelMessage(message: { channel_id: string; user_id?: string; content: string; is_read?: boolean }): Promise<ChatMessage | null> {
+  async sendChannelMessage(message: { 
+    channel_id: string; 
+    user_id?: string; 
+    content: string; 
+    is_read?: boolean;
+    attachments?: Array<{
+      id: string;
+      file: File;
+      type: string;
+      name: string;
+    }>;
+  }): Promise<ChatMessage | null> {
     try {
+      let attachmentUrls: Array<{
+        id: string;
+        type: string;
+        url: string;
+        name: string;
+      }> = [];
+
+      // Upload attachments if any
+      if (message.attachments && message.attachments.length > 0) {
+        // Process each file and upload
+        for (const attachment of message.attachments) {
+          // Generate a unique file path
+          const fileExt = attachment.name.split('.').pop();
+          const fileName = `${uuidv4()}.${fileExt}`;
+          const filePath = `chat/${message.channel_id}/${fileName}`;
+          
+          // Upload to Supabase Storage
+          const { data: uploadData, error: uploadError } = await supabase
+            .storage
+            .from('chat-attachments')
+            .upload(filePath, attachment.file);
+            
+          if (uploadError) {
+            console.error("Error uploading file:", uploadError);
+            continue;
+          }
+          
+          // Get public URL for the uploaded file
+          const { data: { publicUrl } } = supabase
+            .storage
+            .from('chat-attachments')
+            .getPublicUrl(filePath);
+            
+          attachmentUrls.push({
+            id: attachment.id,
+            type: attachment.type,
+            url: publicUrl,
+            name: attachment.name
+          });
+        }
+      }
+      
       // Create a properly structured message for the database
       const dbMessage = {
         content: message.content,
         sender_id: message.user_id || '',
         channel_id: message.channel_id,
         is_read: message.is_read || false,
-        reactions: {}
+        reactions: {},
+        attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined
       };
       
       const { data, error } = await supabase
@@ -72,7 +134,8 @@ export const messageService = {
           is_read: data.is_read || false,
           created_at: data.created_at,
           updated_at: data.updated_at,
-          reactions: data.reactions as Record<string, string[]> || {}
+          reactions: data.reactions as Record<string, string[]> || {},
+          attachments: data.attachments || []
         };
       }
       

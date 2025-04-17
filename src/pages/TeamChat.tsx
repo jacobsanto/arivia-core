@@ -29,6 +29,11 @@ const TeamChat = () => {
     showEmojiPicker,
     emojiSymbols,
     errors,
+    // New state from useMessageSender
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    showMessageEmojiPicker,
 
     // Actions
     setActiveTab,
@@ -39,7 +44,15 @@ const TeamChat = () => {
     addReaction,
     setReactionMessageId,
     setShowEmojiPicker,
-    removeError
+    removeError,
+    // New actions from useMessageSender
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    toggleMessageEmojiPicker,
+    handleEmojiSelect,
   } = useTeamChat();
 
   return (
@@ -103,6 +116,18 @@ const TeamChat = () => {
           setShowEmojiPicker={setShowEmojiPicker}
           isLoading={loading}
           isOffline={isOffline}
+          // New props
+          attachments={attachments}
+          fileInputRef={fileInputRef}
+          imageInputRef={imageInputRef}
+          handleFileSelect={handleFileSelect}
+          handleImageSelect={handleImageSelect}
+          handleFileClick={handleFileClick}
+          handleImageClick={handleImageClick}
+          removeAttachment={removeAttachment}
+          showMessageEmojiPicker={showMessageEmojiPicker}
+          toggleMessageEmojiPicker={toggleMessageEmojiPicker}
+          handleEmojiSelect={handleEmojiSelect}
         />
       </div>
     </div>

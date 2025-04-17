@@ -34,8 +34,25 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     chatType === 'general' ? 'general-chat' : recipientId
   );
   
-  // Use the extracted hook for sending messages
-  const { messageInput, setMessageInput, sendMessage, sendError } = useMessageSender({ 
+  // Use the extracted hook for sending messages with enhanced functionality
+  const { 
+    messageInput, 
+    setMessageInput, 
+    sendMessage, 
+    sendError,
+    // New functionality
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    showEmojiPicker,
+    toggleEmojiPicker,
+    handleEmojiSelect
+  } = useMessageSender({ 
     chatType, 
     recipientId, 
     messages, 
@@ -50,7 +67,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   }
   
   // Use the extracted hook for message reactions
-  const { addReaction, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker, reactionError } = useMessageReactions({ 
+  const { addReaction, reactionMessageId, setReactionMessageId, showEmojiPicker: showReactionEmojiPicker, setShowEmojiPicker: setReactionEmojiPicker, reactionError } = useMessageReactions({ 
     chatType, 
     messages, 
     setMessages, 
@@ -80,10 +97,22 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     addReaction,
     reactionMessageId,
     setReactionMessageId,
-    showEmojiPicker,
-    setShowEmojiPicker,
+    showEmojiPicker: showReactionEmojiPicker,
+    setShowEmojiPicker: setReactionEmojiPicker,
     typingStatus,
     handleTyping,
-    clearTyping
+    clearTyping,
+    // New functionality
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    showMessageEmojiPicker: showEmojiPicker,
+    toggleMessageEmojiPicker: toggleEmojiPicker,
+    handleEmojiSelect
   };
 }

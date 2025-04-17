@@ -3,6 +3,7 @@ import React from "react";
 import { Message } from "@/hooks/useChatTypes";
 import EmojiPicker from "../emoji/EmojiPicker";
 import MessageReactions from "../emoji/MessageReactions";
+import { Paperclip } from "lucide-react";
 
 interface MessageContentProps {
   message: Message;
@@ -41,6 +42,39 @@ const MessageContent: React.FC<MessageContentProps> = ({
         onMouseLeave={handleMessageMouseLeave}
       >
         <p className="text-sm">{message.content}</p>
+        
+        {/* Display attachments if any */}
+        {message.attachments && message.attachments.length > 0 && (
+          <div className="mt-2 space-y-2">
+            {message.attachments.map(attachment => (
+              <div key={attachment.id} className="flex flex-col">
+                {attachment.type.startsWith('image/') ? (
+                  <a 
+                    href={attachment.url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block"
+                  >
+                    <img 
+                      src={attachment.url} 
+                      alt={attachment.name} 
+                      className="max-h-48 max-w-full rounded-md object-cover" 
+                    />
+                  </a>
+                ) : (
+                  <a 
+                    href={attachment.url} 
+                    download={attachment.name}
+                    className="flex items-center gap-2 py-1 px-2 bg-background/20 backdrop-blur-sm rounded text-xs hover:bg-background/30 transition-colors"
+                  >
+                    <Paperclip className="h-3 w-3" />
+                    <span className="truncate max-w-[200px]">{attachment.name}</span>
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       
       {/* Emoji reactions display */}
