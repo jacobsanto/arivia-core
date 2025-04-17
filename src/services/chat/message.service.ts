@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
@@ -33,7 +34,7 @@ export const messageService = {
       if (error) throw error;
       
       // Transform the raw data to our ChatMessage type with explicit casting
-      return (data || []).map((msg: any) => ({
+      return (data || []).map((msg: DbMessage) => ({
         id: msg.id,
         channel_id: channelId,
         user_id: msg.sender_id,
