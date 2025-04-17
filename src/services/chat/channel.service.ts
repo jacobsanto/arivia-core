@@ -33,7 +33,7 @@ export const channelService = {
         return data;
       }
 
-      // If not, create the general channel with the proper UUID
+      // If not found, create the general channel with the proper UUID
       const channel = {
         id: GENERAL_CHAT_CHANNEL_ID,
         name: 'General',
@@ -41,9 +41,10 @@ export const channelService = {
         is_property_specific: false
       };
 
+      // Use upsert instead of insert to avoid duplicate key errors
       const { data: newChannel, error: createError } = await supabase
         .from('chat_channels')
-        .insert(channel)
+        .upsert(channel)
         .select()
         .single();
 

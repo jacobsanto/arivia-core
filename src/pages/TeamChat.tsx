@@ -83,11 +83,11 @@ const TeamChat = () => {
         
         // Load channels
         try {
-          const channelsData = await chatService.getChannels();
-          
-          // Make sure general channel exists
+          let channelsData = await chatService.getChannels();
           let generalChannel;
+          
           try {
+            // Attempt to get or create the general channel
             generalChannel = await chatService.getOrCreateGeneralChannel();
           } catch (error) {
             console.error("Error getting general channel:", error);
@@ -96,10 +96,11 @@ const TeamChat = () => {
           }
           
           if (generalChannel) {
-            // Add to channels if not already there
-            const channelExists = channelsData.some(ch => ch.id === generalChannel.id);
+            // Check if general channel already exists in the fetched channels
+            const generalExists = channelsData.some(ch => ch.id === generalChannel!.id);
             
-            const allChannels = channelExists ? channelsData : [generalChannel, ...channelsData];
+            // Only add general channel if it doesn't already exist in the list
+            const allChannels = generalExists ? channelsData : [generalChannel, ...channelsData];
             
             // Convert to Channel format for sidebar
             const typedChannels: Channel[] = allChannels.map(channel => ({
