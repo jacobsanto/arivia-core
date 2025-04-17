@@ -58,8 +58,8 @@ export function useTeamChat() {
     handleFileSelect,
     handleImageSelect,
     removeAttachment,
-    showEmojiPicker: showMessageEmojiPicker,
-    toggleEmojiPicker: toggleMessageEmojiPicker,
+    showMessageEmojiPicker,
+    toggleMessageEmojiPicker, // This name must match what's returned from useChat
     handleEmojiSelect
   } = useChat(chatType, activeChatId);
 
@@ -132,7 +132,7 @@ export function useTeamChat() {
     handleFileSelect,
     handleImageSelect,
     removeAttachment,
-    toggleMessageEmojiPicker,
+    toggleMessageEmojiPicker, // Make sure this matches the name from useChat
     handleEmojiSelect
   };
 }
