@@ -82,14 +82,14 @@ const RoleEditForm: React.FC<RoleEditFormProps> = ({
           onClick={handleCancelEdit}
           disabled={isSaving}
         >
-          Cancel
+          <span>Cancel</span>
         </Button>
         <Button 
           size="sm" 
           onClick={handleSaveRole}
           disabled={isSaving}
         >
-          {isSaving ? "Saving..." : "Save"}
+          <span>{isSaving ? "Saving..." : "Save"}</span>
         </Button>
       </div>
     </>

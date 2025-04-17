@@ -171,16 +171,16 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
               Cancel
             </Button>
             <Button size="sm" onClick={handleSaveRole} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save"}
+              <span>{isSaving ? "Saving..." : "Save"}</span>
             </Button>
           </div>
         ) : (
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={() => onEditPermissions(user)}>
-              Permissions
+              <span>Permissions</span>
             </Button>
             <Button size="sm" variant="outline" onClick={handleEditClick}>
-              Change Role
+              <span>Change Role</span>
             </Button>
             {user.id !== currentUser?.id && (
               <Button size="sm" variant="destructive" onClick={handleDeleteClick}>
