@@ -23,10 +23,6 @@ export function useTeamChat() {
   const [isConnected, setIsConnected] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   
-  // For reactions
-  const [reactionMessageId, setReactionMessageId] = useState<string | null>(null);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  
   // Hooks
   const isMobile = useIsMobile();
   const { user } = useUser();
@@ -242,8 +238,8 @@ export function useTeamChat() {
     loading,
     isOffline,
     typingStatus,
-    reactionMessageId,
-    showEmojiPicker,
+    reactionMessageId: null,
+    showEmojiPicker: false,
     emojiSymbols,
 
     // Actions
@@ -253,7 +249,7 @@ export function useTeamChat() {
     handleSendMessage,
     handleChangeMessage,
     addReaction,
-    setReactionMessageId,
-    setShowEmojiPicker
+    setReactionMessageId: () => {},
+    setShowEmojiPicker: () => {}
   };
 }
