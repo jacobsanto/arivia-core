@@ -17,14 +17,21 @@ export const useChatMessages = (activeChat: string) => {
   
   // Use our custom hooks
   const { messages, setMessages } = useMessageStorage(activeChat);
-  const { typingStatus, handleTyping, clearTyping } = useTypingIndicator();
+  const { typingStatus, handleTyping, clearTyping } = useTypingIndicator(activeChat);
+  
+  // Fix the error by passing only one parameter to useMessageReactions
+  // The hook was being called with both `messages` and `setMessages` when it expects
+  // an object with those properties
   const { 
     reactionMessageId, 
     setReactionMessageId, 
     showEmojiPicker, 
     setShowEmojiPicker, 
     addReaction: addReactionToMessage 
-  } = useMessageReactions(messages, setMessages);
+  } = useMessageReactions({
+    messages, 
+    setMessages
+  });
 
   const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
