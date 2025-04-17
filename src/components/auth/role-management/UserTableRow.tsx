@@ -168,7 +168,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
         {isEditing ? (
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-              Cancel
+              <span>Cancel</span>
             </Button>
             <Button size="sm" onClick={handleSaveRole} disabled={isSaving}>
               <span>{isSaving ? "Saving..." : "Save"}</span>
