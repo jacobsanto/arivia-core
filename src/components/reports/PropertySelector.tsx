@@ -20,9 +20,10 @@ export const PropertySelector: React.FC<PropertySelectorProps> = ({
   selectedProperty,
   onPropertyChange
 }) => {
+  // Use provided properties or default to just "all" if empty
   const propertiesList = properties.length > 0 
     ? properties
-    : ["all", "villa-caldera", "villa-azure", "villa-sunset"];
+    : ["all"];
 
   return (
     <div className="space-y-1.5">

@@ -11,6 +11,9 @@ import {
   getProfitabilityByPropertyData, 
   getExpenseCategories 
 } from './financial/financialDataHelpers';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 export const FinancialReports: React.FC = () => {
   const { selectedProperty, selectedYear, financialData, isLoading } = useAnalytics();
@@ -41,6 +44,30 @@ export const FinancialReports: React.FC = () => {
           <Skeleton className="h-[300px]" />
           <Skeleton className="h-[300px]" />
         </div>
+      </div>
+    );
+  }
+  
+  if (!financialData || financialData.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>{getFinancialOverviewTitle()}</CardTitle>
+            <CardDescription>{getFinancialOverviewDescription()}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Alert className="bg-muted/50">
+              <InfoIcon className="h-4 w-4" />
+              <AlertTitle>No financial data available</AlertTitle>
+              <AlertDescription>
+                Financial data will appear here once it's recorded. Please select a different time period or add financial records.
+              </AlertDescription>
+            </Alert>
+          </CardContent>
+        </Card>
+        
+        <FinancialMetricsCards financialData={[]} />
       </div>
     );
   }
