@@ -5,6 +5,7 @@ import MessageContent from "./message/MessageContent";
 import MessageAvatar from "./message/MessageAvatar";
 import MessageTimestamp from "./message/MessageTimestamp";
 import { useMessageHover } from "@/hooks/chat/useMessageHover";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface ChatMessageProps {
   message: Message;
@@ -61,41 +62,47 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   return (
-    <div
-      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
-    >
-      <div
-        className={`flex max-w-[80%] ${
-          message.isCurrentUser ? "flex-row-reverse" : "flex-row"
-        }`}
+    <AnimatePresence mode="popLayout">
+      <motion.div
+        className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
       >
-        <MessageAvatar 
-          sender={message.sender} 
-          avatar={message.avatar} 
-          isCurrentUser={message.isCurrentUser} 
-        />
-        
-        <div>
-          <MessageContent
-            message={message}
-            emojis={emojis}
-            isHoveringMessage={isHoveringMessage}
-            setIsHoveringMessage={setIsHoveringMessage}
-            handleMessageMouseEnter={handleMessageMouseEnter}
-            handleMessageMouseLeave={handleMessageMouseLeave}
-            handleEmojiClick={handleEmojiClick}
-            reactionMessageId={reactionMessageId}
-            showEmojiPicker={showEmojiPicker}
-            {...messagePickerHandler}
+        <div
+          className={`flex max-w-[80%] ${
+            message.isCurrentUser ? "flex-row-reverse" : "flex-row"
+          }`}
+        >
+          <MessageAvatar 
+            sender={message.sender} 
+            avatar={message.avatar} 
+            isCurrentUser={message.isCurrentUser} 
           />
           
-          <MessageTimestamp 
-            timestamp={message.timestamp}
-            isCurrentUser={message.isCurrentUser}
-          />
+          <div>
+            <MessageContent
+              message={message}
+              emojis={emojis}
+              isHoveringMessage={isHoveringMessage}
+              setIsHoveringMessage={setIsHoveringMessage}
+              handleMessageMouseEnter={handleMessageMouseEnter}
+              handleMessageMouseLeave={handleMessageMouseLeave}
+              handleEmojiClick={handleEmojiClick}
+              reactionMessageId={reactionMessageId}
+              showEmojiPicker={showEmojiPicker}
+              {...messagePickerHandler}
+            />
+            
+            <MessageTimestamp 
+              timestamp={message.timestamp}
+              isCurrentUser={message.isCurrentUser}
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

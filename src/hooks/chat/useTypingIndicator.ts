@@ -1,50 +1,70 @@
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/integrations/supabase/client";
 
-interface UseTypingIndicatorOptions {
-  timeoutDuration?: number;
-}
-
-export const useTypingIndicator = (options: UseTypingIndicatorOptions = {}) => {
-  const { timeoutDuration = 3000 } = options;
-  const [typingStatus, setTypingStatus] = useState("");
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
-
-  // Clean up on unmount
+export const useTypingIndicator = (channelId?: string) => {
+  const [typingStatus, setTypingStatus] = useState<string>("");
+  const [typingTimeout, setTypingTimeout] = useState<number | null>(null);
+  const { user } = useUser();
+  
   useEffect(() => {
+    let typingChannel: any;
+    
+    if (channelId && user) {
+      // Subscribe to typing indicators
+      typingChannel = supabase.channel(`typing:${channelId}`)
+        .on('broadcast', { event: 'typing' }, (payload) => {
+          if (payload.payload.userId !== user.id) {
+            setTypingStatus(`${payload.payload.userName} is typing...`);
+            
+            // Clear typing status after 3 seconds of no typing updates
+            setTimeout(() => {
+              setTypingStatus("");
+            }, 3000);
+          }
+        })
+        .subscribe();
+    }
+    
     return () => {
-      if (typingTimeout) {
-        clearTimeout(typingTimeout);
+      if (typingChannel) {
+        supabase.removeChannel(typingChannel);
       }
     };
-  }, [typingTimeout]);
-
-  // Handle typing event
-  const handleTyping = useCallback(() => {
+  }, [channelId, user]);
+  
+  const handleTyping = () => {
+    if (!channelId || !user) return;
+    
+    // Clear existing timeout
     if (typingTimeout) {
-      clearTimeout(typingTimeout);
+      window.clearTimeout(typingTimeout);
     }
     
-    setTypingStatus("typing...");
+    // Send typing indicator
+    const channel = supabase.channel(`typing:${channelId}`);
+    channel.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: user.id, userName: user.name || 'Anonymous' }
+    });
     
-    const timeout = setTimeout(() => {
-      setTypingStatus("");
-    }, timeoutDuration);
+    // Set timeout to clear typing status
+    const timeout = window.setTimeout(() => {
+      setTypingTimeout(null);
+    }, 2000);
     
-    setTypingTimeout(timeout);
-  }, [timeoutDuration, typingTimeout]);
-
-  // Clear typing indicator
-  const clearTyping = useCallback(() => {
+    setTypingTimeout(timeout as unknown as number);
+  };
+  
+  const clearTyping = () => {
     if (typingTimeout) {
-      clearTimeout(typingTimeout);
+      window.clearTimeout(typingTimeout);
+      setTypingTimeout(null);
     }
     setTypingStatus("");
-  }, [typingTimeout]);
-
-  return {
-    typingStatus,
-    handleTyping,
-    clearTyping
   };
+  
+  return { typingStatus, handleTyping, clearTyping };
 };

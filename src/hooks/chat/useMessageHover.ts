@@ -1,94 +1,68 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export const useMessageHover = () => {
-  const [isHoveringMessage, setIsHoveringMessage] = useState(false);
-  const [isHoveringPicker, setIsHoveringPicker] = useState(false);
-  const [hoverTimer, setHoverTimer] = useState<NodeJS.Timeout | null>(null);
-  const [leaveTimer, setLeaveTimer] = useState<NodeJS.Timeout | null>(null);
-  
-  // Clean up timers when component unmounts
-  useEffect(() => {
-    return () => {
-      if (hoverTimer) clearTimeout(hoverTimer);
-      if (leaveTimer) clearTimeout(leaveTimer);
-    };
-  }, [hoverTimer, leaveTimer]);
+  const [isHoveringMessage, setIsHoveringMessage] = useState<boolean>(false);
+  const [hoverTimer, setHoverTimer] = useState<number | null>(null);
   
   const handleMessageMouseEnter = (
     messageId: string,
-    isCurrentUser: boolean,
+    isCurrentUserMessage: boolean,
     setReactionMessageId: (id: string | null) => void,
     setShowEmojiPicker: (show: boolean) => void
   ) => {
-    // Don't show reaction picker for own messages
-    if (isCurrentUser) {
-      return;
-    }
+    if (isCurrentUserMessage) return;
     
     setIsHoveringMessage(true);
     
-    // Clear any existing leave timer
-    if (leaveTimer) {
-      clearTimeout(leaveTimer);
-      setLeaveTimer(null);
+    // Clear any existing timer
+    if (hoverTimer) {
+      window.clearTimeout(hoverTimer);
+      setHoverTimer(null);
     }
     
-    // Set a short delay before showing picker to prevent flickering
-    const timer = setTimeout(() => {
+    // Set reaction message ID and show emoji picker after a brief delay
+    const timer = window.setTimeout(() => {
       setReactionMessageId(messageId);
       setShowEmojiPicker(true);
-    }, 300);
+    }, 500); // 500ms delay before showing emoji picker
     
-    setHoverTimer(timer);
+    setHoverTimer(timer as unknown as number);
   };
   
   const handleMessageMouseLeave = (setShowEmojiPicker: (show: boolean) => void) => {
     setIsHoveringMessage(false);
     
-    // Clear any existing hover timer
+    // Clear any existing timer
     if (hoverTimer) {
-      clearTimeout(hoverTimer);
+      window.clearTimeout(hoverTimer);
       setHoverTimer(null);
     }
     
-    // Only hide picker if not hovering over the picker itself after a short delay
-    const timer = setTimeout(() => {
-      if (!isHoveringPicker) {
-        setShowEmojiPicker(false);
-      }
-    }, 300);
+    // Hide emoji picker after a delay to allow mouseover on it
+    const timer = window.setTimeout(() => {
+      setShowEmojiPicker(false);
+    }, 300); // 300ms delay before hiding emoji picker
     
-    setLeaveTimer(timer);
+    setHoverTimer(timer as unknown as number);
   };
   
   const handlePickerMouseEnter = () => {
-    setIsHoveringPicker(true);
-    
-    // Clear any existing leave timer
-    if (leaveTimer) {
-      clearTimeout(leaveTimer);
-      setLeaveTimer(null);
+    // Clear any existing timer
+    if (hoverTimer) {
+      window.clearTimeout(hoverTimer);
+      setHoverTimer(null);
     }
   };
   
   const handlePickerMouseLeave = (setShowEmojiPicker: (show: boolean) => void) => {
-    setIsHoveringPicker(false);
-    
-    // Only hide if not hovering over the message after a short delay
-    const timer = setTimeout(() => {
-      if (!isHoveringMessage) {
-        setShowEmojiPicker(false);
-      }
-    }, 300);
-    
-    setLeaveTimer(timer);
+    // Hide emoji picker immediately when mouse leaves it
+    setShowEmojiPicker(false);
   };
-
+  
   return {
     isHoveringMessage,
     setIsHoveringMessage,
-    isHoveringPicker,
     handleMessageMouseEnter,
     handleMessageMouseLeave,
     handlePickerMouseEnter,

@@ -11,25 +11,29 @@ interface UseMessageSenderProps {
   recipientId?: string;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  clearTyping?: () => void;
 }
 
 export function useMessageSender({ 
   chatType, 
   recipientId, 
   messages, 
-  setMessages 
+  setMessages,
+  clearTyping
 }: UseMessageSenderProps) {
   const [messageInput, setMessageInput] = useState<string>("");
+  const [sendingInProgress, setSendingInProgress] = useState<boolean>(false);
   const { user } = useUser();
 
   const sendMessage = async () => {
-    if (!user || !messageInput.trim()) return;
+    if (!user || !messageInput.trim() || sendingInProgress) return;
     
     try {
+      setSendingInProgress(true);
       const tempId = `temp-${Date.now()}`;
       const optimisticMessage = {
         id: tempId,
-        sender: user.name,
+        sender: user.name || user.email.split('@')[0],
         avatar: user.avatar || "/placeholder.svg",
         content: messageInput.trim(),
         timestamp: new Date().toISOString(),
@@ -38,13 +42,19 @@ export function useMessageSender({
       };
       
       setMessages(prev => [...prev, optimisticMessage]);
+      const currentMessage = messageInput.trim();
       setMessageInput("");
+      
+      // Clear typing indicator if provided
+      if (clearTyping) {
+        clearTyping();
+      }
       
       if (chatType === 'general') {
         const result = await chatService.sendChannelMessage({
           channel_id: GENERAL_CHAT_CHANNEL_ID,
           user_id: user.id,
-          content: messageInput.trim()
+          content: currentMessage
         });
         
         if (!result) {
@@ -55,7 +65,7 @@ export function useMessageSender({
         const result = await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
-          content: messageInput.trim(),
+          content: currentMessage,
           is_read: false
         });
         
@@ -68,8 +78,10 @@ export function useMessageSender({
       console.error("Failed to send message:", error);
       toast.error("Failed to send message");
       setMessages(prev => prev.filter(m => m.id !== `temp-${Date.now()}`));
+    } finally {
+      setSendingInProgress(false);
     }
   };
 
-  return { messageInput, setMessageInput, sendMessage };
+  return { messageInput, setMessageInput, sendMessage, sendingInProgress };
 }

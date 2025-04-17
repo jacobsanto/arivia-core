@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -9,6 +10,8 @@ import { useUser } from "@/contexts/UserContext";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
 import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
+import { useUserPresence } from "@/hooks/chat/useUserPresence";
+import { supabase } from "@/integrations/supabase/client";
 
 const TeamChat = () => {
   // State
@@ -23,7 +26,8 @@ const TeamChat = () => {
   // Hooks
   const isMobile = useIsMobile();
   const { user } = useUser();
-  const { typingStatus, handleTyping, clearTyping } = useTypingIndicator();
+  const { userStatuses, getUserStatus } = useUserPresence();
+  const { typingStatus, handleTyping, clearTyping } = useTypingIndicator(activeChatId);
   
   // Use our chat hook to manage messages
   const {
@@ -71,17 +75,30 @@ const TeamChat = () => {
           }
         }
         
-        // TODO: Replace this with actual user data from profiles table
-        // For now we'll use dummy data
-        const dummyUsers: DirectMessage[] = [
-          { id: "user1", name: "Maria Kowalska", avatar: "/placeholder.svg", status: "online", unreadCount: 3 },
-          { id: "user2", name: "John Doe", avatar: "/placeholder.svg", status: "offline", unreadCount: 0 },
-          { id: "user3", name: "Alex Smith", avatar: "/placeholder.svg", status: "online", unreadCount: 0 },
-          { id: "user4", name: "Sara Johnson", avatar: "/placeholder.svg", status: "offline", unreadCount: 1 }
-        ];
+        // Load real user data from profiles
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, name, avatar')
+          .neq('id', user.id); // Don't include current user
         
-        setDirectMessages(dummyUsers);
+        if (profilesError) {
+          throw profilesError;
+        }
         
+        if (profiles) {
+          // Get unread counts for direct messages
+          const unreadCounts = await chatService.getUnreadMessageCounts(user.id);
+          
+          const userProfiles: DirectMessage[] = profiles.map(profile => ({
+            id: profile.id,
+            name: profile.name || 'Unknown User',
+            avatar: profile.avatar || '/placeholder.svg',
+            status: getUserStatus(profile.id),
+            unreadCount: unreadCounts[profile.id] || 0
+          }));
+          
+          setDirectMessages(userProfiles);
+        }
       } catch (error) {
         toast.error("Failed to load chat data");
         console.error(error);
@@ -89,7 +106,14 @@ const TeamChat = () => {
     }
     
     loadChannelsAndUsers();
-  }, [user]);
+    
+    // Set up an interval to refresh user status every minute
+    const intervalId = setInterval(() => {
+      loadChannelsAndUsers();
+    }, 60000);
+    
+    return () => clearInterval(intervalId);
+  }, [user, getUserStatus]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
