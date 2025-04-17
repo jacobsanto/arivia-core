@@ -2,23 +2,16 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bed, Building, Calendar, ClipboardCheck } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 interface OverviewMetricsProps {
   propertyFilter?: string;
 }
 
 export const OverviewMetrics: React.FC<OverviewMetricsProps> = ({ propertyFilter = "all" }) => {
-  // Placeholder data - in real app would come from your API
-  const metricsData = {
-    properties: {
-      total: 5,
-      occupied: 3,
-      available: 2
-    },
-    occupancyRate: 85,
-    totalTasks: 48,
-    taskCompletion: 92
-  };
+  // Empty state - no more sample data
+  const isEmpty = true;
   
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -28,10 +21,21 @@ export const OverviewMetrics: React.FC<OverviewMetricsProps> = ({ propertyFilter
           <Building className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{metricsData.properties.total}</div>
-          <p className="text-xs text-muted-foreground">
-            {metricsData.properties.occupied} occupied, {metricsData.properties.available} available
-          </p>
+          {isEmpty ? (
+            <div>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">
+                No property data available
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground">
+                0 occupied, 0 available
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -41,10 +45,21 @@ export const OverviewMetrics: React.FC<OverviewMetricsProps> = ({ propertyFilter
           <Bed className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{metricsData.occupancyRate}%</div>
-          <p className="text-xs text-muted-foreground">
-            Average for current period
-          </p>
+          {isEmpty ? (
+            <div>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">
+                No occupancy data available
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-2xl font-bold">0%</div>
+              <p className="text-xs text-muted-foreground">
+                Average for current period
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -54,10 +69,21 @@ export const OverviewMetrics: React.FC<OverviewMetricsProps> = ({ propertyFilter
           <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{metricsData.totalTasks}</div>
-          <p className="text-xs text-muted-foreground">
-            {metricsData.taskCompletion}% completion rate
-          </p>
+          {isEmpty ? (
+            <div>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">
+                No task data available
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground">
+                0% completion rate
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
       
@@ -67,10 +93,21 @@ export const OverviewMetrics: React.FC<OverviewMetricsProps> = ({ propertyFilter
           <Calendar className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">12</div>
-          <p className="text-xs text-muted-foreground">
-            Upcoming tasks this week
-          </p>
+          {isEmpty ? (
+            <div>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">
+                No scheduled tasks available
+              </p>
+            </div>
+          ) : (
+            <div>
+              <div className="text-2xl font-bold">0</div>
+              <p className="text-xs text-muted-foreground">
+                Upcoming tasks this week
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
