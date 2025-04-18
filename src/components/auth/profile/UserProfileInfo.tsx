@@ -1,4 +1,3 @@
-
 import React from "react";
 import { User } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +38,7 @@ const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex justify-center sm:justify-start">
-          <AvatarUpload user={user} size="lg" editable={true} />
+          <AvatarUpload user={user} size="lg" />
         </div>
         <div className="space-y-1">
           <h2 className="text-xl font-bold">{user.name}</h2>

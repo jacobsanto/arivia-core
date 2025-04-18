@@ -12,9 +12,7 @@ const MaintenanceFormActions = ({ onCancel }: MaintenanceFormActionsProps) => {
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancel
       </Button>
-      <Button type="submit">
-        Create Task
-      </Button>
+      <Button type="submit">Create Task</Button>
     </div>
   );
 };

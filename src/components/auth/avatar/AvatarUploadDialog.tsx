@@ -1,47 +1,39 @@
 
 import React from "react";
 import { User } from "@/types/auth";
-import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { UserCircle2, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import AvatarComponent from "./AvatarComponent";
+import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Loader2, UserCircle2 } from "lucide-react";
+import { getInitials } from "./AvatarDisplay";
 
 interface AvatarUploadDialogProps {
   user: User;
   isUploading: boolean;
   avatarUrl: string;
   onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  uploadError?: string | null;
 }
 
 const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
   user,
   isUploading,
   avatarUrl,
-  onFileChange,
-  uploadError = null
+  onFileChange
 }) => {
   return (
-    <DialogContent className="sm:max-w-md">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Update Profile Picture</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col items-center space-y-4 py-4">
-        <div className="h-40 w-40">
-          <AvatarComponent 
-            user={{...user, avatar: avatarUrl}} 
-            size="lg" 
-            className="h-40 w-40"
+        <Avatar className="h-40 w-40">
+          <AvatarImage 
+            src={avatarUrl} 
+            alt={user.name || "User"} 
+            className="object-cover object-center"
           />
-        </div>
-        
-        {uploadError && (
-          <Alert variant="destructive" className="mt-2">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{uploadError}</AlertDescription>
-          </Alert>
-        )}
+          <AvatarFallback className="text-4xl">{getInitials(user.name || "User")}</AvatarFallback>
+        </Avatar>
         
         <div className="flex flex-col items-center gap-2">
           <p className="text-sm text-muted-foreground">
@@ -49,21 +41,15 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
           </p>
           
           <label className="relative">
-            <div className="w-full">
-              <Button disabled={isUploading} variant="outline" type="button" className="w-full">
-                {isUploading ? (
-                  <span className="flex items-center">
-                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-primary border-b-2 border-transparent"></span>
-                    <span>Uploading...</span>
-                  </span>
-                ) : (
-                  <span className="flex items-center">
-                    <UserCircle2 className="h-4 w-4 mr-2" />
-                    <span>Choose Image</span>
-                  </span>
-                )}
-              </Button>
-            </div>
+            <Button disabled={isUploading} variant="outline" type="button" className="flex gap-2">
+              {isUploading ? <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Uploading...
+                </> : <>
+                  <UserCircle2 className="h-4 w-4" />
+                  Choose Image
+                </>}
+            </Button>
             <input 
               type="file" 
               accept="image/*" 
@@ -74,11 +60,6 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
           </label>
         </div>
       </div>
-      <DialogFooter className="flex justify-between sm:justify-end">
-        <Button variant="ghost" type="button" disabled={isUploading}>
-          Cancel
-        </Button>
-      </DialogFooter>
     </DialogContent>
   );
 };

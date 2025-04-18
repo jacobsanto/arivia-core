@@ -14,10 +14,8 @@ const WeeklyReviewButton: React.FC<WeeklyReviewButtonProps> = ({ onClick }) => {
       className="flex items-center gap-2"
       onClick={onClick}
     >
-      <span className="flex items-center">
-        <ClipboardCheck className="h-4 w-4 mr-2" />
-        <span>Weekly Review</span>
-      </span>
+      <ClipboardCheck className="h-4 w-4" />
+      <span>Weekly Review</span>
     </Button>
   );
 };

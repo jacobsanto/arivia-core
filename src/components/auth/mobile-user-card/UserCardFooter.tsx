@@ -38,7 +38,7 @@ const UserCardFooter: React.FC<UserCardFooterProps> = ({
         className="flex-1"
         onClick={() => onEditPermissions(user)}
       >
-        <span>Permissions</span>
+        Permissions
       </Button>
       <Button 
         size="sm" 
@@ -46,7 +46,7 @@ const UserCardFooter: React.FC<UserCardFooterProps> = ({
         className="flex-1"
         onClick={handleEditRole}
       >
-        <span>Change Role</span>
+        Change Role
       </Button>
       {user.id !== currentUser?.id && (
         <Button
@@ -55,10 +55,8 @@ const UserCardFooter: React.FC<UserCardFooterProps> = ({
           onClick={handleDeleteClick}
           className="flex-1"
         >
-          <span className="flex items-center">
-            <Trash2 className="h-4 w-4 mr-1" />
-            <span>Delete</span>
-          </span>
+          <Trash2 className="h-4 w-4 mr-1" />
+          Delete
         </Button>
       )}
     </div>

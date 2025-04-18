@@ -57,11 +57,11 @@ const AdminUsers = () => {
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1 px-0 mx-0 py-0 my-0">
-                <span><ArrowLeft className="h-5 w-5" /></span>
+                <ArrowLeft className="h-5 w-5" />
               </Button>}
             <div>
               <h1 className="md:text-3xl font-bold tracking-tight flex items-center text-xl px-0 mx-0 text-left">
-                <Users className="mr-2 h-7 w-7" /> <span>User Management</span>
+                <Users className="mr-2 h-7 w-7" /> User Management
               </h1>
               <p className="text-sm text-muted-foreground tracking-tight py-0 px-0 mx-0">
                 Manage users, roles, and permissions

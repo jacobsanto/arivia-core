@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
 import { TableRow, TableCell } from "@/components/ui/table";
@@ -41,6 +42,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   };
   
   const handleSaveRole = async () => {
+    // Validate selection for Super Admin
     if (selectedRole === "superadmin" && selectedSecondaryRoles.length === 0) {
       toast.error("Super Admin requires at least one secondary role", {
         description: "Please select at least one additional role"
@@ -50,6 +52,8 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
 
     setIsSaving(true);
     try {
+      // Call the updateProfile function from UserContext
+      // This will handle both the database update and local state updates
       const success = await updateProfile(user.id, {
         role: selectedRole,
         secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
@@ -118,7 +122,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {Object.entries(ROLE_DETAILS)
-                    .filter(([role]) => role !== "superadmin")
+                    .filter(([role]) => role !== "superadmin") // Exclude superadmin from secondary roles
                     .map(([role, details]) => (
                       <div key={role} className="flex items-center space-x-2">
                         <Checkbox 
@@ -164,25 +168,23 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
         {isEditing ? (
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-              <span>Cancel</span>
+              Cancel
             </Button>
             <Button size="sm" onClick={handleSaveRole} disabled={isSaving}>
-              <span>{isSaving ? "Saving..." : "Save"}</span>
+              {isSaving ? "Saving..." : "Save"}
             </Button>
           </div>
         ) : (
           <div className="flex justify-end gap-2">
             <Button size="sm" variant="outline" onClick={() => onEditPermissions(user)}>
-              <span>Permissions</span>
+              Permissions
             </Button>
             <Button size="sm" variant="outline" onClick={handleEditClick}>
-              <span>Change Role</span>
+              Change Role
             </Button>
             {user.id !== currentUser?.id && (
               <Button size="sm" variant="destructive" onClick={handleDeleteClick}>
-                <span className="flex items-center">
-                  <Trash2 className="h-4 w-4" />
-                </span>
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
           </div>

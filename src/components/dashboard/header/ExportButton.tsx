@@ -22,14 +22,12 @@ const ExportButton: React.FC<ExportButtonProps> = ({
       disabled={isExporting}
       className="flex-1 flex items-center justify-center gap-2"
     >
-      <span className="flex items-center">
-        {isExporting ? (
-          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-        ) : (
-          <FileDown className="h-4 w-4 mr-2" />
-        )}
-        <span>Export</span>
-      </span>
+      {isExporting ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <FileDown className="h-4 w-4" />
+      )}
+      <span>Export</span>
     </Button>
   ) : (
     <TooltipProvider>
@@ -42,14 +40,12 @@ const ExportButton: React.FC<ExportButtonProps> = ({
             onClick={onClick}
             disabled={isExporting}
           >
-            <span className="flex items-center">
-              {isExporting ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <FileDown className="h-4 w-4 mr-2" />
-              )}
-              <span>Export Reports</span>
-            </span>
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4" />
+            )}
+            <span>Export Reports</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>

@@ -31,10 +31,6 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
     await onConfirm();
   };
   
-  if (!userToDelete) {
-    return null;
-  }
-  
   return (
     <Dialog open={!!userToDelete} onOpenChange={open => !open && !isDeleting && onCancel()}>
       <DialogContent>
@@ -45,22 +41,24 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="py-4">
-          <div className="flex items-center gap-4 mb-4">
-            <AvatarUpload user={userToDelete} editable={false} />
-            <div>
-              <h3 className="font-medium">{userToDelete.name}</h3>
-              <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
-              <Badge variant="outline" className="mt-1">
-                {ROLE_DETAILS[userToDelete.role].title}
-              </Badge>
+        {userToDelete && (
+          <div className="py-4">
+            <div className="flex items-center gap-4 mb-4">
+              <AvatarUpload user={userToDelete} editable={false} />
+              <div>
+                <h3 className="font-medium">{userToDelete.name}</h3>
+                <p className="text-sm text-muted-foreground">{userToDelete.email}</p>
+                <Badge variant="outline" className="mt-1">
+                  {ROLE_DETAILS[userToDelete.role].title}
+                </Badge>
+              </div>
             </div>
+            
+            <p className="text-sm text-destructive font-medium">
+              Are you sure you want to delete this user?
+            </p>
           </div>
-          
-          <p className="text-sm text-destructive font-medium">
-            Are you sure you want to delete this user?
-          </p>
-        </div>
+        )}
         
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={isDeleting}>
@@ -70,15 +68,10 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
             variant="destructive" 
             onClick={handleConfirm} 
             disabled={isDeleting}
+            className="flex items-center gap-2"
           >
-            {isDeleting ? (
-              <span className="flex items-center">
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                <span>Deleting...</span>
-              </span>
-            ) : (
-              <span>Delete User</span>
-            )}
+            {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+            {isDeleting ? "Deleting..." : "Delete User"}
           </Button>
         </DialogFooter>
       </DialogContent>

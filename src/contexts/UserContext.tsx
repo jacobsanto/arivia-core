@@ -17,7 +17,6 @@ import {
   signup
 } from "./auth/operations";
 import { useAuth } from "./AuthContext";
-import { toast } from "sonner";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -118,28 +117,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const handleRefreshProfile = async () => {
-    if (!navigator.onLine) {
-      toast.warning("You're offline", {
-        description: "Profile cannot be refreshed while offline"
-      });
-      return false;
-    }
-    
-    try {
-      const result = await refreshUserProfile();
-      if (result) {
-        toast.success("Profile refreshed", {
-          description: "Your profile data has been updated"
-        });
-      }
-      return result;
-    } catch (error) {
-      console.error("Error refreshing profile:", error);
-      toast.error("Profile refresh failed", {
-        description: "There was a problem updating your profile"
-      });
-      return false;
-    }
+    return await refreshUserProfile();
   };
 
   return (

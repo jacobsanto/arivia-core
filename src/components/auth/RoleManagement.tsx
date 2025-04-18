@@ -44,7 +44,7 @@ const RoleManagement: React.FC = () => {
         <div className="flex justify-between items-center">
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            <span>User & Permission Management</span>
+            User & Permission Management
           </CardTitle>
           
           <Button 
@@ -53,10 +53,8 @@ const RoleManagement: React.FC = () => {
             onClick={() => setIsDeleteAllDialogOpen(true)}
             className="flex items-center gap-1"
           >
-            <span className="flex items-center">
-              <Trash2 className="h-4 w-4 mr-1" />
-              <span>Delete All Users</span>
-            </span>
+            <Trash2 className="h-4 w-4" />
+            Delete All Users
           </Button>
         </div>
         <CardDescription>
@@ -68,11 +66,11 @@ const RoleManagement: React.FC = () => {
           <TabsList className="w-full overflow-x-auto flex-nowrap">
             <TabsTrigger value="roles" className="flex items-center gap-1">
               <Shield className="h-4 w-4" />
-              <span>User Roles</span>
+              User Roles
             </TabsTrigger>
             <TabsTrigger value="permissions" className="flex items-center gap-1">
               <Lock className="h-4 w-4" />
-              <span>Permissions</span>
+              Permissions
             </TabsTrigger>
           </TabsList>
           
@@ -104,7 +102,7 @@ const RoleManagement: React.FC = () => {
                     className="px-3 py-1 text-sm border rounded-md"
                     onClick={() => setActiveTab("roles")}
                   >
-                    <span>Back to Users</span>
+                    Back to Users
                   </button>
                 </div>
                 <PermissionManagement selectedUser={selectedUser} />
