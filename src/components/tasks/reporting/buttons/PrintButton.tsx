@@ -43,12 +43,14 @@ export const PrintButton: React.FC<PrintButtonProps> = ({
             onClick={handlePrint}
             disabled={isPrinting}
           >
-            {isPrinting ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Printer className="mr-2 h-4 w-4" />
-            )}
-            Print
+            <span className="flex items-center">
+              {isPrinting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="mr-2 h-4 w-4" />
+              )}
+              <span>Print</span>
+            </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>

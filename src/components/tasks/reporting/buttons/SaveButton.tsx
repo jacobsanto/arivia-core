@@ -41,12 +41,14 @@ export const SaveButton: React.FC<SaveButtonProps> = ({
             onClick={handleSaveReport}
             disabled={isSaving}
           >
-            {isSaving ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="mr-2 h-4 w-4" />
-            )}
-            Save
+            <span className="flex items-center">
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              <span>Save</span>
+            </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>

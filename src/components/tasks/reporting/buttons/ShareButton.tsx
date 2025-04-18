@@ -41,12 +41,14 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
             onClick={handleShareReport}
             disabled={isSharing}
           >
-            {isSharing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Share2 className="mr-2 h-4 w-4" />
-            )}
-            Share
+            <span className="flex items-center">
+              {isSharing ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Share2 className="mr-2 h-4 w-4" />
+              )}
+              <span>Share</span>
+            </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>

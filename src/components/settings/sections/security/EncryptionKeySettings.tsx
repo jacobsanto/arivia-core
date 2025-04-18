@@ -25,9 +25,11 @@ const EncryptionKeySettings: React.FC = () => {
         className="flex items-center gap-2"
         onClick={generateEncryptionKeys}
       >
-        <RefreshCw className="h-4 w-4" />
-        <LockKeyhole className="h-4 w-4" />
-        Rotate Encryption Keys
+        <span className="flex items-center">
+          <RefreshCw className="h-4 w-4 mr-1" />
+          <LockKeyhole className="h-4 w-4 mr-1" />
+          <span>Rotate Encryption Keys</span>
+        </span>
       </Button>
       <p className="text-sm text-muted-foreground mt-2">
         Warning: Rotating encryption keys will require re-encryption of sensitive data

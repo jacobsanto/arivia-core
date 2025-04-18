@@ -22,14 +22,16 @@ const OfflineDataActions: React.FC<OfflineDataActionsProps> = ({
         onClick={onSyncData}
         disabled={totalOfflineItems === 0 || syncingData}
       >
-        {syncingData ? "Syncing..." : "Sync Now"}
+        <span className="flex items-center">
+          {syncingData ? <span>Syncing...</span> : <span>Sync Now</span>}
+        </span>
       </Button>
       <Button 
         variant="outline" 
         onClick={onClearOfflineData}
         disabled={totalOfflineItems === 0}
       >
-        Clear Offline Data
+        <span>Clear Offline Data</span>
       </Button>
     </div>
   );
