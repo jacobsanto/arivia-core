@@ -56,7 +56,7 @@ const DeleteAllUsersDialog: React.FC<DeleteAllUsersDialogProps> = ({
         
         <DialogFooter>
           <Button variant="outline" onClick={onCancel} disabled={isDeleting}>
-            Cancel
+            <span>Cancel</span>
           </Button>
           <Button 
             variant="destructive" 
@@ -69,7 +69,7 @@ const DeleteAllUsersDialog: React.FC<DeleteAllUsersDialogProps> = ({
                 <span>Deleting All Users...</span>
               </span>
             ) : (
-              "Delete All Users"
+              <span>Delete All Users</span>
             )}
           </Button>
         </DialogFooter>
