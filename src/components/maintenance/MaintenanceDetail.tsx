@@ -48,9 +48,15 @@ const MaintenanceDetail = ({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid grid-cols-3 mb-4">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="instructions">Instructions</TabsTrigger>
-          <TabsTrigger value="media">Media</TabsTrigger>
+          <TabsTrigger value="details">
+            <span>Details</span>
+          </TabsTrigger>
+          <TabsTrigger value="instructions">
+            <span>Instructions</span>
+          </TabsTrigger>
+          <TabsTrigger value="media">
+            <span>Media</span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="details">
@@ -139,11 +145,11 @@ const MaintenanceDetail = ({
 
       <div className="flex justify-between mt-6">
         <Button variant="outline" onClick={onClose}>
-          Close
+          <span>Close</span>
         </Button>
         {canComplete && (
           <Button onClick={onComplete} disabled={!canComplete}>
-            Complete & Submit Report
+            <span>Complete & Submit Report</span>
           </Button>
         )}
       </div>

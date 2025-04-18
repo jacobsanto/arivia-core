@@ -74,18 +74,34 @@ const MaintenanceFilters = ({
         {isMobile ? (
           <ScrollArea orientation="horizontal" className="w-full pb-2">
             <TabsList className="inline-flex w-auto min-w-full">
-              <TabsTrigger value="all" className="whitespace-nowrap px-3">All</TabsTrigger>
-              <TabsTrigger value="pending" className="whitespace-nowrap px-3">Pending</TabsTrigger>
-              <TabsTrigger value="inProgress" className="whitespace-nowrap px-3">In Progress</TabsTrigger>
-              <TabsTrigger value="completed" className="whitespace-nowrap px-3">Completed</TabsTrigger>
+              <TabsTrigger value="all" className="whitespace-nowrap px-3">
+                <span>All</span>
+              </TabsTrigger>
+              <TabsTrigger value="pending" className="whitespace-nowrap px-3">
+                <span>Pending</span>
+              </TabsTrigger>
+              <TabsTrigger value="inProgress" className="whitespace-nowrap px-3">
+                <span>In Progress</span>
+              </TabsTrigger>
+              <TabsTrigger value="completed" className="whitespace-nowrap px-3">
+                <span>Completed</span>
+              </TabsTrigger>
             </TabsList>
           </ScrollArea>
         ) : (
           <TabsList className="w-full sm:w-auto">
-            <TabsTrigger value="all" className="flex-1 sm:flex-none">All</TabsTrigger>
-            <TabsTrigger value="pending" className="flex-1 sm:flex-none">Pending</TabsTrigger>
-            <TabsTrigger value="inProgress" className="flex-1 sm:flex-none">In Progress</TabsTrigger>
-            <TabsTrigger value="completed" className="flex-1 sm:flex-none">Completed</TabsTrigger>
+            <TabsTrigger value="all" className="flex-1 sm:flex-none">
+              <span>All</span>
+            </TabsTrigger>
+            <TabsTrigger value="pending" className="flex-1 sm:flex-none">
+              <span>Pending</span>
+            </TabsTrigger>
+            <TabsTrigger value="inProgress" className="flex-1 sm:flex-none">
+              <span>In Progress</span>
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1 sm:flex-none">
+              <span>Completed</span>
+            </TabsTrigger>
           </TabsList>
         )}
       </Tabs>

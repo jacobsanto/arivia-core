@@ -98,36 +98,52 @@ const SystemSettingsTabs: React.FC = () => {
               ref={tabsRef}
             >
               <TabsTrigger value="general" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Settings className="h-4 w-4" />
-                <span className="hidden sm:inline">General</span>
+                <span className="flex items-center gap-2">
+                  <Settings className="h-4 w-4" />
+                  <span className="hidden sm:inline">General</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="users" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Users className="h-4 w-4" />
-                <span className="hidden sm:inline">Users</span>
+                <span className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span className="hidden sm:inline">Users</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="email" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Mail className="h-4 w-4" />
-                <span className="hidden sm:inline">Email</span>
+                <span className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span className="hidden sm:inline">Email</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="maintenance" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Wrench className="h-4 w-4" />
-                <span className="hidden sm:inline">Maintenance</span>
+                <span className="flex items-center gap-2">
+                  <Wrench className="h-4 w-4" />
+                  <span className="hidden sm:inline">Maintenance</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="integrations" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Plug className="h-4 w-4" />
-                <span className="hidden sm:inline">Integrations</span>
+                <span className="flex items-center gap-2">
+                  <Plug className="h-4 w-4" />
+                  <span className="hidden sm:inline">Integrations</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="security" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Security</span>
+                <span className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span className="hidden sm:inline">Security</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="appearance" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <PaintBucket className="h-4 w-4" />
-                <span className="hidden sm:inline">Appearance</span>
+                <span className="flex items-center gap-2">
+                  <PaintBucket className="h-4 w-4" />
+                  <span className="hidden sm:inline">Appearance</span>
+                </span>
               </TabsTrigger>
               <TabsTrigger value="notifications" className="flex items-center justify-center gap-2 min-w-[100px] md:min-w-0">
-                <Bell className="h-4 w-4" />
-                <span className="hidden sm:inline">Notifications</span>
+                <span className="flex items-center gap-2">
+                  <Bell className="h-4 w-4" />
+                  <span className="hidden sm:inline">Notifications</span>
+                </span>
               </TabsTrigger>
             </TabsList>
           </ScrollArea>

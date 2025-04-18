@@ -23,11 +23,16 @@ const RefreshButton: React.FC<RefreshButtonProps> = ({
       className="flex-1 flex items-center justify-center gap-2"
     >
       {isRefreshing ? (
-        <Loader2 className="h-4 w-4 animate-spin" />
+        <span className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Refresh</span>
+        </span>
       ) : (
-        <RefreshCw className="h-4 w-4" />
+        <span className="flex items-center gap-2">
+          <RefreshCw className="h-4 w-4" />
+          <span>Refresh</span>
+        </span>
       )}
-      <span>Refresh</span>
     </Button>
   ) : (
     <TooltipProvider>
@@ -41,11 +46,16 @@ const RefreshButton: React.FC<RefreshButtonProps> = ({
             disabled={isRefreshing}
           >
             {isRefreshing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Refresh</span>
+              </span>
             ) : (
-              <RefreshCw className="h-4 w-4" />
+              <span className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                <span>Refresh</span>
+              </span>
             )}
-            <span>Refresh</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
