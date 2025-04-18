@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
 import SystemSettingsTabs from "@/components/settings/SystemSettingsTabs";
 import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const AdminSettings = () => {
   const { user } = useUser();
@@ -58,12 +59,12 @@ const AdminSettings = () => {
   };
   
   return (
-    <div {...gestureProps}>
+    <div {...gestureProps} className="max-w-full">
       <Helmet>
         <title>System Settings - Arivia Villa Sync</title>
       </Helmet>
       
-      <div className="space-y-6">
+      <div className="space-y-6 max-w-full">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2">
             {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1">
@@ -92,7 +93,9 @@ const AdminSettings = () => {
           </div>
         </div>
         
-        <SystemSettingsTabs />
+        <div className="max-w-full">
+          <SystemSettingsTabs />
+        </div>
       </div>
     </div>
   );

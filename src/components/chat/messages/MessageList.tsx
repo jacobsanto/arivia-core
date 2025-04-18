@@ -36,7 +36,7 @@ const MessageList: React.FC<MessageListProps> = ({
 }) => {
   if (isLoading) {
     return (
-      <ScrollArea className="flex-1 p-6">
+      <ScrollArea className="flex-1 p-6 h-full">
         <div className="space-y-6">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-start gap-2">
@@ -53,8 +53,8 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <ScrollArea className="flex-1 p-6">
-      <div className="space-y-6">
+    <ScrollArea className="flex-1 p-6 h-full" orientation="vertical">
+      <div className="space-y-6 min-h-[calc(100%-80px)]">
         {messages.length === 0 ? (
           <div className="flex flex-col justify-center items-center h-40 gap-2">
             {isOffline ? (
