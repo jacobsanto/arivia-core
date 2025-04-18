@@ -71,7 +71,7 @@ const UserDeleteDialog: React.FC<UserDeleteDialogProps> = ({
             onClick={handleConfirm} 
             disabled={isDeleting}
           >
-            {isDeleting ? (
+            {isDeliting ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 <span>Deleting...</span>
