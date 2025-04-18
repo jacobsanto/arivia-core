@@ -50,15 +50,15 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
           
           <label className="relative">
             <div className="w-full">
-              <Button disabled={isUploading} variant="outline" type="button" className="flex gap-2">
+              <Button disabled={isUploading} variant="outline" type="button" className="w-full">
                 {isUploading ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     <span>Uploading...</span>
                   </>
                 ) : (
                   <>
-                    <UserCircle2 className="h-4 w-4" />
+                    <UserCircle2 className="h-4 w-4 mr-2" />
                     <span>Choose Image</span>
                   </>
                 )}
