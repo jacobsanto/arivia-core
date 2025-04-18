@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
 import { TableRow, TableCell } from "@/components/ui/table";

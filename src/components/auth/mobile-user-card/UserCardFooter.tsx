@@ -55,8 +55,10 @@ const UserCardFooter: React.FC<UserCardFooterProps> = ({
           onClick={handleDeleteClick}
           className="flex-1"
         >
-          <Trash2 className="h-4 w-4 mr-1" />
-          Delete
+          <span className="flex items-center">
+            <Trash2 className="h-4 w-4 mr-1" />
+            <span>Delete</span>
+          </span>
         </Button>
       )}
     </div>
