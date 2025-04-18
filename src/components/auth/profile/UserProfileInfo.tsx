@@ -1,15 +1,19 @@
+
 import React from "react";
 import { User } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { Mail } from "lucide-react";
 import { ROLE_DETAILS } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
+import { useUser } from "@/contexts/UserContext";
 
 interface UserProfileInfoProps {
   user: User;
 }
 
 const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
+  const { refreshProfile } = useUser();
+  
   const getRoleBadges = () => {
     const badges = [];
     
@@ -34,11 +38,19 @@ const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
     return badges;
   };
 
+  const handleAvatarChange = async () => {
+    await refreshProfile();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         <div className="flex justify-center sm:justify-start">
-          <AvatarUpload user={user} size="lg" />
+          <AvatarUpload 
+            user={user} 
+            size="lg" 
+            onAvatarChange={handleAvatarChange}
+          />
         </div>
         <div className="space-y-1">
           <h2 className="text-xl font-bold">{user.name}</h2>
