@@ -14,8 +14,10 @@ const StockFormSubmitButton: React.FC<StockFormSubmitButtonProps> = ({
 }) => {
   return (
     <Button type="submit" className="w-full md:w-auto" disabled={isLoading}>
-      {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {label}
+      <span className="flex items-center">
+        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        <span>{label}</span>
+      </span>
     </Button>
   );
 };

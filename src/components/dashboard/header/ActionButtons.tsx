@@ -28,8 +28,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         onClick={onExportClick}
         disabled={isExporting || disabled}
       >
-        <Download className="h-4 w-4 mr-2" />
-        {isExporting ? 'Exporting...' : 'Export'}
+        <span className="flex items-center">
+          <Download className="h-4 w-4 mr-2" />
+          <span>{isExporting ? 'Exporting...' : 'Export'}</span>
+        </span>
       </Button>
       <Button 
         variant="outline" 
@@ -37,8 +39,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         onClick={onRefreshClick}
         disabled={isRefreshing || disabled}
       >
-        <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-        {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        <span className="flex items-center">
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+        </span>
       </Button>
       <Button 
         variant="outline" 
@@ -46,8 +50,10 @@ const ActionButtons: React.FC<ActionButtonsProps> = ({
         onClick={onWeeklyReviewClick}
         disabled={disabled}
       >
-        <BarChart4 className="h-4 w-4 mr-2" />
-        Weekly Review
+        <span className="flex items-center">
+          <BarChart4 className="h-4 w-4 mr-2" />
+          <span>Weekly Review</span>
+        </span>
       </Button>
     </div>
   );
