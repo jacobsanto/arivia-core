@@ -10,7 +10,6 @@ interface AvatarComponentProps {
   size?: "sm" | "md" | "lg";
   className?: string;
   editable?: boolean;
-  onAvatarClick?: () => void;
 }
 
 const sizeClasses = {
@@ -23,8 +22,7 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
   user,
   size = "md",
   className = "",
-  editable = false,
-  onAvatarClick
+  editable = false
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -65,14 +63,6 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
     setAvatarUrl(null);
   };
   
-  const handleClick = (e: React.MouseEvent) => {
-    if (editable && onAvatarClick) {
-      e.preventDefault();
-      e.stopPropagation();
-      onAvatarClick();
-    }
-  };
-  
   if (!user) {
     return (
       <Avatar className={`${sizeClasses[size]} ${className}`}>
@@ -91,7 +81,6 @@ const AvatarComponent: React.FC<AvatarComponentProps> = ({
       
       <Avatar 
         className={`${sizeClasses[size]} ${className} ${editable ? 'cursor-pointer' : ''}`}
-        onClick={handleClick}
       >
         {avatarUrl ? (
           <AvatarImage 

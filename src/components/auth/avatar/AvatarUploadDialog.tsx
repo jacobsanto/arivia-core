@@ -76,7 +76,7 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
       </div>
       <DialogFooter className="flex justify-between sm:justify-end">
         <Button variant="ghost" type="button" disabled={isUploading}>
-          <span>Cancel</span>
+          Cancel
         </Button>
       </DialogFooter>
     </DialogContent>
