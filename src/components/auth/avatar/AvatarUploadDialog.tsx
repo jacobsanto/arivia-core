@@ -3,7 +3,7 @@ import React from "react";
 import { User } from "@/types/auth";
 import { DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, UserCircle2, AlertCircle } from "lucide-react";
+import { UserCircle2, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import AvatarComponent from "./AvatarComponent";
 
@@ -53,7 +53,7 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
               <Button disabled={isUploading} variant="outline" type="button" className="w-full">
                 {isUploading ? (
                   <span className="flex items-center">
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-t-2 border-primary border-b-2 border-transparent"></span>
                     <span>Uploading...</span>
                   </span>
                 ) : (
@@ -76,7 +76,7 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
       </div>
       <DialogFooter className="flex justify-between sm:justify-end">
         <Button variant="ghost" type="button" disabled={isUploading}>
-          <span>Cancel</span>
+          Cancel
         </Button>
       </DialogFooter>
     </DialogContent>

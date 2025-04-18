@@ -10,10 +10,10 @@ const MaintenanceFormActions = ({ onCancel }: MaintenanceFormActionsProps) => {
   return (
     <div className="flex justify-end space-x-2 pt-4">
       <Button type="button" variant="outline" onClick={onCancel}>
-        <span>Cancel</span>
+        Cancel
       </Button>
       <Button type="submit">
-        <span>Create Task</span>
+        Create Task
       </Button>
     </div>
   );

@@ -31,9 +31,7 @@ const ToolbarButton: React.FC<ToolbarButtonProps> = ({
       title={label}
       disabled={disabled}
     >
-      <span className="flex items-center justify-center">
-        {icon}
-      </span>
+      {icon}
     </Button>
   );
 };
