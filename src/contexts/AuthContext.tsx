@@ -26,8 +26,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       
+      setSession(data.session);
+      
       if (data.session) {
-        setSession(data.session);
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -35,7 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (profile) {
-          setUser({
+          const newUser = {
             id: data.session.user.id,
             email: data.session.user.email || '',
             name: profile.name || data.session.user.email?.split('@')[0] || 'User',
@@ -44,8 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             phone: profile.phone,
             secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
             customPermissions: profile.custom_permissions as Record<string, boolean> || {}
-          });
+          };
+          setUser(newUser);
         }
+      } else {
+        setUser(null);
       }
     } catch (err) {
       console.error("Error refreshing auth state:", err);
@@ -54,40 +58,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toastService.error("Authentication error", {
         description: "There was a problem refreshing your session"
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         console.log("Auth state change event:", event);
         setSession(newSession);
         
         if (newSession?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
-
-          if (profile) {
-            setUser({
-              id: newSession.user.id,
-              email: newSession.user.email || '',
-              name: profile.name || newSession.user.email?.split('@')[0] || 'User',
-              role: profile.role as UserRole || 'property_manager',
-              avatar: profile.avatar || "/placeholder.svg",
-              phone: profile.phone,
-              secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
-              customPermissions: profile.custom_permissions as Record<string, boolean> || {}
-            });
-          }
+          // Use setTimeout to prevent auth deadlock
+          setTimeout(() => {
+            supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', newSession.user.id)
+              .single()
+              .then(({ data: profile }) => {
+                if (profile) {
+                  const newUser = {
+                    id: newSession.user.id,
+                    email: newSession.user.email || '',
+                    name: profile.name || newSession.user.email?.split('@')[0] || 'User',
+                    role: profile.role as UserRole || 'property_manager',
+                    avatar: profile.avatar || "/placeholder.svg",
+                    phone: profile.phone,
+                    secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
+                    customPermissions: profile.custom_permissions as Record<string, boolean> || {}
+                  };
+                  setUser(newUser);
+                }
+              });
+          }, 0);
         } else {
           setUser(null);
         }
       }
     );
 
+    // Initialize auth state
     refreshAuthState();
 
     return () => {
