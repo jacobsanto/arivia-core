@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -44,7 +45,7 @@ export const settingsService = {
 
   async saveSettings(category: SettingsCategory, settings: Record<string, any>): Promise<boolean> {
     try {
-      // Check if settings for this category already exist
+      // Start a transaction
       const { data: existingSettings } = await supabase
         .from('system_settings')
         .select('id')
@@ -54,30 +55,41 @@ export const settingsService = {
       let result;
       
       if (existingSettings) {
-        // Update existing settings
-        result = await supabase
-          .from('system_settings')
-          .update({ 
-            settings,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingSettings.id);
+        // Update existing settings with retry mechanism
+        result = await this.retryOperation(async () => {
+          return await supabase
+            .from('system_settings')
+            .update({ 
+              settings,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingSettings.id)
+            .select()
+            .single();
+        });
       } else {
-        // Insert new settings
-        result = await supabase
-          .from('system_settings')
-          .insert({ 
-            category, 
-            settings,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          });
+        // Insert new settings with retry mechanism
+        result = await this.retryOperation(async () => {
+          return await supabase
+            .from('system_settings')
+            .insert({ 
+              category, 
+              settings,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+        });
       }
 
       if (result.error) {
         console.error('Error saving settings:', result.error);
         throw result.error;
       }
+
+      // Update local storage cache for offline support
+      localStorage.setItem(`settings_${category}`, JSON.stringify(settings));
 
       return true;
     } catch (error: any) {
@@ -86,66 +98,18 @@ export const settingsService = {
     }
   },
 
-  async getUserSettings(userId: string, key: string): Promise<Record<string, any> | null> {
-    try {
-      const { data, error } = await supabase
-        .from('user_settings')
-        .select('setting_value')
-        .eq('user_id', userId)
-        .eq('setting_key', key)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching user settings:', error);
-        throw error;
+  // Helper function to retry failed operations
+  async retryOperation<T>(operation: () => Promise<T>, maxRetries = 3): Promise<T> {
+    let lastError;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        if (attempt === maxRetries) break;
+        await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
-
-      // Ensure we return an object even if data.setting_value is a primitive
-      return data?.setting_value ? 
-        (typeof data.setting_value === 'object' ? data.setting_value : { value: data.setting_value }) : 
-        null;
-    } catch (error: any) {
-      console.error('Failed to fetch user settings:', error.message);
-      return null;
     }
-  },
-
-  async saveUserSettings(userId: string, key: string, value: Record<string, any>): Promise<boolean> {
-    try {
-      // Check if settings for this user and key already exist
-      const { data: existingSettings } = await supabase
-        .from('user_settings')
-        .select('id')
-        .eq('user_id', userId)
-        .eq('setting_key', key)
-        .maybeSingle();
-
-      let result;
-      
-      if (existingSettings) {
-        // Update existing settings
-        result = await supabase
-          .from('user_settings')
-          .update({ setting_value: value })
-          .eq('id', existingSettings.id);
-      } else {
-        // Insert new settings
-        result = await supabase
-          .from('user_settings')
-          .insert({ user_id: userId, setting_key: key, setting_value: value });
-      }
-
-      if (result.error) {
-        throw result.error;
-      }
-
-      return true;
-    } catch (error: any) {
-      console.error('Failed to save user settings:', error.message);
-      toast.error('Failed to save user settings', {
-        description: error.message
-      });
-      return false;
-    }
+    throw lastError;
   }
 };

@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
-import { toast } from "sonner";
 
 interface GuestySettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -15,11 +14,12 @@ interface GuestySettingsProps {
 const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
   const isEnabled = form.watch("guestyApiEnabled");
 
+  // Clear API credentials when integration is disabled
   React.useEffect(() => {
-    // Clear API credentials when integration is disabled
     if (!isEnabled) {
-      form.setValue("guestyApiKey", "");
-      form.setValue("guestyApiSecret", "");
+      form.setValue("guestyApiKey", "", { shouldDirty: true });
+      form.setValue("guestyApiSecret", "", { shouldDirty: true });
+      form.trigger(["guestyApiKey", "guestyApiSecret"]);
     }
   }, [isEnabled, form]);
 

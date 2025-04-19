@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { useSettingsForm } from "@/hooks/useSettingsForm";
@@ -26,6 +27,8 @@ const IntegrationSettings: React.FC = () => {
     onAfterSave: (data) => {
       if (!data.guestyApiEnabled) {
         toast.success('Guesty integration disabled successfully');
+      } else {
+        toast.success('Guesty integration settings saved successfully');
       }
     },
   });
