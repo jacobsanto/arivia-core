@@ -176,6 +176,106 @@ export type Database = {
         }
         Relationships: []
       }
+      damage_report_media: {
+        Row: {
+          created_at: string
+          id: string
+          media_type: string
+          report_id: string
+          uploaded_by: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_type: string
+          report_id: string
+          uploaded_by: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_type?: string
+          report_id?: string
+          uploaded_by?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "damage_report_media_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "damage_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      damage_reports: {
+        Row: {
+          assigned_to: string | null
+          compensation_amount: number | null
+          compensation_notes: string | null
+          conclusion: string | null
+          created_at: string
+          damage_date: string
+          description: string
+          estimated_cost: number | null
+          final_cost: number | null
+          id: string
+          property_id: string
+          reported_by: string
+          resolution_date: string | null
+          status: Database["public"]["Enums"]["damage_report_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          compensation_amount?: number | null
+          compensation_notes?: string | null
+          conclusion?: string | null
+          created_at?: string
+          damage_date: string
+          description: string
+          estimated_cost?: number | null
+          final_cost?: number | null
+          id?: string
+          property_id: string
+          reported_by: string
+          resolution_date?: string | null
+          status?: Database["public"]["Enums"]["damage_report_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          compensation_amount?: number | null
+          compensation_notes?: string | null
+          conclusion?: string | null
+          created_at?: string
+          damage_date?: string
+          description?: string
+          estimated_cost?: number | null
+          final_cost?: number | null
+          id?: string
+          property_id?: string
+          reported_by?: string
+          resolution_date?: string | null
+          status?: Database["public"]["Enums"]["damage_report_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "damage_reports_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       direct_messages: {
         Row: {
           content: string
@@ -869,7 +969,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      damage_report_status:
+        | "pending"
+        | "investigating"
+        | "resolved"
+        | "compensation_required"
+        | "compensation_paid"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -984,6 +1090,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      damage_report_status: [
+        "pending",
+        "investigating",
+        "resolved",
+        "compensation_required",
+        "compensation_paid",
+        "closed",
+      ],
+    },
   },
 } as const
