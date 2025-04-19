@@ -35,7 +35,8 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
       <AvatarImage 
         src={avatarUrl} 
         alt={user.name || "User"} 
-        className="object-contain p-1" 
+        className="object-cover" 
+        style={{ objectPosition: "center" }}
         loading="eager"
       />
       <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
