@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import ChatMessage from '../ChatMessage';
 import { Message } from '@/hooks/useChatTypes';
@@ -23,6 +24,7 @@ const MemoizedMessage = memo(({
   setShowEmojiPicker,
 }: MemoizedMessageProps) => (
   <ChatMessage
+    key={message.id}
     message={message}
     emojis={emojis}
     onAddReaction={onAddReaction}
@@ -32,6 +34,9 @@ const MemoizedMessage = memo(({
     setShowEmojiPicker={setShowEmojiPicker}
   />
 ), (prevProps, nextProps) => {
+  // Check if any of the required props are undefined
+  if (!prevProps.message || !nextProps.message) return false;
+  
   // Only re-render under these specific conditions:
   // 1. If the message ID changes
   if (prevProps.message.id !== nextProps.message.id) return false;

@@ -17,7 +17,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({ typingStatus, activeC
         <Circle className="h-2 w-2 animate-pulse delay-100" />
         <Circle className="h-2 w-2 animate-pulse delay-200" />
       </div>
-      <span className="ml-2">{activeChat} is {typingStatus}</span>
+      <span className="ml-2">{typingStatus}</span>
     </div>
   );
 };
