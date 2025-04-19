@@ -1,18 +1,13 @@
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { Message } from "../useChatTypes";
+import { Message } from "@/hooks/useChatTypes";
 import { chatService } from "@/services/chat/chat.service";
 import { toast } from "sonner";
-import { offlineManager } from "@/utils/offlineManager";
+import { useAttachments } from "./useAttachments";
+import { useEmojiPicker } from "./useEmojiPicker";
+import { useOfflineMessages } from "./useOfflineMessages";
 import { v4 as uuidv4 } from "uuid";
-
-export interface Attachment {
-  id: string;
-  file: File;
-  type: string;
-  preview: string;
-}
 
 interface UseMessageSenderProps {
   chatType: 'general' | 'direct';
@@ -33,70 +28,30 @@ export function useMessageSender({
 }: UseMessageSenderProps) {
   const [messageInput, setMessageInput] = useState("");
   const [sendError, setSendError] = useState<Error | null>(null);
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
   const { user } = useUser();
+  
+  const {
+    attachments,
+    fileInputRef,
+    imageInputRef,
+    handleFileClick,
+    handleImageClick,
+    handleFileSelect,
+    handleImageSelect,
+    removeAttachment,
+    clearAttachments
+  } = useAttachments();
 
-  const handleFileClick = () => {
-    fileInputRef.current?.click();
-  };
+  const {
+    showEmojiPicker,
+    toggleEmojiPicker,
+    handleEmojiSelect: baseHandleEmojiSelect
+  } = useEmojiPicker();
 
-  const handleImageClick = () => {
-    imageInputRef.current?.click();
-  };
-
-  const toggleEmojiPicker = () => {
-    setShowEmojiPicker(!showEmojiPicker);
-  };
+  const { handleOfflineMessage } = useOfflineMessages();
 
   const handleEmojiSelect = (emoji: string) => {
-    setMessageInput(prev => prev + emoji);
-    setShowEmojiPicker(false);
-  };
-
-  const handleFileSelect = (files: FileList) => {
-    const newAttachments = Array.from(files).map(file => ({
-      id: uuidv4(),
-      file,
-      type: file.type,
-      preview: URL.createObjectURL(file)
-    }));
-    
-    setAttachments(prev => [...prev, ...newAttachments]);
-  };
-
-  const handleImageSelect = (files: FileList) => {
-    const newAttachments = Array.from(files).map(file => ({
-      id: uuidv4(),
-      file,
-      type: file.type,
-      preview: URL.createObjectURL(file)
-    }));
-    
-    setAttachments(prev => [...prev, ...newAttachments]);
-  };
-
-  const removeAttachment = (id: string) => {
-    setAttachments(prev => {
-      // Revoke object URL to prevent memory leaks
-      const attachment = prev.find(a => a.id === id);
-      if (attachment) {
-        URL.revokeObjectURL(attachment.preview);
-      }
-      
-      return prev.filter(a => a.id !== id);
-    });
-  };
-
-  const clearAttachments = () => {
-    // Revoke all object URLs to prevent memory leaks
-    attachments.forEach(attachment => {
-      URL.revokeObjectURL(attachment.preview);
-    });
-    
-    setAttachments([]);
+    baseHandleEmojiSelect(emoji, setMessageInput);
   };
 
   const sendMessage = async () => {
@@ -104,10 +59,8 @@ export function useMessageSender({
       return;
     }
 
-    // Reset error state
     setSendError(null);
 
-    // Create a temporary message to show immediately
     const tempId = `temp-${Date.now()}`;
     const tempMessage: Message = {
       id: tempId,
@@ -125,39 +78,19 @@ export function useMessageSender({
       }))
     };
 
-    // Add the message to the list
     setMessages(prev => [...prev, tempMessage]);
-    
-    // Clear the input and attachments
     setMessageInput("");
     clearAttachments();
     clearTyping();
     setShowEmojiPicker(false);
 
-    // If offline, store for later sync
     if (isOffline) {
-      offlineManager.storeOfflineData('message', 'create', {
-        chatType,
-        recipientId,
-        content: tempMessage.content,
-        sender_id: user.id,
-        attachments: attachments.map(a => ({
-          id: a.id,
-          type: a.type,
-          name: a.file.name,
-          // Store the file itself in indexedDB for later upload
-          file: a.file
-        }))
-      });
-      toast.info("Message saved for later sending", {
-        description: "Will be sent when you reconnect"
-      });
+      handleOfflineMessage(tempMessage, chatType, recipientId || '', user.id, attachments);
       return;
     }
 
     try {
       if (chatType === 'general' && recipientId) {
-        // Send to channel
         const sentMessage = await chatService.sendChannelMessage({
           channel_id: recipientId,
           user_id: user.id,
@@ -171,7 +104,6 @@ export function useMessageSender({
           }))
         });
         
-        // Replace the temp message with the real one if we got a response
         if (sentMessage) {
           setMessages(prev => 
             prev.map(msg => 
@@ -185,7 +117,6 @@ export function useMessageSender({
           );
         }
       } else if (chatType === 'direct' && recipientId) {
-        // Send direct message
         const directMessage = await chatService.sendDirectMessage({
           sender_id: user.id,
           recipient_id: recipientId,
@@ -199,7 +130,6 @@ export function useMessageSender({
           }))
         });
         
-        // Replace the temp message if we got a response
         if (directMessage) {
           setMessages(prev => 
             prev.map(msg => 
@@ -217,7 +147,6 @@ export function useMessageSender({
       console.error("Error sending message:", error);
       setSendError(error instanceof Error ? error : new Error("Failed to send message"));
       
-      // Mark message as failed
       setMessages(prev => 
         prev.map(msg => 
           msg.id === tempId ? {
