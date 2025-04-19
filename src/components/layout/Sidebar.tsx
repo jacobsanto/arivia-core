@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare, Lock } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -47,21 +47,20 @@ const Sidebar = () => {
           <>
             <SidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />
             <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
-            {(user.role === "administrator" || user.role === "property_manager") && (
-              <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
-            )}
           </>
         )}
         
-        {(user.role === "maintenance_staff" || canAccess("manageProperties")) && <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />}
+        {(user.role === "administrator" || user.role === "property_manager") && (
+          <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
+        )}
         
-        {(user.role === "inventory_manager" || canAccess("viewInventory")) && <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />}
+        {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
+          <SidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" />
+        )}
         
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         
         {canAccess("viewReports") && <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />}
-        
-        {canAccess("viewReports") && <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />}
         
         {(isSuperAdmin || isAdmin) && (
           <div className="pt-4 border-t border-sidebar-border mt-4">

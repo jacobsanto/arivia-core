@@ -4,7 +4,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
@@ -14,13 +14,8 @@ interface MobileSidebarProps {
 }
 
 const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
-  const {
-    user,
-    logout
-  } = useUser();
-  const {
-    canAccess
-  } = usePermissions();
+  const { user, logout } = useUser();
+  const { canAccess } = usePermissions();
 
   if (!user) return null;
 
@@ -58,30 +53,40 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
         
         <div className="py-2">
           <nav className="space-y-1 px-2">
-            <MobileSidebarLink to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={handleLinkClick} />
+            <MobileSidebarLink to="/dashboard" icon={<LayoutDashboard size={20} />} label="Dashboard" onClick={handleLinkClick} />
             
             {canAccess("viewProperties") && <MobileSidebarLink to="/properties" icon={<Home size={20} />} label="Properties" onClick={handleLinkClick} />}
             
-            {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && <MobileSidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" onClick={handleLinkClick} />}
+            {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
+              <>
+                <MobileSidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" onClick={handleLinkClick} />
+                <MobileSidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" onClick={handleLinkClick} />
+              </>
+            )}
             
-            {(user.role === "maintenance_staff" || canAccess("manageProperties")) && <MobileSidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" onClick={handleLinkClick} />}
+            {(user.role === "administrator" || user.role === "property_manager") && (
+              <MobileSidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" onClick={handleLinkClick} />
+            )}
             
-            {(user.role === "inventory_manager" || canAccess("viewInventory")) && <MobileSidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" onClick={handleLinkClick} />}
+            {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
+              <MobileSidebarLink to="/inventory" icon={<Package size={20} />} label="Inventory" onClick={handleLinkClick} />
+            )}
             
             <MobileSidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" onClick={handleLinkClick} />
             
             {canAccess("viewReports") && <MobileSidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" onClick={handleLinkClick} />}
             
-            {canAccess("viewReports") && <MobileSidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" onClick={handleLinkClick} />}
-            
-            {isSuperAdmin && <div className="pt-2 mt-2 border-t border-sidebar-border">
+            {isSuperAdmin && (
+              <div className="pt-2 mt-2 border-t border-sidebar-border">
                 <h3 className="px-3 text-xs uppercase font-semibold text-sidebar-muted tracking-wider mb-2">
                   Admin Controls
                 </h3>
                 <MobileSidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" onClick={handleLinkClick} />
                 <MobileSidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" onClick={handleLinkClick} />
+                <MobileSidebarLink to="/admin/checklists" icon={<CheckSquare size={20} />} label="Checklists" onClick={handleLinkClick} />
                 <MobileSidebarLink to="/admin/settings" icon={<Settings size={20} />} label="System Settings" onClick={handleLinkClick} />
-              </div>}
+              </div>
+            )}
             
             <div className="pt-2 mt-2 border-t border-sidebar-border">
               <MobileSidebarLink to="/profile" icon={<User size={20} />} label="Profile" onClick={handleLinkClick} />

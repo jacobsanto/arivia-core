@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Home, Menu, BedDouble, Package, Wrench } from "lucide-react";
+import { Home, Menu, BedDouble, Package, Wrench, FileText } from "lucide-react";
 import NavItem from "./NavItem";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -15,16 +15,19 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
   
   if (!user) return null;
   
+  const isAdminOrManager = user.role === "administrator" || user.role === "property_manager";
+  
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex items-center justify-around z-50 lg:hidden">
       <NavItem to="/dashboard" icon={<Home size={20} />} label="Home" />
       
       {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
-        <NavItem to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />
-      )}
-      
-      {(user.role === "maintenance_staff" || canAccess("manageProperties")) && (
-        <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
+        <>
+          <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
+          {isAdminOrManager && (
+            <NavItem to="/damage-reports" icon={<FileText size={20} />} label="Reports" />
+          )}
+        </>
       )}
       
       {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
