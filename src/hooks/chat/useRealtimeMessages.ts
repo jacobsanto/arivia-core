@@ -35,7 +35,7 @@ export function useRealtimeMessages({
         schema: 'public', 
         table,
         filter: `${column}=eq.${recipientId}`
-      }, (payload) => {
+      }, async (payload) => {
         // Don't show messages from ourselves (we already added them)
         const senderId = payload.new.sender_id;
           
@@ -53,33 +53,31 @@ export function useRealtimeMessages({
         };
         
         // Try to fetch user details
-        const fetchSenderDetails = async () => {
-          try {
-            const { data } = await supabase
-              .from('profiles')
-              .select('name, avatar')
-              .eq('id', senderId)
-              .single();
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('name, avatar')
+            .eq('id', senderId)
+            .single();
               
-            if (data) {
-              newMessage.sender = data.name || "Unknown User";
-              newMessage.avatar = data.avatar || "/placeholder.svg";
-            }
-            
-            setMessages(prev => [...prev, newMessage]);
-          } catch (error) {
-            console.warn("Could not fetch sender details", error);
-            setMessages(prev => [...prev, newMessage]);
+          if (data) {
+            newMessage.sender = data.name || "Unknown User";
+            newMessage.avatar = data.avatar || "/placeholder.svg";
           }
-        };
-        
-        fetchSenderDetails();
+            
+          setMessages(prev => [...prev, newMessage]);
+        } catch (error) {
+          console.warn("Could not fetch sender details", error);
+          setMessages(prev => [...prev, newMessage]);
+        }
       });
       
     // Subscribe to the channel
     channel.subscribe((status) => {
-      if (status !== 'SUBSCRIBED') {
-        console.warn(`Failed to subscribe to ${channelName}:`, status);
+      if (status === 'SUBSCRIBED') {
+        console.log(`Subscribed to ${channelName}`);
+      } else {
+        console.warn(`Subscription status for ${channelName}:`, status);
       }
     });
       

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Message } from "@/hooks/useChatTypes";
 import MessageContent from "./message/MessageContent";
 import MessageAvatar from "./message/MessageAvatar";
@@ -17,7 +17,7 @@ interface ChatMessageProps {
   setShowEmojiPicker: (show: boolean) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = ({
+const ChatMessage: React.FC<ChatMessageProps> = memo(({
   message,
   emojis,
   onAddReaction,
@@ -69,13 +69,14 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   return (
-    <AnimatePresence mode="popLayout">
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.2 }}
+        transition={{ duration: 0.15 }}
+        layout
       >
         <div
           className={`flex max-w-[80%] ${
@@ -110,6 +111,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       </motion.div>
     </AnimatePresence>
   );
-};
+});
+
+ChatMessage.displayName = "ChatMessage";
 
 export default ChatMessage;

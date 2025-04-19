@@ -1,11 +1,11 @@
 
-import React from "react";
+import React, { useRef, useLayoutEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
 import { Message } from "@/hooks/useChatTypes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { WifiOff, Wifi, AlertCircle } from "lucide-react";
+import { WifiOff, AlertCircle } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
@@ -34,6 +34,16 @@ const MessageList: React.FC<MessageListProps> = ({
   isLoading = false,
   isOffline = false,
 }) => {
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when new messages arrive
+  useLayoutEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollArea = scrollAreaRef.current;
+      scrollArea.scrollTop = scrollArea.scrollHeight;
+    }
+  }, [messages]);
+
   if (isLoading) {
     return (
       <ScrollArea className="flex-1 p-6 h-full">
@@ -53,7 +63,7 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <ScrollArea className="flex-1 p-6 h-full" orientation="vertical">
+    <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 h-full hardware-accelerated" orientation="vertical">
       <div className="space-y-6 min-h-[calc(100%-80px)]">
         {messages.length === 0 ? (
           <div className="flex flex-col justify-center items-center h-40 gap-2">
@@ -86,7 +96,9 @@ const MessageList: React.FC<MessageListProps> = ({
       </div>
       
       {/* Typing indicator - only show when online */}
-      {!isOffline && <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />}
+      {!isOffline && typingStatus && (
+        <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />
+      )}
       
       {/* Offline indicator at bottom of messages */}
       {isOffline && messages.length > 0 && (
@@ -99,4 +111,4 @@ const MessageList: React.FC<MessageListProps> = ({
   );
 };
 
-export default MessageList;
+export default React.memo(MessageList);
