@@ -1,73 +1,68 @@
 
+import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, Clock } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
+import { CheckCircle2, AlertTriangle, Circle } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-type SettingsStatus = "configured" | "not-configured" | "needs-attention";
+import { format } from "date-fns";
 
 interface SettingsStatusBadgeProps {
-  status: SettingsStatus;
+  status: "configured" | "not-configured" | "needs-attention";
   lastUpdated?: Date;
+  className?: string;
 }
 
-const SettingsStatusBadge: React.FC<SettingsStatusBadgeProps> = ({ 
-  status, 
-  lastUpdated 
+const SettingsStatusBadge: React.FC<SettingsStatusBadgeProps> = ({
+  status,
+  lastUpdated,
+  className
 }) => {
-  const getStatusDetails = () => {
-    switch (status) {
-      case "configured":
-        return {
-          label: "Configured",
-          variant: "outline" as const,
-          icon: <CheckCircle className="h-4 w-4 text-green-500 mr-1" />,
-          className: "border-green-200 text-green-700 bg-green-50"
-        };
-      case "not-configured":
-        return {
-          label: "Not Configured",
-          variant: "outline" as const,
-          icon: <AlertCircle className="h-4 w-4 text-amber-500 mr-1" />,
-          className: "border-amber-200 text-amber-700 bg-amber-50"
-        };
-      case "needs-attention":
-        return {
-          label: "Needs Attention",
-          variant: "outline" as const,
-          icon: <AlertCircle className="h-4 w-4 text-red-500 mr-1" />,
-          className: "border-red-200 text-red-700 bg-red-50"
-        };
-      default:
-        return {
-          label: "Unknown",
-          variant: "outline" as const,
-          icon: null,
-          className: ""
-        };
-    }
-  };
-
-  const { label, variant, icon, className } = getStatusDetails();
-
+  let content;
+  let tooltip;
+  
+  switch (status) {
+    case "configured":
+      content = (
+        <Badge className={cn("bg-green-500 hover:bg-green-600 px-2 gap-1", className)}>
+          <CheckCircle2 className="h-3.5 w-3.5" />
+          <span>Configured</span>
+        </Badge>
+      );
+      tooltip = lastUpdated 
+        ? `Last updated: ${format(lastUpdated, 'PPp')}` 
+        : "Settings are properly configured";
+      break;
+      
+    case "needs-attention":
+      content = (
+        <Badge variant="destructive" className={cn("px-2 gap-1", className)}>
+          <AlertTriangle className="h-3.5 w-3.5" />
+          <span>Needs Attention</span>
+        </Badge>
+      );
+      tooltip = "Settings require attention";
+      break;
+      
+    case "not-configured":
+    default:
+      content = (
+        <Badge variant="outline" className={cn("px-2 gap-1 border-dashed", className)}>
+          <Circle className="h-3.5 w-3.5" />
+          <span>Not Configured</span>
+        </Badge>
+      );
+      tooltip = "Settings have not been configured";
+      break;
+  }
+  
   return (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Badge variant={variant} className={className}>
-            {icon}
-            <span>{label}</span>
-            {lastUpdated && status === "configured" && (
-              <Clock className="ml-1 h-3 w-3 opacity-70" />
-            )}
-          </Badge>
+          {content}
         </TooltipTrigger>
         <TooltipContent>
-          {lastUpdated 
-            ? `Last updated ${formatDistanceToNow(lastUpdated, { addSuffix: true })}` 
-            : status === "not-configured" 
-              ? "These settings haven't been configured yet" 
-              : "Settings status"}
+          <p>{tooltip}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

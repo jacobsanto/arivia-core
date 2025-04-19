@@ -1,319 +1,298 @@
 
 import React from "react";
-import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
+import { useSettingsForm } from "@/hooks/useSettingsForm";
+import SettingsLayout from "@/components/settings/SettingsLayout";
+import SettingsSection from "@/components/settings/SettingsSection";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import SettingsCard from "../SettingsCard";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Button } from "@/components/ui/button";
+import { Palette, Monitor, MoonStar, SunMedium } from "lucide-react";
 
+// Define validation schema
 const appearanceSchema = z.object({
-  theme: z.string(),
-  logoUrl: z.string().optional(),
-  faviconUrl: z.string().optional(),
+  theme: z.enum(["light", "dark", "system"]),
   primaryColor: z.string(),
-  secondaryColor: z.string(),
-  fontFamily: z.string(),
-  fontSize: z.string(),
-  enableDarkMode: z.boolean(),
-  enableReducedMotion: z.boolean(),
-  menuStyle: z.string(),
+  accentColor: z.string(),
+  enableCustomLogo: z.boolean(),
+  logoUrl: z.string().optional(),
+  customFontFamily: z.string().optional(),
+  enableAnimations: z.boolean(),
+  highContrastMode: z.boolean(),
+  compactMode: z.boolean(),
 });
 
 type AppearanceFormValues = z.infer<typeof appearanceSchema>;
 
+const defaultAppearanceValues: AppearanceFormValues = {
+  theme: "system",
+  primaryColor: "#3B82F6",
+  accentColor: "#F59E0B",
+  enableCustomLogo: false,
+  logoUrl: "",
+  customFontFamily: "",
+  enableAnimations: true,
+  highContrastMode: false,
+  compactMode: false,
+};
+
 const AppearanceSettings: React.FC = () => {
-  const form = useForm<AppearanceFormValues>({
-    resolver: zodResolver(appearanceSchema),
-    defaultValues: {
-      theme: "default",
-      logoUrl: "/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png",
-      faviconUrl: "/favicon.ico",
-      primaryColor: "#1f2937",
-      secondaryColor: "#4f46e5",
-      fontFamily: "system-ui",
-      fontSize: "medium",
-      enableDarkMode: true,
-      enableReducedMotion: false,
-      menuStyle: "sidebar",
-    },
+  const {
+    form,
+    isLoading,
+    isSaving,
+    isDirty,
+    onSubmit,
+    resetForm,
+  } = useSettingsForm<AppearanceFormValues>({
+    category: 'appearance',
+    defaultValues: defaultAppearanceValues,
+    schema: appearanceSchema
   });
 
-  function onSubmit(data: AppearanceFormValues) {
-    toast.success("Appearance settings updated", {
-      description: "Your theme changes have been applied."
-    });
-    console.log("Appearance settings saved:", data);
-  }
+  // Watch values to show conditional fields
+  const enableCustomLogo = form.watch("enableCustomLogo");
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)}>
-        <SettingsCard 
-          title="Appearance Settings" 
-          description="Customize the look and feel of the application"
+        <SettingsLayout
+          title="Appearance Settings"
+          description="Customize the appearance of the application"
+          isLoading={isLoading}
+          isSaving={isSaving}
+          isDirty={isDirty}
+          onSave={form.handleSubmit(onSubmit)}
+          onReset={resetForm}
         >
-          <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="theme"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Theme</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select theme" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="default">Default</SelectItem>
-                      <SelectItem value="modern">Modern</SelectItem>
-                      <SelectItem value="classic">Classic</SelectItem>
-                      <SelectItem value="minimalist">Minimalist</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Choose a predefined theme for the application
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SettingsSection title="Theme" description="Configure the application theme">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="logoUrl"
+                name="theme"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Logo URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Path to your company logo image
-                    </FormDescription>
-                    <FormMessage />
+                    <FormLabel>Theme Mode</FormLabel>
+                    <div className="flex space-x-2">
+                      <Button
+                        type="button"
+                        variant={field.value === "light" ? "default" : "outline"}
+                        className="flex-1 flex items-center justify-center gap-2"
+                        onClick={() => field.onChange("light")}
+                      >
+                        <SunMedium className="h-5 w-5" />
+                        <span>Light</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={field.value === "dark" ? "default" : "outline"}
+                        className="flex-1 flex items-center justify-center gap-2"
+                        onClick={() => field.onChange("dark")}
+                      >
+                        <MoonStar className="h-5 w-5" />
+                        <span>Dark</span>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={field.value === "system" ? "default" : "outline"}
+                        className="flex-1 flex items-center justify-center gap-2"
+                        onClick={() => field.onChange("system")}
+                      >
+                        <Monitor className="h-5 w-5" />
+                        <span>System</span>
+                      </Button>
+                    </div>
                   </FormItem>
                 )}
               />
-              
-              <FormField
-                control={form.control}
-                name="faviconUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Favicon URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Path to your favicon image
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+
               <FormField
                 control={form.control}
                 name="primaryColor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Primary Color</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <Input 
-                        type="color"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className="w-12 h-10 p-1"
+                    <div className="flex justify-between">
+                      <FormLabel>Primary Color</FormLabel>
+                      <div
+                        className="h-5 w-5 rounded-full border"
+                        style={{ backgroundColor: field.value }}
                       />
                     </div>
+                    <FormControl>
+                      <Input type="color" {...field} />
+                    </FormControl>
                     <FormDescription>
-                      Main color for buttons and accents
+                      Main color used throughout the interface
                     </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
-                name="secondaryColor"
+                name="accentColor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Secondary Color</FormLabel>
-                    <div className="flex items-center gap-2">
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <Input 
-                        type="color"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className="w-12 h-10 p-1"
+                    <div className="flex justify-between">
+                      <FormLabel>Accent Color</FormLabel>
+                      <div
+                        className="h-5 w-5 rounded-full border"
+                        style={{ backgroundColor: field.value }}
                       />
                     </div>
+                    <FormControl>
+                      <Input type="color" {...field} />
+                    </FormControl>
                     <FormDescription>
-                      Secondary color for highlights
+                      Secondary color used for highlights and accents
                     </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          </SettingsSection>
+
+          <SettingsSection title="Branding" description="Configure logo and branding">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="fontFamily"
+                name="enableCustomLogo"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Custom Logo</FormLabel>
+                      <FormDescription>
+                        Use a custom logo instead of the default
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              {enableCustomLogo && (
+                <FormField
+                  control={form.control}
+                  name="logoUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Logo URL</FormLabel>
+                      <FormControl>
+                        <Input placeholder="https://example.com/logo.png" {...field} value={field.value || ''} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the URL of your logo image
+                      </FormDescription>
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="customFontFamily"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Font Family</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Custom Font</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select font" />
+                          <SelectValue placeholder="Select a font" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="system-ui">System Default</SelectItem>
-                        <SelectItem value="inter">Inter</SelectItem>
-                        <SelectItem value="roboto">Roboto</SelectItem>
-                        <SelectItem value="open-sans">Open Sans</SelectItem>
-                        <SelectItem value="montserrat">Montserrat</SelectItem>
+                        <SelectItem value="">Default System Font</SelectItem>
+                        <SelectItem value="Inter">Inter</SelectItem>
+                        <SelectItem value="Roboto">Roboto</SelectItem>
+                        <SelectItem value="Poppins">Poppins</SelectItem>
+                        <SelectItem value="Lato">Lato</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormDescription>
-                      Primary font family for the interface
+                      Font family used throughout the application
                     </FormDescription>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
-              
+            </div>
+          </SettingsSection>
+
+          <SettingsSection title="Accessibility" description="Configure accessibility options">
+            <div className="space-y-4">
               <FormField
                 control={form.control}
-                name="fontSize"
+                name="enableAnimations"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Font Size</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select size" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="small">Small</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormDescription>
-                      Default text size throughout the application
-                    </FormDescription>
-                    <FormMessage />
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Enable Animations</FormLabel>
+                      <FormDescription>
+                        Enable UI animations and transitions
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="highContrastMode"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">High Contrast Mode</FormLabel>
+                      <FormDescription>
+                        Increase contrast for better visibility
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="compactMode"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">Compact Mode</FormLabel>
+                      <FormDescription>
+                        Reduce spacing and padding in the UI
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />
             </div>
-            
-            <FormField
-              control={form.control}
-              name="menuStyle"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Menu Style</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col space-y-1"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="sidebar" id="sidebar" />
-                        <Label htmlFor="sidebar">Side Navigation</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="topbar" id="topbar" />
-                        <Label htmlFor="topbar">Top Navigation</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="both" id="both" />
-                        <Label htmlFor="both">Combined Navigation</Label>
-                      </div>
-                    </RadioGroup>
-                  </FormControl>
-                  <FormDescription>
-                    How the navigation menu is displayed
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="enableDarkMode"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Dark Mode</FormLabel>
-                    <FormDescription>
-                      Enable dark mode support and toggle
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="enableReducedMotion"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Reduced Motion</FormLabel>
-                    <FormDescription>
-                      Reduce interface animations for accessibility
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <div className="bg-muted/50 border rounded-md p-4">
-              <div className="font-medium mb-2">Theme Preview</div>
-              <div className="text-sm text-muted-foreground">
-                A live preview of your theme would appear here in a full implementation.
-              </div>
-            </div>
-          </div>
-        </SettingsCard>
+          </SettingsSection>
+        </SettingsLayout>
       </form>
     </Form>
   );

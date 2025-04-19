@@ -15,11 +15,13 @@ export const TaskReminderField: React.FC<TaskReminderFieldProps> = ({ form }) =>
       form={form}
       name="taskReminderHours"
       label="Task Reminder Hours"
-      description="Hours before due date to send task reminders"
+      description="Hours before a task is due when reminders should be sent"
     >
       <Input 
-        type="number"
-        onChange={(e) => form.setValue('taskReminderHours', parseInt(e.target.value))}
+        type="number" 
+        min={1} 
+        max={72} 
+        placeholder="24"
       />
     </FormFieldWrapper>
   );
