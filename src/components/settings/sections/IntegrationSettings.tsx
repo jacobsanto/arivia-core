@@ -47,7 +47,6 @@ const IntegrationSettings: React.FC = () => {
 
   // Check for form errors when form state changes
   React.useEffect(() => {
-    // Use watch instead of subscribe to detect error changes
     const hasErrors = Object.keys(form.formState.errors).length > 0;
     
     if (hasErrors) {
@@ -56,8 +55,6 @@ const IntegrationSettings: React.FC = () => {
     } else {
       setHasFormErrors(false);
     }
-    
-    // Add this as a dependency to re-run when errors change
   }, [form.formState.errors]);
 
   const handleSubmit = async (data: IntegrationSettingsFormValues) => {
