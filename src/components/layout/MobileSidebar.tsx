@@ -6,14 +6,15 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
-
+import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
+const MobileSidebar: React.FC<MobileSidebarProps> = ({
+  isOpen,
+  onClose
+}) => {
   const {
     user,
     logout
@@ -21,22 +22,16 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   const {
     canAccess
   } = usePermissions();
-
   if (!user) return null;
-
   const isSuperAdmin = user.role === "superadmin";
-
   const handleLogout = () => {
     logout();
     onClose();
   };
-
   const handleLinkClick = () => {
     onClose();
   };
-
-  return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
+  return <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent side="left" className="w-[280px] p-0 bg-sidebar text-sidebar-foreground">
         <SheetHeader className="p-4 border-b border-sidebar-border text-left">
           <SheetTitle className="flex justify-center">
@@ -47,7 +42,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
         <div className="flex items-center justify-center py-6 border-b border-sidebar-border">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
-              <AvatarDisplay user={user} size="md" />
+              <AvatarUpload user={user} size="md" editable={false} />
             </div>
             <p className="text-sm font-medium text-sidebar-foreground">{user.name}</p>
             <span className="text-xs px-2 py-1 bg-sidebar-accent rounded-full mt-1 text-sidebar-accent-foreground">
@@ -94,17 +89,14 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
           </nav>
         </div>
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>;
 };
-
 interface MobileSidebarLinkProps {
   to: string;
   icon: React.ReactNode;
   label: string;
   onClick?: () => void;
 }
-
 const MobileSidebarLink: React.FC<MobileSidebarLinkProps> = ({
   to,
   icon,
@@ -118,5 +110,4 @@ const MobileSidebarLink: React.FC<MobileSidebarLinkProps> = ({
       <span>{label}</span>
     </NavLink>;
 };
-
 export default MobileSidebar;
