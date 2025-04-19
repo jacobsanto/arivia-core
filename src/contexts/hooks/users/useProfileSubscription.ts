@@ -8,6 +8,8 @@ export const useProfileSubscription = (
   refreshProfileFn: () => Promise<boolean>
 ) => {
   const profileSubscriptionRef = useRef<any>(null);
+  const isRefreshingRef = useRef(false);
+  const lastRefreshTimeRef = useRef(0);
 
   useEffect(() => {
     if (!user) {
@@ -36,10 +38,27 @@ export const useProfileSubscription = (
         filter: `id=eq.${user.id}`
       }, async (payload) => {
         console.log("Profile update detected:", payload);
-        // Immediate refresh when profile changes are detected
-        const success = await refreshProfileFn();
-        if (success) {
-          console.log("Profile refreshed successfully after real-time update");
+        
+        // Prevent refresh if another is in progress or if it's too soon
+        const now = Date.now();
+        if (isRefreshingRef.current || now - lastRefreshTimeRef.current < 5000) {
+          console.log("Skipping profile refresh - in progress or too recent");
+          return;
+        }
+        
+        // Set flags to prevent duplicate refreshes
+        isRefreshingRef.current = true;
+        lastRefreshTimeRef.current = now;
+        
+        try {
+          // Immediate refresh when profile changes are detected
+          const success = await refreshProfileFn();
+          if (success) {
+            console.log("Profile refreshed successfully after real-time update");
+          }
+        } finally {
+          // Reset refresh flag
+          isRefreshingRef.current = false;
         }
       })
       .subscribe((status) => {
@@ -58,6 +77,7 @@ export const useProfileSubscription = (
   }, [user, refreshProfileFn]);
 
   return {
-    profileSubscriptionRef
+    profileSubscriptionRef,
+    isRefreshing: isRefreshingRef.current
   };
 };

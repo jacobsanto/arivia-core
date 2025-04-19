@@ -50,9 +50,21 @@ const MemoizedMessage = memo(({
   if (prevAttachments !== nextAttachments) return false;
   
   // 4. If this message's reaction state changes
-  const prevReactions = JSON.stringify(prevProps.message.reactions || {});
-  const nextReactions = JSON.stringify(nextProps.message.reactions || {});
-  if (prevReactions !== nextReactions) return false;
+  // Use a more efficient way to compare reaction objects
+  const prevReactionKeys = Object.keys(prevProps.message.reactions || {}).sort().join(',');
+  const nextReactionKeys = Object.keys(nextProps.message.reactions || {}).sort().join(',');
+  
+  if (prevReactionKeys !== nextReactionKeys) return false;
+  
+  // Check reaction values only if the keys match
+  if (prevReactionKeys === nextReactionKeys && prevReactionKeys !== '') {
+    const reactions = prevProps.message.reactions || {};
+    for (const key of Object.keys(reactions)) {
+      const prevUsers = (prevProps.message.reactions?.[key] || []).sort().join(',');
+      const nextUsers = (nextProps.message.reactions?.[key] || []).sort().join(',');
+      if (prevUsers !== nextUsers) return false;
+    }
+  }
   
   // 5. If this specific message is being reacted to
   if (

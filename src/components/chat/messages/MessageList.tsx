@@ -1,5 +1,5 @@
 
-import React, { useCallback, useRef, useEffect } from "react";
+import React, { useCallback, useRef, useEffect, memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MemoizedMessage from "../message/MemoizedMessage";
 import TypingIndicator from "../typing/TypingIndicator";
@@ -37,16 +37,27 @@ const MessageList: React.FC<MessageListProps> = ({
 }) => {
   // Create a ref for scrolling to bottom
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageCountRef = useRef(0);
+  const lastActiveChat = useRef(activeChat);
   
-  // Scroll to bottom when new messages arrive
+  // Scroll to bottom when new messages arrive or chat changes
   useEffect(() => {
-    if (scrollAreaRef.current) {
+    const shouldScrollToBottom = 
+      messages.length !== lastMessageCountRef.current || 
+      activeChat !== lastActiveChat.current ||
+      typingStatus !== '';
+      
+    if (shouldScrollToBottom && scrollAreaRef.current) {
       const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
       if (scrollElement) {
         scrollElement.scrollTop = scrollElement.scrollHeight;
       }
     }
-  }, [messages, typingStatus]);
+    
+    // Update refs
+    lastMessageCountRef.current = messages.length;
+    lastActiveChat.current = activeChat;
+  }, [messages, typingStatus, activeChat]);
 
   // Memoize the empty state to prevent re-renders
   const renderEmptyState = useCallback(() => (
@@ -65,6 +76,7 @@ const MessageList: React.FC<MessageListProps> = ({
     </div>
   ), [isOffline]);
 
+  // Show loading state
   if (isLoading) {
     return (
       <ScrollArea className="flex-1 p-6 h-full">
@@ -96,7 +108,7 @@ const MessageList: React.FC<MessageListProps> = ({
           <AnimatePresence mode="popLayout" initial={false}>
             {messages.map((msg) => (
               <MemoizedMessage
-                key={`${msg.id}-${msg.content}`}
+                key={`${msg.id}-${JSON.stringify(msg.reactions)}`}
                 message={msg}
                 emojis={emojis}
                 onAddReaction={onAddReaction}
@@ -124,4 +136,5 @@ const MessageList: React.FC<MessageListProps> = ({
   );
 };
 
-export default React.memo(MessageList);
+// Use memo to prevent unnecessary re-renders
+export default memo(MessageList);

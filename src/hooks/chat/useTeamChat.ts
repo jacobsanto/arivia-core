@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
 import { useChatError } from "@/hooks/chat/useChatError";
+import { useChatEfficiency } from "@/hooks/chat/useChatEfficiency";
 
 export function useTeamChat() {
   // State
@@ -18,6 +19,7 @@ export function useTeamChat() {
   const isMobile = useIsMobile();
   const { user } = useUser();
   const { addError, removeError, errors } = useChatError();
+  const efficiency = useChatEfficiency();
   
   // Use our new hook for channel and users data
   const {
@@ -36,7 +38,7 @@ export function useTeamChat() {
     addError('connection', loadError);
   }
   
-  // Use our chat hook to manage messages
+  // Use our chat hook to manage messages with memoization to prevent excessive renders
   const {
     messages,
     loading,
@@ -59,35 +61,40 @@ export function useTeamChat() {
     handleImageSelect,
     removeAttachment,
     showMessageEmojiPicker,
-    toggleMessageEmojiPicker, // This name must match what's returned from useChat
+    toggleMessageEmojiPicker,
     handleEmojiSelect
   } = useChat(chatType, activeChatId);
+
+  // Once messages are loaded, mark initial load as complete
+  if (messages.length > 0 && !efficiency.hasInitialLoad) {
+    efficiency.markInitialLoadComplete();
+  }
 
   // Handle chat errors
   if (error && errors.length === 0) {
     addError('general', error);
   }
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+  const toggleSidebar = useCallback(() => {
+    setSidebarOpen(prev => !prev);
+  }, []);
 
   // Handle sending messages
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     sendMessage();
-  };
+  }, [sendMessage]);
 
-  const handleChangeMessage = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
     handleTyping();
-  };
+  }, [setMessageInput, handleTyping]);
 
-  const handleEmojiClick = (emoji: string, messageId: string) => {
+  const handleEmojiClick = useCallback((emoji: string, messageId: string) => {
     addReaction(messageId, emoji);
     setReactionMessageId(null);
     setShowEmojiPicker(false);
-  };
+  }, [addReaction]);
 
   // Extract just the emoji symbols
   const emojiSymbols = ["👍", "❤️", "😊", "🎉", "😂", "🤔", "👏", "🙏", "🔥", "⭐", "😍", "😎", "🤩", "😢", "😡", "🤯", "🤝", "👋", "✅", "❌"];
@@ -132,7 +139,7 @@ export function useTeamChat() {
     handleFileSelect,
     handleImageSelect,
     removeAttachment,
-    toggleMessageEmojiPicker, // Make sure this matches the name from useChat
+    toggleMessageEmojiPicker,
     handleEmojiSelect
   };
 }

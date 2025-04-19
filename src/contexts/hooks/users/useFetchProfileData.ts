@@ -9,6 +9,7 @@ export const useFetchProfileData = (
   setUser?: (user: User | null) => void
 ) => {
   const profileFetchInProgress = useRef<boolean>(false);
+  const lastFetchTime = useRef<number>(0);
 
   // Function to fetch profile data from Supabase
   const fetchProfileData = useCallback(async (userId: string): Promise<boolean> => {
@@ -22,8 +23,16 @@ export const useFetchProfileData = (
       console.log("Profile fetch already in progress, skipping duplicate request");
       return false;
     }
+    
+    // Throttle fetches to prevent excessive API calls
+    const now = Date.now();
+    if (now - lastFetchTime.current < 5000) {
+      console.log("Profile fetch throttled, too many requests");
+      return false;
+    }
 
     profileFetchInProgress.current = true;
+    lastFetchTime.current = now;
     console.log("Fetching profile data for user:", userId);
     
     try {
@@ -67,7 +76,14 @@ export const useFetchProfileData = (
         };
         
         setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        
+        // Use localStorage to cache the user profile
+        try {
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+        } catch (e) {
+          console.error("Failed to cache user profile in localStorage:", e);
+        }
+        
         console.log("Profile data updated successfully, returning:", updatedUser);
         return true;
       }
@@ -83,6 +99,7 @@ export const useFetchProfileData = (
 
   return {
     fetchProfileData,
-    profileFetchInProgress
+    profileFetchInProgress,
+    lastFetchTime
   };
 };

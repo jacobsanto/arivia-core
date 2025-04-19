@@ -20,12 +20,20 @@ export function useRealtimeMessages({
 }: UseRealtimeMessagesProps) {
   const { user } = useUser();
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const isMountedRef = useRef(true);
+  const lastMessageIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Set the mounted flag
+    isMountedRef.current = true;
+    
     // Don't set up subscriptions unless we have a user and recipient
     if (!user || !recipientId) return;
 
-    let isMounted = true;
+    // Record the ID of the last message to prevent duplicates
+    if (messages.length > 0) {
+      lastMessageIdRef.current = messages[messages.length - 1].id;
+    }
     
     // Clean up previous subscription if it exists
     if (channelRef.current) {
@@ -49,11 +57,20 @@ export function useRealtimeMessages({
         filter: `${column}=eq.${recipientId}`
       }, async (payload) => {
         // Don't proceed if component is unmounted
-        if (!isMounted) return;
+        if (!isMountedRef.current) {
+          console.log("Component unmounted, ignoring message update");
+          return;
+        }
         
         // Don't show messages from ourselves (we already added them)
         const senderId = payload.new.sender_id;
         if (senderId === user.id) return;
+        
+        // Prevent duplicate messages
+        if (lastMessageIdRef.current === payload.new.id) {
+          console.log("Duplicate message detected, skipping", payload.new.id);
+          return;
+        }
         
         try {
           // Get sender details
@@ -61,7 +78,7 @@ export function useRealtimeMessages({
             .from('profiles')
             .select('name, avatar')
             .eq('id', senderId)
-            .single();
+            .maybeSingle();
             
           const newMessage: Message = {
             id: payload.new.id,
@@ -73,6 +90,9 @@ export function useRealtimeMessages({
             reactions: chatType === 'general' ? (payload.new.reactions || {}) : {},
             attachments: payload.new.attachments
           };
+          
+          // Update the last message ID
+          lastMessageIdRef.current = newMessage.id;
           
           // Use a functional update to ensure we're working with the latest state
           setMessages(prev => {
@@ -88,11 +108,10 @@ export function useRealtimeMessages({
       });
 
     // Subscribe and store the channel reference
-    // Using 'any' to handle the type mismatch between TypeScript enum and string values
     channel.subscribe((status: any) => {
       // Convert the string status to a type-safe comparison
       if (status === 'SUBSCRIBED') {
-        if (isMounted) {
+        if (isMountedRef.current) {
           channelRef.current = channel;
           console.log(`Successfully subscribed to ${channelName}`);
         } else {
@@ -107,7 +126,7 @@ export function useRealtimeMessages({
     // Clean up on unmount or when dependencies change
     return () => {
       console.log(`Cleaning up subscription for ${channelName}`);
-      isMounted = false;
+      isMountedRef.current = false;
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
