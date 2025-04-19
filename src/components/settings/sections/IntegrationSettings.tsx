@@ -45,19 +45,20 @@ const IntegrationSettings: React.FC = () => {
     },
   });
 
-  // Check for form errors when validation is triggered
+  // Check for form errors when form state changes
   React.useEffect(() => {
-    const subscription = form.formState.subscribe(() => {
-      if (Object.keys(form.formState.errors).length > 0) {
-        console.log("Form has errors:", form.formState.errors);
-        setHasFormErrors(true);
-      } else {
-        setHasFormErrors(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [form.formState]);
+    // Use watch instead of subscribe to detect error changes
+    const hasErrors = Object.keys(form.formState.errors).length > 0;
+    
+    if (hasErrors) {
+      console.log("Form has errors:", form.formState.errors);
+      setHasFormErrors(true);
+    } else {
+      setHasFormErrors(false);
+    }
+    
+    // Add this as a dependency to re-run when errors change
+  }, [form.formState.errors]);
 
   const handleSubmit = async (data: IntegrationSettingsFormValues) => {
     console.log("Submitting integration settings:", data);
