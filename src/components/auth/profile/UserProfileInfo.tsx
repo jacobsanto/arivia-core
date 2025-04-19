@@ -2,7 +2,7 @@
 import React from "react";
 import { User } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { ROLE_DETAILS } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { useUser } from "@/contexts/UserContext";
@@ -13,7 +13,7 @@ interface UserProfileInfoProps {
 
 const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
   const { refreshProfile } = useUser();
-  
+
   const getRoleBadges = () => {
     const badges = [];
     
@@ -58,6 +58,12 @@ const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
             <Mail className="h-4 w-4" />
             {user.email}
           </p>
+          {user.phone && (
+            <p className="text-sm text-muted-foreground flex items-center gap-1">
+              <Phone className="h-4 w-4" />
+              {user.phone}
+            </p>
+          )}
           <div className="flex flex-wrap mt-2">
             {getRoleBadges()}
             {user.customPermissions && Object.keys(user.customPermissions).length > 0 && (

@@ -1,11 +1,9 @@
-
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useIsMobile } from "@/hooks/use-mobile";
 import ProfileForm from "./forms/ProfileForm";
 import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
@@ -25,13 +23,14 @@ const UserInformation = () => {
     setIsEditing(false);
   };
 
-  const handleFormSubmit = async (data: { name: string; email: string }) => {
+  const handleFormSubmit = async (data: { name: string; email: string; phone?: string }) => {
     if (!user) return;
     
     try {
       const result = await updateProfile(user.id, {
         name: data.name,
-        email: data.email
+        email: data.email,
+        phone: data.phone
       });
       
       if (result) {
