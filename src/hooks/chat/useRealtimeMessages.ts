@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
-import { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
+import { RealtimeChannel, RealtimeSubscribeStatus } from "@supabase/supabase-js";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
@@ -73,11 +73,11 @@ export function useRealtimeMessages({
       });
 
     // Subscribe and store the channel reference
-    channel.subscribe((status) => {
-      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+    channel.subscribe((status: RealtimeSubscribeStatus) => {
+      if (status === 'SUBSCRIBED') {
         channelRef.current = channel;
-      } else if (status !== REALTIME_SUBSCRIBE_STATES.SUBSCRIBED && 
-                status !== REALTIME_SUBSCRIBE_STATES.CLOSED) {
+      } else if (status !== 'SUBSCRIBED' && 
+                status !== 'CLOSED') {
         console.warn(`Failed to subscribe to ${channelName}:`, status);
       }
     });
