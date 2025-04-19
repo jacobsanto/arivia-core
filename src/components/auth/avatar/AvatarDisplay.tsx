@@ -4,7 +4,7 @@ import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AvatarDisplayProps {
-  user: User;
+  user: User | { name: string; avatar?: string; id?: string };
   size?: "sm" | "md" | "lg";
   className?: string;
 }
