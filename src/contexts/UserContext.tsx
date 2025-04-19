@@ -21,7 +21,7 @@ import {
 import {
   hasPermissionWithAllRoles as hasPermission
 } from "@/types/auth/permissions";
-import { hasFeatureAccess } from "@/services/auth/permissionService";
+import { checkFeatureAccess } from "@/services/auth/permissionService";
 import { updatePermissions } from "./auth/operations/permissionOperations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -75,7 +75,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleHasFeatureAccess = (featureKey: string) => {
-    return hasFeatureAccess(currentUser, featureKey);
+    return checkFeatureAccess(currentUser, featureKey);
   };
 
   const handleUpdateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
