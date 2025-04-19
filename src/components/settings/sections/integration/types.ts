@@ -1,3 +1,4 @@
+
 import { z } from "zod";
 
 export const integrationSettingsSchema = z.object({
@@ -12,14 +13,25 @@ export const integrationSettingsSchema = z.object({
   stripeApiKey: z.string().optional().transform(val => val || ""),
   stripeWebhookSecret: z.string().optional().transform(val => val || ""),
 }).refine((data) => {
-  // Only validate credentials if the integration is enabled
-  if (data.guestyApiEnabled) {
-    return !!data.guestyApiKey && !!data.guestyApiSecret;
+  // Validate Guesty credentials if enabled
+  if (data.guestyApiEnabled && (!data.guestyApiKey || !data.guestyApiSecret)) {
+    return false;
+  }
+  // Validate Booking.com credentials if enabled
+  if (data.bookingComEnabled && !data.bookingComApiKey) {
+    return false;
+  }
+  // Validate Airbnb credentials if enabled
+  if (data.airbnbEnabled && !data.airbnbApiKey) {
+    return false;
+  }
+  // Validate Stripe credentials if enabled
+  if (data.stripeEnabled && (!data.stripeApiKey || !data.stripeWebhookSecret)) {
+    return false;
   }
   return true;
 }, {
-  message: "API Key and Secret are required when Guesty integration is enabled",
-  path: ["guestyApiKey"]
+  message: "API credentials are required when an integration is enabled",
 });
 
 export type IntegrationSettingsFormValues = z.infer<typeof integrationSettingsSchema>;
