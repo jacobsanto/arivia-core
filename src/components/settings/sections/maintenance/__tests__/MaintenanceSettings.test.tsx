@@ -1,4 +1,3 @@
-
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Form } from '@/components/ui/form';
@@ -18,7 +17,6 @@ const defaultValues: MaintenanceFormValues = {
   maintenanceEmail: "",
 };
 
-// Test wrapper component to provide form context
 const FormWrapper: React.FC<{
   children: React.ReactNode;
   onSubmit?: (data: MaintenanceFormValues) => void;
@@ -214,4 +212,3 @@ describe('MaintenanceSettings Form Components', () => {
     });
   });
 });
-
