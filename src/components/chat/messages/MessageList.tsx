@@ -1,11 +1,11 @@
 
-import React, { useCallback } from "react";
+import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import MemoizedMessage from "../message/MemoizedMessage";
+import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
 import { Message } from "@/hooks/useChatTypes";
 import { Skeleton } from "@/components/ui/skeleton";
-import { WifiOff, AlertCircle } from "lucide-react";
+import { WifiOff, Wifi, AlertCircle } from "lucide-react";
 
 interface MessageListProps {
   messages: Message[];
@@ -34,23 +34,6 @@ const MessageList: React.FC<MessageListProps> = ({
   isLoading = false,
   isOffline = false,
 }) => {
-  // Memoize the empty state to prevent re-renders
-  const renderEmptyState = useCallback(() => (
-    <div className="flex flex-col justify-center items-center h-40 gap-2">
-      {isOffline ? (
-        <>
-          <WifiOff className="h-10 w-10 text-amber-500" />
-          <p className="text-muted-foreground">You are in offline mode. Messages cannot be loaded.</p>
-        </>
-      ) : (
-        <>
-          <AlertCircle className="h-10 w-10 text-blue-500" />
-          <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
-        </>
-      )}
-    </div>
-  ), [isOffline]);
-
   if (isLoading) {
     return (
       <ScrollArea className="flex-1 p-6 h-full">
@@ -70,13 +53,25 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <ScrollArea className="flex-1 p-6 h-full relative" orientation="vertical">
+    <ScrollArea className="flex-1 p-6 h-full" orientation="vertical">
       <div className="space-y-6 min-h-[calc(100%-80px)]">
         {messages.length === 0 ? (
-          renderEmptyState()
+          <div className="flex flex-col justify-center items-center h-40 gap-2">
+            {isOffline ? (
+              <>
+                <WifiOff className="h-10 w-10 text-amber-500" />
+                <p className="text-muted-foreground">You are in offline mode. Messages cannot be loaded.</p>
+              </>
+            ) : (
+              <>
+                <AlertCircle className="h-10 w-10 text-blue-500" />
+                <p className="text-muted-foreground">No messages yet. Start the conversation!</p>
+              </>
+            )}
+          </div>
         ) : (
           messages.map((msg) => (
-            <MemoizedMessage
+            <ChatMessage
               key={msg.id}
               message={msg}
               emojis={emojis}
@@ -90,10 +85,10 @@ const MessageList: React.FC<MessageListProps> = ({
         )}
       </div>
       
-      {!isOffline && typingStatus && (
-        <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />
-      )}
+      {/* Typing indicator - only show when online */}
+      {!isOffline && <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />}
       
+      {/* Offline indicator at bottom of messages */}
       {isOffline && messages.length > 0 && (
         <div className="flex items-center justify-center gap-2 mt-4 text-sm text-amber-600">
           <WifiOff className="h-4 w-4" />
@@ -104,4 +99,4 @@ const MessageList: React.FC<MessageListProps> = ({
   );
 };
 
-export default React.memo(MessageList);
+export default MessageList;
