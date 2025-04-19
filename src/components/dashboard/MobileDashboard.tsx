@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import DashboardMetrics from "@/components/dashboard/metrics";
 import { Separator } from "@/components/ui/separator";
@@ -108,7 +109,7 @@ const MobileDashboard: React.FC<MobileDashboardProps> = ({
               disabled={isLoadingMore}
             >
               {isLoadingMore ? (
-                <LoadingSpinner size="sm" className="mr-2" />
+                <LoadingSpinner size="small" className="mr-2" />
               ) : null}
               Load More
             </Button>
