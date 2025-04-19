@@ -61,13 +61,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     handlePickerMouseLeave: () => handlePickerMouseLeave(setShowEmojiPicker)
   };
 
-  // Create a user object from message data for AvatarDisplay
-  const userObj = {
-    name: message.sender,
-    avatar: message.avatar,
-    id: message.id
-  };
-
   return (
     <AnimatePresence mode="popLayout">
       <motion.div
@@ -83,7 +76,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           }`}
         >
           <MessageAvatar 
-            user={userObj} 
+            sender={message.sender} 
+            avatar={message.avatar} 
             isCurrentUser={message.isCurrentUser} 
           />
           
