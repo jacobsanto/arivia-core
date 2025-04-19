@@ -30,17 +30,13 @@ export const useProfileSubscription = (
     const channel = supabase
       .channel(`profile-changes-${user.id}`)
       .on('postgres_changes', { 
-        event: '*',
+        event: '*',  // Listen to all events (INSERT, UPDATE, DELETE)
         schema: 'public', 
         table: 'profiles',
         filter: `id=eq.${user.id}`
       }, async (payload) => {
         console.log("Profile update detected:", payload);
-        // Immediate refresh when profile changes are detected
-        const success = await refreshProfileFn();
-        if (success) {
-          console.log("Profile refreshed successfully after real-time update");
-        }
+        await refreshProfileFn();
       })
       .subscribe((status) => {
         console.log(`Profile subscription status: ${status}`);

@@ -75,7 +75,7 @@ export const SwipeableCard: React.FC<SwipeableCardProps> = ({
 
   return (
     <Card
-      className={cn("touch-manipulation hardware-accelerated", className)}
+      className={cn("touch-manipulation", className)}
       style={cardStyle}
       onTouchStart={(e) => {
         handleTouchStart(e);

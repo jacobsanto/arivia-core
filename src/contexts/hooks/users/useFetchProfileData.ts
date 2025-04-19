@@ -4,9 +4,11 @@ import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+/**
+ * Hook to fetch profile data from Supabase
+ */
 export const useFetchProfileData = (
-  user: User | null,
-  setUser?: (user: User | null) => void
+  user: User | null
 ) => {
   const profileFetchInProgress = useRef<boolean>(false);
 
@@ -35,6 +37,7 @@ export const useFetchProfileData = (
 
       if (error) {
         console.error("Error fetching profile data:", error);
+        // More specific error logging based on status
         if (error.code === '406') {
           console.error("Not Acceptable error - check content types");
         } else if (error.code === 'PGRST116') {
@@ -48,17 +51,20 @@ export const useFetchProfileData = (
 
       console.log("Profile data received:", data);
       
-      if (data && user && setUser) {
-        // Update user with profile data
+      if (data && user) {
+        // Update user with profile data - ensure proper type casting
         const updatedUser: User = {
           ...user,
           name: data.name || user.name,
+          // Properly cast role to UserRole type
           role: data.role as UserRole || user.role,
           email: data.email || user.email,
           avatar: data.avatar || user.avatar,
+          // Cast secondary_roles array elements to UserRole
           secondaryRoles: data.secondary_roles 
             ? data.secondary_roles.map((role: string) => role as UserRole) 
             : user.secondaryRoles,
+          // Explicitly cast custom_permissions to the correct type
           customPermissions: data.custom_permissions 
             ? (typeof data.custom_permissions === 'object' 
                 ? data.custom_permissions as Record<string, boolean> 
@@ -66,8 +72,6 @@ export const useFetchProfileData = (
             : user.customPermissions
         };
         
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
         console.log("Profile data updated successfully, returning:", updatedUser);
         return true;
       }
@@ -79,7 +83,7 @@ export const useFetchProfileData = (
     } finally {
       profileFetchInProgress.current = false;
     }
-  }, [user, setUser]);
+  }, [user]);
 
   return {
     fetchProfileData,
