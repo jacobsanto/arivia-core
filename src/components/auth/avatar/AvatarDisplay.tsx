@@ -31,11 +31,11 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   }, [user.avatar]);
 
   return (
-    <Avatar className={`${sizeClasses[size]} ${className}`}>
+    <Avatar className={`${sizeClasses[size]} ${className} bg-muted/30`}>
       <AvatarImage 
         src={avatarUrl} 
         alt={user.name || "User"} 
-        className="object-center object-cover" 
+        className="object-contain p-1" 
         loading="eager"
       />
       <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
