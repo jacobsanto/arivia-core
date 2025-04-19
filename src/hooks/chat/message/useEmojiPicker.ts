@@ -9,7 +9,7 @@ export function useEmojiPicker() {
   };
 
   const handleEmojiSelect = (emoji: string, setMessageInput: (value: string) => void) => {
-    setMessageInput(prev => prev + emoji);
+    setMessageInput((prev: string) => prev + emoji);
     setShowEmojiPicker(false);
   };
 
