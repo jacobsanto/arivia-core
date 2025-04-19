@@ -5,6 +5,7 @@
   scroll-behavior: smooth;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
+  overscroll-behavior-y: contain;
 }
 
 .mobile-scroll::-webkit-scrollbar {
@@ -15,18 +16,82 @@
 @media (max-width: 768px) {
   button, 
   [role="button"],
-  a {
+  a,
+  .interactive-element {
     min-height: 44px;
     min-width: 44px;
+    padding: 8px 16px;
   }
   
   input,
-  select {
+  select,
+  textarea {
     min-height: 44px;
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 8px 12px;
+  }
+  
+  /* Add active state feedback */
+  .touch-feedback:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
   }
 }
 
 /* Prevent text scaling */
 html {
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Enhanced scrolling experience */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Smooth animations */
+.animate-pull {
+  transition: transform 0.2s ease-out;
+}
+
+/* Pull to refresh animation */
+@keyframes pull-spinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pull-to-refresh-spinner {
+  animation: pull-spinner 1s linear infinite;
+}
+
+/* Swipe animation */
+@keyframes swipe-hint {
+  0% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(10px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+}
+
+.animate-swipe {
+  animation: swipe-hint 1.5s ease-in-out infinite;
+}
+
+/* Mobile-optimized transitions */
+.mobile-transition {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
 }
