@@ -25,10 +25,10 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   className = ""
 }) => {
   const avatarUrl = useMemo(() => {
+    // Always add a timestamp to the URL to prevent caching
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Date.now()}`;
+    return `${url}?t=${Date.now()}`;
   }, [user.avatar]);
 
   return (

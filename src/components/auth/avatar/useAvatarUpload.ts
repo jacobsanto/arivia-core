@@ -11,7 +11,7 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { updateUserAvatar } = useUser();
+  const { updateUserAvatar, refreshProfile } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -23,13 +23,6 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
     setAvatarUrl(newUrl);
     previousAvatarRef.current = newUrl;
   }, [user.avatar]);
-
-  // Update avatar with cache busting only when needed
-  const getAvatarUrl = (url: string) => {
-    if (!url || url.includes('placeholder.svg')) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Date.now()}`;
-  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -68,15 +61,17 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         .getPublicUrl(filePath);
       
       if (publicUrlData?.publicUrl) {
-        const newAvatarUrl = getAvatarUrl(publicUrlData.publicUrl);
-        
         await updateUserAvatar(userId, publicUrlData.publicUrl);
-        setAvatarUrl(newAvatarUrl);
+        setAvatarUrl(publicUrlData.publicUrl);
         previousAvatarRef.current = publicUrlData.publicUrl;
 
+        // Call onAvatarChange callback if provided
         if (onAvatarChange) {
           onAvatarChange(publicUrlData.publicUrl);
         }
+
+        // Refresh the profile to update all components
+        await refreshProfile();
         
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);
