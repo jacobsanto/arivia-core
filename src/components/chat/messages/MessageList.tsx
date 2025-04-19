@@ -1,5 +1,5 @@
 
-import React, { useRef, useLayoutEffect } from "react";
+import React, { useRef, useLayoutEffect, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
@@ -35,14 +35,18 @@ const MessageList: React.FC<MessageListProps> = ({
   isOffline = false,
 }) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom when new messages arrive
-  useLayoutEffect(() => {
+  
+  const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
       const scrollArea = scrollAreaRef.current;
       scrollArea.scrollTop = scrollArea.scrollHeight;
     }
-  }, [messages]);
+  }, []);
+
+  // Auto-scroll to bottom when new messages arrive
+  useLayoutEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
 
   if (isLoading) {
     return (
@@ -63,7 +67,11 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 h-full hardware-accelerated" orientation="vertical">
+    <ScrollArea 
+      ref={scrollAreaRef} 
+      className="flex-1 p-6 h-full hardware-accelerated" 
+      orientation="vertical"
+    >
       <div className="space-y-6 min-h-[calc(100%-80px)]">
         {messages.length === 0 ? (
           <div className="flex flex-col justify-center items-center h-40 gap-2">
@@ -95,12 +103,10 @@ const MessageList: React.FC<MessageListProps> = ({
         )}
       </div>
       
-      {/* Typing indicator - only show when online */}
       {!isOffline && typingStatus && (
         <TypingIndicator typingStatus={typingStatus} activeChat={activeChat} />
       )}
       
-      {/* Offline indicator at bottom of messages */}
       {isOffline && messages.length > 0 && (
         <div className="flex items-center justify-center gap-2 mt-4 text-sm text-amber-600">
           <WifiOff className="h-4 w-4" />

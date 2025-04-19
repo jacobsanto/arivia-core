@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
+import { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
@@ -22,13 +23,11 @@ export function useRealtimeMessages({
   useEffect(() => {
     if (!user || !recipientId) return;
 
-    // Set up real-time listeners based on chat type
     const table = chatType === 'general' ? 'chat_messages' : 'direct_messages';
     const column = chatType === 'general' ? 'channel_id' : 'recipient_id';
     const channelName = `chat-${chatType}-${recipientId}`;
     
-    // Create a channel for this specific chat
-    const channel = supabase
+    const channel: RealtimeChannel = supabase
       .channel(channelName)
       .on('postgres_changes', { 
         event: 'INSERT', 
@@ -36,15 +35,13 @@ export function useRealtimeMessages({
         table,
         filter: `${column}=eq.${recipientId}`
       }, async (payload) => {
-        // Don't show messages from ourselves (we already added them)
         const senderId = payload.new.sender_id;
           
         if (senderId === user.id) return;
         
-        // Format message from payload
         let newMessage: Message = {
           id: payload.new.id,
-          sender: "User", // Will be updated with user details
+          sender: "User",
           avatar: "/placeholder.svg",
           content: payload.new.content,
           timestamp: payload.new.created_at,
@@ -52,7 +49,6 @@ export function useRealtimeMessages({
           reactions: chatType === 'general' ? (payload.new.reactions || {}) : {}
         };
         
-        // Try to fetch user details
         try {
           const { data } = await supabase
             .from('profiles')
@@ -72,16 +68,14 @@ export function useRealtimeMessages({
         }
       });
       
-    // Subscribe to the channel
     channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
+      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
         console.log(`Subscribed to ${channelName}`);
       } else {
         console.warn(`Subscription status for ${channelName}:`, status);
       }
     });
       
-    // Clean up subscription
     return () => {
       supabase.removeChannel(channel);
     };

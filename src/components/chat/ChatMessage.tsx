@@ -17,7 +17,7 @@ interface ChatMessageProps {
   setShowEmojiPicker: (show: boolean) => void;
 }
 
-const ChatMessage: React.FC<ChatMessageProps> = memo(({
+const ChatMessage = memo<ChatMessageProps>(({
   message,
   emojis,
   onAddReaction,
@@ -26,7 +26,6 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(({
   showEmojiPicker,
   setShowEmojiPicker,
 }) => {
-  // Use our custom hook for hover management
   const {
     isHoveringMessage,
     setIsHoveringMessage,
@@ -36,7 +35,6 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(({
     handlePickerMouseLeave
   } = useMessageHover();
   
-  // Create specific handlers for this message
   const handleMessageMouseEnter = () => {
     baseHandleMessageMouseEnter(
       message.id,
@@ -61,7 +59,6 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(({
     handlePickerMouseLeave: () => handlePickerMouseLeave(setShowEmojiPicker)
   };
 
-  // Create a user object from message data for AvatarDisplay
   const userObj = {
     name: message.sender,
     avatar: message.avatar,
@@ -69,47 +66,53 @@ const ChatMessage: React.FC<ChatMessageProps> = memo(({
   };
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <motion.div
-        className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        transition={{ duration: 0.15 }}
-        layout
+    <motion.div
+      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.15 }}
+      layout="position"
+    >
+      <div
+        className={`flex max-w-[80%] ${
+          message.isCurrentUser ? "flex-row-reverse" : "flex-row"
+        }`}
       >
-        <div
-          className={`flex max-w-[80%] ${
-            message.isCurrentUser ? "flex-row-reverse" : "flex-row"
-          }`}
-        >
-          <MessageAvatar 
-            user={userObj} 
-            isCurrentUser={message.isCurrentUser} 
+        <MessageAvatar 
+          user={userObj} 
+          isCurrentUser={message.isCurrentUser} 
+        />
+        
+        <div>
+          <MessageContent
+            message={message}
+            emojis={emojis}
+            isHoveringMessage={isHoveringMessage}
+            setIsHoveringMessage={setIsHoveringMessage}
+            handleMessageMouseEnter={handleMessageMouseEnter}
+            handleMessageMouseLeave={handleMessageMouseLeave}
+            handleEmojiClick={handleEmojiClick}
+            reactionMessageId={reactionMessageId}
+            showEmojiPicker={showEmojiPicker}
+            {...messagePickerHandler}
           />
           
-          <div>
-            <MessageContent
-              message={message}
-              emojis={emojis}
-              isHoveringMessage={isHoveringMessage}
-              setIsHoveringMessage={setIsHoveringMessage}
-              handleMessageMouseEnter={handleMessageMouseEnter}
-              handleMessageMouseLeave={handleMessageMouseLeave}
-              handleEmojiClick={handleEmojiClick}
-              reactionMessageId={reactionMessageId}
-              showEmojiPicker={showEmojiPicker}
-              {...messagePickerHandler}
-            />
-            
-            <MessageTimestamp 
-              timestamp={message.timestamp}
-              isCurrentUser={message.isCurrentUser}
-            />
-          </div>
+          <MessageTimestamp 
+            timestamp={message.timestamp}
+            isCurrentUser={message.isCurrentUser}
+          />
         </div>
-      </motion.div>
-    </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison function for memo
+  return (
+    prevProps.message.id === nextProps.message.id &&
+    prevProps.showEmojiPicker === nextProps.showEmojiPicker &&
+    prevProps.reactionMessageId === nextProps.reactionMessageId &&
+    JSON.stringify(prevProps.message.reactions) === JSON.stringify(nextProps.message.reactions)
   );
 });
 
