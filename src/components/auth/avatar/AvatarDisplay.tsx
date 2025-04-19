@@ -15,7 +15,7 @@ const sizeClasses = {
   lg: "h-32 w-32"
 };
 
-export const getInitials = (name: string) => {
+export const getInitials = (name: string = "User") => {
   return name.split(' ').map(part => part[0]).join('').toUpperCase().substring(0, 2);
 };
 
@@ -25,20 +25,23 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   className = ""
 }) => {
   const avatarUrl = useMemo(() => {
+    if (!user) return "/placeholder.svg";
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
     return `${url}?t=${Date.now()}`; // Force cache invalidation
-  }, [user.avatar]);
+  }, [user?.avatar]);
+
+  const displayName = user?.name || "User";
 
   return (
     <Avatar className={`${sizeClasses[size]} ${className} bg-muted/30 flex items-center justify-center`}>
       <AvatarImage 
         src={avatarUrl} 
-        alt={user.name || "User"} 
+        alt={displayName} 
         className="w-full h-full"
         loading="eager"
       />
-      <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
+      <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
     </Avatar>
   );
 };

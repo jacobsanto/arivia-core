@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Message } from "@/hooks/useChatTypes";
 import MessageContent from "./message/MessageContent";
@@ -83,7 +82,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           }`}
         >
           <MessageAvatar 
-            user={userObj} 
+            sender={message.sender}
+            avatar={message.avatar}
             isCurrentUser={message.isCurrentUser} 
           />
           

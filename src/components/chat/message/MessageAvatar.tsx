@@ -1,14 +1,20 @@
 
 import React from "react";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
-import { User } from "@/types/auth";
 
 interface MessageAvatarProps {
-  user: User | { name: string; avatar?: string; id?: string };
+  sender: string;
+  avatar?: string;
   isCurrentUser: boolean;
 }
 
-const MessageAvatar: React.FC<MessageAvatarProps> = ({ user, isCurrentUser }) => {
+const MessageAvatar: React.FC<MessageAvatarProps> = ({ sender, avatar, isCurrentUser }) => {
+  const user = {
+    name: sender,
+    avatar: avatar,
+    id: sender // Using sender as id since we don't have actual IDs
+  };
+
   return (
     <div className={`${isCurrentUser ? "ml-2" : "mr-2"}`}>
       <AvatarDisplay user={user} size="sm" />
