@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import { Message } from "@/hooks/useChatTypes";
 import EmojiPicker from "../emoji/EmojiPicker";
 import MessageReactions from "../emoji/MessageReactions";
@@ -30,6 +30,8 @@ const MessageContent: React.FC<MessageContentProps> = ({
   handlePickerMouseEnter,
   handlePickerMouseLeave,
 }) => {
+  const hasAttachments = message.attachments && message.attachments.length > 0;
+  
   return (
     <div className="relative">
       <div
@@ -44,9 +46,9 @@ const MessageContent: React.FC<MessageContentProps> = ({
         <p className="text-sm">{message.content}</p>
         
         {/* Display attachments if any */}
-        {message.attachments && message.attachments.length > 0 && (
+        {hasAttachments && (
           <div className="mt-2 space-y-2">
-            {message.attachments.map(attachment => (
+            {message.attachments!.map(attachment => (
               <div key={attachment.id} className="flex flex-col">
                 {attachment.type.startsWith('image/') ? (
                   <a 
@@ -59,6 +61,7 @@ const MessageContent: React.FC<MessageContentProps> = ({
                       src={attachment.url} 
                       alt={attachment.name} 
                       className="max-h-48 max-w-full rounded-md object-cover" 
+                      loading="lazy"
                     />
                   </a>
                 ) : (
@@ -96,4 +99,5 @@ const MessageContent: React.FC<MessageContentProps> = ({
   );
 };
 
-export default MessageContent;
+// Memoize to prevent unnecessary re-renders
+export default memo(MessageContent);

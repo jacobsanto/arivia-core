@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { memo } from "react";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
 interface MessageAvatarProps {
@@ -16,10 +16,15 @@ const MessageAvatar: React.FC<MessageAvatarProps> = ({ sender, avatar, isCurrent
   };
 
   return (
-    <div className={`${isCurrentUser ? "ml-2" : "mr-2"}`}>
-      <AvatarDisplay user={user} size="sm" />
+    <div className={`${isCurrentUser ? "ml-2" : "mr-2"} flex-shrink-0`}>
+      <AvatarDisplay 
+        user={user} 
+        size="sm" 
+        className="opacity-90 transition-opacity hover:opacity-100"
+      />
     </div>
   );
 };
 
-export default MessageAvatar;
+// Memoize to prevent unnecessary re-renders
+export default memo(MessageAvatar);

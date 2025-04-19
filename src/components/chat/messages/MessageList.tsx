@@ -1,11 +1,12 @@
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MemoizedMessage from "../message/MemoizedMessage";
 import TypingIndicator from "../typing/TypingIndicator";
 import { Message } from "@/hooks/useChatTypes";
 import { Skeleton } from "@/components/ui/skeleton";
 import { WifiOff, AlertCircle } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 interface MessageListProps {
   messages: Message[];
@@ -34,6 +35,19 @@ const MessageList: React.FC<MessageListProps> = ({
   isLoading = false,
   isOffline = false,
 }) => {
+  // Create a ref for scrolling to bottom
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  }, [messages, typingStatus]);
+
   // Memoize the empty state to prevent re-renders
   const renderEmptyState = useCallback(() => (
     <div className="flex flex-col justify-center items-center h-40 gap-2">
@@ -70,23 +84,29 @@ const MessageList: React.FC<MessageListProps> = ({
   }
 
   return (
-    <ScrollArea className="flex-1 p-6 h-full relative" orientation="vertical">
+    <ScrollArea 
+      className="flex-1 p-6 h-full relative" 
+      orientation="vertical"
+      ref={scrollAreaRef}
+    >
       <div className="space-y-6 min-h-[calc(100%-80px)]">
         {messages.length === 0 ? (
           renderEmptyState()
         ) : (
-          messages.map((msg) => (
-            <MemoizedMessage
-              key={msg.id}
-              message={msg}
-              emojis={emojis}
-              onAddReaction={onAddReaction}
-              reactionMessageId={reactionMessageId}
-              setReactionMessageId={setReactionMessageId}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-            />
-          ))
+          <AnimatePresence mode="popLayout" initial={false}>
+            {messages.map((msg) => (
+              <MemoizedMessage
+                key={`${msg.id}-${msg.content}`}
+                message={msg}
+                emojis={emojis}
+                onAddReaction={onAddReaction}
+                reactionMessageId={reactionMessageId}
+                setReactionMessageId={setReactionMessageId}
+                showEmojiPicker={showEmojiPicker}
+                setShowEmojiPicker={setShowEmojiPicker}
+              />
+            ))}
+          </AnimatePresence>
         )}
       </div>
       
