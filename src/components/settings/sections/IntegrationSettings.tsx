@@ -100,6 +100,19 @@ const IntegrationSettings: React.FC = () => {
               name="guestyApiEnabled"
               label="Enable Guesty Integration"
               description="Connect to Guesty for property and booking management"
+              showConfirmation={true}
+              onBeforeToggle={async (newValue) => {
+                // If enabling, no confirmation needed
+                if (newValue) return true;
+                
+                // If disabling, show confirmation dialog
+                return new Promise((resolve) => {
+                  const confirmed = window.confirm(
+                    "Are you sure you want to disable Guesty integration? This will clear your API credentials."
+                  );
+                  resolve(confirmed);
+                });
+              }}
             />
             <GuestySettings form={form} />
           </SettingsSection>

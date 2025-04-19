@@ -37,7 +37,8 @@ const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
           return;
         }
       }
-      form.setValue(name, checked);
+      // Ensure we set a boolean value, not a string
+      form.setValue(name, Boolean(checked));
     } finally {
       setIsToggling(false);
     }
@@ -58,7 +59,7 @@ const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
               <LoadingSpinner size="small" />
             ) : (
               <Switch
-                checked={field.value}
+                checked={Boolean(field.value)}
                 onCheckedChange={handleToggle}
                 disabled={isToggling}
               />
