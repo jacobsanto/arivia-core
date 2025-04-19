@@ -3,6 +3,7 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormControl, FormDescription } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { IntegrationSettingsFormValues } from "./types";
 
 interface IntegrationToggleProps {
@@ -10,6 +11,8 @@ interface IntegrationToggleProps {
   name: keyof IntegrationSettingsFormValues;
   label: string;
   description: string;
+  showConfirmation?: boolean;
+  onBeforeToggle?: (newValue: boolean) => Promise<boolean> | boolean;
 }
 
 const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
@@ -17,7 +20,29 @@ const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
   name,
   label,
   description,
+  showConfirmation = false,
+  onBeforeToggle
 }) => {
+  const [isToggling, setIsToggling] = React.useState(false);
+
+  const handleToggle = async (checked: boolean) => {
+    if (isToggling) return;
+
+    setIsToggling(true);
+    try {
+      if (onBeforeToggle) {
+        const shouldProceed = await onBeforeToggle(checked);
+        if (!shouldProceed) {
+          setIsToggling(false);
+          return;
+        }
+      }
+      form.setValue(name, checked);
+    } finally {
+      setIsToggling(false);
+    }
+  };
+
   return (
     <FormField
       control={form.control}
@@ -29,10 +54,15 @@ const IntegrationToggle: React.FC<IntegrationToggleProps> = ({
             <FormDescription>{description}</FormDescription>
           </div>
           <FormControl>
-            <Switch
-              checked={Boolean(field.value)}
-              onCheckedChange={field.onChange}
-            />
+            {isToggling ? (
+              <LoadingSpinner size="small" />
+            ) : (
+              <Switch
+                checked={field.value}
+                onCheckedChange={handleToggle}
+                disabled={isToggling}
+              />
+            )}
           </FormControl>
         </FormItem>
       )}
