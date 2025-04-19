@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Bell, MessageSquare, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
+import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -49,7 +49,6 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
-        {/* Logo on the left */}
         <div className="flex items-center">
           {isMobile}
           
@@ -58,7 +57,6 @@ const Header: React.FC<HeaderProps> = ({
           </Link>
         </div>
 
-        {/* User controls on the right */}
         <div className="flex items-center space-x-2 md:space-x-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -105,12 +103,8 @@ const Header: React.FC<HeaderProps> = ({
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
-                {user && user.role === 'superadmin' && (
-                  <Badge variant="outline" className="text-xs border-sidebar-foreground text-sidebar-foreground">
-                    {ROLE_DETAILS[user.role].title}
-                  </Badge>
-                )}
+              <Button variant="ghost" size="icon" className="relative">
+                {user && <AvatarDisplay user={user} size="sm" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
