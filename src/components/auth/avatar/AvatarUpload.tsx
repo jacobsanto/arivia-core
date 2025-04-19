@@ -38,10 +38,10 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <div className="relative cursor-pointer group">
+        <div className="relative inline-flex">
           <AvatarDisplay user={{...user, avatar: avatarUrl}} size={size} />
-          <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1 group-hover:bg-primary/10 transition-colors">
-            <Camera className="h-4 w-4 text-muted-foreground" />
+          <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1.5 ring-1 ring-border group-hover:bg-primary/10 transition-colors">
+            <Camera className="h-3 w-3 text-muted-foreground" />
           </div>
         </div>
       </DialogTrigger>
@@ -56,3 +56,4 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({
 };
 
 export default AvatarUpload;
+
