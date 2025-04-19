@@ -5,7 +5,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { toast } from "sonner";
 
 interface BookingComSettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -16,15 +17,18 @@ const BookingComSettings: React.FC<BookingComSettingsProps> = ({ form }) => {
 
   // Reset API key when disabled
   React.useEffect(() => {
-    if (!isEnabled) {
-      form.setValue("bookingComApiKey", "", { shouldValidate: true });
+    if (!isEnabled && form.getValues("bookingComApiKey") !== "") {
+      form.setValue("bookingComApiKey", "", { shouldValidate: false });
+      toast.info("Booking.com credentials cleared", {
+        description: "API credentials have been removed as integration was disabled"
+      });
     }
   }, [isEnabled, form]);
 
   if (!isEnabled) {
     return (
-      <Alert variant="destructive" className="mt-4">
-        <AlertCircle className="h-4 w-4" />
+      <Alert className="mt-4 bg-muted">
+        <Info className="h-4 w-4" />
         <AlertDescription>
           Booking.com integration is currently disabled. Enable it to sync with Booking.com.
         </AlertDescription>
@@ -39,10 +43,11 @@ const BookingComSettings: React.FC<BookingComSettingsProps> = ({ form }) => {
         name="bookingComApiKey"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Booking.com API Key</FormLabel>
+            <FormLabel>Booking.com API Key <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Booking.com API key"
                 {...field} 
                 onChange={(e) => {
                   field.onChange(e);

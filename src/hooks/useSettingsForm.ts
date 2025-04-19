@@ -25,9 +25,10 @@ export function useSettingsForm<T extends Record<string, any>>({
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [saveAttempts, setSaveAttempts] = useState(0);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // Get settings from the database
-  const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
+  const { settings, saveSettings, isLoading, isSaving, isOffline } = useSystemSettings<T>(
     category,
     defaultValues as unknown as T
   );
@@ -47,6 +48,8 @@ export function useSettingsForm<T extends Record<string, any>>({
         ...defaultValues,
         ...settings,
       };
+      
+      console.log("Initializing form with settings:", mergedSettings);
       form.reset(mergedSettings as unknown as DefaultValues<T>);
       setIsInitialized(true);
     }
@@ -60,14 +63,38 @@ export function useSettingsForm<T extends Record<string, any>>({
       const currentValues = form.getValues();
       const hasChanges = !isEqual(currentValues, settings);
       setIsDirty(hasChanges);
+      
+      // Clear validation errors when values change
+      if (validationError) {
+        setValidationError(null);
+      }
     });
     
     return () => subscription.unsubscribe();
-  }, [form, settings, isInitialized]);
+  }, [form, settings, isInitialized, validationError]);
   
   // Handle form submission with proper cleanup
   const onSubmit = async (data: T) => {
+    setValidationError(null);
+    console.log("Submitting form data:", data);
+    
     try {
+      // Validate all fields first
+      const result = await form.trigger();
+      
+      if (!result) {
+        console.error("Form validation failed:", form.formState.errors);
+        const errorMessages = Object.entries(form.formState.errors)
+          .map(([field, error]) => `${field}: ${error.message}`)
+          .join(", ");
+        
+        setValidationError(errorMessages);
+        toast.error("Validation failed", {
+          description: "Please check your inputs and try again"
+        });
+        return false;
+      }
+      
       // Clean up empty string values to null
       const cleanData = Object.fromEntries(
         Object.entries(data).map(([key, value]) => [
@@ -76,6 +103,8 @@ export function useSettingsForm<T extends Record<string, any>>({
         ])
       ) as T;
 
+      console.log("Saving cleaned data:", cleanData);
+      
       // Optimistic UI update - if the form data is valid, we reset the form first
       form.reset(cleanData as unknown as DefaultValues<T>);
       
@@ -86,11 +115,10 @@ export function useSettingsForm<T extends Record<string, any>>({
         // Update form state after successful save
         setIsDirty(false);
         
-        toast.success("Settings saved successfully");
-        
         if (onAfterSave) {
           onAfterSave(cleanData);
         }
+        return true;
       } else {
         // If save failed, we reset the form to the previous state
         form.reset(settings as unknown as DefaultValues<T>);
@@ -106,6 +134,7 @@ export function useSettingsForm<T extends Record<string, any>>({
             description: "Please check your connection and try again later"
           });
         }
+        return false;
       }
     } catch (error: any) {
       console.error('Failed to save settings:', error);
@@ -115,14 +144,17 @@ export function useSettingsForm<T extends Record<string, any>>({
       
       // Reset form to previous state
       form.reset(settings as unknown as DefaultValues<T>);
+      return false;
     }
   };
   
   // Reset form to the last saved values
   const resetForm = () => {
     if (settings) {
+      console.log("Resetting form to saved settings:", settings);
       form.reset(settings as unknown as DefaultValues<T>);
       setIsDirty(false);
+      setValidationError(null);
       
       toast.info("Settings reset", {
         description: "Changes have been reverted to last saved values"
@@ -138,6 +170,8 @@ export function useSettingsForm<T extends Record<string, any>>({
     onSubmit,
     resetForm,
     settings,
-    isInitialized
+    isInitialized,
+    validationError,
+    isOffline
   };
 }

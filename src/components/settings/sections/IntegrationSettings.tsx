@@ -11,8 +11,12 @@ import BookingComSettings from "./integration/BookingComSettings";
 import AirbnbSettings from "./integration/AirbnbSettings";
 import StripeSettings from "./integration/StripeSettings";
 import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 const IntegrationSettings: React.FC = () => {
+  const [hasFormErrors, setHasFormErrors] = React.useState(false);
+
   const {
     form,
     isLoading,
@@ -25,15 +29,39 @@ const IntegrationSettings: React.FC = () => {
     defaultValues: defaultIntegrationValues,
     schema: integrationSettingsSchema,
     onAfterSave: (data) => {
-      if (!data.guestyApiEnabled) {
-        toast.success('Guesty integration disabled successfully');
+      let enabledServices = [];
+      if (data.guestyApiEnabled) enabledServices.push("Guesty");
+      if (data.bookingComEnabled) enabledServices.push("Booking.com");
+      if (data.airbnbEnabled) enabledServices.push("Airbnb");
+      if (data.stripeEnabled) enabledServices.push("Stripe");
+      
+      if (enabledServices.length > 0) {
+        toast.success(`Integration settings saved successfully`, {
+          description: `Enabled services: ${enabledServices.join(", ")}`
+        });
       } else {
-        toast.success('Guesty integration settings saved successfully');
+        toast.success('All integrations are currently disabled');
       }
     },
   });
 
+  // Check for form errors when validation is triggered
+  React.useEffect(() => {
+    const subscription = form.formState.subscribe(() => {
+      if (Object.keys(form.formState.errors).length > 0) {
+        console.log("Form has errors:", form.formState.errors);
+        setHasFormErrors(true);
+      } else {
+        setHasFormErrors(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form.formState]);
+
   const handleSubmit = async (data: IntegrationSettingsFormValues) => {
+    console.log("Submitting integration settings:", data);
+    
     try {
       await onSubmit(data);
     } catch (error) {
@@ -56,6 +84,15 @@ const IntegrationSettings: React.FC = () => {
           onSave={form.handleSubmit(handleSubmit)}
           onReset={resetForm}
         >
+          {hasFormErrors && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Please fix the errors highlighted below before saving.
+              </AlertDescription>
+            </Alert>
+          )}
+
           <SettingsSection
             title="Guesty Integration"
             description="Connect to Guesty for property and booking management"
@@ -79,7 +116,7 @@ const IntegrationSettings: React.FC = () => {
               label="Enable Booking.com Integration"
               description="Connect to Booking.com for channel management"
             />
-            {form.watch("bookingComEnabled") && <BookingComSettings form={form} />}
+            <BookingComSettings form={form} />
           </SettingsSection>
 
           <SettingsSection
@@ -92,7 +129,7 @@ const IntegrationSettings: React.FC = () => {
               label="Enable Airbnb Integration"
               description="Connect to Airbnb for channel management"
             />
-            {form.watch("airbnbEnabled") && <AirbnbSettings form={form} />}
+            <AirbnbSettings form={form} />
           </SettingsSection>
 
           <SettingsSection
@@ -105,7 +142,7 @@ const IntegrationSettings: React.FC = () => {
               label="Enable Stripe Integration"
               description="Connect to Stripe for payment processing"
             />
-            {form.watch("stripeEnabled") && <StripeSettings form={form} />}
+            <StripeSettings form={form} />
           </SettingsSection>
         </SettingsLayout>
       </form>

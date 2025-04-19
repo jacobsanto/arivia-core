@@ -12,26 +12,60 @@ export const integrationSettingsSchema = z.object({
   stripeEnabled: z.boolean(),
   stripeApiKey: z.string().optional().transform(val => val || ""),
   stripeWebhookSecret: z.string().optional().transform(val => val || ""),
-}).refine((data) => {
+}).superRefine((data, ctx) => {
   // Validate Guesty credentials if enabled
-  if (data.guestyApiEnabled && (!data.guestyApiKey || !data.guestyApiSecret)) {
-    return false;
+  if (data.guestyApiEnabled) {
+    if (!data.guestyApiKey) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Guesty API Key is required when enabled",
+        path: ["guestyApiKey"]
+      });
+    }
+    if (!data.guestyApiSecret) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Guesty API Secret is required when enabled",
+        path: ["guestyApiSecret"]
+      });
+    }
   }
+  
   // Validate Booking.com credentials if enabled
   if (data.bookingComEnabled && !data.bookingComApiKey) {
-    return false;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Booking.com API Key is required when enabled",
+      path: ["bookingComApiKey"]
+    });
   }
+  
   // Validate Airbnb credentials if enabled
   if (data.airbnbEnabled && !data.airbnbApiKey) {
-    return false;
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Airbnb API Key is required when enabled",
+      path: ["airbnbApiKey"]
+    });
   }
+  
   // Validate Stripe credentials if enabled
-  if (data.stripeEnabled && (!data.stripeApiKey || !data.stripeWebhookSecret)) {
-    return false;
+  if (data.stripeEnabled) {
+    if (!data.stripeApiKey) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Stripe API Key is required when enabled",
+        path: ["stripeApiKey"]
+      });
+    }
+    if (!data.stripeWebhookSecret) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Stripe Webhook Secret is required when enabled",
+        path: ["stripeWebhookSecret"]
+      });
+    }
   }
-  return true;
-}, {
-  message: "API credentials are required when an integration is enabled",
 });
 
 export type IntegrationSettingsFormValues = z.infer<typeof integrationSettingsSchema>;

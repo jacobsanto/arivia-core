@@ -5,7 +5,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { toast } from "sonner";
 
 interface StripeSettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -16,16 +17,19 @@ const StripeSettings: React.FC<StripeSettingsProps> = ({ form }) => {
 
   // Reset API credentials when disabled
   React.useEffect(() => {
-    if (!isEnabled) {
-      form.setValue("stripeApiKey", "", { shouldValidate: true });
-      form.setValue("stripeWebhookSecret", "", { shouldValidate: true });
+    if (!isEnabled && (form.getValues("stripeApiKey") !== "" || form.getValues("stripeWebhookSecret") !== "")) {
+      form.setValue("stripeApiKey", "", { shouldValidate: false });
+      form.setValue("stripeWebhookSecret", "", { shouldValidate: false });
+      toast.info("Stripe credentials cleared", {
+        description: "API credentials have been removed as integration was disabled"
+      });
     }
   }, [isEnabled, form]);
 
   if (!isEnabled) {
     return (
-      <Alert variant="destructive" className="mt-4">
-        <AlertCircle className="h-4 w-4" />
+      <Alert className="mt-4 bg-muted">
+        <Info className="h-4 w-4" />
         <AlertDescription>
           Stripe integration is currently disabled. Enable it to process payments.
         </AlertDescription>
@@ -40,10 +44,11 @@ const StripeSettings: React.FC<StripeSettingsProps> = ({ form }) => {
         name="stripeApiKey"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Stripe API Key</FormLabel>
+            <FormLabel>Stripe API Key <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Stripe API key"
                 {...field} 
                 onChange={(e) => {
                   field.onChange(e);
@@ -64,10 +69,11 @@ const StripeSettings: React.FC<StripeSettingsProps> = ({ form }) => {
         name="stripeWebhookSecret"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Stripe Webhook Secret</FormLabel>
+            <FormLabel>Stripe Webhook Secret <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Stripe webhook secret"
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);

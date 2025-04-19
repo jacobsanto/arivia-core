@@ -23,6 +23,7 @@ export interface SystemSettings {
 export const settingsService = {
   async getSettings(category: SettingsCategory): Promise<Record<string, any>> {
     try {
+      console.log(`Fetching settings for category: ${category}`);
       const { data, error } = await supabase
         .from('system_settings')
         .select('*')
@@ -32,6 +33,12 @@ export const settingsService = {
       if (error) {
         console.error('Error fetching settings:', error);
         throw error;
+      }
+
+      if (data?.settings) {
+        console.log(`Settings retrieved for ${category}:`, data.settings);
+      } else {
+        console.log(`No settings found for ${category}, using defaults`);
       }
 
       return data?.settings ? 
@@ -45,6 +52,8 @@ export const settingsService = {
 
   async saveSettings(category: SettingsCategory, settings: Record<string, any>): Promise<boolean> {
     try {
+      console.log(`Saving settings for category: ${category}`, settings);
+      
       // Start a transaction
       const { data: existingSettings } = await supabase
         .from('system_settings')
@@ -55,6 +64,7 @@ export const settingsService = {
       let result;
       
       if (existingSettings) {
+        console.log(`Updating existing settings with ID: ${existingSettings.id}`);
         // Update existing settings with retry mechanism
         result = await this.retryOperation(async () => {
           return await supabase
@@ -64,10 +74,10 @@ export const settingsService = {
               updated_at: new Date().toISOString()
             })
             .eq('id', existingSettings.id)
-            .select()
-            .single();
+            .select();
         });
       } else {
+        console.log(`Creating new settings entry for category: ${category}`);
         // Insert new settings with retry mechanism
         result = await this.retryOperation(async () => {
           return await supabase
@@ -78,8 +88,7 @@ export const settingsService = {
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             })
-            .select()
-            .single();
+            .select();
         });
       }
 
@@ -90,6 +99,7 @@ export const settingsService = {
 
       // Update local storage cache for offline support
       localStorage.setItem(`settings_${category}`, JSON.stringify(settings));
+      console.log(`Settings for ${category} saved successfully`);
 
       return true;
     } catch (error: any) {
@@ -103,13 +113,18 @@ export const settingsService = {
     let lastError;
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        console.log(`Operation attempt ${attempt}/${maxRetries}`);
         return await operation();
       } catch (error) {
         lastError = error;
+        console.error(`Operation failed on attempt ${attempt}/${maxRetries}:`, error);
+        
         if (attempt === maxRetries) break;
+        console.log(`Retrying in ${attempt} second(s)...`);
         await new Promise(resolve => setTimeout(resolve, attempt * 1000));
       }
     }
+    console.error(`Operation failed after ${maxRetries} attempts`);
     throw lastError;
   }
 };

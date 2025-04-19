@@ -5,7 +5,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { toast } from "sonner";
 
 interface AirbnbSettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -16,15 +17,18 @@ const AirbnbSettings: React.FC<AirbnbSettingsProps> = ({ form }) => {
 
   // Reset API key when disabled
   React.useEffect(() => {
-    if (!isEnabled) {
-      form.setValue("airbnbApiKey", "", { shouldValidate: true });
+    if (!isEnabled && form.getValues("airbnbApiKey") !== "") {
+      form.setValue("airbnbApiKey", "", { shouldValidate: false });
+      toast.info("Airbnb credentials cleared", {
+        description: "API credentials have been removed as integration was disabled"
+      });
     }
   }, [isEnabled, form]);
 
   if (!isEnabled) {
     return (
-      <Alert variant="destructive" className="mt-4">
-        <AlertCircle className="h-4 w-4" />
+      <Alert className="mt-4 bg-muted">
+        <Info className="h-4 w-4" />
         <AlertDescription>
           Airbnb integration is currently disabled. Enable it to sync with Airbnb.
         </AlertDescription>
@@ -39,10 +43,11 @@ const AirbnbSettings: React.FC<AirbnbSettingsProps> = ({ form }) => {
         name="airbnbApiKey"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Airbnb API Key</FormLabel>
+            <FormLabel>Airbnb API Key <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Airbnb API key"
                 {...field} 
                 onChange={(e) => {
                   field.onChange(e);

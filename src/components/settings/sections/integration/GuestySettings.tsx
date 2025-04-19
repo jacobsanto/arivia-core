@@ -5,7 +5,8 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessa
 import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
+import { toast } from "sonner";
 
 interface GuestySettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -16,16 +17,19 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
 
   // Reset API credentials immediately when integration is disabled
   React.useEffect(() => {
-    if (!isEnabled) {
-      form.setValue("guestyApiKey", "", { shouldValidate: true });
-      form.setValue("guestyApiSecret", "", { shouldValidate: true });
+    if (!isEnabled && form.getValues("guestyApiKey") !== "" || form.getValues("guestyApiSecret") !== "") {
+      form.setValue("guestyApiKey", "", { shouldValidate: false });
+      form.setValue("guestyApiSecret", "", { shouldValidate: false });
+      toast.info("Guesty credentials cleared", {
+        description: "API credentials have been removed as integration was disabled"
+      });
     }
   }, [isEnabled, form]);
 
   if (!isEnabled) {
     return (
-      <Alert variant="destructive" className="mt-4">
-        <AlertCircle className="h-4 w-4" />
+      <Alert className="mt-4 bg-muted">
+        <Info className="h-4 w-4" />
         <AlertDescription>
           Guesty integration is currently disabled. Enable it to manage properties and bookings through Guesty.
         </AlertDescription>
@@ -40,10 +44,11 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
         name="guestyApiKey"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Guesty API Key</FormLabel>
+            <FormLabel>Guesty API Key <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Guesty API key"
                 {...field} 
                 onChange={(e) => {
                   field.onChange(e);
@@ -64,10 +69,11 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
         name="guestyApiSecret"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Guesty API Secret</FormLabel>
+            <FormLabel>Guesty API Secret <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input 
                 type="password" 
+                placeholder="Enter your Guesty API secret"
                 {...field}
                 onChange={(e) => {
                   field.onChange(e);
