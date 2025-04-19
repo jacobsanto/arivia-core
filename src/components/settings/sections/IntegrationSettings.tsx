@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { useSettingsForm } from "@/hooks/useSettingsForm";
@@ -10,6 +9,7 @@ import GuestySettings from "./integration/GuestySettings";
 import BookingComSettings from "./integration/BookingComSettings";
 import AirbnbSettings from "./integration/AirbnbSettings";
 import StripeSettings from "./integration/StripeSettings";
+import { toast } from "sonner";
 
 const IntegrationSettings: React.FC = () => {
   const {
@@ -23,18 +23,34 @@ const IntegrationSettings: React.FC = () => {
     category: 'integration',
     defaultValues: defaultIntegrationValues,
     schema: integrationSettingsSchema,
+    onAfterSave: (data) => {
+      if (!data.guestyApiEnabled) {
+        toast.success('Guesty integration disabled successfully');
+      }
+    },
   });
+
+  const handleSubmit = async (data: IntegrationSettingsFormValues) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error('Failed to save integration settings:', error);
+      toast.error('Failed to save settings', {
+        description: 'Please try again or contact support if the issue persists'
+      });
+    }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(handleSubmit)}>
         <SettingsLayout
           title="Integration Settings"
           description="Configure third-party service integrations"
           isLoading={isLoading}
           isSaving={isSaving}
           isDirty={isDirty}
-          onSave={form.handleSubmit(onSubmit)}
+          onSave={form.handleSubmit(handleSubmit)}
           onReset={resetForm}
         >
           <SettingsSection
@@ -47,7 +63,7 @@ const IntegrationSettings: React.FC = () => {
               label="Enable Guesty Integration"
               description="Connect to Guesty for property and booking management"
             />
-            {form.watch("guestyApiEnabled") && <GuestySettings form={form} />}
+            <GuestySettings form={form} />
           </SettingsSection>
 
           <SettingsSection

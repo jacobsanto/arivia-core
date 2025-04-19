@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { IntegrationSettingsFormValues } from "./types";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 
 interface GuestySettingsProps {
   form: UseFormReturn<IntegrationSettingsFormValues>;
@@ -13,6 +14,14 @@ interface GuestySettingsProps {
 
 const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
   const isEnabled = form.watch("guestyApiEnabled");
+
+  React.useEffect(() => {
+    // Clear API credentials when integration is disabled
+    if (!isEnabled) {
+      form.setValue("guestyApiKey", "");
+      form.setValue("guestyApiSecret", "");
+    }
+  }, [isEnabled, form]);
 
   if (!isEnabled) {
     return (
@@ -34,7 +43,14 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
           <FormItem>
             <FormLabel>Guesty API Key</FormLabel>
             <FormControl>
-              <Input type="password" {...field} />
+              <Input 
+                type="password" 
+                {...field} 
+                onChange={(e) => {
+                  field.onChange(e);
+                  form.trigger("guestyApiKey");
+                }}
+              />
             </FormControl>
             <FormDescription>
               Your Guesty API Key from the Guesty developer portal
@@ -51,7 +67,14 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
           <FormItem>
             <FormLabel>Guesty API Secret</FormLabel>
             <FormControl>
-              <Input type="password" {...field} />
+              <Input 
+                type="password" 
+                {...field}
+                onChange={(e) => {
+                  field.onChange(e);
+                  form.trigger("guestyApiSecret");
+                }}
+              />
             </FormControl>
             <FormDescription>
               Your Guesty API Secret from the Guesty developer portal

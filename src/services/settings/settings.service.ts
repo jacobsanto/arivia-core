@@ -33,13 +33,12 @@ export const settingsService = {
         throw error;
       }
 
-      // Ensure we return an object even if data.settings is a primitive
       return data?.settings ? 
         (typeof data.settings === 'object' ? data.settings : { value: data.settings }) : 
         {};
     } catch (error: any) {
       console.error('Failed to fetch settings:', error.message);
-      return {};
+      throw error;
     }
   },
 
@@ -58,26 +57,32 @@ export const settingsService = {
         // Update existing settings
         result = await supabase
           .from('system_settings')
-          .update({ settings })
+          .update({ 
+            settings,
+            updated_at: new Date().toISOString()
+          })
           .eq('id', existingSettings.id);
       } else {
         // Insert new settings
         result = await supabase
           .from('system_settings')
-          .insert({ category, settings });
+          .insert({ 
+            category, 
+            settings,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
       }
 
       if (result.error) {
+        console.error('Error saving settings:', result.error);
         throw result.error;
       }
 
       return true;
     } catch (error: any) {
-      console.error('Failed to save settings:', error.message);
-      toast.error('Failed to save settings', {
-        description: error.message
-      });
-      return false;
+      console.error('Failed to save settings:', error);
+      throw error;
     }
   },
 
