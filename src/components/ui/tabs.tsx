@@ -65,21 +65,25 @@ interface SwipeableTabsContentProps extends React.ComponentPropsWithoutRef<typeo
   children: React.ReactNode;
   value: string;
   swipeEnabled?: boolean;
+  tabsRoot?: React.RefObject<any>; // Add tabsRoot to the interface
 }
 
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   SwipeableTabsContentProps
->(({ className, children, value, swipeEnabled = true, ...props }, ref) => {
+>(({ className, children, value, swipeEnabled = true, tabsRoot, ...props }, ref) => {
   const { availableTabs, getNextTab, getPreviousTab } = React.useContext(TabsContentContext);
   const tabsRootRef = React.useContext(TabsRootContext);
+  
+  // Use provided tabsRoot or context value
+  const activeTabsRoot = tabsRoot || tabsRootRef;
 
   const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
     onSwipeLeft: () => {
-      if (swipeEnabled && tabsRootRef) {
+      if (swipeEnabled && activeTabsRoot) {
         const nextTab = getNextTab(value);
         if (nextTab) {
-          const tabsElement = tabsRootRef as unknown as { setValue: (value: string) => void };
+          const tabsElement = activeTabsRoot as unknown as { setValue: (value: string) => void };
           if (tabsElement.setValue) {
             tabsElement.setValue(nextTab);
           }
@@ -87,10 +91,10 @@ const TabsContent = React.forwardRef<
       }
     },
     onSwipeRight: () => {
-      if (swipeEnabled && tabsRootRef) {
+      if (swipeEnabled && activeTabsRoot) {
         const previousTab = getPreviousTab(value);
         if (previousTab) {
-          const tabsElement = tabsRootRef as unknown as { setValue: (value: string) => void };
+          const tabsElement = activeTabsRoot as unknown as { setValue: (value: string) => void };
           if (tabsElement.setValue) {
             tabsElement.setValue(previousTab);
           }

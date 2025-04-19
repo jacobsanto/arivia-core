@@ -70,4 +70,7 @@ export const securityUtils = {
   }
 };
 
+// Export individual functions for direct import
+export const { isSecureContext, areCookiesEnabled, isLocalStorageAvailable, isSessionStorageAvailable, supportsModernSecurity } = securityUtils;
+
 export default securityUtils;
