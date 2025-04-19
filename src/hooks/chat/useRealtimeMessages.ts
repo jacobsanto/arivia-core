@@ -68,11 +68,9 @@ export function useRealtimeMessages({
         }
       });
       
-    channel.subscribe((status) => {
+    channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
       if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
         console.log(`Subscribed to ${channelName}`);
-      } else {
-        console.warn(`Subscription status for ${channelName}:`, status);
       }
     });
       

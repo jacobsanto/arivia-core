@@ -1,5 +1,5 @@
 
-import React, { useRef, useLayoutEffect, useCallback } from "react";
+import React, { useRef, useLayoutEffect, useCallback, memo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ChatMessage from "../ChatMessage";
 import TypingIndicator from "../typing/TypingIndicator";
@@ -21,7 +21,7 @@ interface MessageListProps {
   isOffline?: boolean;
 }
 
-const MessageList: React.FC<MessageListProps> = ({
+const MessageList = ({
   messages,
   emojis,
   onAddReaction,
@@ -33,17 +33,20 @@ const MessageList: React.FC<MessageListProps> = ({
   activeChat,
   isLoading = false,
   isOffline = false,
-}) => {
+}: MessageListProps) => {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const scrollToBottom = useCallback(() => {
     if (scrollAreaRef.current) {
-      const scrollArea = scrollAreaRef.current;
-      scrollArea.scrollTop = scrollArea.scrollHeight;
+      requestAnimationFrame(() => {
+        const scrollArea = scrollAreaRef.current;
+        if (scrollArea) {
+          scrollArea.scrollTop = scrollArea.scrollHeight;
+        }
+      });
     }
   }, []);
 
-  // Auto-scroll to bottom when new messages arrive
   useLayoutEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
@@ -117,4 +120,4 @@ const MessageList: React.FC<MessageListProps> = ({
   );
 };
 
-export default React.memo(MessageList);
+export default memo(MessageList);
