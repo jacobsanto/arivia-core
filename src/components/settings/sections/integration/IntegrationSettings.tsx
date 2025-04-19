@@ -1,14 +1,15 @@
+
 import React from "react";
 import { Form } from "@/components/ui/form";
 import { useSettingsForm } from "@/hooks/useSettingsForm";
 import SettingsLayout from "@/components/settings/SettingsLayout";
 import SettingsSection from "@/components/settings/SettingsSection";
-import { integrationSettingsSchema, defaultIntegrationValues, IntegrationSettingsFormValues } from "./integration/types";
-import IntegrationToggle from "./integration/IntegrationToggle";
-import GuestySettings from "./integration/GuestySettings";
-import BookingComSettings from "./integration/BookingComSettings";
-import AirbnbSettings from "./integration/AirbnbSettings";
-import StripeSettings from "./integration/StripeSettings";
+import { integrationSettingsSchema, defaultIntegrationValues, IntegrationSettingsFormValues } from "./types";
+import IntegrationToggle from "./IntegrationToggle";
+import GuestySettings from "./GuestySettings";
+import BookingComSettings from "./BookingComSettings";
+import AirbnbSettings from "./AirbnbSettings";
+import StripeSettings from "./StripeSettings";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
