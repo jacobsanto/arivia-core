@@ -6,7 +6,7 @@ import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarCh
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import AvatarUpload from "@/components/auth/avatar/AvatarUpload";
+import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
 const Sidebar = () => {
   const { user, logout } = useUser();
@@ -29,8 +29,8 @@ const Sidebar = () => {
       
       <div className="flex items-center justify-center mb-6">
         <div className="flex flex-col items-center">
-          <div className="w-12 h-12 rounded-full overflow-hidden mb-2">
-            <AvatarUpload user={user} size="sm" editable={false} />
+          <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
+            <AvatarDisplay user={user} size="md" />
           </div>
           <p className="font-semibold text-base">{user.name}</p>
           <span className="text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1 font-semibold text-sm">
