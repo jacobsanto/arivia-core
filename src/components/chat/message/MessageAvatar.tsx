@@ -4,7 +4,7 @@ import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { User } from "@/types/auth";
 
 interface MessageAvatarProps {
-  user: User | { name: string; avatar?: string; id?: string };
+  user: User;
   isCurrentUser: boolean;
 }
 

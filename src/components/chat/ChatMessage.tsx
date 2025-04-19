@@ -1,5 +1,5 @@
 
-import React, { memo } from "react";
+import React from "react";
 import { Message } from "@/hooks/useChatTypes";
 import MessageContent from "./message/MessageContent";
 import MessageAvatar from "./message/MessageAvatar";
@@ -17,7 +17,7 @@ interface ChatMessageProps {
   setShowEmojiPicker: (show: boolean) => void;
 }
 
-const ChatMessage = memo<ChatMessageProps>(({
+const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   emojis,
   onAddReaction,
@@ -26,6 +26,7 @@ const ChatMessage = memo<ChatMessageProps>(({
   showEmojiPicker,
   setShowEmojiPicker,
 }) => {
+  // Use our custom hook for hover management
   const {
     isHoveringMessage,
     setIsHoveringMessage,
@@ -35,6 +36,7 @@ const ChatMessage = memo<ChatMessageProps>(({
     handlePickerMouseLeave
   } = useMessageHover();
   
+  // Create specific handlers for this message
   const handleMessageMouseEnter = () => {
     baseHandleMessageMouseEnter(
       message.id,
@@ -59,63 +61,49 @@ const ChatMessage = memo<ChatMessageProps>(({
     handlePickerMouseLeave: () => handlePickerMouseLeave(setShowEmojiPicker)
   };
 
-  const userObj = {
-    name: message.sender,
-    avatar: message.avatar,
-    id: message.id
-  };
-
   return (
-    <motion.div
-      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15, type: "tween" }}
-      layout="position"
-      layoutId={message.id}
-    >
-      <div
-        className={`flex max-w-[80%] ${
-          message.isCurrentUser ? "flex-row-reverse" : "flex-row"
-        }`}
+    <AnimatePresence mode="popLayout">
+      <motion.div
+        className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.2 }}
       >
-        <MessageAvatar 
-          user={userObj} 
-          isCurrentUser={message.isCurrentUser} 
-        />
-        
-        <div>
-          <MessageContent
-            message={message}
-            emojis={emojis}
-            isHoveringMessage={isHoveringMessage}
-            setIsHoveringMessage={setIsHoveringMessage}
-            handleMessageMouseEnter={handleMessageMouseEnter}
-            handleMessageMouseLeave={handleMessageMouseLeave}
-            handleEmojiClick={handleEmojiClick}
-            reactionMessageId={reactionMessageId}
-            showEmojiPicker={showEmojiPicker}
-            {...messagePickerHandler}
+        <div
+          className={`flex max-w-[80%] ${
+            message.isCurrentUser ? "flex-row-reverse" : "flex-row"
+          }`}
+        >
+          <MessageAvatar 
+            sender={message.sender} 
+            avatar={message.avatar} 
+            isCurrentUser={message.isCurrentUser} 
           />
           
-          <MessageTimestamp 
-            timestamp={message.timestamp}
-            isCurrentUser={message.isCurrentUser}
-          />
+          <div>
+            <MessageContent
+              message={message}
+              emojis={emojis}
+              isHoveringMessage={isHoveringMessage}
+              setIsHoveringMessage={setIsHoveringMessage}
+              handleMessageMouseEnter={handleMessageMouseEnter}
+              handleMessageMouseLeave={handleMessageMouseLeave}
+              handleEmojiClick={handleEmojiClick}
+              reactionMessageId={reactionMessageId}
+              showEmojiPicker={showEmojiPicker}
+              {...messagePickerHandler}
+            />
+            
+            <MessageTimestamp 
+              timestamp={message.timestamp}
+              isCurrentUser={message.isCurrentUser}
+            />
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.message.id === nextProps.message.id &&
-    prevProps.showEmojiPicker === nextProps.showEmojiPicker &&
-    prevProps.reactionMessageId === nextProps.reactionMessageId &&
-    JSON.stringify(prevProps.message.reactions) === JSON.stringify(nextProps.message.reactions)
-  );
-});
-
-ChatMessage.displayName = "ChatMessage";
+};
 
 export default ChatMessage;
