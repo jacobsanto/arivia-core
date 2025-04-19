@@ -20,6 +20,7 @@ export interface UserContextType {
     profileData: Partial<{
       name: string;
       email: string;
+      phone?: string;
       role: UserRole;
       secondaryRoles?: UserRole[];
       customPermissions?: Record<string, boolean>;

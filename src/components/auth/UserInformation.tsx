@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import ProfileForm from "./forms/ProfileForm";
 import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserInformation = () => {
   const { user, updateProfile, refreshProfile } = useUser();
