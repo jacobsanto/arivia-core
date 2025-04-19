@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -52,7 +51,7 @@ const Sidebar = () => {
           </>
         )}
         
-        {(isAdmin || isPropertyManager) && (
+        {canAccess("view_damage_reports") && (
           <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
         )}
         

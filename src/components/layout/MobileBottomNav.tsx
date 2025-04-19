@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Home, Menu, BedDouble, Package, Wrench, FileText } from "lucide-react";
 import NavItem from "./NavItem";
@@ -25,7 +24,7 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
         <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
       )}
       
-      {isAdminOrManager && (
+      {canAccess("view_damage_reports") && (
         <NavItem to="/damage-reports" icon={<FileText size={20} />} label="Reports" />
       )}
       

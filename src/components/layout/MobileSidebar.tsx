@@ -67,7 +67,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
               </>
             )}
             
-            {(isAdmin || isPropertyManager) && (
+            {/* Updated to use the new permission */}
+            {canAccess("view_damage_reports") && (
               <MobileSidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" onClick={handleLinkClick} />
             )}
             

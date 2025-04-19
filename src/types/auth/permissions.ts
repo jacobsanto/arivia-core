@@ -1,4 +1,3 @@
-
 /**
  * Permission definitions and related utilities
  */
@@ -20,6 +19,16 @@ export const FEATURE_PERMISSIONS: Record<string, FeaturePermission> = {
     title: "Booking Management",
     description: "Handle reservations and guest information",
     allowedRoles: ["superadmin", "administrator", "property_manager", "concierge"]
+  },
+  view_damage_reports: {
+    title: "View Damage Reports",
+    description: "Access and view damage reports",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff", "inventory_manager", "concierge"]
+  },
+  manage_damage_reports: {
+    title: "Manage Damage Reports",
+    description: "Create and update damage reports",
+    allowedRoles: ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"]
   },
   manage_housekeeping: {
     title: "Housekeeping Management",
