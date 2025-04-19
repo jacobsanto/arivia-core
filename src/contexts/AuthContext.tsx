@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Session } from "@/types/auth";
+import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
 
@@ -39,11 +39,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             id: data.session.user.id,
             email: data.session.user.email || '',
             name: profile.name || data.session.user.email?.split('@')[0] || 'User',
-            role: profile.role || 'property_manager',
+            role: profile.role as UserRole || 'property_manager',
             avatar: profile.avatar || "/placeholder.svg",
             phone: profile.phone,
-            secondaryRoles: profile.secondary_roles,
-            customPermissions: profile.custom_permissions
+            secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
+            customPermissions: profile.custom_permissions as Record<string, boolean> || {}
           });
         }
       }
@@ -75,11 +75,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               id: newSession.user.id,
               email: newSession.user.email || '',
               name: profile.name || newSession.user.email?.split('@')[0] || 'User',
-              role: profile.role || 'property_manager',
+              role: profile.role as UserRole || 'property_manager',
               avatar: profile.avatar || "/placeholder.svg",
               phone: profile.phone,
-              secondaryRoles: profile.secondary_roles,
-              customPermissions: profile.custom_permissions
+              secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
+              customPermissions: profile.custom_permissions as Record<string, boolean> || {}
             });
           }
         } else {
