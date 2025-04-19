@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
@@ -50,13 +49,16 @@ export function useRealtimeMessages({
         };
         
         try {
-          const { data } = await supabase
+          const { data, error } = await supabase
             .from('profiles')
             .select('name, avatar')
             .eq('id', senderId)
-            .single();
+            .maybeSingle();
               
-          if (data) {
+          if (error) {
+            console.warn("Error fetching sender details:", error);
+            // Continue with default values if profile fetch fails
+          } else if (data) {
             newMessage.sender = data.name || "Unknown User";
             newMessage.avatar = data.avatar || "/placeholder.svg";
           }
@@ -64,6 +66,7 @@ export function useRealtimeMessages({
           setMessages(prev => [...prev, newMessage]);
         } catch (error) {
           console.warn("Could not fetch sender details", error);
+          // Still add message even if we can't get sender details
           setMessages(prev => [...prev, newMessage]);
         }
       });
@@ -71,6 +74,13 @@ export function useRealtimeMessages({
     channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
       if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
         console.log(`Subscribed to ${channelName}`);
+      } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
+        console.log(`Channel ${channelName} closed`);
+      } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+        console.error(`Channel ${channelName} error`);
+        toast.error("Lost connection to chat", {
+          description: "Messages may be delayed. Trying to reconnect..."
+        });
       }
     });
       
