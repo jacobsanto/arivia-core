@@ -14,12 +14,11 @@ interface GuestySettingsProps {
 const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
   const isEnabled = form.watch("guestyApiEnabled");
 
-  // Clear API credentials when integration is disabled
+  // Reset API credentials immediately when integration is disabled
   React.useEffect(() => {
     if (!isEnabled) {
-      form.setValue("guestyApiKey", "", { shouldDirty: true });
-      form.setValue("guestyApiSecret", "", { shouldDirty: true });
-      form.trigger(["guestyApiKey", "guestyApiSecret"]);
+      form.setValue("guestyApiKey", "", { shouldValidate: true });
+      form.setValue("guestyApiSecret", "", { shouldValidate: true });
     }
   }, [isEnabled, form]);
 
@@ -88,3 +87,4 @@ const GuestySettings: React.FC<GuestySettingsProps> = ({ form }) => {
 };
 
 export default GuestySettings;
+

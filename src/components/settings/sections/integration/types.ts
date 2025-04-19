@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const integrationSettingsSchema = z.object({
@@ -13,6 +12,7 @@ export const integrationSettingsSchema = z.object({
   stripeApiKey: z.string().optional().transform(val => val || ""),
   stripeWebhookSecret: z.string().optional().transform(val => val || ""),
 }).refine((data) => {
+  // Only validate credentials if the integration is enabled
   if (data.guestyApiEnabled) {
     return !!data.guestyApiKey && !!data.guestyApiSecret;
   }
