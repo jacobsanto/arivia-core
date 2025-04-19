@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
 import { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
-import { toast } from "sonner";
+import { useToastService } from "@/contexts/ToastContext";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
@@ -20,6 +20,7 @@ export function useRealtimeMessages({
   setMessages 
 }: UseRealtimeMessagesProps) {
   const { user } = useUser();
+  const toastService = useToastService();
 
   useEffect(() => {
     if (!user || !recipientId) return;
@@ -80,7 +81,7 @@ export function useRealtimeMessages({
         console.log(`Channel ${channelName} closed`);
       } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
         console.error(`Channel ${channelName} error`);
-        toast.error("Lost connection to chat", {
+        toastService.error("Lost connection to chat", {
           description: "Messages may be delayed. Trying to reconnect..."
         });
       }
@@ -89,5 +90,5 @@ export function useRealtimeMessages({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, recipientId, chatType, setMessages]);
+  }, [user, recipientId, chatType, setMessages, toastService]);
 }
