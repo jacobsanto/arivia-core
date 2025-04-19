@@ -4,7 +4,7 @@ import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AvatarDisplayProps {
-  user: User;
+  user?: User | { name: string; avatar?: string; id?: string };
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -24,6 +24,15 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   size = "md",
   className = ""
 }) => {
+  // Handle case where user is undefined
+  if (!user) {
+    return (
+      <Avatar className={`${sizeClasses[size]} ${className}`}>
+        <AvatarFallback>NA</AvatarFallback>
+      </Avatar>
+    );
+  }
+
   const avatarUrl = useMemo(() => {
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
@@ -31,14 +40,16 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     return `${url}${separator}t=${Date.now()}`;
   }, [user.avatar]);
 
+  const displayName = user.name || "User";
+
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
       <AvatarImage 
         src={avatarUrl} 
-        alt={user.name || "User"} 
+        alt={displayName} 
         className="object-center object-cover" 
       />
-      <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
+      <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
     </Avatar>
   );
 };

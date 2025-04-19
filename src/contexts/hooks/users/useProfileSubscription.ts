@@ -10,7 +10,7 @@ export const useProfileSubscription = (
   const profileSubscriptionRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !user.id) {
       if (profileSubscriptionRef.current) {
         console.log("Cleaning up profile subscription: no current user");
         supabase.removeChannel(profileSubscriptionRef.current);
