@@ -38,30 +38,35 @@ const MaintenanceSettings: React.FC = () => {
 
   const form = useForm<MaintenanceFormValues>({
     resolver: zodResolver(maintenanceSchema),
-    defaultValues: settings,
-    values: settings
+    defaultValues: settings || defaultValues,
   });
 
   // Update form values when settings are loaded
   React.useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && settings) {
       Object.keys(settings).forEach(key => {
         form.setValue(key as keyof MaintenanceFormValues, 
-          settings[key as keyof MaintenanceFormValues]);
+          settings[key as keyof MaintenanceFormValues],
+          { shouldValidate: true });
       });
     }
   }, [settings, isLoading, form]);
 
   async function onSubmit(data: MaintenanceFormValues) {
-    const success = await saveSettings(data);
-    if (success) {
-      form.reset(data);
+    try {
+      const success = await saveSettings(data);
+      if (success) {
+        toast.success('Maintenance settings saved successfully');
+      }
+    } catch (error) {
+      console.error('Failed to save maintenance settings:', error);
+      toast.error('Failed to save settings');
     }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <SettingsCard 
           title="Maintenance Configuration" 
           description="Configure settings for the maintenance system"
@@ -181,7 +186,7 @@ const MaintenanceSettings: React.FC = () => {
             />
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button type="submit" disabled={isLoading || form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? 'Saving...' : 'Save Settings'}
               </Button>
             </div>
