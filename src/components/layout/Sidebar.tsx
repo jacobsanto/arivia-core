@@ -1,8 +1,7 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Lock, Users, Shield, Settings, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -44,7 +43,15 @@ const Sidebar = () => {
         
         {canAccess("viewProperties") && <SidebarLink to="/properties" icon={<Home size={20} />} label="Properties" />}
         
-        {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && <SidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />}
+        {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
+          <>
+            <SidebarLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" />
+            <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
+            {(user.role === "administrator" || user.role === "property_manager") && (
+              <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
+            )}
+          </>
+        )}
         
         {(user.role === "maintenance_staff" || canAccess("manageProperties")) && <SidebarLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />}
         

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,6 @@ import { format } from "date-fns";
 import { useUser } from "@/contexts/UserContext";
 import { FileUpload } from "@/components/ui/file-upload";
 
-// Define status type to match database enum
 type DamageReportStatus = "pending" | "investigating" | "resolved" | "compensation_required" | "compensation_paid" | "closed";
 
 interface DamageReportDetailProps {
@@ -84,7 +82,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
   };
 
   const renderStatusOptions = () => {
-    // Property managers and admins can set any status
     if (user?.role === "administrator" || user?.role === "property_manager") {
       return (
         <>
@@ -98,7 +95,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       );
     }
     
-    // Standard users can only mark as resolved if assigned to them
     return (
       <>
         <SelectItem value="pending">Pending</SelectItem>
@@ -227,6 +223,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                 <FileUpload
                   onChange={handleMediaUpload}
                   accept="image/*,video/*"
+                  isDisabled={!canEdit}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Upload photos or videos as evidence

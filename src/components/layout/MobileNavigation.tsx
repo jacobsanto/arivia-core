@@ -1,18 +1,7 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
-import {
-  LayoutDashboard,
-  Home,
-  BedDouble,
-  Wrench,
-  Package,
-  MessageSquare,
-  BarChart,
-  FileText,
-  User,
-} from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, User } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 
@@ -59,7 +48,13 @@ const MobileNavigation: React.FC<MobileNavigationProps> = ({ isOpen, onClose }) 
             )}
             
             {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
-              <MobileNavLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" onClick={onClose} />
+              <>
+                <MobileNavLink to="/housekeeping" icon={<BedDouble size={20} />} label="Housekeeping" onClick={onClose} />
+                <MobileNavLink to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" onClick={onClose} />
+                {(user.role === "administrator" || user.role === "property_manager") && (
+                  <MobileNavLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" onClick={onClose} />
+                )}
+              </>
             )}
             
             {(user.role === "maintenance_staff" || canAccess("manageProperties")) && (
