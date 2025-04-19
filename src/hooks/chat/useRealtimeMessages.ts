@@ -74,9 +74,9 @@ export function useRealtimeMessages({
 
     // Subscribe and store the channel reference
     channel.subscribe((status) => {
-      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+      if (status === 'SUBSCRIBED') {
         channelRef.current = channel;
-      } else if (status !== REALTIME_SUBSCRIBE_STATES.SUBSCRIBED && status !== REALTIME_SUBSCRIBE_STATES.CLOSED) {
+      } else if (status !== 'SUBSCRIBED' && status !== 'CLOSED') {
         console.warn(`Failed to subscribe to ${channelName}:`, status);
       }
     });
