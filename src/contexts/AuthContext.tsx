@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  refreshAuthState: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,53 +21,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Set up auth state listener FIRST to avoid missing events
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ? {
-          id: newSession.user.id,
-          email: newSession.user.email || '',
-          name: newSession.user.user_metadata?.name || newSession.user.email?.split('@')[0] || 'User',
-          role: newSession.user.user_metadata?.role || 'property_manager',
-          avatar: newSession.user.user_metadata?.avatar || "/placeholder.svg"
-        } : null);
-      }
-    );
+  const refreshAuthState = async () => {
+    try {
+      const { data, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) throw sessionError;
+      
+      if (data.session) {
+        setSession(data.session);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single();
 
-    // THEN check for existing session
-    const initializeSession = async () => {
-      try {
-        setError(null);
-        const { data, error: sessionError } = await supabase.auth.getSession();
-        
-        if (sessionError) {
-          throw sessionError;
-        }
-        
-        if (data.session) {
-          setSession(data.session);
+        if (profile) {
           setUser({
             id: data.session.user.id,
             email: data.session.user.email || '',
-            name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || 'User',
-            role: data.session.user.user_metadata?.role || 'property_manager',
-            avatar: data.session.user.user_metadata?.avatar || "/placeholder.svg"
+            name: profile.name || data.session.user.email?.split('@')[0] || 'User',
+            role: profile.role || 'property_manager',
+            avatar: profile.avatar || "/placeholder.svg",
+            phone: profile.phone,
+            secondaryRoles: profile.secondary_roles,
+            customPermissions: profile.custom_permissions
           });
         }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Authentication error';
-        setError(errorMessage);
-        toastService.error("Authentication error", {
-          description: "There was a problem with your authentication session"
-        });
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("Error refreshing auth state:", err);
+      const errorMessage = err instanceof Error ? err.message : 'Authentication error';
+      setError(errorMessage);
+      toastService.error("Authentication error", {
+        description: "There was a problem refreshing your session"
+      });
+    }
+  };
 
-    initializeSession();
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log("Auth state change event:", event);
+        setSession(newSession);
+        
+        if (newSession?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', newSession.user.id)
+            .single();
+
+          if (profile) {
+            setUser({
+              id: newSession.user.id,
+              email: newSession.user.email || '',
+              name: profile.name || newSession.user.email?.split('@')[0] || 'User',
+              role: profile.role || 'property_manager',
+              avatar: profile.avatar || "/placeholder.svg",
+              phone: profile.phone,
+              secondaryRoles: profile.secondary_roles,
+              customPermissions: profile.custom_permissions
+            });
+          }
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    refreshAuthState();
 
     return () => {
       subscription.unsubscribe();
@@ -78,7 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     isLoading,
     isAuthenticated: !!user && !!session,
-    error
+    error,
+    refreshAuthState
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

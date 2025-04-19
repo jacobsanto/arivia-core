@@ -1,44 +1,17 @@
-
 import React, { createContext, useContext } from "react";
-import { User, UserRole, Session, UserStateSetter } from "@/types/auth";
+import { User, UserRole, Session } from "@/types/auth";
 import { useUserState } from "./hooks";
 import { UserContextType } from "./types/userContext.types";
-import { 
-  login, 
-  logout, 
-  hasPermission, 
-  hasFeatureAccess, 
-  getOfflineLoginStatus, 
-  updatePermissions,
-  updateAvatar,
-  removeUser,
-  syncUserWithProfile,
-  updateUserProfile,
-  signup
-} from "./auth/operations";
 import { useAuth } from "./AuthContext";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Try to use the central auth state but don't fail if not available
-  let authState: { user: User | null; session: Session | null; isLoading: boolean } = { 
-    user: null, 
-    session: null, 
-    isLoading: false 
-  };
-  
-  try {
-    authState = useAuth();
-  } catch (error) {
-    // If AuthContext is not available, we'll just use our local state
-    console.warn("AuthContext not available, using local state only");
-  }
+  const { user: authUser, session, isLoading: authLoading, refreshAuthState } = useAuth();
   
   const { 
     user, 
     setUser, 
-    session, 
     isLoading, 
     setIsLoading, 
     isOffline, 
@@ -49,10 +22,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUserProfile
   } = useUserState();
 
-  // Override the local user state with the one from AuthContext to ensure consistency
-  const currentUser = authState.user || user;
-  const currentSession = authState.session || session;
-  const currentIsLoading = authState.isLoading || isLoading;
+  // Use auth state as source of truth
+  const currentUser = authUser || user;
+  const currentSession = session;
+  const currentIsLoading = authLoading || isLoading;
+
+  const handleRefreshProfile = async () => {
+    const success = await refreshUserProfile();
+    if (success) {
+      // Also refresh auth state to ensure consistency
+      await refreshAuthState();
+    }
+    return success;
+  };
 
   const handleLogin = async (email: string, password: string): Promise<void> => {
     return await login(email, password, setUser, setLastAuthTime, setIsLoading);
@@ -116,10 +98,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await updateUserProfile(userId, profileData, setUser as UserStateSetter, currentUser);
   };
   
-  const handleRefreshProfile = async () => {
-    return await refreshUserProfile();
-  };
-
   return (
     <UserContext.Provider value={{ 
       user: currentUser,
