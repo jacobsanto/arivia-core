@@ -70,9 +70,10 @@ const ChatMessage = memo<ChatMessageProps>(({
       className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.15 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.15, type: "tween" }}
       layout="position"
+      layoutId={message.id}
     >
       <div
         className={`flex max-w-[80%] ${
@@ -107,7 +108,6 @@ const ChatMessage = memo<ChatMessageProps>(({
     </motion.div>
   );
 }, (prevProps, nextProps) => {
-  // Custom comparison function for memo
   return (
     prevProps.message.id === nextProps.message.id &&
     prevProps.showEmojiPicker === nextProps.showEmojiPicker &&

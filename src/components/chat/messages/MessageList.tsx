@@ -37,19 +37,16 @@ const MessageList = ({
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   const scrollToBottom = useCallback(() => {
-    if (scrollAreaRef.current) {
-      requestAnimationFrame(() => {
-        const scrollArea = scrollAreaRef.current;
-        if (scrollArea) {
-          scrollArea.scrollTop = scrollArea.scrollHeight;
-        }
-      });
+    const scrollArea = scrollAreaRef.current;
+    if (scrollArea) {
+      const lastMessage = scrollArea.lastElementChild;
+      lastMessage?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, []);
 
   useLayoutEffect(() => {
     scrollToBottom();
-  }, [messages, scrollToBottom]);
+  }, [messages.length, scrollToBottom]); // Only scroll on new messages
 
   if (isLoading) {
     return (
@@ -72,7 +69,7 @@ const MessageList = ({
   return (
     <ScrollArea 
       ref={scrollAreaRef} 
-      className="flex-1 p-6 h-full hardware-accelerated" 
+      className="flex-1 p-6 h-full hardware-accelerated will-change-scroll" 
       orientation="vertical"
     >
       <div className="space-y-6 min-h-[calc(100%-80px)]">
@@ -120,4 +117,13 @@ const MessageList = ({
   );
 };
 
-export default memo(MessageList);
+// Optimize re-renders with memo
+export default memo(MessageList, (prevProps, nextProps) => {
+  return (
+    prevProps.messages.length === nextProps.messages.length &&
+    prevProps.typingStatus === nextProps.typingStatus &&
+    prevProps.isOffline === nextProps.isOffline &&
+    prevProps.showEmojiPicker === nextProps.showEmojiPicker &&
+    prevProps.reactionMessageId === nextProps.reactionMessageId
+  );
+});

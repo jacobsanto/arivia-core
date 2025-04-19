@@ -1,5 +1,4 @@
-
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
@@ -22,6 +21,39 @@ export function useRealtimeMessages({
   const { user } = useUser();
   const toastService = useToastService();
 
+  const handleNewMessage = useCallback(async (payload: any) => {
+    const senderId = payload.new.sender_id;
+    if (senderId === user?.id) return;
+    
+    let newMessage: Message = {
+      id: payload.new.id,
+      sender: "User",
+      avatar: "/placeholder.svg",
+      content: payload.new.content,
+      timestamp: payload.new.created_at,
+      isCurrentUser: false,
+      reactions: chatType === 'general' ? (payload.new.reactions || {}) : {}
+    };
+    
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('name, avatar')
+        .eq('id', senderId)
+        .maybeSingle();
+            
+      if (data) {
+        newMessage.sender = data.name || "Unknown User";
+        newMessage.avatar = data.avatar || "/placeholder.svg";
+      }
+          
+      setMessages(prev => [...prev, newMessage]);
+    } catch (error) {
+      console.warn("Could not fetch sender details", error);
+      setMessages(prev => [...prev, newMessage]);
+    }
+  }, [user?.id, chatType, setMessages]);
+
   useEffect(() => {
     if (!user || !recipientId) return;
 
@@ -36,59 +68,22 @@ export function useRealtimeMessages({
         schema: 'public', 
         table,
         filter: `${column}=eq.${recipientId}`
-      }, async (payload) => {
-        const senderId = payload.new.sender_id;
-          
-        if (senderId === user.id) return;
-        
-        let newMessage: Message = {
-          id: payload.new.id,
-          sender: "User",
-          avatar: "/placeholder.svg",
-          content: payload.new.content,
-          timestamp: payload.new.created_at,
-          isCurrentUser: false,
-          reactions: chatType === 'general' ? (payload.new.reactions || {}) : {}
-        };
-        
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('name, avatar')
-            .eq('id', senderId)
-            .maybeSingle();
-              
-          if (error) {
-            console.warn("Error fetching sender details:", error);
-            // Continue with default values if profile fetch fails
-          } else if (data) {
-            newMessage.sender = data.name || "Unknown User";
-            newMessage.avatar = data.avatar || "/placeholder.svg";
-          }
-            
-          setMessages(prev => [...prev, newMessage]);
-        } catch (error) {
-          console.warn("Could not fetch sender details", error);
-          // Still add message even if we can't get sender details
-          setMessages(prev => [...prev, newMessage]);
+      }, handleNewMessage)
+      .subscribe((status) => {
+        if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+          console.log(`Subscribed to ${channelName}`);
+        } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
+          console.log(`Channel ${channelName} closed`);
+        } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
+          console.error(`Channel ${channelName} error`);
+          toastService.error("Lost connection to chat", {
+            description: "Messages may be delayed. Trying to reconnect..."
+          });
         }
       });
-      
-    channel.subscribe((status: REALTIME_SUBSCRIBE_STATES) => {
-      if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
-        console.log(`Subscribed to ${channelName}`);
-      } else if (status === REALTIME_SUBSCRIBE_STATES.CLOSED) {
-        console.log(`Channel ${channelName} closed`);
-      } else if (status === REALTIME_SUBSCRIBE_STATES.CHANNEL_ERROR) {
-        console.error(`Channel ${channelName} error`);
-        toastService.error("Lost connection to chat", {
-          description: "Messages may be delayed. Trying to reconnect..."
-        });
-      }
-    });
       
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, recipientId, chatType, setMessages, toastService]);
+  }, [user, recipientId, chatType, handleNewMessage, toastService]);
 }
