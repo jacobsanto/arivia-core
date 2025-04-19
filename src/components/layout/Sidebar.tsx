@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";

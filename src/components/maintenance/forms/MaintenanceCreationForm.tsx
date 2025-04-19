@@ -50,7 +50,7 @@ const MaintenanceCreationForm: React.FC<MaintenanceCreationFormProps> = ({ onSub
             onChange={(files) => {
               // Handle files separately since they're not part of the form schema
               const filesArray = Array.from(files);
-              form.setValue('taskMedia', filesArray as any);
+              form.setValue('photos', filesArray as any);
             }}
             accept="image/*"
             multiple
