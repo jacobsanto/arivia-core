@@ -11,7 +11,6 @@ export interface User {
   role: UserRole;
   secondaryRoles?: UserRole[];
   avatar?: string;
-  phone?: string;
   customPermissions?: {
     [key: string]: boolean;  // Permission key to boolean (granted/denied)
   };

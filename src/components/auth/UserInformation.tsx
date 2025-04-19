@@ -5,11 +5,11 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 import ProfileForm from "./forms/ProfileForm";
 import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserInformation = () => {
   const { user, updateProfile, refreshProfile } = useUser();
@@ -25,14 +25,13 @@ const UserInformation = () => {
     setIsEditing(false);
   };
 
-  const handleFormSubmit = async (data: { name: string; email: string; phone?: string }) => {
+  const handleFormSubmit = async (data: { name: string; email: string }) => {
     if (!user) return;
     
     try {
       const result = await updateProfile(user.id, {
         name: data.name,
-        email: data.email,
-        phone: data.phone
+        email: data.email
       });
       
       if (result) {

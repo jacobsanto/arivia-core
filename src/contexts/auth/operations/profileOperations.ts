@@ -54,7 +54,6 @@ export const syncUserWithProfile = async (
         email: profile.email,
         role: profile.role as UserRole,
         avatar: profile.avatar || currentUser.avatar,
-        phone: profile.phone,
         secondaryRoles,
         customPermissions
       };
@@ -81,7 +80,6 @@ export const updateUserProfile = async (
   profileData: Partial<{
     name: string;
     email: string;
-    phone?: string;
     role: UserRole;
     secondaryRoles?: UserRole[];
     customPermissions?: Record<string, boolean>;
