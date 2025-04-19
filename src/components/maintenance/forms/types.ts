@@ -11,6 +11,7 @@ export const maintenanceFormSchema = z.object({
   location: z.string().min(1, "Location is required"),
   requiredTools: z.string().optional(),
   specialInstructions: z.string().optional(),
+  taskMedia: z.any().optional(), // Add taskMedia field
 });
 
 export type MaintenanceFormValues = z.infer<typeof maintenanceFormSchema>;

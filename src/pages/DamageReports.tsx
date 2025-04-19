@@ -73,7 +73,7 @@ const DamageReports = () => {
           onClose={handleCloseReport}
           onUpdate={handleUpdateReport}
           onMediaUpload={handleMediaUpload}
-          canEdit={user?.role === "admin" || user?.role === "property_manager" || selectedReport.assigned_to === user?.id}
+          canEdit={user?.role === "administrator" || user?.role === "property_manager" || selectedReport.assigned_to === user?.id}
         />
       )}
 

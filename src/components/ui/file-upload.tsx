@@ -12,16 +12,19 @@ interface FileUploadProps {
   maxFiles?: number;
   maxSize?: number; // in MB
   className?: string;
+  disabled?: boolean; // Add disabled prop
 }
 
 export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
-  ({ onChange, value, accept, multiple = false, maxFiles = 10, maxSize = 5, className }, ref) => {
+  ({ onChange, value, accept, multiple = false, maxFiles = 10, maxSize = 5, className, disabled = false }, ref) => {
     const inputRef = useRef<HTMLInputElement>(null);
     const [files, setFiles] = useState<File[]>(value || []);
     const [error, setError] = useState<string | null>(null);
 
     const handleClick = () => {
-      inputRef.current?.click();
+      if (!disabled) {
+        inputRef.current?.click();
+      }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,6 +59,8 @@ export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
     };
 
     const removeFile = (index: number) => {
+      if (disabled) return;
+      
       const newFiles = [...files];
       newFiles.splice(index, 1);
       setFiles(newFiles);
@@ -72,7 +77,10 @@ export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
     return (
       <div className={cn("space-y-2", className)}>
         <div 
-          className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition"
+          className={cn(
+            "border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/50 transition",
+            disabled && "opacity-50 cursor-not-allowed hover:bg-transparent"
+          )}
           onClick={handleClick}
         >
           <input
@@ -82,6 +90,7 @@ export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
             accept={accept}
             multiple={multiple}
             onChange={handleChange}
+            disabled={disabled}
           />
           <div className="flex flex-col items-center gap-2">
             <Upload className="h-6 w-6 text-muted-foreground" />
@@ -111,7 +120,11 @@ export const FileUpload = React.forwardRef<HTMLInputElement, FileUploadProps>(
                     e.stopPropagation();
                     removeFile(index);
                   }}
-                  className="ml-1 text-muted-foreground hover:text-destructive"
+                  className={cn(
+                    "ml-1 text-muted-foreground hover:text-destructive",
+                    disabled && "pointer-events-none"
+                  )}
+                  disabled={disabled}
                 >
                   <X className="h-4 w-4" />
                 </button>

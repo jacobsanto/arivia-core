@@ -42,26 +42,25 @@ const MaintenanceCreationForm: React.FC<MaintenanceCreationFormProps> = ({ onSub
         <MaintenanceBasicInfo form={form} />
         <MaintenanceSchedule form={form} />
         <MaintenanceDetails form={form} />
-        <FormField
-          control={form.control}
-          name="photos"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Task Photos</FormLabel>
-              <FormControl>
-                <FileUpload
-                  onChange={(files) => field.onChange(Array.from(files))}
-                  accept="image/*"
-                  multiple
-                  maxFiles={5}
-                />
-              </FormControl>
-              <FormDescription>
-                Upload up to 5 photos related to the task (optional)
-              </FormDescription>
-            </FormItem>
-          )}
-        />
+        
+        {/* Use a regular div instead of FormField since photos is not in the schema */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium">Task Photos</p>
+          <FileUpload
+            onChange={(files) => {
+              // Handle files separately since they're not part of the form schema
+              const filesArray = Array.from(files);
+              form.setValue('taskMedia', filesArray as any);
+            }}
+            accept="image/*"
+            multiple
+            maxFiles={5}
+          />
+          <p className="text-xs text-muted-foreground">
+            Upload up to 5 photos related to the task (optional)
+          </p>
+        </div>
+        
         <MaintenanceFormActions onCancel={onCancel} />
       </form>
     </Form>

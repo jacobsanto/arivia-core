@@ -10,6 +10,9 @@ import { format } from "date-fns";
 import { useUser } from "@/contexts/UserContext";
 import { FileUpload } from "@/components/ui/file-upload";
 
+// Define status type to match database enum
+type DamageReportStatus = "pending" | "investigating" | "resolved" | "compensation_required" | "compensation_paid" | "closed";
+
 interface DamageReportDetailProps {
   report: DamageReport;
   onClose: () => void;
@@ -26,7 +29,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
   canEdit,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [status, setStatus] = useState(report.status);
+  const [status, setStatus] = useState<DamageReportStatus>(report.status as DamageReportStatus);
   const [conclusion, setConclusion] = useState(report.conclusion || "");
   const [estimatedCost, setEstimatedCost] = useState(report.estimated_cost?.toString() || "");
   const [finalCost, setFinalCost] = useState(report.final_cost?.toString() || "");
@@ -82,7 +85,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
 
   const renderStatusOptions = () => {
     // Property managers and admins can set any status
-    if (user?.role === "property_manager" || user?.role === "admin") {
+    if (user?.role === "administrator" || user?.role === "property_manager") {
       return (
         <>
           <SelectItem value="pending">Pending</SelectItem>
@@ -137,7 +140,10 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
             <div>
               <p className="text-sm font-medium">Status</p>
               {canEdit ? (
-                <Select value={status} onValueChange={setStatus} disabled={!canEdit}>
+                <Select 
+                  value={status} 
+                  onValueChange={(value: DamageReportStatus) => setStatus(value)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -167,7 +173,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                       type="number" 
                       value={estimatedCost} 
                       onChange={(e) => setEstimatedCost(e.target.value)}
-                      disabled={!canEdit}
                       placeholder="0.00"
                     />
                   </div>
@@ -177,7 +182,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                       type="number" 
                       value={finalCost} 
                       onChange={(e) => setFinalCost(e.target.value)} 
-                      disabled={!canEdit}
                       placeholder="0.00"
                     />
                   </div>
@@ -193,7 +197,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                       type="number" 
                       value={compensationAmount} 
                       onChange={(e) => setCompensationAmount(e.target.value)}
-                      disabled={!canEdit || status === "compensation_paid"}
+                      disabled={status === "compensation_paid"}
                       placeholder="0.00"
                     />
                   </div>
@@ -202,7 +206,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                     <Textarea 
                       value={compensationNotes} 
                       onChange={(e) => setCompensationNotes(e.target.value)}
-                      disabled={!canEdit || status === "compensation_paid"}
+                      disabled={status === "compensation_paid"}
                       placeholder="Enter compensation notes..."
                     />
                   </div>
@@ -214,7 +218,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                 <Textarea 
                   value={conclusion} 
                   onChange={(e) => setConclusion(e.target.value)}
-                  disabled={!canEdit}
                   placeholder="Enter conclusion or resolution details..."
                 />
               </div>
@@ -224,7 +227,6 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
                 <FileUpload
                   onChange={handleMediaUpload}
                   accept="image/*,video/*"
-                  disabled={!canEdit}
                 />
                 <p className="text-xs text-muted-foreground mt-1">
                   Upload photos or videos as evidence
