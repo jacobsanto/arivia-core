@@ -50,14 +50,13 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     handleImageSelect,
     removeAttachment,
     showEmojiPicker,
-    toggleEmojiPicker, // Make sure this is exported correctly
+    toggleEmojiPicker,
     handleEmojiSelect
   } = useMessageSender({ 
     chatType, 
     recipientId, 
     messages, 
     setMessages,
-    clearTyping,
     isOffline 
   });
   
@@ -112,7 +111,7 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     handleImageSelect,
     removeAttachment,
     showMessageEmojiPicker: showEmojiPicker,
-    toggleMessageEmojiPicker: toggleEmojiPicker, // This was likely missing or named incorrectly
+    toggleMessageEmojiPicker: toggleEmojiPicker,
     handleEmojiSelect
   };
 }

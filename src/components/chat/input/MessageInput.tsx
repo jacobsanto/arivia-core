@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { AnimatePresence } from "framer-motion";
 import MessageToolbar from "./MessageToolbar";
 import FileInputs from "./FileInputs";
 import InlineEmojiPicker from "../emoji/InlineEmojiPicker";
-import { Attachment } from "@/hooks/chat/useMessageSender";
+import { Attachment } from "@/hooks/chat/message/useAttachments";
 
 interface MessageInputProps {
   message: string;
