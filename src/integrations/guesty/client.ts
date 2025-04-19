@@ -1,87 +1,115 @@
 
-import { getGuestyAdapter } from "./adapter";
-
-// Create a singleton instance of the adapter
-const guestyAdapter = getGuestyAdapter();
+import { getGuestyAdapter } from './adapter';
 
 /**
- * Guesty API client for making authenticated requests
- * Uses a platform adapter to handle authentication and requests
+ * A simple client for making requests to the Guesty API
  */
-export const guestyClient = {
-  /**
-   * Make a GET request to the Guesty API
-   */
-  async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
-    return guestyAdapter.makeRequest('GET', endpoint, params);
-  },
-
-  /**
-   * Make a POST request to the Guesty API
-   */
-  async post<T>(endpoint: string, data: any): Promise<T> {
-    return guestyAdapter.makeRequest('POST', endpoint, undefined, data);
-  },
-
-  /**
-   * Make a PUT request to the Guesty API
-   */
-  async put<T>(endpoint: string, data: any): Promise<T> {
-    return guestyAdapter.makeRequest('PUT', endpoint, undefined, data);
-  },
-
-  /**
-   * Make a DELETE request to the Guesty API
-   */
-  async delete<T>(endpoint: string): Promise<T> {
-    return guestyAdapter.makeRequest('DELETE', endpoint, undefined);
-  }
-};
+export interface GuestyClient {
+  get<T>(endpoint: string, params?: Record<string, string>): Promise<T>;
+  post<T>(endpoint: string, data: any): Promise<T>;
+  put<T>(endpoint: string, data: any): Promise<T>;
+  delete<T>(endpoint: string): Promise<T>;
+}
 
 /**
- * Utils specifically for Guesty API pagination and data handling
+ * Utility functions for Guesty integration
  */
 export const guestyUtils = {
   /**
-   * Create pagination parameters for Guesty API requests
-   */
-  createPaginationParams(page: number, limit: number): { skip: number, limit: number } {
-    return {
-      skip: (page - 1) * limit,
-      limit: limit
-    };
-  },
-  
-  /**
-   * Format date to Guesty compatible format (ISO string)
-   */
-  formatDate(date: Date): string {
-    return date.toISOString();
-  },
-
-  /**
-   * Get the first day of 2024 as the default start date for booking queries
+   * Get a default start date for queries (2024-01-01)
    */
   getDefaultStartDate(): string {
-    return new Date(2024, 0, 1).toISOString(); // January 1, 2024
+    return new Date(2024, 0, 1).toISOString();
   },
 
   /**
-   * Create date range parameters for Guesty API requests
-   * Used for filtering bookings by check-in or check-out dates
+   * Create date range parameters for API queries
    */
-  createDateRangeParams(type: 'checkIn' | 'checkOut', fromDate?: Date, toDate?: Date): Record<string, string> {
+  createDateRangeParams(
+    prefix: string,
+    startDate?: Date,
+    endDate?: Date
+  ): Record<string, string> {
     const params: Record<string, string> = {};
-    
-    // Always include at least the start of 2024 as the minimum date
-    params[`${type}From`] = fromDate 
-      ? this.formatDate(fromDate) 
-      : this.getDefaultStartDate();
-    
-    if (toDate) {
-      params[`${type}To`] = this.formatDate(toDate);
+
+    if (startDate) {
+      params[`${prefix}From`] = startDate.toISOString();
     }
-    
+
+    if (endDate) {
+      params[`${prefix}To`] = endDate.toISOString();
+    }
+
     return params;
+  },
+
+  /**
+   * Format a price with currency symbol
+   */
+  formatPrice(amount?: number, currency: string = 'EUR'): string {
+    if (amount === undefined) return 'N/A';
+    
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+    }).format(amount);
+  },
+
+  /**
+   * Format a date in a user-friendly way
+   */
+  formatDate(date?: string | Date): string {
+    if (!date) return 'N/A';
+    
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }).format(dateObj);
+  },
+
+  /**
+   * Check if the app is running on Netlify
+   */
+  isOnNetlify(): boolean {
+    return Boolean(process.env.NETLIFY || window.location.hostname.includes('netlify.app'));
+  },
+
+  /**
+   * Get the Netlify function base URL
+   */
+  getNetlifyFunctionUrl(): string {
+    return '/.netlify/functions';
   }
 };
+
+/**
+ * Create a Guesty client using the correct adapter (Netlify or direct API)
+ */
+export const createGuestyClient = (): GuestyClient => {
+  // Get the platform adapter
+  const adapter = getGuestyAdapter();
+
+  return {
+    async get<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+      return adapter.makeRequest<T>('GET', endpoint, params);
+    },
+
+    async post<T>(endpoint: string, data: any): Promise<T> {
+      return adapter.makeRequest<T>('POST', endpoint, undefined, data);
+    },
+
+    async put<T>(endpoint: string, data: any): Promise<T> {
+      return adapter.makeRequest<T>('PUT', endpoint, undefined, data);
+    },
+
+    async delete<T>(endpoint: string): Promise<T> {
+      return adapter.makeRequest<T>('DELETE', endpoint);
+    }
+  };
+};
+
+// Create and export a singleton instance of the client
+export const guestyClient = createGuestyClient();

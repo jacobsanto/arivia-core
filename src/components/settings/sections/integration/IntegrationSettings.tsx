@@ -12,10 +12,15 @@ import AirbnbSettings from "./AirbnbSettings";
 import StripeSettings from "./StripeSettings";
 import { toast } from "sonner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ExternalLink } from "lucide-react";
 
 const IntegrationSettings: React.FC = () => {
   const [hasFormErrors, setHasFormErrors] = React.useState(false);
+  const [showNetlifyInfo, setShowNetlifyInfo] = React.useState(false);
 
   const {
     form,
@@ -70,6 +75,10 @@ const IntegrationSettings: React.FC = () => {
     }
   };
 
+  const openNetlifyDocs = () => {
+    window.open('https://docs.netlify.com/environment-variables/overview/', '_blank');
+  };
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)}>
@@ -90,6 +99,63 @@ const IntegrationSettings: React.FC = () => {
               </AlertDescription>
             </Alert>
           )}
+
+          <Card className="p-4 mb-6">
+            <div className="flex items-start gap-4">
+              <div className="bg-blue-50 rounded-lg p-3">
+                <img 
+                  src="https://www.netlify.com/v3/img/components/logomark.png" 
+                  alt="Netlify logo" 
+                  className="w-8 h-8" 
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-medium">Netlify Deployment Settings</h3>
+                  <Badge className="bg-blue-500">Recommended</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  This app is configured to run on Netlify. You'll need to set up environment variables in your Netlify dashboard.
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={openNetlifyDocs}
+                    className="flex items-center gap-1"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Netlify Docs
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => setShowNetlifyInfo(!showNetlifyInfo)}
+                  >
+                    {showNetlifyInfo ? "Hide Details" : "Show Required Env Variables"}
+                  </Button>
+                </div>
+
+                {showNetlifyInfo && (
+                  <Alert className="mt-3 bg-slate-50">
+                    <Info className="h-4 w-4" />
+                    <AlertDescription className="text-xs">
+                      <p className="font-semibold mb-1">Required Environment Variables for Netlify:</p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        <li><code>GUESTY_CLIENT_ID</code> - OAuth client ID from Guesty</li>
+                        <li><code>GUESTY_SECRET</code> - OAuth client secret from Guesty</li>
+                        <li><code>GUESTY_USERNAME</code> - Guesty account username</li>
+                        <li><code>GUESTY_PASSWORD</code> - Guesty account password</li>
+                        <li><code>STRIPE_SECRET_KEY</code> - Your Stripe secret API key</li>
+                      </ul>
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </div>
+          </Card>
 
           <SettingsSection
             title="Guesty Integration"

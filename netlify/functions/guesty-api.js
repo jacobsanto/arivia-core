@@ -25,19 +25,23 @@ const getAuthToken = async () => {
   try {
     // Get credentials from environment variables
     const clientId = process.env.GUESTY_CLIENT_ID;
-    const clientSecret = process.env.GUESTY_CLIENT_SECRET;
+    const clientSecret = process.env.GUESTY_SECRET;
+    const username = process.env.GUESTY_USERNAME;
+    const password = process.env.GUESTY_PASSWORD;
     
-    if (!clientId || !clientSecret) {
-      throw new Error('Missing Guesty API credentials. Please configure GUESTY_CLIENT_ID and GUESTY_CLIENT_SECRET environment variables.');
+    if (!clientId || !clientSecret || !username || !password) {
+      throw new Error('Missing Guesty API credentials. Please configure environment variables in Netlify dashboard.');
     }
     
     // Request a new token from Guesty
-    const response = await axios.post('https://app.guesty.com/api/v1/oauth2/token', {
-      grant_type: 'client_credentials',
-      client_id: clientId,
-      client_secret: clientSecret,
-      scope: 'open-api'
-    });
+    const response = await axios.post('https://app.guesty.com/api/v1/auth/token', 
+      `grant_type=password&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}&client_id=${encodeURIComponent(clientId)}&client_secret=${encodeURIComponent(clientSecret)}`,
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      }
+    );
     
     if (!response.data || !response.data.access_token) {
       throw new Error('Failed to obtain access token from Guesty API');
@@ -61,10 +65,26 @@ const getAuthToken = async () => {
  * Main serverless function handler
  */
 exports.handler = async function(event, context) {
-  // Only allow GET, POST, PUT methods
-  if (!['GET', 'POST', 'PUT'].includes(event.httpMethod)) {
+  // Set CORS headers for browser requests
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+
+  // Handle CORS preflight requests
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: corsHeaders,
+      body: ''
+    };
+  }
+  
+  // Only allow GET, POST, PUT, DELETE methods
+  if (!['GET', 'POST', 'PUT', 'DELETE'].includes(event.httpMethod)) {
     return {
       statusCode: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({ message: 'Method not allowed' })
     };
   }
@@ -76,6 +96,7 @@ exports.handler = async function(event, context) {
     if (!endpoint) {
       return {
         statusCode: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Missing endpoint parameter' })
       };
     }
@@ -83,13 +104,47 @@ exports.handler = async function(event, context) {
     // Get auth token
     const token = await getAuthToken();
     
+    // Parse the request body if present
+    let requestBody = {};
+    if (event.body) {
+      try {
+        requestBody = JSON.parse(event.body);
+      } catch (err) {
+        console.error('Failed to parse request body:', err);
+      }
+    }
+    
+    // Extract method and data from the request body or use the HTTP method
+    const method = requestBody.method || event.httpMethod;
+    const data = requestBody.data || undefined;
+    
     // Build the full URL
     const url = `${GUESTY_API_BASE_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
     
+    // Extract any params_ prefixed query parameters
+    const params = {};
+    if (event.queryStringParameters) {
+      Object.keys(event.queryStringParameters).forEach(key => {
+        if (key.startsWith('param_')) {
+          const paramName = key.substring(6); // Remove 'param_' prefix
+          params[paramName] = event.queryStringParameters[key];
+        }
+      });
+    }
+    
+    // Add query parameters to URL if needed
+    let finalUrl = url;
+    if (Object.keys(params).length > 0) {
+      const queryString = Object.entries(params)
+        .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+        .join('&');
+      finalUrl = `${url}${url.includes('?') ? '&' : '?'}${queryString}`;
+    }
+    
     // Set up request config
     const config = {
-      method: event.httpMethod,
-      url,
+      method: method,
+      url: finalUrl,
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
@@ -97,17 +152,19 @@ exports.handler = async function(event, context) {
     };
     
     // Add request body for POST or PUT
-    if (['POST', 'PUT'].includes(event.httpMethod) && event.body) {
-      config.data = JSON.parse(event.body);
+    if (['POST', 'PUT'].includes(method) && data) {
+      config.data = data;
     }
     
-    console.log(`Making ${config.method} request to ${url}`);
+    console.log(`Making ${config.method} request to ${finalUrl}`);
     
     // Make the request to Guesty API
     const response = await axios(config);
     
+    // Return the response to the client
     return {
-      statusCode: response.status,
+      statusCode: response.status || 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(response.data)
     };
     
@@ -117,11 +174,15 @@ exports.handler = async function(event, context) {
     // Try to extract status code from axios error
     const statusCode = error.response?.status || 500;
     
+    // Try to extract error details from axios error
+    const errorDetails = error.response?.data || { message: error.message };
+    
     return {
       statusCode,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        message: error.message,
-        error: error.response?.data || 'Internal server error'
+        error: 'Guesty API request failed',
+        details: errorDetails
       })
     };
   }

@@ -65,7 +65,7 @@ async function getGuestyToken() {
   const secret = process.env.GUESTY_SECRET;
 
   if (!username || !password || !clientId || !secret) {
-    throw new Error('Missing Guesty credentials');
+    throw new Error('Missing Guesty credentials. Please configure environment variables in Netlify dashboard.');
   }
 
   const tokenEndpoint = 'https://app.guesty.com/api/v1/auth/token';

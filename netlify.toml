@@ -5,6 +5,11 @@
   functions = "netlify/functions"
 
 [[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
@@ -15,9 +20,11 @@
   targetPort = 5173
   port = 8888
 
-# Environment variables needed for Guesty integration:
+# Required environment variables for integrations:
 # GUESTY_USERNAME - Guesty account username
 # GUESTY_PASSWORD - Guesty account password
 # GUESTY_CLIENT_ID - OAuth client ID from Guesty
 # GUESTY_SECRET - OAuth client secret from Guesty
+# STRIPE_SECRET_KEY - Stripe API secret key
+# STRIPE_WEBHOOK_SECRET - Stripe webhook signing secret
 
