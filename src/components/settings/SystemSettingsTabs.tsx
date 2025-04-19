@@ -8,7 +8,7 @@ import GeneralSettings from "./sections/GeneralSettings";
 import UserManagementSettings from "./sections/UserManagementSettings";
 import EmailSettings from "./sections/EmailSettings";
 import MaintenanceSettings from "./sections/MaintenanceSettings";
-import IntegrationSettings from "./sections/IntegrationSettings";
+import IntegrationSettings from "./sections/integration/IntegrationSettings";  // Updated import path
 import SecuritySettings from "./sections/SecuritySettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import NotificationSettings from "./sections/NotificationSettings";
