@@ -38,7 +38,8 @@ const UserInformation = () => {
       if (result) {
         toast.success("Profile updated successfully");
         setIsEditing(false);
-        refreshProfile();
+        // Ensure profile is refreshed after successful update
+        await refreshProfile();
       }
     } catch (error) {
       console.error("Error updating profile:", error);

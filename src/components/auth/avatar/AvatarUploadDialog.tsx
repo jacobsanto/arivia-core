@@ -26,14 +26,16 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
         <DialogTitle>Update Profile Picture</DialogTitle>
       </DialogHeader>
       <div className="flex flex-col items-center space-y-4 py-4">
-        <Avatar className="h-40 w-40">
-          <AvatarImage 
-            src={avatarUrl} 
-            alt={user.name || "User"} 
-            className="object-cover object-center"
-          />
-          <AvatarFallback className="text-4xl">{getInitials(user.name || "User")}</AvatarFallback>
-        </Avatar>
+        <div className="flex items-center justify-center">
+          <Avatar className="h-40 w-40 flex items-center justify-center">
+            <AvatarImage 
+              src={avatarUrl} 
+              alt={user.name || "User"} 
+              className="w-full h-full"
+            />
+            <AvatarFallback className="text-4xl">{getInitials(user.name || "User")}</AvatarFallback>
+          </Avatar>
+        </div>
         
         <div className="flex flex-col items-center gap-2">
           <p className="text-sm text-muted-foreground">
@@ -65,3 +67,4 @@ const AvatarUploadDialog: React.FC<AvatarUploadDialogProps> = ({
 };
 
 export default AvatarUploadDialog;
+

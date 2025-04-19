@@ -4,7 +4,7 @@ import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AvatarDisplayProps {
-  user?: User | { name: string; avatar?: string; id?: string };
+  user: User | { name: string; avatar?: string; id?: string };
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -24,32 +24,21 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   size = "md",
   className = ""
 }) => {
-  // Handle case where user is undefined
-  if (!user) {
-    return (
-      <Avatar className={`${sizeClasses[size]} ${className}`}>
-        <AvatarFallback>NA</AvatarFallback>
-      </Avatar>
-    );
-  }
-
   const avatarUrl = useMemo(() => {
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}t=${Date.now()}`;
+    return `${url}?t=${Date.now()}`; // Force cache invalidation
   }, [user.avatar]);
 
-  const displayName = user.name || "User";
-
   return (
-    <Avatar className={`${sizeClasses[size]} ${className}`}>
+    <Avatar className={`${sizeClasses[size]} ${className} bg-muted/30 flex items-center justify-center`}>
       <AvatarImage 
         src={avatarUrl} 
-        alt={displayName} 
-        className="object-center object-cover" 
+        alt={user.name || "User"} 
+        className="w-full h-full"
+        loading="eager"
       />
-      <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+      <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
     </Avatar>
   );
 };
