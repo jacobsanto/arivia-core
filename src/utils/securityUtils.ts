@@ -1,12 +1,19 @@
 
-// Security utility functions
-
+/**
+ * Security utility functions for checking browser features and security settings
+ */
 export const securityUtils = {
-  isSecureContext(): boolean {
-    return typeof window !== 'undefined' && window.isSecureContext;
+  /**
+   * Checks if the current context is secure (HTTPS)
+   */
+  isSecureContext: () => {
+    return window.isSecureContext;
   },
-
-  areCookiesEnabled(): boolean {
+  
+  /**
+   * Checks if cookies are enabled
+   */
+  areCookiesEnabled: () => {
     try {
       document.cookie = "cookietest=1";
       const result = document.cookie.indexOf("cookietest=") !== -1;
@@ -16,44 +23,51 @@ export const securityUtils = {
       return false;
     }
   },
-
-  isLocalStorageAvailable(): boolean {
+  
+  /**
+   * Checks if localStorage is available
+   */
+  isLocalStorageAvailable: () => {
     try {
-      const testKey = '__storage_test__';
-      localStorage.setItem(testKey, testKey);
-      localStorage.removeItem(testKey);
+      localStorage.setItem('test', 'test');
+      localStorage.removeItem('test');
       return true;
     } catch (e) {
       return false;
     }
   },
-
-  isSessionStorageAvailable(): boolean {
+  
+  /**
+   * Checks if sessionStorage is available
+   */
+  isSessionStorageAvailable: () => {
     try {
-      const testKey = '__storage_test__';
-      sessionStorage.setItem(testKey, testKey);
-      sessionStorage.removeItem(testKey);
+      sessionStorage.setItem('test', 'test');
+      sessionStorage.removeItem('test');
       return true;
     } catch (e) {
       return false;
     }
   },
-
-  supportsModernSecurity(): boolean {
-    return typeof window !== 'undefined' && 
-      'crypto' in window && 
-      'subtle' in window.crypto;
-  },
-
-  generateUUID(): string {
-    // Simple UUID generator for client-side use
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+  
+  /**
+   * Checks if modern security features are supported
+   */
+  supportsModernSecurity: () => {
+    // Check for Content-Security-Policy support
+    const hasCSP = 'securityPolicy' in document || 'webkitSecurityPolicy' in document;
+    
+    // Check for Cross-Origin-Embedder-Policy support
+    const hasCoep = !!(window.crossOriginIsolated);
+    
+    // Check for Cross-Origin-Opener-Policy support
+    const hasCoop = typeof window.opener !== 'undefined';
+    
+    // Simple check for SharedArrayBuffer which indicates cross-origin isolation
+    const hasSAB = typeof SharedArrayBuffer !== 'undefined';
+    
+    return hasCSP || hasCoep || hasCoop || hasSAB;
   }
 };
 
-// Direct export of isSecureContext for backward compatibility
-export const isSecureContext = securityUtils.isSecureContext;
+export default securityUtils;

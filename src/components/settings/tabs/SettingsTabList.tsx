@@ -1,5 +1,5 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Settings, Users, Mail, Wrench, Plug, Shield, PaintBucket, Bell } from "lucide-react";
@@ -11,15 +11,31 @@ interface SettingsTabListProps {
 
 const SettingsTabList: React.FC<SettingsTabListProps> = ({ activeTab }) => {
   const tabsRef = useRef<HTMLDivElement>(null);
+  const activeTabElementRef = useRef<HTMLButtonElement | null>(null);
   const isMobile = useIsMobile();
   
-  // Scroll active tab into view on mobile
-  React.useEffect(() => {
+  // Scroll active tab into view when the active tab changes
+  useEffect(() => {
     if (isMobile && tabsRef.current) {
-      const activeTabElement = tabsRef.current.querySelector(`[data-state="active"]`);
-      if (activeTabElement) {
-        activeTabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
+      // Use a small delay to ensure the DOM is updated
+      const timer = setTimeout(() => {
+        const activeTabElement = tabsRef.current?.querySelector(`[data-state="active"]`) as HTMLButtonElement;
+        
+        if (activeTabElement) {
+          activeTabElementRef.current = activeTabElement;
+          // Calculate the scroll amount to center the tab
+          const container = tabsRef.current;
+          const scrollLeft = activeTabElement.offsetLeft - (container.clientWidth / 2) + (activeTabElement.offsetWidth / 2);
+          
+          // Smooth scroll to position
+          container.scrollTo({
+            left: scrollLeft,
+            behavior: 'smooth'
+          });
+        }
+      }, 50);
+      
+      return () => clearTimeout(timer);
     }
   }, [activeTab, isMobile]);
 

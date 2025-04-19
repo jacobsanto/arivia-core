@@ -24,6 +24,7 @@ export function useSettingsForm<T extends Record<string, any>>({
 }: UseSettingsFormProps<T>) {
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [saveAttempts, setSaveAttempts] = useState(0);
   
   // Get settings from the database
   const { settings, saveSettings, isLoading, isSaving } = useSystemSettings<T>(
@@ -35,6 +36,7 @@ export function useSettingsForm<T extends Record<string, any>>({
   const form = useForm<T>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as unknown as DefaultValues<T>,
+    mode: 'onChange'
   });
   
   // Initialize form once settings are loaded
@@ -74,11 +76,14 @@ export function useSettingsForm<T extends Record<string, any>>({
         ])
       ) as T;
 
+      // Optimistic UI update - if the form data is valid, we reset the form first
+      form.reset(cleanData as unknown as DefaultValues<T>);
+      
+      // Perform the actual save operation
       const success = await saveSettings(cleanData);
       
       if (success) {
         // Update form state after successful save
-        form.reset(cleanData as unknown as DefaultValues<T>);
         setIsDirty(false);
         
         toast.success("Settings saved successfully");
@@ -86,12 +91,30 @@ export function useSettingsForm<T extends Record<string, any>>({
         if (onAfterSave) {
           onAfterSave(cleanData);
         }
+      } else {
+        // If save failed, we reset the form to the previous state
+        form.reset(settings as unknown as DefaultValues<T>);
+        setSaveAttempts(prev => prev + 1);
+        
+        // Only show toast error if we haven't tried too many times
+        if (saveAttempts < 3) {
+          toast.error("Failed to save settings", {
+            description: "Please try again"
+          });
+        } else {
+          toast.error("Persistent save errors", {
+            description: "Please check your connection and try again later"
+          });
+        }
       }
     } catch (error: any) {
       console.error('Failed to save settings:', error);
       toast.error("Failed to save settings", {
         description: error.message || "An unknown error occurred"
       });
+      
+      // Reset form to previous state
+      form.reset(settings as unknown as DefaultValues<T>);
     }
   };
   

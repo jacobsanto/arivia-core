@@ -1,7 +1,6 @@
 
-import React from "react";
-import { TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React, { useEffect } from "react";
+import { TabsContent, useRegisterTab } from "@/components/ui/tabs";
 import SettingsStatusBadge from "../SettingsStatusBadge";
 
 interface SettingsTabContentProps {
@@ -20,6 +19,9 @@ const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
   status,
   children
 }) => {
+  // Register this tab with the swipeable tabs provider
+  useRegisterTab(value);
+
   return (
     <TabsContent value={value} className="space-y-4">
       <div className="flex justify-between items-center mb-2">

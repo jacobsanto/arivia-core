@@ -45,34 +45,41 @@ const TabsTrigger = React.forwardRef<
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
+// Create a context to manage tab registration and navigation
+interface TabsContentContextType {
+  registerTab: (tabValue: string) => void;
+  getNextTab: (currentTab: string) => string | null;
+  getPreviousTab: (currentTab: string) => string | null;
+  availableTabs: string[];
+}
+
+const TabsContentContext = React.createContext<TabsContentContextType>({
+  registerTab: () => {},
+  getNextTab: () => null,
+  getPreviousTab: () => null,
+  availableTabs: []
+});
+
 // Create a wrapper component for TabsContent that adds swipe functionality
 interface SwipeableTabsContentProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {
   children: React.ReactNode;
-  tabsRoot?: React.RefObject<HTMLElement>;
   value: string;
-  availableTabs?: string[];
   swipeEnabled?: boolean;
 }
 
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   SwipeableTabsContentProps
->(({ className, children, tabsRoot, value, availableTabs, swipeEnabled = true, ...props }, ref) => {
-  const context = tabsRoot?.current ? 
-    React.useContext(TabsContentContext) : { registerTab: () => {}, getNextTab: () => null, getPreviousTab: () => null };
-
-  React.useEffect(() => {
-    if (context?.registerTab && value) {
-      context.registerTab(value);
-    }
-  }, [context, value]);
+>(({ className, children, value, swipeEnabled = true, ...props }, ref) => {
+  const { availableTabs, getNextTab, getPreviousTab } = React.useContext(TabsContentContext);
+  const tabsRootRef = React.useContext(TabsRootContext);
 
   const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
     onSwipeLeft: () => {
-      if (swipeEnabled && context?.getNextTab && tabsRoot?.current) {
-        const nextTab = context.getNextTab(value);
+      if (swipeEnabled && tabsRootRef) {
+        const nextTab = getNextTab(value);
         if (nextTab) {
-          const tabsElement = tabsRoot.current as unknown as { setValue: (value: string) => void };
+          const tabsElement = tabsRootRef as unknown as { setValue: (value: string) => void };
           if (tabsElement.setValue) {
             tabsElement.setValue(nextTab);
           }
@@ -80,10 +87,10 @@ const TabsContent = React.forwardRef<
       }
     },
     onSwipeRight: () => {
-      if (swipeEnabled && context?.getPreviousTab && tabsRoot?.current) {
-        const previousTab = context.getPreviousTab(value);
+      if (swipeEnabled && tabsRootRef) {
+        const previousTab = getPreviousTab(value);
         if (previousTab) {
-          const tabsElement = tabsRoot.current as unknown as { setValue: (value: string) => void };
+          const tabsElement = tabsRootRef as unknown as { setValue: (value: string) => void };
           if (tabsElement.setValue) {
             tabsElement.setValue(previousTab);
           }
@@ -113,16 +120,10 @@ const TabsContent = React.forwardRef<
     </TabsPrimitive.Content>
   )
 })
-TabsContent.displayName = "SwipeableTabsContent"
+TabsContent.displayName = "TabsContent"
 
-// Create a context to manage tab registration and navigation
-interface TabsContentContextType {
-  registerTab: (tabValue: string) => void;
-  getNextTab: (currentTab: string) => string | null;
-  getPreviousTab: (currentTab: string) => string | null;
-}
-
-const TabsContentContext = React.createContext<TabsContentContextType | null>(null);
+// Create a context for the tabs root component
+const TabsRootContext = React.createContext<React.RefObject<HTMLElement> | null>(null);
 
 interface SwipeableTabsProviderProps {
   children: React.ReactNode;
@@ -130,37 +131,51 @@ interface SwipeableTabsProviderProps {
 
 const SwipeableTabsProvider = ({ children }: SwipeableTabsProviderProps) => {
   const [tabs, setTabs] = React.useState<string[]>([]);
+  const tabsRef = React.useRef<HTMLDivElement>(null);
 
-  const registerTab = (tabValue: string) => {
+  const registerTab = React.useCallback((tabValue: string) => {
     setTabs(prev => {
       if (!prev.includes(tabValue)) {
         return [...prev, tabValue];
       }
       return prev;
     });
-  };
+  }, []);
 
-  const getNextTab = (currentTab: string) => {
+  const getNextTab = React.useCallback((currentTab: string) => {
     const currentIndex = tabs.indexOf(currentTab);
-    if (currentIndex < tabs.length - 1) {
+    if (currentIndex !== -1 && currentIndex < tabs.length - 1) {
       return tabs[currentIndex + 1];
     }
     return null;
-  };
+  }, [tabs]);
 
-  const getPreviousTab = (currentTab: string) => {
+  const getPreviousTab = React.useCallback((currentTab: string) => {
     const currentIndex = tabs.indexOf(currentTab);
     if (currentIndex > 0) {
       return tabs[currentIndex - 1];
     }
     return null;
-  };
+  }, [tabs]);
 
   return (
-    <TabsContentContext.Provider value={{ registerTab, getNextTab, getPreviousTab }}>
-      {children}
-    </TabsContentContext.Provider>
+    <TabsRootContext.Provider value={tabsRef}>
+      <TabsContentContext.Provider value={{ registerTab, getNextTab, getPreviousTab, availableTabs: tabs }}>
+        {children}
+      </TabsContentContext.Provider>
+    </TabsRootContext.Provider>
   );
+};
+
+// Create a hook to use the swipeable tabs functionality
+const useRegisterTab = (tabValue: string) => {
+  const { registerTab } = React.useContext(TabsContentContext);
+  
+  React.useEffect(() => {
+    if (tabValue) {
+      registerTab(tabValue);
+    }
+  }, [tabValue, registerTab]);
 };
 
 // Export the enhanced components
@@ -169,5 +184,6 @@ export {
   TabsList, 
   TabsTrigger, 
   TabsContent, 
-  SwipeableTabsProvider 
+  SwipeableTabsProvider,
+  useRegisterTab
 }

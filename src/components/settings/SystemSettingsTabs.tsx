@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from "react";
-import { Tabs, SwipeableTabsProvider } from "@/components/ui/tabs";
+import React, { useState, useEffect, useRef } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { settingsService, SettingsCategory } from "@/services/settings/settings.service";
+import { toast } from "sonner";
 import GeneralSettings from "./sections/GeneralSettings";
 import UserManagementSettings from "./sections/UserManagementSettings";
 import EmailSettings from "./sections/EmailSettings";
@@ -35,7 +36,8 @@ const SystemSettingsTabs: React.FC = () => {
     appearance: { status: "not-configured" },
     notifications: { status: "not-configured" }
   });
-
+  const tabsRef = useRef<HTMLDivElement>(null);
+  
   // Load settings status on component mount
   useEffect(() => {
     const loadSettingsStatus = async () => {
@@ -63,6 +65,9 @@ const SystemSettingsTabs: React.FC = () => {
           }
         } catch (error) {
           console.error(`Error loading ${category} settings status:`, error);
+          toast.error(`Failed to load ${category} settings`, {
+            description: "Please try again later"
+          });
         }
       }
       
@@ -74,7 +79,12 @@ const SystemSettingsTabs: React.FC = () => {
 
   return (
     <SwipeableTabsProvider>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={setActiveTab} 
+        className="space-y-4"
+        ref={tabsRef}
+      >
         <SettingsTabList activeTab={activeTab} />
         
         <ScrollArea className="w-full">
