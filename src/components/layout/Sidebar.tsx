@@ -1,3 +1,4 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const Sidebar = () => {
   
   const isSuperAdmin = user.role === "superadmin";
   const isAdmin = user.role === "administrator";
+  const isPropertyManager = user.role === "property_manager";
 
   return (
     <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
@@ -50,7 +52,7 @@ const Sidebar = () => {
           </>
         )}
         
-        {(user.role === "administrator" || user.role === "property_manager") && (
+        {(isAdmin || isPropertyManager) && (
           <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
         )}
         
@@ -105,7 +107,6 @@ const SidebarLink = ({
       <div className="flex items-center px-4 py-2 rounded-md font-medium text-sidebar-muted opacity-50 cursor-not-allowed">
         <span className="mr-3">{icon}</span>
         <span>{label}</span>
-        <Lock size={14} className="ml-auto" />
       </div>
     );
   }

@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -20,6 +21,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   if (!user) return null;
 
   const isSuperAdmin = user.role === "superadmin";
+  const isAdmin = user.role === "administrator";
+  const isPropertyManager = user.role === "property_manager";
 
   const handleLogout = () => {
     logout();
@@ -64,7 +67,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
               </>
             )}
             
-            {(user.role === "administrator" || user.role === "property_manager") && (
+            {(isAdmin || isPropertyManager) && (
               <MobileSidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" onClick={handleLinkClick} />
             )}
             

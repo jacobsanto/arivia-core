@@ -22,12 +22,11 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
       <NavItem to="/dashboard" icon={<Home size={20} />} label="Home" />
       
       {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
-        <>
-          <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
-          {isAdminOrManager && (
-            <NavItem to="/damage-reports" icon={<FileText size={20} />} label="Reports" />
-          )}
-        </>
+        <NavItem to="/maintenance" icon={<Wrench size={20} />} label="Maintenance" />
+      )}
+      
+      {isAdminOrManager && (
+        <NavItem to="/damage-reports" icon={<FileText size={20} />} label="Reports" />
       )}
       
       {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
