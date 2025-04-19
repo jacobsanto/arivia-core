@@ -1,45 +1,28 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+import { Form } from "@/components/ui/form";
 import SettingsCard from "../SettingsCard";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
 import { toast } from "sonner";
-
-const maintenanceSchema = z.object({
-  taskReminderHours: z.number().min(1).max(72),
-  defaultTaskPriority: z.string(),
-  autoAssignTasks: z.boolean(),
-  enableRecurringTasks: z.boolean(),
-  maintenanceEmail: z.string().email("Must be a valid email address").optional().or(z.literal('')),
-});
-
-type MaintenanceFormValues = z.infer<typeof maintenanceSchema>;
+import { maintenanceSchema, defaultMaintenanceValues, MaintenanceFormValues } from "./maintenance/schema";
+import { TaskReminderField } from "./maintenance/TaskReminderField";
+import { PriorityField } from "./maintenance/PriorityField";
+import { EmailField } from "./maintenance/EmailField";
+import { TaskSwitches } from "./maintenance/TaskSwitches";
 
 const MaintenanceSettings: React.FC = () => {
   const [isInitialized, setIsInitialized] = React.useState(false);
   
-  const defaultValues: MaintenanceFormValues = {
-    taskReminderHours: 24,
-    defaultTaskPriority: "normal",
-    autoAssignTasks: false,
-    enableRecurringTasks: false,
-    maintenanceEmail: "",
-  };
-
   const { settings, saveSettings, isLoading } = useSystemSettings<MaintenanceFormValues>(
     'maintenance', 
-    defaultValues
+    defaultMaintenanceValues
   );
 
   const form = useForm<MaintenanceFormValues>({
     resolver: zodResolver(maintenanceSchema),
-    defaultValues: settings || defaultValues,
+    defaultValues: settings || defaultMaintenanceValues,
   });
 
   // Initialize form when settings are loaded
@@ -83,117 +66,10 @@ const MaintenanceSettings: React.FC = () => {
           isLoading={isLoading}
         >
           <div className="space-y-6">
-            <FormField
-              control={form.control}
-              name="taskReminderHours"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Task Reminder Hours</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      {...field} 
-                      onChange={(e) => field.onChange(parseInt(e.target.value))} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Hours before due date to send task reminders
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="defaultTaskPriority"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Default Task Priority</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select default priority" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="normal">Normal</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="urgent">Urgent</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    Default priority for new maintenance tasks
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="maintenanceEmail"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Maintenance Notification Email</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="maintenance@arivia-villas.com" 
-                      {...field} 
-                      value={field.value || ''} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Email to receive maintenance notifications
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="autoAssignTasks"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Auto-Assign Tasks</FormLabel>
-                    <FormDescription>
-                      Automatically assign tasks based on staff availability and skills
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="enableRecurringTasks"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Recurring Tasks</FormLabel>
-                    <FormDescription>
-                      Enable scheduling of recurring maintenance tasks
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            <TaskReminderField form={form} />
+            <PriorityField form={form} />
+            <EmailField form={form} />
+            <TaskSwitches form={form} />
           </div>
         </SettingsCard>
       </form>
