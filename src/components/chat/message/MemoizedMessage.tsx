@@ -1,5 +1,4 @@
-
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 import ChatMessage from '../ChatMessage';
 import { Message } from '@/hooks/useChatTypes';
 
@@ -13,7 +12,10 @@ interface MemoizedMessageProps {
   setShowEmojiPicker: (show: boolean) => void;
 }
 
-// Use a more effective memoization that considers all the important properties
+/**
+ * Memoized chat message component to prevent unnecessary re-renders
+ * Only re-renders when the specific message or its reactions change
+ */
 const MemoizedMessage = memo(({
   message,
   emojis,
@@ -22,61 +24,94 @@ const MemoizedMessage = memo(({
   setReactionMessageId,
   showEmojiPicker,
   setShowEmojiPicker,
-}: MemoizedMessageProps) => (
-  <ChatMessage
-    key={message.id}
-    message={message}
-    emojis={emojis}
-    onAddReaction={onAddReaction}
-    reactionMessageId={reactionMessageId}
-    setReactionMessageId={setReactionMessageId}
-    showEmojiPicker={showEmojiPicker}
-    setShowEmojiPicker={setShowEmojiPicker}
-  />
-), (prevProps, nextProps) => {
+}: MemoizedMessageProps) => {
+  // Use useMemo for complex props to ensure consistent reference
+  const messageProps = useMemo(() => ({
+    key: message.id,
+    message,
+    emojis,
+    onAddReaction,
+    reactionMessageId,
+    setReactionMessageId,
+    showEmojiPicker,
+    setShowEmojiPicker
+  }), [
+    message,
+    emojis, 
+    onAddReaction, 
+    reactionMessageId, 
+    setReactionMessageId, 
+    showEmojiPicker, 
+    setShowEmojiPicker
+  ]);
+  
+  return <ChatMessage {...messageProps} />;
+}, (prevProps, nextProps) => {
   // Check if any of the required props are undefined
   if (!prevProps.message || !nextProps.message) return false;
   
-  // Only re-render under these specific conditions:
-  // 1. If the message ID changes
+  // 1. If the message ID changes (should never happen for same component)
   if (prevProps.message.id !== nextProps.message.id) return false;
   
   // 2. If the message content changes
   if (prevProps.message.content !== nextProps.message.content) return false;
   
   // 3. If the message attachments change
-  const prevAttachments = JSON.stringify(prevProps.message.attachments || []);
-  const nextAttachments = JSON.stringify(nextProps.message.attachments || []);
-  if (prevAttachments !== nextAttachments) return false;
+  const prevAttachmentsLength = prevProps.message.attachments?.length || 0;
+  const nextAttachmentsLength = nextProps.message.attachments?.length || 0;
+  
+  if (prevAttachmentsLength !== nextAttachmentsLength) return false;
+  
+  if (prevAttachmentsLength > 0) {
+    const prevAttachments = JSON.stringify(prevProps.message.attachments);
+    const nextAttachments = JSON.stringify(nextProps.message.attachments);
+    if (prevAttachments !== nextAttachments) return false;
+  }
   
   // 4. If this message's reaction state changes
-  // Use a more efficient way to compare reaction objects
-  const prevReactionKeys = Object.keys(prevProps.message.reactions || {}).sort().join(',');
-  const nextReactionKeys = Object.keys(nextProps.message.reactions || {}).sort().join(',');
+  const prevReactions = prevProps.message.reactions || {};
+  const nextReactions = nextProps.message.reactions || {};
   
-  if (prevReactionKeys !== nextReactionKeys) return false;
+  // Quick check: different number of reaction types
+  const prevReactionTypes = Object.keys(prevReactions).length;
+  const nextReactionTypes = Object.keys(nextReactions).length;
   
-  // Check reaction values only if the keys match
-  if (prevReactionKeys === nextReactionKeys && prevReactionKeys !== '') {
-    const reactions = prevProps.message.reactions || {};
-    for (const key of Object.keys(reactions)) {
-      const prevUsers = (prevProps.message.reactions?.[key] || []).sort().join(',');
-      const nextUsers = (nextProps.message.reactions?.[key] || []).sort().join(',');
-      if (prevUsers !== nextUsers) return false;
+  if (prevReactionTypes !== nextReactionTypes) return false;
+  
+  // Deeper check for reactions if needed
+  if (prevReactionTypes > 0) {
+    // Get sorted keys for comparison
+    const prevReactionKeys = Object.keys(prevReactions).sort();
+    const nextReactionKeys = Object.keys(nextReactions).sort();
+    
+    // Check if reaction types match
+    if (prevReactionKeys.join(',') !== nextReactionKeys.join(',')) return false;
+    
+    // Check each reaction's users
+    for (const key of prevReactionKeys) {
+      const prevUsers = (prevReactions[key] || []).sort();
+      const nextUsers = (nextReactions[key] || []).sort();
+      
+      if (prevUsers.length !== nextUsers.length) return false;
+      if (prevUsers.join(',') !== nextUsers.join(',')) return false;
     }
   }
   
   // 5. If this specific message is being reacted to
-  if (
+  const isReactionTargetChanged = (
     (prevProps.reactionMessageId === prevProps.message.id || nextProps.reactionMessageId === nextProps.message.id) &&
     prevProps.reactionMessageId !== nextProps.reactionMessageId
-  ) return false;
+  );
+  
+  if (isReactionTargetChanged) return false;
   
   // 6. If the emoji picker visibility changes for this message
-  if (
+  const isEmojiPickerChanged = (
     prevProps.reactionMessageId === prevProps.message.id &&
     prevProps.showEmojiPicker !== nextProps.showEmojiPicker
-  ) return false;
+  );
+  
+  if (isEmojiPickerChanged) return false;
   
   // Otherwise, don't re-render
   return true;

@@ -1,73 +1,120 @@
-# Welcome to your Lovable project
 
-## Project info
+# Arivia Villas All-in-One Operations App
+
+## Project Overview
+
+The Arivia Villas Operations Application is a comprehensive platform designed to streamline villa property management operations, enabling both staff and villa owners to efficiently manage properties, tasks, inventory, and financials.
 
 **URL**: https://lovable.dev/projects/57c4596f-bf34-4143-b817-b833cee798ef
 
-## How can I edit this code?
+## Core Features
 
-There are several ways of editing your application.
+- **Operations Task Management**: Cleaning, maintenance scheduling and tracking
+- **Inventory Management**: Stock tracking across general storage and per-villa inventory
+- **Financial Dashboard**: Expenses, reports, and per-villa profitability tracking
+- **Calendar & Booking Integration**: Seamless sync with Guesty booking platform
+- **Team Communication**: Built-in chat system for staff coordination
 
-**Use Lovable**
+## Technology Stack
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/57c4596f-bf34-4143-b817-b833cee798ef) and start prompting.
+- **Frontend**: React 18 with TypeScript, Vite, Tailwind CSS
+- **UI Components**: shadcn/ui component library
+- **State Management**: React Context API, TanStack Query
+- **Database & Authentication**: Supabase
+- **Hosting & Deployment**: Netlify
+- **Integrations**: Guesty API, Stripe payment processing
 
-Changes made via Lovable will be committed automatically to this repo.
+## Local Development
 
-**Use your preferred IDE**
+### Prerequisites
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- Node.js 18+ - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- npm 9+
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+### Setup
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd arivia-villas-app
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Environment Variables
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Create a `.env` file in the root directory with the following variables:
 
-**Use GitHub Codespaces**
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_GUESTY_API_URL=your_guesty_api_url
+VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Deployment
 
-## What technologies are used for this project?
+### Netlify Deployment
 
-This project is built with:
+This project is configured for deployment on Netlify:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+1. Connect your GitHub repository to Netlify
+2. Configure the environment variables in Netlify's dashboard
+3. Deploy using the settings in `netlify.toml`
 
-## How can I deploy this project?
+### Required Environment Variables
 
-Simply open [Lovable](https://lovable.dev/projects/57c4596f-bf34-4143-b817-b833cee798ef) and click on Share -> Publish.
+Ensure these environment variables are set in your hosting platform:
 
-## Can I connect a custom domain to my Lovable project?
+- `GUESTY_USERNAME` - Guesty account username
+- `GUESTY_PASSWORD` - Guesty account password
+- `GUESTY_CLIENT_ID` - OAuth client ID from Guesty
+- `GUESTY_SECRET` - OAuth client secret from Guesty
+- `STRIPE_SECRET_KEY` - Stripe API secret key
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
+- `SUPABASE_URL` - Your Supabase project URL
+- `SUPABASE_ANON_KEY` - Your Supabase anonymous API key
+- `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
 
-Yes it is!
+## Best Practices for GitHub
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+1. **Branch Management**:
+   - `main`: Production-ready code
+   - `development`: Integration branch for ongoing development
+   - Feature branches: Create from development (format: `feature/feature-name`)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+2. **Commit Guidelines**:
+   - Use descriptive commit messages
+   - Reference issue numbers when applicable
+   - Keep commits focused on single changes
+
+3. **Pull Request Process**:
+   - Create PRs from feature branches to development
+   - Use PR template for consistent documentation
+   - Require code review before merging
+
+## Documentation
+
+Additional documentation:
+
+- [API Integration Guide](./src/integrations/guesty/README.md)
+- [Guesty API Reference](./src/integrations/guesty/api-reference.md)
+
+## Important Files to Exclude from Version Control
+
+Note: In addition to the patterns in the existing `.gitignore`, make sure to exclude:
+
+- Local environment files (`.env.local`, `.env.development.local`)
+- Log files and debugging outputs
+- Temporary build files
+- Service account keys and credentials
+
+## License
+
+This project is proprietary software owned by Arivia Villas.

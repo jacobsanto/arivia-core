@@ -1,5 +1,5 @@
 
-import React, { useMemo, Suspense, useCallback } from "react";
+import React, { useMemo, Suspense, useCallback, memo } from "react";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import MobileDashboard from "@/components/dashboard/MobileDashboard";
@@ -13,20 +13,21 @@ import { Button } from "@/components/ui/button";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 
 // Loader component for better UX during loading states
-const DashboardLoader: React.FC = () => (
+const DashboardLoader = memo(() => (
   <div className="flex items-center justify-center h-64">
     <div className="flex flex-col items-center gap-2">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
       <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
     </div>
   </div>
-);
+));
+DashboardLoader.displayName = 'DashboardLoader';
 
 // Error fallback component for error states
-const DashboardErrorFallback: React.FC<{
+const DashboardErrorFallback = memo(({ error, onRetry }: {
   error: string;
   onRetry: () => void;
-}> = ({ error, onRetry }) => (
+}) => (
   <div className="flex flex-col items-center justify-center h-64 px-4">
     <Alert variant="destructive" className="max-w-md w-full mb-4">
       <AlertTriangle className="h-4 w-4" />
@@ -38,7 +39,34 @@ const DashboardErrorFallback: React.FC<{
       Retry
     </Button>
   </div>
-);
+));
+DashboardErrorFallback.displayName = 'DashboardErrorFallback';
+
+// Saving status indicator component
+const SavingIndicator = memo(({ isSaving, lastSaved }: { 
+  isSaving: boolean;
+  lastSaved: Date | null;
+}) => {
+  if (isSaving) {
+    return (
+      <div className="flex items-center justify-end text-xs text-muted-foreground">
+        <Save className="h-3 w-3 mr-1 animate-pulse" />
+        <span>Saving preferences...</span>
+      </div>
+    );
+  }
+  
+  if (lastSaved) {
+    return (
+      <div className="flex items-center justify-end text-xs text-muted-foreground">
+        <span>Preferences saved at {lastSaved.toLocaleTimeString()}</span>
+      </div>
+    );
+  }
+  
+  return null;
+});
+SavingIndicator.displayName = 'SavingIndicator';
 
 const Dashboard: React.FC = () => {
   const {
@@ -50,7 +78,7 @@ const Dashboard: React.FC = () => {
     error
   } = useDashboard();
   
-  // Use the new preferences hook
+  // Use the preferences hook
   const { 
     preferences,
     isSaving,
@@ -64,6 +92,7 @@ const Dashboard: React.FC = () => {
 
   // Optimize refresh callback with useCallback
   const handleRefresh = useCallback(() => {
+    console.log("Manual dashboard refresh triggered");
     return refreshDashboard();
   }, [refreshDashboard]);
 
@@ -77,15 +106,38 @@ const Dashboard: React.FC = () => {
 
   // Handle property change with preference saving
   const handlePropertyChangeWithSave = useCallback((property: string) => {
+    console.log(`Changing selected property to: ${property}`);
     updateSelectedProperty(property);
     handlePropertyChange(property);
   }, [updateSelectedProperty, handlePropertyChange]);
 
   // Handle date range change with preference saving
   const handleDateRangeChangeWithSave = useCallback((range: DateRange) => {
+    console.log(`Updating date range to: ${range.from?.toISOString()} - ${range.to?.toISOString()}`);
     updateDateRange(range);
     handleDateRangeChange(range);
   }, [updateDateRange, handleDateRangeChange]);
+
+  // Memoize the header to prevent unnecessary re-renders
+  const dashboardHeader = useMemo(() => (
+    <DashboardHeader 
+      selectedProperty={preferences.selectedProperty}
+      onPropertyChange={handlePropertyChangeWithSave}
+      dateRange={convertedDateRange}
+      onDateRangeChange={handleDateRangeChangeWithSave}
+      refreshDashboardContent={handleRefresh}
+      dashboardData={dashboardData}
+      isLoading={isLoading}
+    />
+  ), [
+    preferences.selectedProperty, 
+    handlePropertyChangeWithSave, 
+    convertedDateRange, 
+    handleDateRangeChangeWithSave, 
+    handleRefresh,
+    dashboardData,
+    isLoading
+  ]);
 
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
@@ -118,7 +170,15 @@ const Dashboard: React.FC = () => {
         onToggleFavorite={toggleFavoriteMetric}
       />
     );
-  }, [dashboardData, isMobile, isLoading, error, handleRefresh, preferences.favoriteMetrics, toggleFavoriteMetric]);
+  }, [
+    dashboardData, 
+    isMobile, 
+    isLoading, 
+    error, 
+    handleRefresh, 
+    preferences.favoriteMetrics, 
+    toggleFavoriteMetric
+  ]);
 
   return (
     <>
@@ -126,28 +186,9 @@ const Dashboard: React.FC = () => {
         <title>Dashboard - Arivia Villas</title>
       </Helmet>
       <div className="space-y-6 pb-8">
-        {isSaving && (
-          <div className="flex items-center justify-end text-xs text-muted-foreground">
-            <Save className="h-3 w-3 mr-1 animate-pulse" />
-            <span>Saving preferences...</span>
-          </div>
-        )}
+        <SavingIndicator isSaving={isSaving} lastSaved={lastSaved} />
         
-        {lastSaved && !isSaving && (
-          <div className="flex items-center justify-end text-xs text-muted-foreground">
-            <span>Preferences saved at {lastSaved.toLocaleTimeString()}</span>
-          </div>
-        )}
-        
-        <DashboardHeader 
-          selectedProperty={preferences.selectedProperty}
-          onPropertyChange={handlePropertyChangeWithSave}
-          dateRange={convertedDateRange}
-          onDateRangeChange={handleDateRangeChangeWithSave}
-          refreshDashboardContent={handleRefresh}
-          dashboardData={dashboardData}
-          isLoading={isLoading}
-        />
+        {dashboardHeader}
         
         <Suspense fallback={<DashboardLoader />}>
           {dashboardContent}
