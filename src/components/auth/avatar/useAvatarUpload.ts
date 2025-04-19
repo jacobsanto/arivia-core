@@ -11,17 +11,25 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { updateUserAvatar, refreshProfile } = useUser();
+  const { updateUserAvatar } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const previousAvatarRef = useRef<string>("");
   
+  // Initialize avatar URL from user data
   useEffect(() => {
     const newUrl = user.avatar || "/placeholder.svg";
     setAvatarUrl(newUrl);
     previousAvatarRef.current = newUrl;
   }, [user.avatar]);
+
+  // Update avatar with cache busting only when needed
+  const getAvatarUrl = (url: string) => {
+    if (!url || url.includes('placeholder.svg')) return url;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
+  };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -40,15 +48,14 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
 
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
-      const fileName = `avatar-${Date.now()}.${fileExt}`; // Add timestamp to filename
+      const fileName = `avatar.${fileExt}`;
       const filePath = `${userId}/${fileName}`;
       
       const { data, error } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           upsert: true,
-          contentType: file.type,
-          cacheControl: 'no-cache' // Disable caching
+          contentType: file.type
         });
       
       if (error) {
@@ -61,20 +68,15 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         .getPublicUrl(filePath);
       
       if (publicUrlData?.publicUrl) {
-        // Update avatar in database
-        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        const newAvatarUrl = getAvatarUrl(publicUrlData.publicUrl);
         
-        // Update local state
-        setAvatarUrl(publicUrlData.publicUrl);
+        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        setAvatarUrl(newAvatarUrl);
         previousAvatarRef.current = publicUrlData.publicUrl;
 
-        // Notify parent component
         if (onAvatarChange) {
           onAvatarChange(publicUrlData.publicUrl);
         }
-
-        // Refresh profile to update all components
-        await refreshProfile();
         
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);

@@ -4,7 +4,7 @@ import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface AvatarDisplayProps {
-  user: User | { name: string; avatar?: string; id?: string };
+  user: User;
   size?: "sm" | "md" | "lg";
   className?: string;
 }
@@ -27,16 +27,16 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   const avatarUrl = useMemo(() => {
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
-    return `${url}?t=${Date.now()}`; // Force cache invalidation
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${Date.now()}`;
   }, [user.avatar]);
 
   return (
-    <Avatar className={`${sizeClasses[size]} ${className} bg-muted/30 flex items-center justify-center`}>
+    <Avatar className={`${sizeClasses[size]} ${className}`}>
       <AvatarImage 
         src={avatarUrl} 
         alt={user.name || "User"} 
-        className="w-full h-full"
-        loading="eager"
+        className="object-center object-cover" 
       />
       <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
     </Avatar>

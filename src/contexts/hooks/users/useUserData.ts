@@ -12,8 +12,8 @@ export const useUserData = () => {
   // Set up Supabase realtime
   useRealtimeSetup();
   
-  // Get profile data fetching functionality with user state updater
-  const { fetchProfileData } = useFetchProfileData(user, setUser);
+  // Get profile data fetching functionality
+  const { fetchProfileData } = useFetchProfileData(user);
   
   // Function to refresh the current user's profile
   const refreshUserProfile = useCallback(async (): Promise<boolean> => {

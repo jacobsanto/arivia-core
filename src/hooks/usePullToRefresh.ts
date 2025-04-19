@@ -46,9 +46,7 @@ export const usePullToRefresh = (options?: PullToRefreshOptions): PullToRefreshR
     
     // Only allow pull-to-refresh when scrolled to top
     if (contentRef.current && contentRef.current.scrollTop <= 0 && touchDiff > 0) {
-      // Apply resistance factor for natural feel
-      const resistance = 0.4;
-      setPullMoveY(Math.min(touchDiff * resistance, maxPullDistance));
+      setPullMoveY(Math.min(touchDiff / 2, maxPullDistance));
       if (e.cancelable) e.preventDefault();
     }
   }, [isRefreshing, maxPullDistance]);
@@ -60,14 +58,12 @@ export const usePullToRefresh = (options?: PullToRefreshOptions): PullToRefreshR
       // Execute refresh function
       Promise.resolve(onRefresh())
         .finally(() => {
-          // Add slight delay for better UX
           setTimeout(() => {
             setIsRefreshing(false);
             setPullMoveY(0);
           }, 1000);
         });
     } else {
-      // Add a smooth spring-back animation
       setPullMoveY(0);
     }
   }, [pullMoveY, isRefreshing, onRefresh, pullDistance]);

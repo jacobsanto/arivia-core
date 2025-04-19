@@ -15,13 +15,11 @@ export const updateAvatar = async (
     console.log("Updating avatar for user:", userId);
     console.log("Avatar URL:", avatarUrl);
     
+    // Try to update Supabase profile
     if (navigator.onLine) {
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          avatar: avatarUrl,
-          updated_at: new Date().toISOString() // Force update
-        })
+        .update({ avatar: avatarUrl })
         .eq('id', userId);
         
       if (error) {
@@ -31,34 +29,30 @@ export const updateAvatar = async (
       
       console.log("Profile updated successfully in Supabase");
       
-      // Update local state immediately for better UX
+      // No need to update local state here as the real-time subscription will handle it
+      // But we'll update the current user immediately for a better UX
       if (currentUser?.id === userId) {
-        const updatedUser = { ...currentUser, avatar: avatarUrl };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      }
-      
-      // Update users list if present
-      if (users.length > 0) {
-        const updatedUsers = users.map(u => 
-          u.id === userId ? { ...u, avatar: avatarUrl } : u
-        );
-        setUsers(updatedUsers);
+        setUser({ ...currentUser, avatar: avatarUrl });
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, avatar: avatarUrl }));
       }
       
       return true;
     } else {
-      // Offline mode updates
-      if (currentUser?.id === userId) {
-        const updatedUser = { ...currentUser, avatar: avatarUrl };
-        setUser(updatedUser);
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-      }
-      
+      // Offline mode - update local state only
+      // Update local state
       const updatedUsers = users.map(u => 
         u.id === userId ? { ...u, avatar: avatarUrl } : u
       );
+      
       setUsers(updatedUsers);
+      
+      // If the current user's avatar was updated
+      if (currentUser?.id === userId) {
+        setUser({ ...currentUser, avatar: avatarUrl });
+        
+        // Update localStorage for offline support
+        localStorage.setItem("user", JSON.stringify({ ...currentUser, avatar: avatarUrl }));
+      }
       
       return true;
     }
