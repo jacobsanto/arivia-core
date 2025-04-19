@@ -73,9 +73,9 @@ export function useRealtimeMessages({
       });
 
     // Subscribe and store the channel reference
-    // Important: The status is returned as a string, not as an enum value
-    channel.subscribe((status) => {
-      // Using string literals for comparison instead of enum values
+    // The Supabase Realtime API returns status as a string, but TypeScript expects the enum
+    channel.subscribe((status: any) => {
+      // Convert the string status to a type-safe comparison
       if (status === 'SUBSCRIBED') {
         channelRef.current = channel;
       } else if (status !== 'SUBSCRIBED' && status !== 'CLOSED') {
