@@ -1,12 +1,12 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { DamageReport } from "@/services/damage/damage.service";
 import DamageReportHeader from "@/components/damage/DamageReportHeader";
 import DamageReportList from "@/components/damage/DamageReportList";
 import DamageReportDetail from "@/components/damage/DamageReportDetail";
 import DamageReportFilters from "@/components/damage/DamageReportFilters";
 import DamageReportStats from "@/components/damage/stats/DamageReportStats";
+import DamageReportForm from "@/components/damage/DamageReportForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useDamageReports } from "@/hooks/useDamageReports";
@@ -73,7 +73,7 @@ const DamageReports = () => {
           onClose={handleCloseReport}
           onUpdate={handleUpdateReport}
           onMediaUpload={handleMediaUpload}
-          canEdit={user?.role === 'admin' || user?.role === 'property_manager' || selectedReport.assigned_to === user?.id}
+          canEdit={user?.role === "admin" || user?.role === "property_manager" || selectedReport.assigned_to === user?.id}
         />
       )}
 

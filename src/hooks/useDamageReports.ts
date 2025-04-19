@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { DamageReport, damageService } from '@/services/damage/damage.service';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useDamageReports = () => {
   const [reports, setReports] = useState<DamageReport[]>([]);

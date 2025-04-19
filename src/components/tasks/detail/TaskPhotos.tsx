@@ -18,7 +18,7 @@ const TaskPhotos = ({ photos = [], onPhotoUpload, disabled }: TaskPhotosProps) =
             <img src={photo} alt={`Verification ${index + 1}`} className="object-cover w-full h-full" />
           </div>
         ))}
-        {photos.length < 3 && !disabled && (
+        {photos.length < 5 && !disabled && (
           <label className="bg-secondary rounded flex items-center justify-center h-24 cursor-pointer hover:bg-secondary/80 transition-colors">
             <input 
               type="file" 
@@ -29,7 +29,7 @@ const TaskPhotos = ({ photos = [], onPhotoUpload, disabled }: TaskPhotosProps) =
             <Plus className="h-6 w-6 text-muted-foreground" />
           </label>
         )}
-        {Array.from({ length: Math.max(0, 2 - photos.length) }).map((_, index) => (
+        {Array.from({ length: Math.max(0, 4 - photos.length) }).map((_, index) => (
           <div key={`empty-${index}`} className="bg-secondary rounded flex items-center justify-center h-24">
             <Plus className="h-6 w-6 text-muted-foreground" />
           </div>

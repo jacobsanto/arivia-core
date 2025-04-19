@@ -1,8 +1,10 @@
+
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { FileUpload } from "@/components/ui/file-upload";
 
 import { maintenanceFormSchema, MaintenanceFormValues } from "./types";
 import MaintenanceBasicInfo from "./MaintenanceBasicInfo";
