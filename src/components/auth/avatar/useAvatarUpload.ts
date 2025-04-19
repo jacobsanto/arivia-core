@@ -17,7 +17,6 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const previousAvatarRef = useRef<string>("");
   
-  // Initialize avatar URL from user data
   useEffect(() => {
     const newUrl = user.avatar || "/placeholder.svg";
     setAvatarUrl(newUrl);
@@ -41,14 +40,15 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
 
       const userId = user.id;
       const fileExt = file.name.split('.').pop();
-      const fileName = `avatar.${fileExt}`;
+      const fileName = `avatar-${Date.now()}.${fileExt}`; // Add timestamp to filename
       const filePath = `${userId}/${fileName}`;
       
       const { data, error } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           upsert: true,
-          contentType: file.type
+          contentType: file.type,
+          cacheControl: 'no-cache' // Disable caching
         });
       
       if (error) {
@@ -61,16 +61,19 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         .getPublicUrl(filePath);
       
       if (publicUrlData?.publicUrl) {
+        // Update avatar in database
         await updateUserAvatar(userId, publicUrlData.publicUrl);
+        
+        // Update local state
         setAvatarUrl(publicUrlData.publicUrl);
         previousAvatarRef.current = publicUrlData.publicUrl;
 
-        // Call onAvatarChange callback if provided
+        // Notify parent component
         if (onAvatarChange) {
           onAvatarChange(publicUrlData.publicUrl);
         }
 
-        // Refresh the profile to update all components
+        // Refresh profile to update all components
         await refreshProfile();
         
         toast.success("Avatar updated successfully");

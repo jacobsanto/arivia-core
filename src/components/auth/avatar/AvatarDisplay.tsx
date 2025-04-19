@@ -25,10 +25,9 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   className = ""
 }) => {
   const avatarUrl = useMemo(() => {
-    // Always add a timestamp to the URL to prevent caching
     const url = user.avatar || "/placeholder.svg";
     if (!url || url.includes('placeholder.svg')) return url;
-    return `${url}?t=${Date.now()}`;
+    return `${url}?t=${Date.now()}`; // Force cache invalidation
   }, [user.avatar]);
 
   return (
@@ -37,6 +36,7 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
         src={avatarUrl} 
         alt={user.name || "User"} 
         className="object-center object-cover" 
+        loading="eager"
       />
       <AvatarFallback>{getInitials(user.name || "User")}</AvatarFallback>
     </Avatar>

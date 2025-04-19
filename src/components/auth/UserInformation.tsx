@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -37,7 +38,7 @@ const UserInformation = () => {
       if (result) {
         toast.success("Profile updated successfully");
         setIsEditing(false);
-        // Refresh profile after successful update
+        // Ensure profile is refreshed after successful update
         await refreshProfile();
       }
     } catch (error) {
