@@ -1,8 +1,10 @@
+
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
 import { RealtimeChannel, REALTIME_SUBSCRIBE_STATES } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
