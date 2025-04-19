@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -7,6 +7,7 @@ import { useSystemSettings } from '@/hooks/useSystemSettings';
 import { SettingsCategory } from '@/services/settings/settings.service';
 import { z } from 'zod';
 import { DefaultValues } from 'react-hook-form';
+import { isEqual } from 'lodash';
 
 interface UseSettingsFormProps<T extends Record<string, any>> {
   category: SettingsCategory;
@@ -30,7 +31,7 @@ export function useSettingsForm<T extends Record<string, any>>({
     defaultValues as unknown as T
   );
   
-  // Create form with validation, but don't initialize with values yet
+  // Create form with validation
   const form = useForm<T>({
     resolver: zodResolver(schema),
     defaultValues: defaultValues as unknown as DefaultValues<T>,
@@ -49,20 +50,20 @@ export function useSettingsForm<T extends Record<string, any>>({
     }
   }, [settings, isLoading, form, defaultValues, isInitialized]);
   
-  // Track form changes, but only after initialization
+  // Track form changes using deep comparison
   useEffect(() => {
     if (!isInitialized) return;
     
-    const subscription = form.watch(() => {
-      const formValues = form.getValues();
-      const hasChanges = JSON.stringify(formValues) !== JSON.stringify(settings);
+    const subscription = form.watch((formData) => {
+      const currentValues = form.getValues();
+      const hasChanges = !isEqual(currentValues, settings);
       setIsDirty(hasChanges);
     });
     
     return () => subscription.unsubscribe();
   }, [form, settings, isInitialized]);
   
-  // Handle form submission
+  // Handle form submission with proper cleanup
   const onSubmit = async (data: T) => {
     try {
       // Clean up empty string values to null
@@ -76,6 +77,7 @@ export function useSettingsForm<T extends Record<string, any>>({
       const success = await saveSettings(cleanData);
       
       if (success) {
+        // Update form state after successful save
         form.reset(cleanData as unknown as DefaultValues<T>);
         setIsDirty(false);
         
