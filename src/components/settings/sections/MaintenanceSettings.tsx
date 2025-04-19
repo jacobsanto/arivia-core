@@ -7,10 +7,9 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import SettingsCard from "../SettingsCard";
 import { useSystemSettings } from "@/hooks/useSystemSettings";
+import { toast } from "sonner";
 
 const maintenanceSchema = z.object({
   taskReminderHours: z.number().min(1).max(72),
@@ -23,12 +22,14 @@ const maintenanceSchema = z.object({
 type MaintenanceFormValues = z.infer<typeof maintenanceSchema>;
 
 const MaintenanceSettings: React.FC = () => {
+  const [isInitialized, setIsInitialized] = React.useState(false);
+  
   const defaultValues: MaintenanceFormValues = {
     taskReminderHours: 24,
     defaultTaskPriority: "normal",
-    autoAssignTasks: true,
-    enableRecurringTasks: true,
-    maintenanceEmail: "maintenance@arivia-villas.com",
+    autoAssignTasks: false,
+    enableRecurringTasks: false,
+    maintenanceEmail: "",
   };
 
   const { settings, saveSettings, isLoading } = useSystemSettings<MaintenanceFormValues>(
@@ -41,22 +42,31 @@ const MaintenanceSettings: React.FC = () => {
     defaultValues: settings || defaultValues,
   });
 
-  // Update form values when settings are loaded
+  // Initialize form when settings are loaded
   React.useEffect(() => {
-    if (!isLoading && settings) {
-      Object.keys(settings).forEach(key => {
-        form.setValue(key as keyof MaintenanceFormValues, 
-          settings[key as keyof MaintenanceFormValues],
-          { shouldValidate: true });
-      });
+    if (!isLoading && settings && !isInitialized) {
+      form.reset(settings);
+      setIsInitialized(true);
     }
-  }, [settings, isLoading, form]);
+  }, [settings, isLoading, form, isInitialized]);
+
+  // Monitor form changes
+  React.useEffect(() => {
+    const subscription = form.watch(() => {
+      console.log("Form values changed:", form.getValues());
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   async function onSubmit(data: MaintenanceFormValues) {
     try {
+      console.log("Submitting maintenance settings:", data);
       const success = await saveSettings(data);
+      
       if (success) {
         toast.success('Maintenance settings saved successfully');
+      } else {
+        toast.error('Failed to save settings');
       }
     } catch (error) {
       console.error('Failed to save maintenance settings:', error);
@@ -184,12 +194,6 @@ const MaintenanceSettings: React.FC = () => {
                 </FormItem>
               )}
             />
-
-            <div className="flex justify-end">
-              <Button type="submit" disabled={isLoading || form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? 'Saving...' : 'Save Settings'}
-              </Button>
-            </div>
           </div>
         </SettingsCard>
       </form>
