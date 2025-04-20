@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useProperties } from "@/hooks/useProperties";
 import { FileUpload } from "@/components/ui/file-upload";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useUser } from "@/contexts/UserContext";
 
 interface DamageReportFormValues {
   title: string;
@@ -26,6 +27,7 @@ interface DamageReportFormProps {
 const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel }) => {
   const form = useForm<DamageReportFormValues>();
   const { properties } = useProperties();
+  const { users } = useUser();
 
   return (
     <Form {...form}>
@@ -87,9 +89,20 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Person to Resolve</FormLabel>
-                <FormControl>
-                  <Input {...field} placeholder="Enter name or email" />
-                </FormControl>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select person to resolve" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {users?.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name || user.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </FormItem>
             )}
           />
