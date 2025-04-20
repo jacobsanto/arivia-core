@@ -7,7 +7,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/
 import { useProperties } from "@/hooks/useProperties";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUser } from "@/contexts/UserContext";
+import { useUsers } from "@/hooks/useUsers";
 
 interface DamageReportFormValues {
   title: string;
@@ -27,7 +27,7 @@ interface DamageReportFormProps {
 const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel }) => {
   const form = useForm<DamageReportFormValues>();
   const { properties } = useProperties();
-  const { users } = useUser();
+  const { registeredUsers } = useUsers();
 
   return (
     <Form {...form}>
@@ -96,7 +96,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {users?.map((user) => (
+                    {registeredUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.name || user.email}
                       </SelectItem>
