@@ -12,7 +12,7 @@ interface MaintenanceDetailsProps {
 
 const MaintenanceDetails = ({ form }: MaintenanceDetailsProps) => {
   return (
-    <>
+    <div className="space-y-4">
       <FormField
         control={form.control}
         name="location"
@@ -47,24 +47,6 @@ const MaintenanceDetails = ({ form }: MaintenanceDetailsProps) => {
 
       <FormField
         control={form.control}
-        name="specialInstructions"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Special Instructions</FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Enter any special instructions for the maintenance staff"
-                className="min-h-[100px]"
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
         name="requiredTools"
         render={({ field }) => (
           <FormItem>
@@ -76,7 +58,7 @@ const MaintenanceDetails = ({ form }: MaintenanceDetailsProps) => {
           </FormItem>
         )}
       />
-    </>
+    </div>
   );
 };
 

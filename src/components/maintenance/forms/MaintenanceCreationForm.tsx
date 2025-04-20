@@ -3,14 +3,12 @@ import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Form } from "@/components/ui/form";
 import { FileUpload } from "@/components/ui/file-upload";
-
 import { maintenanceFormSchema, MaintenanceFormValues } from "./types";
 import MaintenanceBasicInfo from "./MaintenanceBasicInfo";
 import MaintenanceSchedule from "./MaintenanceSchedule";
 import MaintenanceDetails from "./MaintenanceDetails";
-import MaintenanceFormActions from "./MaintenanceFormActions";
 
 interface MaintenanceCreationFormProps {
   onSubmit: (data: any) => void;
@@ -38,17 +36,15 @@ const MaintenanceCreationForm: React.FC<MaintenanceCreationFormProps> = ({ onSub
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <MaintenanceBasicInfo form={form} />
         <MaintenanceSchedule form={form} />
         <MaintenanceDetails form={form} />
         
-        {/* Use a regular div instead of FormField since photos is not in the schema */}
         <div className="space-y-2">
           <p className="text-sm font-medium">Task Photos</p>
           <FileUpload
             onChange={(files) => {
-              // Handle files separately since they're not part of the form schema
               const filesArray = Array.from(files);
               form.setValue('photos', filesArray as any);
             }}
@@ -61,7 +57,12 @@ const MaintenanceCreationForm: React.FC<MaintenanceCreationFormProps> = ({ onSub
           </p>
         </div>
         
-        <MaintenanceFormActions onCancel={onCancel} />
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit">Create Task</Button>
+        </div>
       </form>
     </Form>
   );
