@@ -4,9 +4,8 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
 import { useProperties } from "@/hooks/useProperties";
-import { Calendar } from "@/components/ui/calendar";
 import { FileUpload } from "@/components/ui/file-upload";
 
 interface DamageReportFormValues {
@@ -16,6 +15,7 @@ interface DamageReportFormValues {
   damage_date: Date;
   estimated_cost?: number;
   media: File[];
+  assigned_to: string;
 }
 
 interface DamageReportFormProps {
@@ -83,21 +83,34 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
 
           <FormField
             control={form.control}
-            name="damage_date"
+            name="assigned_to"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Date of Damage</FormLabel>
+                <FormLabel>Person to Resolve</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="datetime-local" 
-                    {...field} 
-                    value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                  />
+                  <Input {...field} placeholder="Enter name or email" />
                 </FormControl>
               </FormItem>
             )}
           />
         </div>
+
+        <FormField
+          control={form.control}
+          name="damage_date"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Date of Damage</FormLabel>
+              <FormControl>
+                <Input 
+                  type="datetime-local" 
+                  {...field} 
+                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
