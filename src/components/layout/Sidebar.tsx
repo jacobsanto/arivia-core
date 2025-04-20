@@ -61,7 +61,12 @@ const Sidebar = () => {
         
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         
-        {canAccess("viewReports") && <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />}
+        {canAccess("viewReports") && (
+          <>
+            <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
+            <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />
+          </>
+        )}
         
         {(isSuperAdmin || isAdmin) && (
           <div className="pt-4 border-t border-sidebar-border mt-4">
