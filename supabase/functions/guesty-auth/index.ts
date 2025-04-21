@@ -75,16 +75,21 @@ async function getGuestyToken(): Promise<{ access_token: string; expires_in: num
   const tokenEndpoint = 'https://open-api.guesty.com/oauth2/token';
   
   try {
+    // Use URLSearchParams for x-www-form-urlencoded format
+    const params = new URLSearchParams();
+    params.append('client_id', clientId);
+    params.append('client_secret', clientSecret);
+    params.append('grant_type', 'client_credentials');
+    
+    console.log('Sending token request to Guesty...');
+    
     const response = await fetch(tokenEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        grant_type: 'client_credentials'
-      }),
+      body: params,
     });
 
     if (!response.ok) {
@@ -105,4 +110,3 @@ async function getGuestyToken(): Promise<{ access_token: string; expires_in: num
     throw new Error('Failed to authenticate with Guesty');
   }
 }
-
