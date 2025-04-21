@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import SettingsLayout from "@/components/settings/SettingsLayout";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";

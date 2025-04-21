@@ -1,7 +1,11 @@
+
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Property } from "@/types/property.types";
 import PropertyCard from "./PropertyCard";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+
 interface PropertyListProps {
   properties: Property[];
   isLoading: boolean;
@@ -12,6 +16,7 @@ interface PropertyListProps {
   onDelete: (id: string, name: string) => void;
   onAddProperty: () => void;
 }
+
 const PropertyList = ({
   properties,
   isLoading,
@@ -47,15 +52,20 @@ const PropertyList = ({
           </div>)}
       </div>;
   }
+  
   if (properties.length === 0) {
     return <div className="text-center py-12">
         <h3 className="text-lg font-medium mb-2">No properties found</h3>
-        
-        
+        <p className="text-gray-500 mb-6">Add your first property to get started</p>
+        <Button onClick={onAddProperty} className="gap-2">
+          <Plus size={16} /> Add Property
+        </Button>
       </div>;
   }
+  
   return <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {properties.map(property => <PropertyCard key={property.id} property={property} onViewDetails={onViewDetails} onBookingManagement={onBookingManagement} onPricingConfig={onPricingConfig} onGuestManagement={onGuestManagement} onDelete={onDelete} />)}
     </div>;
 };
+
 export default PropertyList;
