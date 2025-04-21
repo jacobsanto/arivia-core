@@ -1,121 +1,322 @@
 
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-
-// Import housekeeping components
-import TaskHeader from "@/components/tasks/TaskHeader";
-import TaskList from "@/components/tasks/TaskList";
-import TaskDetail from "@/components/tasks/TaskDetail";
-import TaskCreationForm from "@/components/tasks/TaskCreationForm";
-import TaskFilters from "@/components/tasks/TaskFilters";
-import { useTasks } from "@/hooks/useTasks";
+import React, { useState, useEffect } from "react";
+import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
-import TaskReporting from "@/components/tasks/TaskReporting";
+import HousekeepingKanban from "@/components/housekeeping/HousekeepingKanban";
+import HousekeepingMobileView from "@/components/housekeeping/HousekeepingMobileView";
+import HousekeepingFilters from "@/components/housekeeping/HousekeepingFilters";
+import HousekeepingHeader from "@/components/housekeeping/HousekeepingHeader";
+import { Task } from "@/types/housekeepingTypes";
+import { DateRange } from "@/components/reports/DateRangeSelector";
 
-const Housekeeping = () => {
-  const {
-    filteredTasks,
-    searchQuery,
-    setSearchQuery,
-    activeTab,
-    setActiveTab,
-    selectedTask,
-    isCreateTaskOpen,
-    setIsCreateTaskOpen,
-    propertyFilter,
-    setPropertyFilter,
-    typeFilter,
-    setTypeFilter,
-    isReportingOpen,
-    setIsReportingOpen,
-    selectedTemplate,
-    handleOpenTask,
-    handleCloseTask,
-    handleCompleteTask,
-    handleApproveTask,
-    handleRejectTask,
-    handleToggleChecklistItem,
-    handleCreateTask,
-    handlePhotoUpload,
-    handleSelectTemplate
-  } = useTasks();
-  
+const HousekeepingDashboard = () => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeView, setActiveView] = useState<string>("kanban");
+  const [taskTypeFilter, setTaskTypeFilter] = useState<string>("all");
+  const [assignedToFilter, setAssignedToFilter] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [taskTypeOptions, setTaskTypeOptions] = useState<string[]>([]);
+  const [staffOptions, setStaffOptions] = useState<string[]>([]);
+  const [cleaningDefinitions, setCleaningDefinitions] = useState<Record<string, string>>({});
+
+  const { toast } = useToast();
   const isMobile = useIsMobile();
   
-  return (
-    <div className="space-y-6">
-      <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} onViewReports={() => setIsReportingOpen(true)} />
+  // Fetch tasks from Supabase
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('housekeeping_tasks')
+          .select('*')
+          .order('due_date', { ascending: true });
+          
+        if (error) throw error;
+        
+        const formattedTasks = (data || []).map((task: any) => ({
+          id: task.id,
+          task_type: task.task_type || 'Standard Cleaning',
+          due_date: task.due_date,
+          listing_id: task.listing_id || '',
+          status: task.status || 'pending',
+          assigned_to: task.assigned_to || '',
+          created_at: task.created_at,
+          booking_id: task.booking_id || '',
+          checklist: task.checklist || []
+        }));
+        
+        setTasks(formattedTasks);
+        setFilteredTasks(formattedTasks);
+        
+        // Extract unique task types and staff members for filters
+        const uniqueTaskTypes = [...new Set(formattedTasks.map(task => task.task_type))];
+        setTaskTypeOptions(uniqueTaskTypes);
+        
+        const uniqueStaff = [...new Set(formattedTasks.map(task => task.assigned_to).filter(Boolean))];
+        setStaffOptions(uniqueStaff);
+      } catch (error: any) {
+        console.error('Error fetching tasks:', error);
+        toast({
+          title: "Error fetching tasks",
+          description: error.message,
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      <TaskFilters 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onPropertyFilter={setPropertyFilter}
-        onTypeFilter={setTypeFilter}
-      />
+    // Fetch cleaning definitions
+    const fetchCleaningDefinitions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('cleaning_service_definitions')
+          .select('task_type, description');
+          
+        if (error) throw error;
+        
+        const definitions: Record<string, string> = {};
+        (data || []).forEach((item: any) => {
+          definitions[item.task_type] = item.description;
+        });
+        
+        setCleaningDefinitions(definitions);
+      } catch (error) {
+        console.error('Error fetching cleaning definitions:', error);
+      }
+    };
 
-      <TaskList
-        tasks={filteredTasks}
-        onOpenTask={handleOpenTask}
-      />
-
-      {/* Task Detail Modal - Sheet on mobile, Dialog on desktop */}
-      {selectedTask && isMobile ? (
-        <Sheet open={!!selectedTask} onOpenChange={() => selectedTask && handleCloseTask()}>
-          <SheetContent className="overflow-y-auto h-[85vh] pt-6" side="bottom">
-            <TaskDetail
-              task={selectedTask}
-              onClose={handleCloseTask}
-              onComplete={handleCompleteTask}
-              onApprove={handleApproveTask}
-              onReject={handleRejectTask}
-              onToggleChecklistItem={handleToggleChecklistItem}
-              onPhotoUpload={handlePhotoUpload}
-            />
-          </SheetContent>
-        </Sheet>
-      ) : (
-        selectedTask && (
-          <TaskDetail
-            task={selectedTask}
-            onClose={handleCloseTask}
-            onComplete={handleCompleteTask}
-            onApprove={handleApproveTask}
-            onReject={handleRejectTask}
-            onToggleChecklistItem={handleToggleChecklistItem}
-            onPhotoUpload={handlePhotoUpload}
-          />
+    fetchTasks();
+    fetchCleaningDefinitions();
+    
+    // Check for overdue tasks and notify
+    checkOverdueTasks();
+    
+    // Set up real-time subscription for task updates
+    const tasksSubscription = supabase
+      .channel('housekeeping_tasks_changes')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'housekeeping_tasks',
+      }, fetchTasks)
+      .subscribe();
+      
+    return () => {
+      supabase.removeChannel(tasksSubscription);
+    };
+  }, [toast]);
+  
+  // Apply filters whenever filter state changes
+  useEffect(() => {
+    let filtered = [...tasks];
+    
+    // Apply task type filter
+    if (taskTypeFilter !== 'all') {
+      filtered = filtered.filter(task => task.task_type === taskTypeFilter);
+    }
+    
+    // Apply assigned to filter
+    if (assignedToFilter !== 'all') {
+      filtered = filtered.filter(task => task.assigned_to === assignedToFilter);
+    }
+    
+    // Apply date range filter
+    if (dateRange && dateRange.from) {
+      const startDate = new Date(dateRange.from);
+      startDate.setHours(0, 0, 0, 0);
+      
+      filtered = filtered.filter(task => {
+        const taskDate = new Date(task.due_date);
+        if (dateRange.to) {
+          const endDate = new Date(dateRange.to);
+          endDate.setHours(23, 59, 59, 999);
+          return taskDate >= startDate && taskDate <= endDate;
+        }
+        return taskDate >= startDate;
+      });
+    }
+    
+    setFilteredTasks(filtered);
+  }, [tasks, taskTypeFilter, assignedToFilter, dateRange]);
+  
+  // Check for overdue tasks
+  const checkOverdueTasks = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const overdueTasks = tasks.filter(task => {
+      const dueDate = new Date(task.due_date);
+      return task.status !== 'done' && dueDate < today;
+    });
+    
+    const todayTasks = tasks.filter(task => {
+      const dueDate = new Date(task.due_date);
+      dueDate.setHours(0, 0, 0, 0);
+      return task.status !== 'done' && dueDate.getTime() === today.getTime();
+    });
+    
+    if (overdueTasks.length > 0) {
+      toast({
+        title: `${overdueTasks.length} Overdue Tasks`,
+        description: "Some housekeeping tasks are past their due date.",
+        variant: "destructive"
+      });
+    }
+    
+    if (todayTasks.length > 0) {
+      toast({
+        title: `${todayTasks.length} Tasks Due Today`,
+        description: "You have housekeeping tasks scheduled for today.",
+        variant: "default"
+      });
+    }
+  };
+  
+  // Handle task status update
+  const handleTaskStatusUpdate = async (taskId: string, newStatus: string) => {
+    try {
+      const { error } = await supabase
+        .from('housekeeping_tasks')
+        .update({ status: newStatus })
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, status: newStatus } 
+            : task
         )
+      );
+      
+      toast({
+        title: "Task updated",
+        description: `Task status changed to ${newStatus}`,
+      });
+    } catch (error: any) {
+      console.error('Error updating task status:', error);
+      toast({
+        title: "Error updating task",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // Handle task assignment
+  const handleAssignTask = async (taskId: string, staffMember: string) => {
+    try {
+      const { error } = await supabase
+        .from('housekeeping_tasks')
+        .update({ assigned_to: staffMember })
+        .eq('id', taskId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId 
+            ? { ...task, assigned_to: staffMember } 
+            : task
+        )
+      );
+      
+      toast({
+        title: "Task assigned",
+        description: `Task assigned to ${staffMember}`,
+      });
+    } catch (error: any) {
+      console.error('Error assigning task:', error);
+      toast({
+        title: "Error assigning task",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+
+  return (
+    <div className="container mx-auto px-4 pb-20">
+      <HousekeepingHeader />
+      
+      <div className="mb-6">
+        <HousekeepingFilters 
+          taskTypeFilter={taskTypeFilter}
+          setTaskTypeFilter={setTaskTypeFilter}
+          assignedToFilter={assignedToFilter}
+          setAssignedToFilter={setAssignedToFilter}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+          taskTypeOptions={taskTypeOptions}
+          staffOptions={staffOptions}
+        />
+      </div>
+      
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </div>
+      ) : filteredTasks.length === 0 ? (
+        <div className="bg-muted p-8 rounded-lg text-center">
+          <h3 className="text-xl font-medium mb-2">No tasks found</h3>
+          <p className="text-muted-foreground">
+            Try adjusting your filters or create new housekeeping tasks
+          </p>
+        </div>
+      ) : (
+        <>
+          {!isMobile && (
+            <Tabs defaultValue="kanban" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="kanban">Kanban View</TabsTrigger>
+                <TabsTrigger value="list">List View</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="kanban" className="min-h-[500px]">
+                <HousekeepingKanban 
+                  tasks={filteredTasks}
+                  onStatusChange={handleTaskStatusUpdate}
+                  onAssignTask={handleAssignTask}
+                  cleaningDefinitions={cleaningDefinitions}
+                />
+              </TabsContent>
+              
+              <TabsContent value="list">
+                <HousekeepingMobileView 
+                  tasks={filteredTasks}
+                  onStatusChange={handleTaskStatusUpdate}
+                  onAssignTask={handleAssignTask}
+                  cleaningDefinitions={cleaningDefinitions}
+                  isActuallyMobile={false}
+                />
+              </TabsContent>
+            </Tabs>
+          )}
+          
+          {isMobile && (
+            <HousekeepingMobileView 
+              tasks={filteredTasks}
+              onStatusChange={handleTaskStatusUpdate}
+              onAssignTask={handleAssignTask}
+              cleaningDefinitions={cleaningDefinitions}
+              isActuallyMobile={true}
+            />
+          )}
+        </>
       )}
-
-      {/* Create Task Dialog */}
-      <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
-        <DialogContent className={isMobile ? "sm:max-w-none" : "sm:max-w-[600px]"}>
-          <DialogHeader>
-            <DialogTitle>Create New Housekeeping Task</DialogTitle>
-          </DialogHeader>
-          <TaskCreationForm 
-            onSubmit={handleCreateTask} 
-            onCancel={() => setIsCreateTaskOpen(false)} 
-            selectedTemplate={selectedTemplate}
-            onSelectTemplate={handleSelectTemplate}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Reporting Dialog */}
-      <Dialog open={isReportingOpen} onOpenChange={setIsReportingOpen}>
-        <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Housekeeping Performance Reports</DialogTitle>
-          </DialogHeader>
-          <TaskReporting />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
 
-export default Housekeeping;
+export default HousekeepingDashboard;
