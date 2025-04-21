@@ -22,7 +22,10 @@ serve(async (req) => {
 
     console.log('Starting Guesty sync process...');
 
+    // Get token using the new caching logic
     const token = await getGuestyToken();
+    
+    // Use the token to sync listings
     const listings = await syncGuestyListings(supabase, token);
 
     console.log(`Syncing bookings for ${listings.length} listings...`);
@@ -38,6 +41,7 @@ serve(async (req) => {
 
     console.log('Sync completed successfully');
 
+    // Return success response
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Sync completed successfully',
@@ -46,6 +50,7 @@ serve(async (req) => {
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
   } catch (error) {
     console.error('Sync error:', error);
     return new Response(JSON.stringify({
