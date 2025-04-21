@@ -15,6 +15,9 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const startTime = Date.now();
+  let syncLog;
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -49,25 +52,30 @@ serve(async (req) => {
       );
     }
 
-    // Create new sync log entry
-    const { data: syncLog } = await supabase
+    // Create new sync log entry with new columns
+    const { data: newSyncLog } = await supabase
       .from('sync_logs')
       .insert({
         service: 'guesty',
+        sync_type: 'full_sync',
         status: 'in_progress',
-        start_time: new Date().toISOString()
+        start_time: new Date().toISOString(),
+        message: 'Starting Guesty full sync process'
       })
       .select()
       .single();
+
+    syncLog = newSyncLog;
 
     console.log('Starting Guesty sync process...');
 
     // Get token using the new caching logic
     const token = await getGuestyToken();
     
-    // Use the token to sync listings
+    // Sync listings
     const listings = await syncGuestyListings(supabase, token);
 
+    // Sync bookings for each listing
     console.log(`Syncing bookings for ${listings.length} listings...`);
     const bookingSyncPromises = listings.map(listing => 
       syncGuestyBookingsForListing(supabase, token, listing._id)
@@ -75,18 +83,21 @@ serve(async (req) => {
     
     const bookingResults = await Promise.allSettled(bookingSyncPromises);
 
+    // Calculate total bookings synced
     const totalBookingsSynced = bookingResults
       .filter(result => result.status === 'fulfilled')
       .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
 
-    // Update sync log with results
+    // Update sync log with results using new columns
     await supabase
       .from('sync_logs')
       .update({
         status: 'completed',
         end_time: new Date().toISOString(),
-        listings_created: listings.length,
-        bookings_created: totalBookingsSynced
+        items_count: listings.length + totalBookingsSynced,
+        sync_duration: Date.now() - startTime,
+        message: `Successfully synced ${listings.length} listings and ${totalBookingsSynced} bookings`,
+        sync_type: 'full_sync'
       })
       .eq('id', syncLog.id);
 
@@ -118,23 +129,24 @@ serve(async (req) => {
   } catch (error) {
     console.error('Sync error:', error);
 
+    // Update sync log with error details
+    if (syncLog?.id) {
+      await supabase
+        .from('sync_logs')
+        .update({
+          status: 'error',
+          end_time: new Date().toISOString(),
+          message: error.message,
+          sync_type: 'full_sync',
+          sync_duration: Date.now() - startTime
+        })
+        .eq('id', syncLog.id);
+    }
+
     // Update integration health for failed sync
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Update sync log with error
-    if (error instanceof Error) {
-      await supabase
-        .from('sync_logs')
-        .update({
-          status: 'failed',
-          end_time: new Date().toISOString(),
-          error_message: error.message
-        })
-        .eq('service', 'guesty')
-        .eq('status', 'in_progress');
-    }
 
     await supabase
       .from('integration_health')
@@ -156,3 +168,4 @@ serve(async (req) => {
     });
   }
 });
+

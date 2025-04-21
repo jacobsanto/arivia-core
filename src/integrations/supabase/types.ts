@@ -1050,12 +1050,16 @@ export type Database = {
           end_time: string | null
           error_message: string | null
           id: string
+          items_count: number | null
           listings_created: number | null
           listings_deleted: number | null
           listings_updated: number | null
+          message: string | null
           service: string
           start_time: string | null
           status: string | null
+          sync_duration: number | null
+          sync_type: string | null
         }
         Insert: {
           bookings_created?: number | null
@@ -1065,12 +1069,16 @@ export type Database = {
           end_time?: string | null
           error_message?: string | null
           id?: string
+          items_count?: number | null
           listings_created?: number | null
           listings_deleted?: number | null
           listings_updated?: number | null
+          message?: string | null
           service: string
           start_time?: string | null
           status?: string | null
+          sync_duration?: number | null
+          sync_type?: string | null
         }
         Update: {
           bookings_created?: number | null
@@ -1080,12 +1088,16 @@ export type Database = {
           end_time?: string | null
           error_message?: string | null
           id?: string
+          items_count?: number | null
           listings_created?: number | null
           listings_deleted?: number | null
           listings_updated?: number | null
+          message?: string | null
           service?: string
           start_time?: string | null
           status?: string | null
+          sync_duration?: number | null
+          sync_type?: string | null
         }
         Relationships: []
       }
