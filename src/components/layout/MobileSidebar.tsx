@@ -1,11 +1,12 @@
 
+
 import React from "react";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
@@ -69,7 +70,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
             
             {/* Updated to use the new permission */}
             {canAccess("view_damage_reports") && (
-              <MobileSidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" onClick={handleLinkClick} />
+              <MobileSidebarLink to="/damage-reports" icon={<FileWarning size={20} />} label="Damage Reports" onClick={handleLinkClick} />
             )}
             
             {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
@@ -129,3 +130,4 @@ const MobileSidebarLink: React.FC<MobileSidebarLinkProps> = ({
 };
 
 export default MobileSidebar;
+

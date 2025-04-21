@@ -1,7 +1,8 @@
+
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -52,7 +53,7 @@ const Sidebar = () => {
         )}
         
         {canAccess("view_damage_reports") && (
-          <SidebarLink to="/damage-reports" icon={<FileText size={20} />} label="Damage Reports" />
+          <SidebarLink to="/damage-reports" icon={<FileWarning size={20} />} label="Damage Reports" />
         )}
         
         {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
@@ -63,7 +64,7 @@ const Sidebar = () => {
         
         {canAccess("viewReports") && (
           <>
-            <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
+            <SidebarLink to="/reports" icon={<FileWarning size={20} />} label="Reports" />
             <SidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" />
           </>
         )}
@@ -134,3 +135,4 @@ const SidebarLink = ({
 };
 
 export default Sidebar;
+

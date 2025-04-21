@@ -1,5 +1,6 @@
+
 import React from "react";
-import { Home, Menu, BedDouble, Package, Wrench, FileText } from "lucide-react";
+import { Home, Menu, BedDouble, Package, Wrench, FileWarning } from "lucide-react";
 import NavItem from "./NavItem";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -25,7 +26,7 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
       )}
       
       {canAccess("view_damage_reports") && (
-        <NavItem to="/damage-reports" icon={<FileText size={20} />} label="Reports" />
+        <NavItem to="/damage-reports" icon={<FileWarning size={20} />} label="Reports" />
       )}
       
       {(user.role === "inventory_manager" || canAccess("viewInventory")) && (
@@ -44,3 +45,4 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
 };
 
 export default MobileBottomNav;
+
