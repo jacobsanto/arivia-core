@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -30,6 +31,37 @@ interface GuestyBooking {
   listing: {
     _id: string;
   };
+}
+
+// Helper function to get cleaning checklist based on type
+function getCleaningChecklist(cleaningType: string) {
+  switch (cleaningType.toLowerCase()) {
+    case 'full':
+      return [
+        { id: 1, title: "Deep clean bathroom", completed: false },
+        { id: 2, title: "Clean behind furniture", completed: false },
+        { id: 3, title: "Change all linens", completed: false },
+        { id: 4, title: "Vacuum and mop floors", completed: false },
+        { id: 5, title: "Dust all surfaces", completed: false },
+        { id: 6, title: "Clean windows", completed: false },
+        { id: 7, title: "Sanitize kitchen", completed: false }
+      ];
+    case 'linen & towel change':
+      return [
+        { id: 1, title: "Change bed linens", completed: false },
+        { id: 2, title: "Replace bath towels", completed: false },
+        { id: 3, title: "Replace kitchen towels", completed: false },
+        { id: 4, title: "Quick bathroom cleanup", completed: false }
+      ];
+    default: // Standard
+      return [
+        { id: 1, title: "Clean bathroom", completed: false },
+        { id: 2, title: "Make bed with fresh linens", completed: false },
+        { id: 3, title: "Vacuum floors", completed: false },
+        { id: 4, title: "Clean kitchen area", completed: false },
+        { id: 5, title: "Empty trash", completed: false }
+      ];
+  }
 }
 
 async function getGuestyToken(): Promise<string> {
@@ -132,45 +164,136 @@ async function syncGuestyBookingsForListing(supabase: any, token: string, listin
         return;
       }
 
-      const tasks = [
-        {
-          booking_id: booking._id,
-          listing_id: booking.listing._id,
-          task_type: 'check-in clean',
-          due_date: booking.checkIn,
-          status: 'pending'
-        },
-        {
-          booking_id: booking._id,
-          listing_id: booking.listing._id,
-          task_type: 'check-out clean',
-          due_date: booking.checkOut,
-          status: 'pending'
-        }
-      ];
-
+      // Calculate stay duration for cleaning schedule
       const checkIn = new Date(booking.checkIn);
       const checkOut = new Date(booking.checkOut);
       const stayDuration = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       
-      if (stayDuration > 7) {
+      // Generate cleaning tasks according to stay duration
+      const cleaningTasks = [];
+      
+      // Always add check-in cleaning (pre-arrival)
+      cleaningTasks.push({
+        booking_id: booking._id,
+        listing_id: booking.listing._id,
+        task_type: 'check-in clean',
+        title: 'Pre-Arrival Cleaning',
+        property_id: booking.listing._id,
+        due_date: booking.checkIn,
+        status: 'pending',
+        priority: 'high',
+        cleaning_type: 'Full',
+        checklist: JSON.stringify(getCleaningChecklist('full')),
+        stay_duration: stayDuration
+      });
+      
+      // For stays between 3-5 nights
+      if (stayDuration > 3 && stayDuration <= 5) {
+        // Add one full cleaning during stay
         const midStayDate = new Date(checkIn);
-        midStayDate.setDate(midStayDate.getDate() + Math.floor(stayDuration / 2));
+        midStayDate.setDate(midStayDate.getDate() + 2); // Around 2 days after check-in
         
-        tasks.push({
+        cleaningTasks.push({
           booking_id: booking._id,
           listing_id: booking.listing._id,
           task_type: 'mid-stay clean',
+          title: 'Mid-Stay Full Cleaning',
+          property_id: booking.listing._id,
           due_date: midStayDate.toISOString().split('T')[0],
-          status: 'pending'
+          status: 'pending',
+          priority: 'normal',
+          cleaning_type: 'Full',
+          checklist: JSON.stringify(getCleaningChecklist('full')),
+          stay_duration: stayDuration
+        });
+      } 
+      // For stays between 5-7 nights
+      else if (stayDuration > 5 && stayDuration <= 7) {
+        // Add two full cleanings during stay
+        const firstCleaningDate = new Date(checkIn);
+        firstCleaningDate.setDate(firstCleaningDate.getDate() + 2); // 2 days after check-in
+        
+        const secondCleaningDate = new Date(checkIn);
+        secondCleaningDate.setDate(secondCleaningDate.getDate() + 5); // 5 days after check-in
+        
+        cleaningTasks.push({
+          booking_id: booking._id,
+          listing_id: booking.listing._id,
+          task_type: 'mid-stay clean',
+          title: 'First Mid-Stay Cleaning',
+          property_id: booking.listing._id,
+          due_date: firstCleaningDate.toISOString().split('T')[0],
+          status: 'pending',
+          priority: 'normal',
+          cleaning_type: 'Full',
+          checklist: JSON.stringify(getCleaningChecklist('full')),
+          stay_duration: stayDuration
+        });
+        
+        cleaningTasks.push({
+          booking_id: booking._id,
+          listing_id: booking.listing._id,
+          task_type: 'mid-stay clean',
+          title: 'Second Mid-Stay Cleaning',
+          property_id: booking.listing._id,
+          due_date: secondCleaningDate.toISOString().split('T')[0],
+          status: 'pending',
+          priority: 'normal',
+          cleaning_type: 'Linen & Towel Change',
+          checklist: JSON.stringify(getCleaningChecklist('linen & towel change')),
+          stay_duration: stayDuration
         });
       }
+      // For stays longer than 7 nights
+      else if (stayDuration > 7) {
+        // Calculate number of cleanings (approximately every 3 days)
+        const numCleanings = Math.floor(stayDuration / 3) - 1; // -1 because we already have check-in/out
+        
+        for (let i = 0; i < numCleanings; i++) {
+          const cleaningDate = new Date(checkIn);
+          cleaningDate.setDate(cleaningDate.getDate() + ((i + 1) * 3)); // Every 3 days
+          
+          // Alternate between full cleaning and linen change
+          const cleaningType = i % 2 === 0 ? 'Full' : 'Linen & Towel Change';
+          const checklistType = i % 2 === 0 ? 'full' : 'linen & towel change';
+          
+          cleaningTasks.push({
+            booking_id: booking._id,
+            listing_id: booking.listing._id,
+            task_type: 'mid-stay clean',
+            title: `Mid-Stay Cleaning ${i + 1}`,
+            property_id: booking.listing._id,
+            due_date: cleaningDate.toISOString().split('T')[0],
+            status: 'pending',
+            priority: 'normal',
+            cleaning_type: cleaningType,
+            checklist: JSON.stringify(getCleaningChecklist(checklistType)),
+            stay_duration: stayDuration
+          });
+        }
+      }
+      
+      // Always add check-out cleaning
+      cleaningTasks.push({
+        booking_id: booking._id,
+        listing_id: booking.listing._id,
+        task_type: 'check-out clean',
+        title: 'Post-Departure Cleaning',
+        property_id: booking.listing._id,
+        due_date: booking.checkOut,
+        status: 'pending',
+        priority: 'high',
+        cleaning_type: 'Full',
+        checklist: JSON.stringify(getCleaningChecklist('full')),
+        stay_duration: stayDuration
+      });
 
-      for (const task of tasks) {
+      // Insert all generated cleaning tasks
+      for (const task of cleaningTasks) {
         const { error: taskError } = await supabase
           .from('housekeeping_tasks')
           .upsert(task, {
-            onConflict: 'booking_id,task_type'
+            onConflict: 'booking_id,task_type,due_date'
           });
 
         if (taskError) {

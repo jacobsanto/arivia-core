@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -40,6 +39,8 @@ export interface HousekeepingTask {
   checklist?: { id: number; title: string; completed: boolean }[];
   created_at?: string;
   updated_at?: string;
+  bookingId?: string;
+  taskType?: string;
 }
 
 // Define database structure interfaces to avoid type mismatches
@@ -60,10 +61,10 @@ interface MaintenanceTaskDB {
 
 interface HousekeepingTaskDB {
   id: string;
-  title: string;
-  property_id: string;
+  title?: string;
+  property_id?: string;
   status: string;
-  priority: string;
+  priority?: string;
   due_date: string;
   assigned_to?: string;
   description?: string;
@@ -71,6 +72,11 @@ interface HousekeepingTaskDB {
   rejection_reason?: string;
   created_at: string;
   updated_at: string;
+  booking_id?: string;
+  listing_id?: string;
+  task_type?: string;
+  checklist?: string | any[];
+  cleaning_type?: string;
 }
 
 // Mapping functions between DB and client types
@@ -109,20 +115,39 @@ const mapMaintenanceTaskToDb = (task: Partial<MaintenanceTask>): Record<string, 
 };
 
 const mapDbToHousekeepingTask = (db: HousekeepingTaskDB): HousekeepingTask => {
+  const title = db.title || db.task_type || 'Cleaning Task';
+  const property = db.property_id || db.listing_id || '';
+  
+  let checklist: { id: number; title: string; completed: boolean }[] = [];
+  if (db.checklist) {
+    try {
+      if (typeof db.checklist === 'string') {
+        checklist = JSON.parse(db.checklist);
+      } else if (Array.isArray(db.checklist)) {
+        checklist = db.checklist;
+      }
+    } catch (e) {
+      console.error("Error parsing checklist:", e);
+    }
+  }
+  
   return {
     id: db.id,
-    title: db.title,
-    property: db.property_id,
+    title: title,
+    property: property,
     type: 'Housekeeping',
     status: db.status,
-    priority: db.priority,
+    priority: db.priority || 'normal',
     dueDate: db.due_date,
     assignedTo: db.assigned_to,
     description: db.description,
     approvalStatus: db.approval_status,
     rejectionReason: db.rejection_reason,
+    checklist: checklist,
     created_at: db.created_at,
-    updated_at: db.updated_at
+    updated_at: db.updated_at,
+    bookingId: db.booking_id,
+    taskType: db.task_type
   };
 };
 
@@ -130,7 +155,10 @@ const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Record<string
   const result: Record<string, any> = {};
   
   if (task.title !== undefined) result.title = task.title;
-  if (task.property !== undefined) result.property_id = task.property;
+  if (task.property !== undefined) {
+    result.property_id = task.property;
+    result.listing_id = task.property; // Support both fields
+  }
   if (task.status !== undefined) result.status = task.status;
   if (task.priority !== undefined) result.priority = task.priority;
   if (task.dueDate !== undefined) result.due_date = task.dueDate;
@@ -138,12 +166,14 @@ const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Record<string
   if (task.description !== undefined) result.description = task.description;
   if (task.approvalStatus !== undefined) result.approval_status = task.approvalStatus;
   if (task.rejectionReason !== undefined) result.rejection_reason = task.rejectionReason;
+  if (task.checklist !== undefined) result.checklist = JSON.stringify(task.checklist);
+  if (task.taskType !== undefined) result.task_type = task.taskType;
+  if (task.bookingId !== undefined) result.booking_id = task.bookingId;
   
   return result;
 };
 
 export const tasksService = {
-  // Maintenance Tasks
   async getMaintenanceTasks(): Promise<MaintenanceTask[]> {
     try {
       const { data, error } = await supabase
@@ -182,12 +212,10 @@ export const tasksService = {
     try {
       const dbTask = mapMaintenanceTaskToDb(task);
       
-      // Ensure required fields are present
       if (!dbTask.title) throw new Error('Task title is required');
       if (!dbTask.property_id) throw new Error('Property is required');
       if (!dbTask.due_date) throw new Error('Due date is required');
       
-      // Explicitly set required fields to ensure type safety
       const insertData = {
         title: dbTask.title,
         property_id: dbTask.property_id,
@@ -197,7 +225,7 @@ export const tasksService = {
         assigned_to: dbTask.assigned_to,
         description: dbTask.description,
         location: dbTask.location,
-        required_tools: dbTask.required_tools
+        required_tools: dbTask.requiredTools
       };
       
       const { data, error } = await supabase
@@ -258,7 +286,6 @@ export const tasksService = {
     }
   },
 
-  // Housekeeping Tasks
   async getHousekeepingTasks(): Promise<HousekeepingTask[]> {
     try {
       const { data, error } = await supabase
@@ -267,7 +294,8 @@ export const tasksService = {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return (data || []).map(mapDbToHousekeepingTask);
+      
+      return (data || []).map((item: any) => mapDbToHousekeepingTask(item as HousekeepingTaskDB));
     } catch (error: any) {
       console.error('Error fetching housekeeping tasks:', error);
       toast.error('Failed to load housekeeping tasks', {
@@ -286,7 +314,7 @@ export const tasksService = {
         .maybeSingle();
 
       if (error) throw error;
-      return data ? mapDbToHousekeepingTask(data) : null;
+      return data ? mapDbToHousekeepingTask(data as HousekeepingTaskDB) : null;
     } catch (error: any) {
       console.error(`Error fetching housekeeping task with id ${id}:`, error);
       return null;
@@ -297,22 +325,21 @@ export const tasksService = {
     try {
       const dbTask = mapHousekeepingTaskToDb(task);
       
-      // Ensure required fields are present
       if (!dbTask.title) throw new Error('Task title is required');
-      if (!dbTask.property_id) throw new Error('Property is required');
+      if (!dbTask.listing_id && !dbTask.property_id) throw new Error('Property is required');
       if (!dbTask.due_date) throw new Error('Due date is required');
       
-      // Explicitly set required fields to ensure type safety
-      const insertData = {
+      const insertData: Record<string, any> = {
         title: dbTask.title,
-        property_id: dbTask.property_id,
+        property_id: dbTask.property_id || dbTask.listing_id,
+        listing_id: dbTask.listing_id || dbTask.property_id,
         due_date: dbTask.due_date,
         status: dbTask.status || 'pending',
         priority: dbTask.priority || 'normal',
         assigned_to: dbTask.assigned_to,
         description: dbTask.description,
-        approval_status: dbTask.approval_status,
-        rejection_reason: dbTask.rejection_reason
+        task_type: dbTask.task_type || 'standard',
+        checklist: dbTask.checklist || '[]'
       };
       
       const { data, error } = await supabase
@@ -323,7 +350,7 @@ export const tasksService = {
 
       if (error) throw error;
       toast.success('Housekeeping task added successfully');
-      return mapDbToHousekeepingTask(data);
+      return mapDbToHousekeepingTask(data as HousekeepingTaskDB);
     } catch (error: any) {
       console.error('Error adding housekeeping task:', error);
       toast.error('Failed to add housekeeping task', {
@@ -373,7 +400,6 @@ export const tasksService = {
     }
   },
 
-  // Tasks for Today (Both maintenance and housekeeping)
   async getTasksForToday(): Promise<Array<MaintenanceTask | HousekeepingTask>> {
     try {
       const today = new Date();
@@ -384,7 +410,6 @@ export const tasksService = {
       const todayStr = today.toISOString();
       const tomorrowStr = tomorrow.toISOString();
 
-      // Get maintenance tasks for today
       const { data: maintenanceTasks, error: maintenanceError } = await supabase
         .from('maintenance_tasks')
         .select('*')
@@ -393,7 +418,6 @@ export const tasksService = {
 
       if (maintenanceError) throw maintenanceError;
 
-      // Get housekeeping tasks for today
       const { data: housekeepingTasks, error: housekeepingError } = await supabase
         .from('housekeeping_tasks')
         .select('*')
@@ -402,13 +426,11 @@ export const tasksService = {
 
       if (housekeepingError) throw housekeepingError;
 
-      // Combine the tasks
       const allTasks = [
         ...(maintenanceTasks || []).map(mapDbToMaintenanceTask), 
-        ...(housekeepingTasks || []).map(mapDbToHousekeepingTask)
+        ...(housekeepingTasks || []).map((item: any) => mapDbToHousekeepingTask(item as HousekeepingTaskDB))
       ];
       
-      // Sort by due date
       return allTasks.sort((a, b) => {
         return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
       });
