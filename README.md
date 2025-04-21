@@ -21,7 +21,7 @@ The Arivia Villas Operations Application is a comprehensive platform designed to
 - **UI Components**: shadcn/ui component library
 - **State Management**: React Context API, TanStack Query
 - **Database & Authentication**: Supabase
-- **Hosting & Deployment**: Netlify
+- **Hosting & Deployment**: 
 - **Integrations**: Guesty API, Stripe payment processing
 
 ## Local Development
@@ -60,27 +60,7 @@ VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
 
 ## Deployment
 
-### Netlify Deployment
-
-This project is configured for deployment on Netlify:
-
-1. Connect your GitHub repository to Netlify
-2. Configure the environment variables in Netlify's dashboard
-3. Deploy using the settings in `netlify.toml`
-
-### Required Environment Variables
-
-Ensure these environment variables are set in your hosting platform:
-
-- `GUESTY_USERNAME` - Guesty account username
-- `GUESTY_PASSWORD` - Guesty account password
-- `GUESTY_CLIENT_ID` - OAuth client ID from Guesty
-- `GUESTY_SECRET` - OAuth client secret from Guesty
-- `STRIPE_SECRET_KEY` - Stripe API secret key
-- `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
-- `SUPABASE_URL` - Your Supabase project URL
-- `SUPABASE_ANON_KEY` - Your Supabase anonymous API key
-- `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
+<!-- Netlify-specific deployment and environment variable setup info has been removed. Add your own hosting/deployment instructions as needed. -->
 
 ## Best Practices for GitHub
 
