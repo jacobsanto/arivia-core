@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from "react";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { SwipeableTabsProvider } from "@/components/ui/tabs";
@@ -12,49 +12,39 @@ interface SwipeableTabsProps {
     icon?: keyof typeof LucideIcons;
     disabled?: boolean;
   }[];
-  defaultValue?: string;
+  value: string;
+  onValueChange: (value: string) => void;
   className?: string;
-  onValueChange?: (value: string) => void;
 }
 
 const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
   tabs,
-  defaultValue,
-  className,
+  value,
   onValueChange,
+  className,
 }) => {
-  const [activeTab, setActiveTab] = useState(defaultValue || tabs[0]?.value);
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    if (onValueChange) {
-      onValueChange(value);
-    }
-  };
-
   return (
     <SwipeableTabsProvider>
-      <Tabs
-        value={activeTab}
-        onValueChange={handleTabChange}
-        className={cn("w-full", className)}
-      >
+      <div className={cn("w-full", className)}>
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start md:justify-center px-2 py-1">
           {tabs.map((tab) => {
-            // Create a proper icon element if an icon name is provided
             let iconElement = null;
-            if (tab.icon && typeof tab.icon === 'string' && tab.icon in LucideIcons) {
-              // Use type assertion to correctly handle the dynamic icon component
-              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
+            if (
+              tab.icon &&
+              typeof tab.icon === "string" &&
+              (LucideIcons as Record<string, any>)[tab.icon]
+            ) {
+              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons] as React.FC<{ className?: string }>;
               iconElement = <IconComponent className="h-4 w-4" />;
             }
-            
             return (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
                 disabled={tab.disabled}
+                onClick={() => onValueChange(tab.value)}
                 className="flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5"
+                data-state={value === tab.value ? "active" : undefined}
               >
                 {iconElement}
                 <span>{tab.label}</span>
@@ -62,7 +52,7 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
             );
           })}
         </TabsList>
-      </Tabs>
+      </div>
     </SwipeableTabsProvider>
   );
 };

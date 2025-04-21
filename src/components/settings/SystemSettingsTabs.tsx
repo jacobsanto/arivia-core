@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SwipeableTabs from "@/components/ui/swipeable-tabs";
 import GeneralSettings from "./sections/GeneralSettings";
@@ -9,18 +9,24 @@ import IntegrationSettings from "./sections/integration/IntegrationSettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import SettingsTabContent from "./tabs/SettingsTabContent";
 
+const settingsTabs = [
+  { value: "general", label: "General", icon: "Settings" },
+  { value: "users", label: "Users", icon: "Users" },
+  { value: "notifications", label: "Notifications", icon: "Bell" },
+  { value: "integrations", label: "Integrations", icon: "Plug" },
+  { value: "appearance", label: "Appearance", icon: "Palette" },
+];
+
 const SystemSettingsTabs = () => {
+  const [value, setValue] = useState("general");
+
   return (
-    <Tabs defaultValue="general" className="w-full">
+    <Tabs value={value} onValueChange={setValue} className="w-full">
       <div className="mb-8">
         <SwipeableTabs
-          tabs={[
-            { value: 'general', label: 'General', icon: 'Settings' },
-            { value: 'users', label: 'Users', icon: 'Users' },
-            { value: 'notifications', label: 'Notifications', icon: 'Bell' },
-            { value: 'integrations', label: 'Integrations', icon: 'Plug' },
-            { value: 'appearance', label: 'Appearance', icon: 'Palette' },
-          ]}
+          tabs={settingsTabs}
+          value={value}
+          onValueChange={setValue}
         />
       </div>
 
