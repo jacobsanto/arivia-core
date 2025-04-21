@@ -15,8 +15,10 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
 
   if (!user) return null;
 
+  const isAdminOrManager = user.role === "administrator" || user.role === "property_manager";
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-primary text-primary-foreground flex items-center justify-around z-50 lg:hidden shadow-lg border-t border-primary/20">
+    <div className="fixed bottom-0 left-0 right-0 h-16 bg-primary text-primary-foreground flex items-center justify-around z-50 lg:hidden shadow-md">
       <NavItem to="/dashboard" icon={<Home size={20} />} label="Home" />
 
       {(canAccess("viewAllTasks") || canAccess("viewAssignedTasks")) && (
@@ -33,13 +35,13 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
 
       <button
         onClick={onOpenMenu}
-        className="flex flex-col items-center justify-center py-1 transition-opacity hover:opacity-80 active:opacity-60"
+        className="flex flex-col items-center justify-center py-1"
         aria-label="Open menu"
       >
         <Menu size={20} />
         <span className="text-xs mt-1">Menu</span>
       </button>
-    </nav>
+    </div>
   );
 };
 
