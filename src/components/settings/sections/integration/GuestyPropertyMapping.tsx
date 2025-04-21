@@ -162,7 +162,7 @@ const GuestyPropertyMapping = () => {
                       <span className="flex flex-col text-left">
                         <span className="font-medium">{property.name}</span>
                         {property.address && (
-                          <span className="text-xs text-muted-foreground">{property.address.full}</span>
+                          <span className="text-xs text-muted-foreground">{property.address}</span>
                         )}
                       </span>
                     </SelectItem>
@@ -182,7 +182,7 @@ const GuestyPropertyMapping = () => {
                       <span className="font-medium">
                         {listing.title || listing.nickname || "Untitled"}
                       </span>
-                      {listing.address?.full && (
+                      {listing.address && typeof listing.address === 'object' && listing.address.full && (
                         <span className="text-xs text-muted-foreground">{listing.address.full}</span>
                       )}
                     </span>
@@ -233,8 +233,8 @@ const GuestyPropertyMapping = () => {
                       <tr key={mapping.property_id} className="border-b">
                         <td className="px-4 py-2">
                           <span className="font-medium">{property?.name || mapping.property_id}</span>
-                          {property?.address?.full && (
-                            <div className="text-xs text-muted-foreground">{property.address.full}</div>
+                          {property?.address && (
+                            <div className="text-xs text-muted-foreground">{property.address}</div>
                           )}
                         </td>
                         <td className="px-4 py-2">
@@ -254,7 +254,7 @@ const GuestyPropertyMapping = () => {
                           )}
                         </td>
                         <td className="px-4 py-2">
-                          {listing?.address?.full ? (
+                          {listing?.address && typeof listing.address === 'object' && listing.address.full ? (
                             <span>{listing.address.full}</span>
                           ) : (
                             <span className="text-muted-foreground">No address</span>
