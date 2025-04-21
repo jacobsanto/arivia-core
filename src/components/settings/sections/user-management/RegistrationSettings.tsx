@@ -3,6 +3,7 @@ import React from "react";
 import { FormField, FormItem, FormLabel, FormDescription, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { UserManagementFormValues } from "./types";
 
@@ -40,9 +41,19 @@ const RegistrationSettings: React.FC<RegistrationSettingsProps> = ({ form }) => 
         render={({ field }) => (
           <FormItem>
             <FormLabel>Default Role</FormLabel>
-            <FormControl>
-              <Input {...field} />
-            </FormControl>
+            <Select 
+              onValueChange={field.onChange}
+              value={field.value || "guest"}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select default role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="guest">Guest</SelectItem>
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="staff">Staff</SelectItem>
+              </SelectContent>
+            </Select>
             <FormDescription>
               Default role assigned to new users
             </FormDescription>

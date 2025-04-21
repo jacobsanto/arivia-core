@@ -32,7 +32,7 @@ const DamageReportFilters: React.FC<DamageReportFiltersProps> = ({
         className="md:w-1/3"
       />
 
-      <Select value={propertyFilter} onValueChange={onPropertyFilter}>
+      <Select value={propertyFilter || "all"} onValueChange={onPropertyFilter}>
         <SelectTrigger className="md:w-1/4">
           <SelectValue placeholder="Filter by property" />
         </SelectTrigger>
@@ -46,7 +46,7 @@ const DamageReportFilters: React.FC<DamageReportFiltersProps> = ({
         </SelectContent>
       </Select>
 
-      <Select value={statusFilter} onValueChange={onStatusFilter}>
+      <Select value={statusFilter || "all"} onValueChange={onStatusFilter}>
         <SelectTrigger className="md:w-1/4">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>

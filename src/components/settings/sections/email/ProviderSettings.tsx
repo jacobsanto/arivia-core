@@ -17,13 +17,14 @@ const ProviderSettings: React.FC<ProviderSettingsProps> = ({ form }) => {
       render={({ field }) => (
         <FormItem>
           <FormLabel>Email Provider</FormLabel>
-          <Select onValueChange={field.onChange} defaultValue={field.value}>
+          <Select onValueChange={field.onChange} value={field.value || "select-provider"}>
             <FormControl>
               <SelectTrigger>
                 <SelectValue placeholder="Select email provider" />
               </SelectTrigger>
             </FormControl>
             <SelectContent>
+              <SelectItem value="select-provider" disabled>Select provider</SelectItem>
               <SelectItem value="smtp">Custom SMTP</SelectItem>
               <SelectItem value="sendgrid">SendGrid</SelectItem>
               <SelectItem value="mailgun">Mailgun</SelectItem>

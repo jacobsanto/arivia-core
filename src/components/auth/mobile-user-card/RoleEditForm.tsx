@@ -31,13 +31,14 @@ const RoleEditForm: React.FC<RoleEditFormProps> = ({
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">Select Role</p>
           <Select 
-            value={selectedRole}
+            value={selectedRole || "select-role"}
             onValueChange={(value) => setSelectedRole(value as UserRole)}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select a role" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="select-role" disabled>Select a role</SelectItem>
               {Object.entries(ROLE_DETAILS).map(([role, details]) => (
                 <SelectItem key={role} value={role}>{details.title}</SelectItem>
               ))}

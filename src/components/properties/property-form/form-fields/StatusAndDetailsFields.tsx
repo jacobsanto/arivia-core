@@ -19,13 +19,14 @@ const StatusAndDetailsFields = ({ form }: StatusAndDetailsFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Status</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || "select-status"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
+                <SelectItem value="select-status" disabled>Select status</SelectItem>
                 <SelectItem value="Vacant">Vacant</SelectItem>
                 <SelectItem value="Occupied">Occupied</SelectItem>
                 <SelectItem value="Maintenance">Maintenance</SelectItem>

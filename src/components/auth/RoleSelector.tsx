@@ -20,7 +20,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ form, superAdminExists }) =
           <FormLabel>Role</FormLabel>
           <Select
             onValueChange={field.onChange}
-            defaultValue={field.value}
+            value={field.value || "select-role"}
           >
             <FormControl>
               <SelectTrigger>
@@ -28,6 +28,7 @@ const RoleSelector: React.FC<RoleSelectorProps> = ({ form, superAdminExists }) =
               </SelectTrigger>
             </FormControl>
             <SelectContent>
+              <SelectItem value="select-role" disabled>Select a role</SelectItem>
               <SelectItem value="administrator">Administrator</SelectItem>
               <SelectItem value="property_manager">Property Manager</SelectItem>
               <SelectItem value="concierge">Concierge</SelectItem>

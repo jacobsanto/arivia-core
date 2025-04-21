@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
@@ -70,14 +71,19 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
               <FormItem>
                 <FormLabel>Property</FormLabel>
                 <FormControl>
-                  <select {...field} className="w-full h-10 px-3 py-2 rounded-md border border-input bg-background">
-                    <option value="">Select a property</option>
-                    {properties.map(property => (
-                      <option key={property.id} value={property.id}>
-                        {property.name}
-                      </option>
-                    ))}
-                  </select>
+                  <Select onValueChange={field.onChange} value={field.value || "select-property"}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a property" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="select-property" disabled>Select a property</SelectItem>
+                      {properties.map(property => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </FormControl>
               </FormItem>
             )}
@@ -89,13 +95,14 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Person to Resolve</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || "select-person"}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select person to resolve" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
+                    <SelectItem value="select-person" disabled>Select a person</SelectItem>
                     {registeredUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.name || user.email}

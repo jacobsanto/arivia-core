@@ -33,13 +33,14 @@ const LocationFields = ({ form }: LocationFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Location</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || "select-location"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
+                <SelectItem value="select-location" disabled>Select location</SelectItem>
                 <SelectItem value="Santorini, Greece">Santorini, Greece</SelectItem>
                 <SelectItem value="Athens, Greece">Athens, Greece</SelectItem>
                 <SelectItem value="Mykonos, Greece">Mykonos, Greece</SelectItem>

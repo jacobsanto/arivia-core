@@ -40,13 +40,14 @@ const MaintenanceBasicInfo = ({ form }: MaintenanceBasicInfoProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Property</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || "select-property"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select property" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
+                  <SelectItem value="select-property" disabled>Select property</SelectItem>
                   <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
                   <SelectItem value="Villa Azure">Villa Azure</SelectItem>
                   <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
@@ -64,7 +65,7 @@ const MaintenanceBasicInfo = ({ form }: MaintenanceBasicInfoProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Priority</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value || "Medium"}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select priority" />

@@ -35,10 +35,10 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
             let iconElement = null;
             if (tab.icon && typeof tab.icon === "string") {
               // Check if the icon exists in Lucide icons
-              const LucideIcon = LucideIcons[tab.icon as IconName];
+              const IconComp = LucideIcons[tab.icon];
               // Only render if it's a valid component
-              if (LucideIcon && typeof LucideIcon === 'function') {
-                iconElement = <LucideIcon className="h-4 w-4" />;
+              if (IconComp && typeof IconComp === 'function') {
+                iconElement = <IconComp className="h-4 w-4" />;
               }
             }
             return (

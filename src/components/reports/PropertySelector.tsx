@@ -28,7 +28,7 @@ export const PropertySelector: React.FC<PropertySelectorProps> = ({
   return (
     <div className="space-y-1.5">
       <Label htmlFor="property-filter">Property</Label>
-      <Select value={selectedProperty} onValueChange={onPropertyChange}>
+      <Select value={selectedProperty || "all"} onValueChange={onPropertyChange}>
         <SelectTrigger id="property-filter" className="w-[180px]">
           <SelectValue placeholder="Select Property" />
         </SelectTrigger>

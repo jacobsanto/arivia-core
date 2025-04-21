@@ -32,13 +32,14 @@ const BookingDetailsFields = ({ form }: BookingDetailsFieldsProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Booking Status</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select onValueChange={field.onChange} value={field.value || "select-status"}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select booking status" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
+                <SelectItem value="select-status" disabled>Select status</SelectItem>
                 <SelectItem value="Confirmed">Confirmed</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="Cancelled">Cancelled</SelectItem>
