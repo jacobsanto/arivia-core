@@ -41,8 +41,8 @@ serve(async (req: Request) => {
 
     // Get token is the only supported action for now
     if (action === 'get-token') {
-      const token = await getGuestyToken();
-      return new Response(JSON.stringify({ token }), {
+      const { access_token, expires_in } = await getGuestyToken();
+      return new Response(JSON.stringify({ access_token, expires_in }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
@@ -62,43 +62,47 @@ serve(async (req: Request) => {
 });
 
 /**
- * Fetch a new auth token from Guesty API
+ * Fetch a new auth token from Guesty API using client credentials flow
  */
-async function getGuestyToken(): Promise<string> {
-  const username = Deno.env.get('GUESTY_USERNAME');
-  const password = Deno.env.get('GUESTY_PASSWORD');
+async function getGuestyToken(): Promise<{ access_token: string; expires_in: number }> {
   const clientId = Deno.env.get('GUESTY_CLIENT_ID');
-  const secret = Deno.env.get('GUESTY_SECRET');
+  const clientSecret = Deno.env.get('GUESTY_CLIENT_SECRET');
 
-  if (!username || !password || !clientId || !secret) {
+  if (!clientId || !clientSecret) {
     throw new Error('Missing Guesty credentials');
   }
 
-  const tokenEndpoint = 'https://app.guesty.com/api/v1/auth/token';
+  const tokenEndpoint = 'https://open-api.guesty.com/oauth2/token';
   
   try {
     const response = await fetch(tokenEndpoint, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Type': 'application/json',
       },
-      body: new URLSearchParams({
-        grant_type: 'password',
-        username,
-        password,
+      body: JSON.stringify({
         client_id: clientId,
-        client_secret: secret,
-      }).toString(),
+        client_secret: clientSecret,
+        grant_type: 'client_credentials'
+      }),
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Guesty auth response:', response.status, errorText);
       throw new Error(`Guesty auth failed with status: ${response.status}`);
     }
 
     const data = await response.json();
-    return data.access_token;
+    console.log('Successfully obtained Guesty access token');
+    
+    return {
+      access_token: data.access_token,
+      expires_in: data.expires_in
+    };
   } catch (error) {
     console.error('Error fetching Guesty token:', error);
     throw new Error('Failed to authenticate with Guesty');
   }
 }
+
