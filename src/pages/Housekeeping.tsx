@@ -30,9 +30,9 @@ const HousekeepingDashboard = () => {
   
   const fetchCleaningDefinitions = async () => {
     try {
-      // Explicitly type the RPC call with type parameters to match the SQL function
+      // Explicitly type the RPC call with both parameter and return type parameters
       const { data, error } = await supabase
-        .rpc<CleaningDefinition[]>('get_cleaning_definitions');
+        .rpc<Record<string, never>, CleaningDefinition[]>('get_cleaning_definitions', {});
         
       if (error) throw error;
       
