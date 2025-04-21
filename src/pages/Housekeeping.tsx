@@ -30,10 +30,7 @@ const HousekeepingDashboard = () => {
   const fetchCleaningDefinitions = async () => {
     try {
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions') as {
-          data: CleaningDefinition[] | null;
-          error: any;
-        };
+        .rpc('get_cleaning_definitions');
         
       if (error) throw error;
       
