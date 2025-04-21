@@ -4,12 +4,16 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { SwipeableTabsProvider } from "@/components/ui/tabs";
+import { LucideProps } from "lucide-react";
+
+// Define proper type for icon names
+type IconName = keyof typeof LucideIcons;
 
 interface SwipeableTabsProps {
   tabs: {
     value: string;
     label: string;
-    icon?: keyof typeof LucideIcons;
+    icon?: IconName;
     disabled?: boolean;
   }[];
   value: string;
@@ -29,13 +33,13 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start md:justify-center px-2 py-1">
           {tabs.map((tab) => {
             let iconElement = null;
-            if (
-              tab.icon &&
-              typeof tab.icon === "string" &&
-              (LucideIcons as Record<string, any>)[tab.icon]
-            ) {
-              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons];
-              iconElement = <IconComponent className="h-4 w-4" />;
+            if (tab.icon && typeof tab.icon === "string") {
+              // Check if the icon exists in Lucide icons
+              const LucideIcon = LucideIcons[tab.icon as IconName];
+              // Only render if it's a valid component
+              if (LucideIcon && typeof LucideIcon === 'function') {
+                iconElement = <LucideIcon className="h-4 w-4" />;
+              }
             }
             return (
               <TabsTrigger
