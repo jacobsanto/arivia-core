@@ -1,4 +1,3 @@
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -20,6 +19,7 @@ import TeamChat from "@/pages/TeamChat";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import DamageReports from "@/pages/DamageReports";
+import ListingDetails from "@/pages/ListingDetails";
 
 // Admin Pages
 import AdminUsers from "@/pages/AdminUsers";
@@ -53,6 +53,9 @@ function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/damage-reports" element={<DamageReports />} />
+              
+              {/* Add the new listing details route */}
+              <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
               
               {/* Admin routes */}
               <Route path="/admin/users" element={<AdminUsers />} />
