@@ -9,7 +9,6 @@ import PropertyHeader from "@/components/properties/PropertyHeader";
 import PropertyFilters from "@/components/properties/PropertyFilters";
 import PropertyList from "@/components/properties/PropertyList";
 import PropertyPagination from "@/components/properties/PropertyPagination";
-import GuestyPropertiesSection from "@/components/properties/GuestyPropertiesSection";
 import { usePropertyFiltering } from "@/hooks/usePropertyFiltering";
 
 interface PropertiesListViewProps {
@@ -102,17 +101,6 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-      
-      <div className="border-t pt-8">
-        <GuestyPropertiesSection
-          onViewDetails={onViewDetails}
-          onBookingManagement={onBookingManagement}
-          onPricingConfig={onPricingConfig}
-          onGuestManagement={onGuestManagement}
-          onDelete={handleDeleteProperty}
-          onAddProperty={handleAddProperty}
-        />
-      </div>
 
       <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
         <DialogContent className="sm:max-w-[600px]">
