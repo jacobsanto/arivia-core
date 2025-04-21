@@ -1,10 +1,13 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
+
 interface LoadingSpinnerProps {
   size?: 'xsmall' | 'small' | 'medium' | 'large';
   className?: string;
   color?: 'primary' | 'secondary' | 'muted';
 }
+
 export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'medium',
   className = '',
@@ -16,12 +19,20 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     medium: 'h-8 w-8 border-2',
     large: 'h-12 w-12 border-[3px]'
   };
+  
   const colorClasses = {
     primary: 'border-t-primary',
     secondary: 'border-t-secondary',
     muted: 'border-t-muted-foreground'
   };
-  return <div className={cn(`flex justify-center items-center`, className)}>
-      
-    </div>;
+  
+  return (
+    <div className={cn(`flex justify-center items-center`, className)}>
+      <div className={cn(
+        `animate-spin rounded-full border-solid border-muted-foreground/20`,
+        sizeClasses[size],
+        colorClasses[color]
+      )}/>
+    </div>
+  );
 };
