@@ -96,7 +96,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="">Any</SelectItem>
                   {[1, 2, 3, 4, 5, "6+"].map((num) => (
                     <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
                   ))}
@@ -114,7 +114,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                   <SelectValue placeholder="Any" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="any">Any</SelectItem>
+                  <SelectItem value="">Any</SelectItem>
                   {[1, 2, 3, 4, "5+"].map((num) => (
                     <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
                   ))}
@@ -133,7 +133,7 @@ const AdvancedFilters: React.FC<AdvancedFiltersProps> = ({
                 <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="">All Types</SelectItem>
                 <SelectItem value="villa">Luxury Villa</SelectItem>
                 <SelectItem value="apartment">Apartment</SelectItem>
                 <SelectItem value="house">House</SelectItem>

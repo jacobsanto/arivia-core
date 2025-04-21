@@ -1,0 +1,37 @@
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[dev]
+  framework = "#custom"
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888
+
+# Required environment variables for integrations:
+# GUESTY_USERNAME - Guesty account username
+# GUESTY_PASSWORD - Guesty account password
+# GUESTY_CLIENT_ID - OAuth client ID from Guesty
+# GUESTY_SECRET - OAuth client secret from Guesty
+# STRIPE_SECRET_KEY - Stripe API secret key
+# STRIPE_WEBHOOK_SECRET - Stripe webhook signing secret
+# SUPABASE_URL - Your Supabase project URL
+# SUPABASE_ANON_KEY - Your Supabase anonymous API key
+# SUPABASE_SERVICE_ROLE_KEY - Your Supabase service role key (for admin operations)
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@supabase/supabase-js"]
+

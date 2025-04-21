@@ -1,6 +1,8 @@
+
 import React, { useEffect } from "react";
 import { TabsContent, useRegisterTab } from "@/components/ui/tabs";
 import SettingsStatusBadge from "../SettingsStatusBadge";
+
 interface SettingsTabContentProps {
   value: string;
   title: string;
@@ -10,6 +12,7 @@ interface SettingsTabContentProps {
   };
   children: React.ReactNode;
 }
+
 const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
   value,
   title,
@@ -18,12 +21,19 @@ const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
 }) => {
   // Register this tab with the swipeable tabs provider
   useRegisterTab(value);
-  return <TabsContent value={value} className="space-y-4">
+
+  return (
+    <TabsContent value={value} className="space-y-4">
       <div className="flex justify-between items-center mb-2">
-        
-        <SettingsStatusBadge status={status.status} lastUpdated={status.lastUpdated} />
+        <h2 className="text-xl font-semibold">{title}</h2>
+        <SettingsStatusBadge 
+          status={status.status} 
+          lastUpdated={status.lastUpdated}
+        />
       </div>
       {children}
-    </TabsContent>;
+    </TabsContent>
+  );
 };
+
 export default SettingsTabContent;

@@ -9,6 +9,7 @@ import PropertyHeader from "@/components/properties/PropertyHeader";
 import PropertyFilters from "@/components/properties/PropertyFilters";
 import PropertyList from "@/components/properties/PropertyList";
 import PropertyPagination from "@/components/properties/PropertyPagination";
+import GuestyPropertiesSection from "@/components/properties/GuestyPropertiesSection";
 import { usePropertyFiltering } from "@/hooks/usePropertyFiltering";
 
 interface PropertiesListViewProps {
@@ -25,7 +26,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
   onGuestManagement
 }) => {
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
-
+  
   const { 
     properties, 
     isLoading, 
@@ -75,6 +76,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
   return (
     <div className="space-y-8">
       <PropertyHeader onAddProperty={handleAddProperty} />
+      
       <PropertyFilters 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -83,6 +85,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
         onAdvancedFilters={handleAdvancedFilters}
         activeFiltersCount={activeFiltersCount}
       />
+
       <PropertyList 
         properties={paginatedProperties}
         isLoading={isLoading}
@@ -93,11 +96,32 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
         onDelete={handleDeleteProperty}
         onAddProperty={handleAddProperty}
       />
+      
       <PropertyPagination 
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
+      
+      <div className="border-t pt-8">
+        <GuestyPropertiesSection
+          onViewDetails={onViewDetails}
+          onBookingManagement={onBookingManagement}
+          onPricingConfig={onPricingConfig}
+          onGuestManagement={onGuestManagement}
+          onDelete={handleDeleteProperty}
+          onAddProperty={handleAddProperty}
+        />
+      </div>
+
+      <Dialog open={isAddPropertyOpen} onOpenChange={setIsAddPropertyOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Property</DialogTitle>
+          </DialogHeader>
+          <PropertyForm onSubmit={handlePropertyCreated} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
