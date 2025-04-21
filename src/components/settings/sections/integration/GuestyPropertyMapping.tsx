@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +11,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { guestyService, GuestyListingItem } from '@/services/integrations/guesty.service';
+import type { GuestyPropertyMapping } from '@/services/integrations/guesty.service';
 import { useProperties } from '@/hooks/useProperties';
 import { Property } from '@/types/property.types';
 import { Loader2, Link, Trash2 } from "lucide-react";
