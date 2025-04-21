@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
-import { format, formatDistance } from "date-fns";
+import { format, formatDistance, isValid, parseISO } from "date-fns";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,21 @@ interface HealthCheckResponse {
   }>;
   recentSyncs: SyncLog[];
 }
+
+// Helper function to safely format dates
+const safeFormatDate = (dateString: string | undefined | null, formatStr: string = 'MMM d, h:mm a'): string => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = parseISO(dateString);
+    if (!isValid(date)) return 'Invalid date';
+    
+    return format(date, formatStr);
+  } catch (error) {
+    console.error('Date formatting error:', error, 'for date string:', dateString);
+    return 'Invalid date';
+  }
+};
 
 const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
@@ -138,7 +154,7 @@ const GuestyApiMonitor: React.FC = () => {
               
               {data.lastSynced && (
                 <span className="text-xs text-muted-foreground">
-                  Last synced: {formatDistance(new Date(data.lastSynced), new Date(), { addSuffix: true })}
+                  Last synced: {formatDistance(parseISO(data.lastSynced), new Date(), { addSuffix: true })}
                 </span>
               )}
             </div>
@@ -147,7 +163,7 @@ const GuestyApiMonitor: React.FC = () => {
               <div className="rounded-md bg-amber-50 p-2 border border-amber-200 text-amber-800 text-sm mb-4">
                 <div className="flex items-center gap-1">
                   <AlertTriangle className="h-4 w-4" />
-                  <span>Next sync available: {format(new Date(data.nextSyncTime), 'PPpp')}</span>
+                  <span>Next sync available: {safeFormatDate(data.nextSyncTime, 'PPpp')}</span>
                 </div>
               </div>
             )}
@@ -201,7 +217,7 @@ const GuestyApiMonitor: React.FC = () => {
                     >
                       <div className="flex justify-between">
                         <span className="font-medium">
-                          {format(new Date(sync.start_time), 'MMM d, h:mm a')}
+                          {safeFormatDate(sync.start_time, 'MMM d, h:mm a')}
                         </span>
                         <Badge 
                           variant={

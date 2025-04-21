@@ -49,7 +49,7 @@ serve(async (req) => {
             acc[curr.endpoint] = {
               total: 0,
               remaining: curr.remaining,
-              limit: curr.limit
+              limit: curr.rate_limit
             };
           }
           acc[curr.endpoint].total++;
@@ -57,30 +57,71 @@ serve(async (req) => {
         }, {})
       : {};
       
-    // Calculate next sync time
-    const nextSyncTime = syncLogs && syncLogs.length > 0 && syncLogs[0].next_retry_time
-      ? new Date(syncLogs[0].next_retry_time)
-      : null;
+    // Calculate next sync time and ensure it's a valid ISO string
+    let nextSyncTime = null;
+    if (syncLogs && syncLogs.length > 0 && syncLogs[0].next_retry_time) {
+      try {
+        nextSyncTime = new Date(syncLogs[0].next_retry_time).toISOString();
+      } catch (error) {
+        console.error("Invalid next_retry_time format:", syncLogs[0].next_retry_time);
+      }
+    }
       
     const isRateLimited = integrationHealth?.is_rate_limited || false;
     
+    // Process sync logs to ensure all date fields are valid
+    const processedSyncLogs = syncLogs?.map(log => {
+      // Ensure all date strings are valid
+      let startTime = null;
+      let endTime = null;
+      
+      try {
+        if (log.start_time) {
+          startTime = new Date(log.start_time).toISOString();
+        }
+      } catch (e) {
+        console.error("Invalid start_time:", log.start_time);
+      }
+      
+      try {
+        if (log.end_time) {
+          endTime = new Date(log.end_time).toISOString();
+        }
+      } catch (e) {
+        console.error("Invalid end_time:", log.end_time);
+      }
+      
+      return {
+        id: log.id,
+        status: log.status,
+        start_time: startTime,
+        end_time: endTime,
+        duration: log.sync_duration,
+        message: log.message,
+        retry_count: log.retry_count,
+        next_retry_time: log.next_retry_time ? new Date(log.next_retry_time).toISOString() : null
+      };
+    }).filter(log => log.start_time !== null) || [];
+    
+    // Ensure lastSynced is a valid date
+    let lastSynced = null;
+    if (integrationHealth?.last_synced) {
+      try {
+        lastSynced = new Date(integrationHealth.last_synced).toISOString();
+      } catch (error) {
+        console.error("Invalid last_synced format:", integrationHealth.last_synced);
+      }
+    }
+    
     const healthStatus = {
       status: integrationHealth?.status || 'unknown',
-      lastSynced: integrationHealth?.last_synced || null,
+      lastSynced,
       lastError: integrationHealth?.last_error || null,
       isRateLimited,
       remainingRequests: integrationHealth?.remaining_requests,
-      nextSyncTime: nextSyncTime?.toISOString(),
+      nextSyncTime,
       quotaUsage,
-      recentSyncs: syncLogs?.map(log => ({
-        id: log.id,
-        status: log.status,
-        startTime: log.start_time,
-        endTime: log.end_time,
-        duration: log.sync_duration,
-        message: log.message,
-        retryCount: log.retry_count
-      }))
+      recentSyncs: processedSyncLogs
     };
     
     return new Response(JSON.stringify({
