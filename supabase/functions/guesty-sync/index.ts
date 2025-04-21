@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -58,71 +59,87 @@ async function getGuestyToken(): Promise<string> {
 }
 
 async function syncGuestyListings(supabase: any, token: string) {
-  const response = await fetch('https://open-api.guesty.com/v1/listings', {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch listings: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const listings = data.results as GuestyListing[];
-
-  for (const listing of listings) {
-    await supabase.from('guesty_listings').upsert({
-      id: listing._id,
-      title: listing.title,
-      address: listing.address || {},
-      status: listing.status,
-      property_type: listing.propertyType,
-      thumbnail_url: listing.picture?.thumbnail,
-      last_synced: new Date().toISOString(),
-      raw_data: listing,
+  try {
+    console.log('Starting Guesty listings sync...');
+    const response = await fetch('https://open-api.guesty.com/v1/listings', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
     });
-  }
 
-  return listings;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch listings: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const listings = data.results as GuestyListing[];
+
+    console.log(`Syncing ${listings.length} listings...`);
+
+    for (const listing of listings) {
+      await supabase.from('guesty_listings').upsert({
+        id: listing._id,
+        title: listing.title,
+        address: listing.address || {},
+        status: listing.status,
+        property_type: listing.propertyType,
+        thumbnail_url: listing.picture?.thumbnail,
+        last_synced: new Date().toISOString(),
+        raw_data: listing,
+      });
+    }
+
+    return listings;
+  } catch (error) {
+    console.error('Error in syncGuestyListings:', error);
+    throw error;
+  }
 }
 
 async function syncGuestyBookingsForListing(supabase: any, token: string, listingId: string): Promise<number> {
-  const response = await fetch(`https://open-api.guesty.com/v1/bookings?listingId=${listingId}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const bookings = data.results as GuestyBooking[];
-
-  const upsertPromises = bookings.map(async (booking) => {
-    const { error } = await supabase.from('guesty_bookings').upsert({
-      id: booking._id,
-      listing_id: booking.listing._id,
-      guest_name: booking.guest.fullName,
-      check_in: booking.checkIn,
-      check_out: booking.checkOut,
-      status: booking.status,
-      last_synced: new Date().toISOString(),
-      raw_data: booking,
+  try {
+    console.log(`Syncing bookings for listing ${listingId}...`);
+    const response = await fetch(`https://open-api.guesty.com/v1/bookings?listingId=${listingId}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
     });
 
-    if (error) {
-      console.error(`Error upserting booking ${booking._id}:`, error);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
     }
-  });
 
-  await Promise.allSettled(upsertPromises);
+    const data = await response.json();
+    const bookings = data.results as GuestyBooking[];
 
-  return bookings.length;
+    console.log(`Found ${bookings.length} bookings for listing ${listingId}`);
+
+    const upsertPromises = bookings.map(async (booking) => {
+      const { error } = await supabase.from('guesty_bookings').upsert({
+        id: booking._id,
+        listing_id: booking.listing._id,
+        guest_name: booking.guest.fullName,
+        check_in: booking.checkIn,
+        check_out: booking.checkOut,
+        status: booking.status,
+        last_synced: new Date().toISOString(),
+        raw_data: booking,
+      });
+
+      if (error) {
+        console.error(`Error upserting booking ${booking._id}:`, error);
+      }
+    });
+
+    await Promise.allSettled(upsertPromises);
+
+    return bookings.length;
+  } catch (error) {
+    console.error(`Error in syncGuestyBookingsForListing for ${listingId}:`, error);
+    throw error;
+  }
 }
 
 serve(async (req) => {
@@ -135,9 +152,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('Starting Guesty sync process...');
+
     const token = await getGuestyToken();
     const listings = await syncGuestyListings(supabase, token);
 
+    console.log(`Syncing bookings for ${listings.length} listings...`);
     const bookingSyncPromises = listings.map(listing => 
       syncGuestyBookingsForListing(supabase, token, listing._id)
     );
@@ -147,6 +167,8 @@ serve(async (req) => {
     const totalBookingsSynced = bookingResults
       .filter(result => result.status === 'fulfilled')
       .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
+
+    console.log('Sync completed successfully');
 
     return new Response(JSON.stringify({ 
       success: true, 
