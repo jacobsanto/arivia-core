@@ -20,12 +20,17 @@ export const useHousekeepingTasks = () => {
 
   const fetchCleaningDefinitions = async () => {
     try {
+      // Properly type the RPC call with param and return types
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions');
+        .rpc<CleaningDefinition[]>('get_cleaning_definitions', {}, {
+          count: 'exact'
+        });
         
       if (error) throw error;
       
       const definitions: Record<string, string> = {};
+      
+      // Check if data is an array before using forEach
       if (data && Array.isArray(data)) {
         data.forEach((item: CleaningDefinition) => {
           definitions[item.task_type] = item.description;
