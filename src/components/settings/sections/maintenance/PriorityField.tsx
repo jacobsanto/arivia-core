@@ -17,7 +17,7 @@ export const PriorityField: React.FC<PriorityFieldProps> = ({ form }) => {
       label="Default Task Priority"
       description="Default priority level for new maintenance tasks"
     >
-      <Select defaultValue="normal">
+      <Select defaultValue="normal" onValueChange={form.setValue.bind(null, "defaultTaskPriority")}>
         <SelectTrigger>
           <SelectValue placeholder="Select priority" />
         </SelectTrigger>

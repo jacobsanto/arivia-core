@@ -34,7 +34,7 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
           {tabs.map((tab) => {
             let iconElement = null;
             if (tab.icon) {
-              // Get the icon component directly from the imported icons
+              // Get the icon component safely
               const IconComponent = LucideIcons[tab.icon] as React.ComponentType<LucideProps>;
               if (IconComponent) {
                 iconElement = <IconComponent className="h-4 w-4" />;

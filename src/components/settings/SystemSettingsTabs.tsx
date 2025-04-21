@@ -8,7 +8,6 @@ import NotificationSettings from "./sections/NotificationSettings";
 import IntegrationSettings from "./sections/integration/IntegrationSettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import SettingsTabContent from "./tabs/SettingsTabContent";
-import { Settings, Users, Bell, Plug, Palette } from "lucide-react";
 
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },

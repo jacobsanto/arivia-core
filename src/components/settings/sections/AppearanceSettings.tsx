@@ -8,7 +8,6 @@ import SettingsSection from "@/components/settings/SettingsSection";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Palette, Monitor, MoonStar, SunMedium } from "lucide-react";
@@ -210,7 +209,7 @@ const AppearanceSettings: React.FC = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="">Default System Font</SelectItem>
+                        <SelectItem value="default">Default System Font</SelectItem>
                         <SelectItem value="Inter">Inter</SelectItem>
                         <SelectItem value="Roboto">Roboto</SelectItem>
                         <SelectItem value="Poppins">Poppins</SelectItem>
