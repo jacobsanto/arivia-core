@@ -11,12 +11,13 @@ import { Loader2, AlertTriangle, Save } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "@/components/reports/DateRangeSelector";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Loader component for better UX during loading states
 const DashboardLoader = memo(() => (
   <div className="flex items-center justify-center h-64">
     <div className="flex flex-col items-center gap-2">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <LoadingSpinner size="medium" color="primary" />
       <p className="text-sm text-muted-foreground">Loading dashboard data...</p>
     </div>
   </div>
@@ -118,6 +119,10 @@ const Dashboard: React.FC = () => {
     handleDateRangeChange(range);
   }, [updateDateRange, handleDateRangeChange]);
 
+  // Ensure we have some dashboard data (even default data) before rendering content
+  const hasAnyData = Boolean(dashboardData);
+  const showContentLoading = isLoading && !hasAnyData;
+
   // Memoize the header to prevent unnecessary re-renders
   const dashboardHeader = useMemo(() => (
     <DashboardHeader 
@@ -141,7 +146,7 @@ const Dashboard: React.FC = () => {
 
   // Memoize the dashboard content to prevent re-renders
   const dashboardContent = useMemo(() => {
-    if (error) {
+    if (error && !dashboardData) {
       return (
         <DashboardErrorFallback 
           error={error} 
@@ -150,7 +155,7 @@ const Dashboard: React.FC = () => {
       );
     }
     
-    if (isLoading || !dashboardData) {
+    if (showContentLoading) {
       return <DashboardLoader />;
     }
 
@@ -174,6 +179,7 @@ const Dashboard: React.FC = () => {
     dashboardData, 
     isMobile, 
     isLoading, 
+    showContentLoading,
     error, 
     handleRefresh, 
     preferences.favoriteMetrics, 
