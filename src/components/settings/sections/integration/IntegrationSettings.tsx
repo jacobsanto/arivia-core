@@ -1,8 +1,7 @@
-
 import React, { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Info, Settings, Check, Loader2, RefreshCcw } from "lucide-react";
+import { Info, Settings, Check, Loader2, RefreshCcw, AlertTriangle, X } from "lucide-react";
 import { guestyService } from "@/services/guesty/guesty.service";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
@@ -10,13 +9,14 @@ import GuestyPropertyList from "./integrations/guesty/GuestyPropertyList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 const IntegrationSettings = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  // Query latest sync status
+  // Query latest sync status and integration health
   const { data: latestSync, refetch: refetchSync } = useQuery({
     queryKey: ['sync-logs'],
     queryFn: async () => {
@@ -48,6 +48,33 @@ const IntegrationSettings = () => {
       return data;
     }
   });
+
+  // Function to display the status badge with appropriate styling
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'connected':
+        return (
+          <Badge variant="success" className="gap-1">
+            <Check className="h-3.5 w-3.5" />
+            Connected
+          </Badge>
+        );
+      case 'error':
+        return (
+          <Badge variant="destructive" className="gap-1">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Error
+          </Badge>
+        );
+      default:
+        return (
+          <Badge variant="secondary" className="gap-1">
+            <X className="h-3.5 w-3.5" />
+            Disconnected
+          </Badge>
+        );
+    }
+  };
 
   const testGuestyConnection = async () => {
     setIsTestingConnection(true);
@@ -117,15 +144,6 @@ const IntegrationSettings = () => {
     }
   }, [refetchSync]);
 
-  const getStatusBadgeVariant = (status?: string) => {
-    switch (status) {
-      case 'connected': return 'success';
-      case 'error': return 'destructive';
-      case 'expired': return 'warning';
-      default: return 'secondary';
-    }
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -156,28 +174,26 @@ const IntegrationSettings = () => {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium">Guesty Integration</h3>
-              {latestSync && (
+              {integrationHealth?.last_synced && (
                 <div className="text-sm text-muted-foreground">
-                  Last sync: {new Date(latestSync.end_time).toLocaleString()}
+                  Last synced: {format(new Date(integrationHealth.last_synced), 'PPpp')}
                 </div>
               )}
             </div>
             
             <div className="flex justify-between items-center space-x-4 rounded-lg border p-4">
               <div>
-                <h4 className="font-medium">Guesty API Connection</h4>
-                <p className="text-sm text-muted-foreground">
-                  Test your connection to the Guesty API
-                </p>
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium">Guesty API Connection</h4>
+                  {getStatusBadge(integrationHealth?.status)}
+                </div>
+                {integrationHealth?.last_error && (
+                  <p className="text-sm text-destructive mt-1">
+                    Error: {integrationHealth.last_error}
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-2">
-                <Badge 
-                  variant={getStatusBadgeVariant(integrationHealth?.status)} 
-                  className="mr-2"
-                >
-                  {integrationHealth?.status || 'Unknown'}
-                </Badge>
-                
                 <Button 
                   variant="outline" 
                   onClick={testGuestyConnection} 
@@ -244,4 +260,3 @@ const IntegrationSettings = () => {
 };
 
 export default IntegrationSettings;
-
