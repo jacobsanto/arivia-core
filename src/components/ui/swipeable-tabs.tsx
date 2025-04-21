@@ -34,7 +34,7 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
               typeof tab.icon === "string" &&
               (LucideIcons as Record<string, any>)[tab.icon]
             ) {
-              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons] as React.FC<{ className?: string }>;
+              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons];
               iconElement = <IconComponent className="h-4 w-4" />;
             }
             return (

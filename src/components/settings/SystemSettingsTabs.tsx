@@ -8,13 +8,14 @@ import NotificationSettings from "./sections/NotificationSettings";
 import IntegrationSettings from "./sections/integration/IntegrationSettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import SettingsTabContent from "./tabs/SettingsTabContent";
+import { LucideIcon, Settings, Users, Bell, Plug, Palette } from "lucide-react";
 
 const settingsTabs = [
-  { value: "general", label: "General", icon: "Settings" },
-  { value: "users", label: "Users", icon: "Users" },
-  { value: "notifications", label: "Notifications", icon: "Bell" },
-  { value: "integrations", label: "Integrations", icon: "Plug" },
-  { value: "appearance", label: "Appearance", icon: "Palette" },
+  { value: "general", label: "General", icon: "Settings" as const },
+  { value: "users", label: "Users", icon: "Users" as const },
+  { value: "notifications", label: "Notifications", icon: "Bell" as const },
+  { value: "integrations", label: "Integrations", icon: "Plug" as const },
+  { value: "appearance", label: "Appearance", icon: "Palette" as const },
 ];
 
 const SystemSettingsTabs = () => {
