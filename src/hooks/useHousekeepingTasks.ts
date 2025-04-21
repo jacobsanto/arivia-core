@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, CleaningDefinition } from "@/types/housekeepingTypes";
@@ -20,11 +19,9 @@ export const useHousekeepingTasks = () => {
 
   const fetchCleaningDefinitions = async () => {
     try {
-      // Properly type the RPC call with param and return types
+      // Properly type the RPC call with both param and return types
       const { data, error } = await supabase
-        .rpc<CleaningDefinition[]>('get_cleaning_definitions', {}, {
-          count: 'exact'
-        });
+        .rpc<Record<string, never>, CleaningDefinition[]>('get_cleaning_definitions', {});
         
       if (error) throw error;
       
