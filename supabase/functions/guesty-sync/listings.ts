@@ -18,26 +18,14 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
       .select()
       .single();
 
-    // Get last sync time from sync_logs
-    const { data: lastSync } = await supabase
-      .from('sync_logs')
-      .select('end_time')
-      .eq('service', 'guesty')
-      .eq('status', 'completed')
-      .order('end_time', { ascending: false })
-      .limit(1)
-      .single();
-
-    const lastSyncTime = lastSync?.end_time;
-    console.log(`Last successful sync: ${lastSyncTime || 'Never'}`);
-
     let page = 1;
     let hasMore = true;
     let totalListings: GuestyListing[] = [];
     let created = 0;
     let updated = 0;
-    let deleted = 0;
+    let archived = 0;
 
+    // Get all active listings from Guesty
     while (hasMore) {
       try {
         const response = await fetch(`https://open-api.guesty.com/v1/listings?page=${page}&limit=100`, {
@@ -101,11 +89,9 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
             updated++;
           }
 
-          // Add delay between operations to avoid rate limiting
-          await delay(100);
+          totalListings = [...totalListings, listing];
         }
 
-        totalListings = [...totalListings, ...listings];
         page++;
 
       } catch (error) {
@@ -114,30 +100,34 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
       }
     }
 
-    // Mark listings not in the sync as deleted
-    const { data: activeListingIds } = await supabase
+    // Get IDs of all listings fetched from Guesty
+    const activeListingIds = new Set(totalListings.map(l => l._id));
+
+    // Find listings in Supabase that are not in the active set
+    const { data: localListings } = await supabase
       .from('guesty_listings')
       .select('id')
       .eq('sync_status', 'active')
       .eq('is_deleted', false);
 
-    const currentListingIds = new Set(totalListings.map(l => l._id));
-    const deletedListings = (activeListingIds || [])
-      .filter(l => !currentListingIds.has(l.id));
-
-    if (deletedListings.length > 0) {
-      await supabase
-        .from('guesty_listings')
-        .update({ 
-          is_deleted: true, 
-          sync_status: 'deleted',
-          last_synced: new Date().toISOString()
-        })
-        .in('id', deletedListings.map(l => l.id));
-      deleted = deletedListings.length;
+    if (localListings) {
+      // Mark listings as archived if they're not in the active set
+      const listingsToArchive = localListings.filter(l => !activeListingIds.has(l.id));
+      
+      if (listingsToArchive.length > 0) {
+        await supabase
+          .from('guesty_listings')
+          .update({
+            sync_status: 'archived',
+            is_deleted: true,
+            last_synced: new Date().toISOString()
+          })
+          .in('id', listingsToArchive.map(l => l.id));
+        archived = listingsToArchive.length;
+      }
     }
 
-    // Update sync log
+    // Update sync log with final counts
     await supabase
       .from('sync_logs')
       .update({
@@ -145,11 +135,11 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         status: 'completed',
         listings_created: created,
         listings_updated: updated,
-        listings_deleted: deleted
+        listings_deleted: archived
       })
       .eq('id', syncLog.id);
 
-    console.log(`Sync completed: ${created} created, ${updated} updated, ${deleted} deleted`);
+    console.log(`Sync completed: ${created} created, ${updated} updated, ${archived} archived`);
     return totalListings;
 
   } catch (error) {
