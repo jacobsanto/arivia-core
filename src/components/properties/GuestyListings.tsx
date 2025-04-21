@@ -8,6 +8,7 @@ import { guestyService } from '@/services/guesty/guesty.service';
 import { Skeleton } from "@/components/ui/skeleton";
 import GuestyListingCard from './GuestyListingCard';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export function GuestyListings() {
   // Query to fetch listings from Supabase
@@ -28,10 +29,23 @@ export function GuestyListings() {
   const handleSync = async () => {
     try {
       await guestyService.syncListings();
+      toast.success('Listings synced successfully');
       refetch();
     } catch (error) {
       console.error('Error syncing listings:', error);
+      toast.error('Failed to sync listings');
     }
+  };
+
+  // Format the listing data to match the expected props for GuestyListingCard
+  const formatListing = (listing: any) => {
+    return {
+      id: listing.id,
+      title: listing.title,
+      status: listing.status,
+      thumbnail_url: listing.thumbnail_url,
+      address: typeof listing.address === 'object' ? listing.address : { full: '' }
+    };
   };
 
   if (error) {
@@ -67,7 +81,10 @@ export function GuestyListings() {
       ) : listings?.length ? (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {listings.map((listing) => (
-            <GuestyListingCard key={listing.id} listing={listing} />
+            <GuestyListingCard 
+              key={listing.id} 
+              listing={formatListing(listing)} 
+            />
           ))}
         </div>
       ) : (
