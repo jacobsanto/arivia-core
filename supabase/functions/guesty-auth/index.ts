@@ -41,11 +41,31 @@ serve(async (req: Request) => {
 
     // Get token is the only supported action for now
     if (action === 'get-token') {
-      const { access_token, expires_in } = await getGuestyToken();
-      return new Response(JSON.stringify({ access_token, expires_in }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
+      try {
+        const { access_token, expires_in } = await getGuestyToken();
+        return new Response(JSON.stringify({ access_token, expires_in }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        });
+      } catch (error) {
+        console.error('Guesty auth function error:', error);
+        
+        // Check if rate limited
+        if (error.message && error.message.includes('429')) {
+          return new Response(JSON.stringify({ 
+            error: 'Rate limit exceeded',
+            message: 'Too many requests to Guesty API. Please try again later.'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 429,
+          });
+        }
+        
+        return new Response(JSON.stringify({ error: error.message }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      }
     } else {
       return new Response(JSON.stringify({ error: 'Invalid action' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -94,7 +114,7 @@ async function getGuestyToken(): Promise<{ access_token: string; expires_in: num
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Guesty auth response:', response.status, errorText);
+      console.error(`Guesty auth response: ${response.status} ${errorText}`);
       throw new Error(`Guesty auth failed with status: ${response.status}`);
     }
 
@@ -107,6 +127,6 @@ async function getGuestyToken(): Promise<{ access_token: string; expires_in: num
     };
   } catch (error) {
     console.error('Error fetching Guesty token:', error);
-    throw new Error('Failed to authenticate with Guesty');
+    throw error;
   }
 }
