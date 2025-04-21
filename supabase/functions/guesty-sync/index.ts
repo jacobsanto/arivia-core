@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -164,141 +163,25 @@ async function syncGuestyBookingsForListing(supabase: any, token: string, listin
         return;
       }
 
+      // Create a booking object in the format expected by generateHousekeepingTasksFromBooking
+      const bookingForTasks = {
+        id: booking._id,
+        property_id: booking.listing._id,
+        listing_id: booking.listing._id,
+        check_in_date: booking.checkIn,
+        check_out_date: booking.checkOut,
+        guest_name: booking.guest.fullName,
+      };
+
       // Calculate stay duration for cleaning schedule
       const checkIn = new Date(booking.checkIn);
       const checkOut = new Date(booking.checkOut);
       const stayDuration = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
       
-      // Generate cleaning tasks according to stay duration
-      const cleaningTasks = [];
-      
-      // Always add check-in cleaning (pre-arrival)
-      cleaningTasks.push({
-        booking_id: booking._id,
-        listing_id: booking.listing._id,
-        task_type: 'check-in clean',
-        title: 'Pre-Arrival Cleaning',
-        property_id: booking.listing._id,
-        due_date: booking.checkIn,
-        status: 'pending',
-        priority: 'high',
-        cleaning_type: 'Full',
-        checklist: JSON.stringify(getCleaningChecklist('full')),
-        stay_duration: stayDuration
-      });
-      
-      // For stays between 3-5 nights
-      if (stayDuration > 3 && stayDuration <= 5) {
-        // Add one full cleaning during stay
-        const midStayDate = new Date(checkIn);
-        midStayDate.setDate(midStayDate.getDate() + 2); // Around 2 days after check-in
-        
-        cleaningTasks.push({
-          booking_id: booking._id,
-          listing_id: booking.listing._id,
-          task_type: 'mid-stay clean',
-          title: 'Mid-Stay Full Cleaning',
-          property_id: booking.listing._id,
-          due_date: midStayDate.toISOString().split('T')[0],
-          status: 'pending',
-          priority: 'normal',
-          cleaning_type: 'Full',
-          checklist: JSON.stringify(getCleaningChecklist('full')),
-          stay_duration: stayDuration
-        });
-      } 
-      // For stays between 5-7 nights
-      else if (stayDuration > 5 && stayDuration <= 7) {
-        // Add two full cleanings during stay
-        const firstCleaningDate = new Date(checkIn);
-        firstCleaningDate.setDate(firstCleaningDate.getDate() + 2); // 2 days after check-in
-        
-        const secondCleaningDate = new Date(checkIn);
-        secondCleaningDate.setDate(secondCleaningDate.getDate() + 5); // 5 days after check-in
-        
-        cleaningTasks.push({
-          booking_id: booking._id,
-          listing_id: booking.listing._id,
-          task_type: 'mid-stay clean',
-          title: 'First Mid-Stay Cleaning',
-          property_id: booking.listing._id,
-          due_date: firstCleaningDate.toISOString().split('T')[0],
-          status: 'pending',
-          priority: 'normal',
-          cleaning_type: 'Full',
-          checklist: JSON.stringify(getCleaningChecklist('full')),
-          stay_duration: stayDuration
-        });
-        
-        cleaningTasks.push({
-          booking_id: booking._id,
-          listing_id: booking.listing._id,
-          task_type: 'mid-stay clean',
-          title: 'Second Mid-Stay Cleaning',
-          property_id: booking.listing._id,
-          due_date: secondCleaningDate.toISOString().split('T')[0],
-          status: 'pending',
-          priority: 'normal',
-          cleaning_type: 'Linen & Towel Change',
-          checklist: JSON.stringify(getCleaningChecklist('linen & towel change')),
-          stay_duration: stayDuration
-        });
-      }
-      // For stays longer than 7 nights
-      else if (stayDuration > 7) {
-        // Calculate number of cleanings (approximately every 3 days)
-        const numCleanings = Math.floor(stayDuration / 3) - 1; // -1 because we already have check-in/out
-        
-        for (let i = 0; i < numCleanings; i++) {
-          const cleaningDate = new Date(checkIn);
-          cleaningDate.setDate(cleaningDate.getDate() + ((i + 1) * 3)); // Every 3 days
-          
-          // Alternate between full cleaning and linen change
-          const cleaningType = i % 2 === 0 ? 'Full' : 'Linen & Towel Change';
-          const checklistType = i % 2 === 0 ? 'full' : 'linen & towel change';
-          
-          cleaningTasks.push({
-            booking_id: booking._id,
-            listing_id: booking.listing._id,
-            task_type: 'mid-stay clean',
-            title: `Mid-Stay Cleaning ${i + 1}`,
-            property_id: booking.listing._id,
-            due_date: cleaningDate.toISOString().split('T')[0],
-            status: 'pending',
-            priority: 'normal',
-            cleaning_type: cleaningType,
-            checklist: JSON.stringify(getCleaningChecklist(checklistType)),
-            stay_duration: stayDuration
-          });
-        }
-      }
-      
-      // Always add check-out cleaning
-      cleaningTasks.push({
-        booking_id: booking._id,
-        listing_id: booking.listing._id,
-        task_type: 'check-out clean',
-        title: 'Post-Departure Cleaning',
-        property_id: booking.listing._id,
-        due_date: booking.checkOut,
-        status: 'pending',
-        priority: 'high',
-        cleaning_type: 'Full',
-        checklist: JSON.stringify(getCleaningChecklist('full')),
-        stay_duration: stayDuration
-      });
-
-      // Insert all generated cleaning tasks
-      for (const task of cleaningTasks) {
-        const { error: taskError } = await supabase
-          .from('housekeeping_tasks')
-          .upsert(task, {
-            onConflict: 'booking_id,task_type,due_date'
-          });
-
-        if (taskError) {
-          console.error(`Error creating housekeeping task for booking ${booking._id}:`, taskError);
-        }
+      try {
+        await generateHousekeepingTasksFromBooking(bookingForTasks);
+      } catch (taskError) {
+        console.error(`Error generating housekeeping tasks for booking ${booking._id}:`, taskError);
       }
     });
 
@@ -308,6 +191,265 @@ async function syncGuestyBookingsForListing(supabase: any, token: string, listin
   } catch (error) {
     console.error(`Error in syncGuestyBookingsForListing for ${listingId}:`, error);
     throw error;
+  }
+}
+
+/**
+ * Interface for booking objects
+ */
+interface BookingObject {
+  id: string;
+  property_id: string;
+  listing_id?: string; // Some bookings may have listing_id instead of property_id
+  check_in_date: string | Date;
+  check_out_date: string | Date;
+  guest_name: string;
+  [key: string]: any; // Allow for other properties
+}
+
+/**
+ * Interface for the task generation result
+ */
+interface TaskGenerationResult {
+  tasksCreated: {
+    id: string;
+    task_type: string;
+    due_date: string;
+  }[];
+  tasksSkipped: {
+    task_type: string;
+    due_date: string;
+    reason: string;
+  }[];
+  manual_schedule_required: boolean;
+}
+
+/**
+ * Generates housekeeping tasks for a given booking based on stay duration
+ * @param booking The booking object containing check-in/out dates and property info
+ * @returns Object containing created tasks, skipped tasks, and if manual scheduling is required
+ */
+async function generateHousekeepingTasksFromBooking(booking: BookingObject): Promise<TaskGenerationResult> {
+  try {
+    // Initialize result
+    const result: TaskGenerationResult = {
+      tasksCreated: [],
+      tasksSkipped: [],
+      manual_schedule_required: false
+    };
+
+    // Normalize dates to Date objects
+    const checkIn = typeof booking.check_in_date === 'string' 
+      ? new Date(booking.check_in_date) 
+      : booking.check_in_date;
+    
+    const checkOut = typeof booking.check_out_date === 'string' 
+      ? new Date(booking.check_out_date) 
+      : booking.check_out_date;
+
+    // Calculate stay duration in nights
+    const stayDuration = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Use listing_id if available, otherwise use property_id
+    const listingId = booking.listing_id || booking.property_id;
+    
+    // Check for same-day check-in after this booking's check-out
+    const { data: sameDayBookings } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('property_id', booking.property_id)
+      .eq('check_in_date', checkOut.toISOString().split('T')[0])
+      .neq('id', booking.id);
+    
+    const hasSameDayCheckIn = sameDayBookings && sameDayBookings.length > 0;
+    
+    // Generate the tasks based on stay duration
+    const tasks = [];
+    
+    // 1. Pre-arrival Standard Cleaning (for all stays)
+    const preArrivalDate = new Date(checkIn);
+    preArrivalDate.setDate(preArrivalDate.getDate() - 1);
+    const preArrivalDateStr = preArrivalDate.toISOString().split('T')[0];
+    
+    tasks.push({
+      booking_id: booking.id,
+      listing_id: listingId,
+      task_type: "Standard Cleaning",
+      due_date: preArrivalDateStr,
+      status: "pending",
+      description: `Pre-arrival cleaning for ${booking.guest_name}`
+    });
+    
+    // 2. Determine mid-stay cleanings based on duration
+    if (stayDuration <= 3) {
+      // No mid-stay cleaning needed
+    } 
+    else if (stayDuration <= 5) {
+      // One mid-stay cleaning
+      const midpointDate = new Date(checkIn);
+      midpointDate.setDate(midpointDate.getDate() + Math.floor(stayDuration / 2));
+      const midpointDateStr = midpointDate.toISOString().split('T')[0];
+      
+      // Add Full Cleaning
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Full Cleaning",
+        due_date: midpointDateStr,
+        status: "pending",
+        description: `Mid-stay full cleaning for ${booking.guest_name}`
+      });
+      
+      // Add Linen & Towel Change on same day
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Linen & Towel Change",
+        due_date: midpointDateStr,
+        status: "pending",
+        description: `Mid-stay linen & towel change for ${booking.guest_name}`
+      });
+    } 
+    else if (stayDuration <= 7) {
+      // Two mid-stay cleanings at 1/3 and 2/3 of stay
+      const firstThirdDate = new Date(checkIn);
+      firstThirdDate.setDate(firstThirdDate.getDate() + Math.floor(stayDuration / 3));
+      const firstThirdDateStr = firstThirdDate.toISOString().split('T')[0];
+      
+      const secondThirdDate = new Date(checkIn);
+      secondThirdDate.setDate(secondThirdDate.getDate() + Math.floor((stayDuration / 3) * 2));
+      const secondThirdDateStr = secondThirdDate.toISOString().split('T')[0];
+      
+      // Add Full Cleanings
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Full Cleaning",
+        due_date: firstThirdDateStr,
+        status: "pending",
+        description: `First mid-stay cleaning for ${booking.guest_name}`
+      });
+      
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Full Cleaning",
+        due_date: secondThirdDateStr,
+        status: "pending",
+        description: `Second mid-stay cleaning for ${booking.guest_name}`
+      });
+      
+      // Add Linen & Towel Changes on same days
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Linen & Towel Change",
+        due_date: firstThirdDateStr,
+        status: "pending",
+        description: `First linen & towel change for ${booking.guest_name}`
+      });
+      
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Linen & Towel Change",
+        due_date: secondThirdDateStr,
+        status: "pending",
+        description: `Second linen & towel change for ${booking.guest_name}`
+      });
+    } 
+    else {
+      // Stays longer than 7 nights - custom schedule
+      const customCleaningDate = new Date(checkIn);
+      customCleaningDate.setDate(customCleaningDate.getDate() + 3);
+      const customCleaningDateStr = customCleaningDate.toISOString().split('T')[0];
+      
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Custom Cleaning Schedule",
+        due_date: customCleaningDateStr,
+        status: "pending",
+        description: `Custom cleaning schedule for extended stay (${stayDuration} nights) - ${booking.guest_name}`
+      });
+      
+      // Flag for manual schedule
+      result.manual_schedule_required = true;
+    }
+    
+    // 3. Post-checkout cleaning (if no same-day check-in)
+    if (!hasSameDayCheckIn) {
+      const checkoutDateStr = checkOut.toISOString().split('T')[0];
+      
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Standard Cleaning",
+        due_date: checkoutDateStr,
+        status: "pending",
+        description: `Post-checkout cleaning after ${booking.guest_name}`
+      });
+    } else {
+      // Log the skipped task
+      result.tasksSkipped.push({
+        task_type: "Standard Cleaning",
+        due_date: checkOut.toISOString().split('T')[0],
+        reason: "Same-day check-in detected"
+      });
+    }
+    
+    // Insert tasks into database, avoiding duplicates
+    for (const task of tasks) {
+      // Check if this task already exists
+      const { data: existingTasks } = await supabase
+        .from('housekeeping_tasks')
+        .select('id')
+        .eq('booking_id', task.booking_id)
+        .eq('task_type', task.task_type)
+        .eq('due_date', task.due_date);
+      
+      if (existingTasks && existingTasks.length > 0) {
+        // Task already exists, skip it
+        result.tasksSkipped.push({
+          task_type: task.task_type,
+          due_date: task.due_date,
+          reason: "Duplicate task"
+        });
+      } else {
+        // Insert the new task
+        const { data: insertedTask, error } = await supabase
+          .from('housekeeping_tasks')
+          .insert(task)
+          .select('id, task_type, due_date')
+          .single();
+        
+        if (error) {
+          console.error(`Error creating task: ${error.message}`, task);
+          result.tasksSkipped.push({
+            task_type: task.task_type,
+            due_date: task.due_date,
+            reason: `Database error: ${error.message}`
+          });
+        } else if (insertedTask) {
+          result.tasksCreated.push({
+            id: insertedTask.id,
+            task_type: insertedTask.task_type,
+            due_date: insertedTask.due_date
+          });
+        }
+      }
+    }
+    
+    return result;
+    
+  } catch (error: any) {
+    console.error("Error generating housekeeping tasks:", error);
+    
+    return {
+      tasksCreated: [],
+      tasksSkipped: [],
+      manual_schedule_required: false
+    };
   }
 }
 
