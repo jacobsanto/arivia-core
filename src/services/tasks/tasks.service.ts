@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -41,6 +42,7 @@ export interface HousekeepingTask {
   updated_at?: string;
   bookingId?: string;
   taskType?: string;
+  cleaningType?: string; // Added for the new schema
 }
 
 // Define database structure interfaces to avoid type mismatches
@@ -77,6 +79,7 @@ interface HousekeepingTaskDB {
   task_type?: string;
   checklist?: string | any[];
   cleaning_type?: string;
+  stay_duration?: number;
 }
 
 // Mapping functions between DB and client types
@@ -147,7 +150,8 @@ const mapDbToHousekeepingTask = (db: HousekeepingTaskDB): HousekeepingTask => {
     created_at: db.created_at,
     updated_at: db.updated_at,
     bookingId: db.booking_id,
-    taskType: db.task_type
+    taskType: db.task_type,
+    cleaningType: db.cleaning_type
   };
 };
 
@@ -169,6 +173,7 @@ const mapHousekeepingTaskToDb = (task: Partial<HousekeepingTask>): Record<string
   if (task.checklist !== undefined) result.checklist = JSON.stringify(task.checklist);
   if (task.taskType !== undefined) result.task_type = task.taskType;
   if (task.bookingId !== undefined) result.booking_id = task.bookingId;
+  if (task.cleaningType !== undefined) result.cleaning_type = task.cleaningType;
   
   return result;
 };
@@ -329,7 +334,8 @@ export const tasksService = {
       if (!dbTask.listing_id && !dbTask.property_id) throw new Error('Property is required');
       if (!dbTask.due_date) throw new Error('Due date is required');
       
-      const insertData: Record<string, any> = {
+      // Ensure required fields for database insert
+      const insertData = {
         title: dbTask.title,
         property_id: dbTask.property_id || dbTask.listing_id,
         listing_id: dbTask.listing_id || dbTask.property_id,
@@ -339,7 +345,9 @@ export const tasksService = {
         assigned_to: dbTask.assigned_to,
         description: dbTask.description,
         task_type: dbTask.task_type || 'standard',
-        checklist: dbTask.checklist || '[]'
+        checklist: dbTask.checklist || '[]',
+        booking_id: dbTask.booking_id || '', // Provide a default value for required booking_id
+        cleaning_type: dbTask.cleaning_type || 'Standard'
       };
       
       const { data, error } = await supabase
