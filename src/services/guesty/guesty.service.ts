@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyAuthResponse {
@@ -14,6 +15,7 @@ export interface GuestyListing {
     country?: string;
   };
   status?: string;
+  propertyType?: string;  // Added this line
   cleaningStatus?: {
     value: string;
   };
