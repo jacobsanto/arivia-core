@@ -43,9 +43,9 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
           {tabs.map((tab) => {
             // Create a proper icon element if an icon name is provided
             let iconElement = null;
-            if (tab.icon && tab.icon in LucideIcons) {
-              const IconComponent = LucideIcons[tab.icon];
-              // IconComponent is now a valid React component that we can render
+            if (tab.icon && typeof tab.icon === 'string' && tab.icon in LucideIcons) {
+              // Use type assertion to correctly handle the dynamic icon component
+              const IconComponent = LucideIcons[tab.icon as keyof typeof LucideIcons] as React.ComponentType<{ className?: string }>;
               iconElement = <IconComponent className="h-4 w-4" />;
             }
             
