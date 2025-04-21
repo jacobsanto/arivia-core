@@ -8,17 +8,15 @@ import { toast } from "sonner";
  */
 export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateStr: string | null, toDateStr: string | null) => {
   try {
-    // Build the query
-    let query = supabase.from('housekeeping_tasks').select(`
-      id, status, due_date, 
-      title, property_id, priority, assigned_to, description,
-      task_type, listing_id, booking_id, cleaning_type, checklist
-    `);
+    // Use a simpler select that only includes fields we know exist in the table
+    let query = supabase.from('housekeeping_tasks').select('*');
     
     // Apply property filter if not 'all'
     if (selectedProperty !== 'all') {
-      // Try both property_id and listing_id for backwards compatibility
-      query = query.or(`property_id.eq.${selectedProperty},listing_id.eq.${selectedProperty}`);
+      if (selectedProperty && selectedProperty !== '') {
+        // Try both property_id and listing_id for backwards compatibility
+        query = query.or(`property_id.eq.${selectedProperty},listing_id.eq.${selectedProperty}`);
+      }
     }
     
     // Apply date range filter if available
@@ -35,7 +33,7 @@ export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateS
     }
     
     // If we get here, tasksData is an array of records or null
-    if (!tasksData) {
+    if (!tasksData || tasksData.length === 0) {
       return {
         tasksData: [],
         stats: { total: 0, completed: 0, pending: 0, inProgress: 0 }
@@ -43,18 +41,24 @@ export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateS
     }
     
     // Map the data to ensure all required fields exist
-    const mappedTasks = tasksData.map(task => ({
-      id: task.id || '',
-      status: task.status || 'pending',
-      due_date: task.due_date || '',
-      title: task.title || task.task_type || 'Cleaning Task',
-      property_id: task.property_id || task.listing_id || '',
-      priority: task.priority || 'normal',
-      assigned_to: task.assigned_to || null,
-      description: task.description || '',
-      task_type: task.task_type || 'cleaning',
-      cleaning_type: task.cleaning_type || 'Standard'
-    })) as TaskRecord[];
+    // Use safe type assertions and default values to handle potential missing fields
+    const mappedTasks = tasksData.map(task => {
+      // Convert the raw database record to our TaskRecord type with safe defaults
+      const mappedTask: TaskRecord = {
+        id: task.id || '',
+        status: task.status || 'pending',
+        due_date: task.due_date || '',
+        title: task.title || task.task_type || 'Cleaning Task',
+        property_id: task.property_id || task.listing_id || '',
+        priority: task.priority || 'normal',
+        assigned_to: task.assigned_to || null,
+        description: task.description || '',
+        task_type: task.task_type || 'cleaning',
+        cleaning_type: task.cleaning_type || 'Standard'
+      };
+      
+      return mappedTask;
+    });
     
     // Count tasks by status
     const totalTasks = mappedTasks.length || 0;
