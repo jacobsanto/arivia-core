@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -117,7 +116,7 @@ async function syncGuestyBookingsForListing(supabase: any, token: string, listin
     console.log(`Found ${bookings.length} bookings for listing ${listingId}`);
 
     const upsertPromises = bookings.map(async (booking) => {
-      const { error } = await supabase.from('guesty_bookings').upsert({
+      const { error: bookingError } = await supabase.from('guesty_bookings').upsert({
         id: booking._id,
         listing_id: booking.listing._id,
         guest_name: booking.guest.fullName,
@@ -128,8 +127,55 @@ async function syncGuestyBookingsForListing(supabase: any, token: string, listin
         raw_data: booking,
       });
 
-      if (error) {
-        console.error(`Error upserting booking ${booking._id}:`, error);
+      if (bookingError) {
+        console.error(`Error upserting booking ${booking._id}:`, bookingError);
+        return;
+      }
+
+      const tasks = [
+        {
+          booking_id: booking._id,
+          listing_id: booking.listing._id,
+          task_type: 'check-in clean',
+          due_date: booking.checkIn,
+          status: 'pending'
+        },
+        {
+          booking_id: booking._id,
+          listing_id: booking.listing._id,
+          task_type: 'check-out clean',
+          due_date: booking.checkOut,
+          status: 'pending'
+        }
+      ];
+
+      const checkIn = new Date(booking.checkIn);
+      const checkOut = new Date(booking.checkOut);
+      const stayDuration = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (stayDuration > 7) {
+        const midStayDate = new Date(checkIn);
+        midStayDate.setDate(midStayDate.getDate() + Math.floor(stayDuration / 2));
+        
+        tasks.push({
+          booking_id: booking._id,
+          listing_id: booking.listing._id,
+          task_type: 'mid-stay clean',
+          due_date: midStayDate.toISOString().split('T')[0],
+          status: 'pending'
+        });
+      }
+
+      for (const task of tasks) {
+        const { error: taskError } = await supabase
+          .from('housekeeping_tasks')
+          .upsert(task, {
+            onConflict: 'booking_id,task_type'
+          });
+
+        if (taskError) {
+          console.error(`Error creating housekeeping task for booking ${booking._id}:`, taskError);
+        }
       }
     });
 

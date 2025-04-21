@@ -431,53 +431,50 @@ export type Database = {
       housekeeping_tasks: {
         Row: {
           assigned_to: string | null
+          booking_id: string
           created_at: string
-          description: string | null
           due_date: string
           id: string
-          priority: string
-          property_id: string
+          listing_id: string
           status: string
-          title: string
+          task_type: string
           updated_at: string
         }
         Insert: {
           assigned_to?: string | null
+          booking_id: string
           created_at?: string
-          description?: string | null
           due_date: string
           id?: string
-          priority?: string
-          property_id: string
+          listing_id: string
           status?: string
-          title: string
+          task_type: string
           updated_at?: string
         }
         Update: {
           assigned_to?: string | null
+          booking_id?: string
           created_at?: string
-          description?: string | null
           due_date?: string
           id?: string
-          priority?: string
-          property_id?: string
+          listing_id?: string
           status?: string
-          title?: string
+          task_type?: string
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "housekeeping_tasks_assigned_to_fkey"
-            columns: ["assigned_to"]
+            foreignKeyName: "housekeeping_tasks_booking_id_fkey"
+            columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "guesty_bookings"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "housekeeping_tasks_property_id_fkey"
-            columns: ["property_id"]
+            foreignKeyName: "housekeeping_tasks_listing_id_fkey"
+            columns: ["listing_id"]
             isOneToOne: false
-            referencedRelation: "properties"
+            referencedRelation: "guesty_listings"
             referencedColumns: ["id"]
           },
         ]
