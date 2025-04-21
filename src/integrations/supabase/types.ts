@@ -372,6 +372,33 @@ export type Database = {
         }
         Relationships: []
       }
+      guesty_api_usage: {
+        Row: {
+          endpoint: string
+          id: string
+          rate_limit: number
+          remaining: number
+          reset: string
+          timestamp: string
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          rate_limit: number
+          remaining: number
+          reset: string
+          timestamp?: string
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          rate_limit?: number
+          remaining?: number
+          reset?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
       guesty_bookings: {
         Row: {
           check_in: string
@@ -520,23 +547,35 @@ export type Database = {
       }
       integration_health: {
         Row: {
+          is_rate_limited: boolean | null
           last_error: string | null
           last_synced: string | null
           provider: string
+          rate_limit_reset: string | null
+          remaining_requests: number | null
+          request_count: number | null
           status: string
           updated_at: string | null
         }
         Insert: {
+          is_rate_limited?: boolean | null
           last_error?: string | null
           last_synced?: string | null
           provider: string
+          rate_limit_reset?: string | null
+          remaining_requests?: number | null
+          request_count?: number | null
           status: string
           updated_at?: string | null
         }
         Update: {
+          is_rate_limited?: boolean | null
           last_error?: string | null
           last_synced?: string | null
           provider?: string
+          rate_limit_reset?: string | null
+          remaining_requests?: number | null
+          request_count?: number | null
           status?: string
           updated_at?: string | null
         }
@@ -1055,6 +1094,8 @@ export type Database = {
           listings_deleted: number | null
           listings_updated: number | null
           message: string | null
+          next_retry_time: string | null
+          retry_count: number | null
           service: string
           start_time: string | null
           status: string | null
@@ -1074,6 +1115,8 @@ export type Database = {
           listings_deleted?: number | null
           listings_updated?: number | null
           message?: string | null
+          next_retry_time?: string | null
+          retry_count?: number | null
           service: string
           start_time?: string | null
           status?: string | null
@@ -1093,6 +1136,8 @@ export type Database = {
           listings_deleted?: number | null
           listings_updated?: number | null
           message?: string | null
+          next_retry_time?: string | null
+          retry_count?: number | null
           service?: string
           start_time?: string | null
           status?: string | null

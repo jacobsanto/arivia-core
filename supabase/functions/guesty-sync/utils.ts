@@ -1,7 +1,6 @@
-
 // Types for rate limit information
 export interface RateLimitInfo {
-  limit: number;
+  rate_limit: number;
   remaining: number;
   reset: string; // ISO string timestamp
 }
@@ -25,14 +24,14 @@ export function calculateNextRetryTime(retryCount: number): number {
 // Extract rate limit information from Guesty API response headers
 export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
   try {
-    const limit = parseInt(headers.get('x-ratelimit-limit') || '0');
+    const rate_limit = parseInt(headers.get('x-ratelimit-limit') || '0');
     const remaining = parseInt(headers.get('x-ratelimit-remaining') || '0');
     const reset = headers.get('x-ratelimit-reset') || new Date(Date.now() + 3600000).toISOString();
     
-    if (limit === 0) return null;
+    if (rate_limit === 0) return null;
     
     return {
-      limit,
+      rate_limit,
       remaining,
       reset
     };

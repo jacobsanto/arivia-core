@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
@@ -243,14 +242,13 @@ serve(async (req) => {
   }
 });
 
-// Store rate limit information from API response
 async function storeRateLimitInfo(supabase: any, endpoint: string, rateLimitInfo: RateLimitInfo) {
   try {
     await supabase
       .from('guesty_api_usage')
       .insert({
         endpoint,
-        limit: rateLimitInfo.limit,
+        rate_limit: rateLimitInfo.rate_limit,
         remaining: rateLimitInfo.remaining,
         reset: rateLimitInfo.reset,
         timestamp: new Date().toISOString()

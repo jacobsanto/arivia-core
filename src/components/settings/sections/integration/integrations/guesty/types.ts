@@ -22,3 +22,12 @@ export interface GuestySyncControlsProps {
   isSyncing: boolean;
   isConnected: boolean;
 }
+
+export interface ApiUsage {
+  id: string;
+  endpoint: string;
+  rate_limit: number;
+  remaining: number;
+  reset: string;
+  timestamp: string;
+}
