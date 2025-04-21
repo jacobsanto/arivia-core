@@ -10,7 +10,7 @@ import HousekeepingKanban from "@/components/housekeeping/HousekeepingKanban";
 import HousekeepingMobileView from "@/components/housekeeping/HousekeepingMobileView";
 import HousekeepingFilters from "@/components/housekeeping/HousekeepingFilters";
 import HousekeepingHeader from "@/components/housekeeping/HousekeepingHeader";
-import { Task } from "@/types/housekeepingTypes";
+import { Task, CleaningDefinition } from "@/types/housekeepingTypes";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 
 const HousekeepingDashboard = () => {
@@ -28,6 +28,26 @@ const HousekeepingDashboard = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
+  // Fetch cleaning definitions from database using a raw query
+  const fetchCleaningDefinitions = async () => {
+    try {
+      // Use a raw SQL query instead since the table isn't in the TypeScript definitions
+      const { data, error } = await supabase
+        .rpc('get_cleaning_definitions');
+        
+      if (error) throw error;
+      
+      const definitions: Record<string, string> = {};
+      (data || []).forEach((item: CleaningDefinition) => {
+        definitions[item.task_type] = item.description;
+      });
+      
+      setCleaningDefinitions(definitions);
+    } catch (error) {
+      console.error('Error fetching cleaning definitions:', error);
+    }
+  };
+
   // Fetch tasks from Supabase
   useEffect(() => {
     const fetchTasks = async () => {
@@ -40,12 +60,12 @@ const HousekeepingDashboard = () => {
           
         if (error) throw error;
         
-        const formattedTasks = (data || []).map((task: any) => ({
+        const formattedTasks: Task[] = (data || []).map((task: any) => ({
           id: task.id,
           task_type: task.task_type || 'Standard Cleaning',
           due_date: task.due_date,
           listing_id: task.listing_id || '',
-          status: task.status || 'pending',
+          status: (task.status as 'pending' | 'in-progress' | 'done') || 'pending',
           assigned_to: task.assigned_to || '',
           created_at: task.created_at,
           booking_id: task.booking_id || '',
@@ -70,26 +90,6 @@ const HousekeepingDashboard = () => {
         });
       } finally {
         setLoading(false);
-      }
-    };
-
-    // Fetch cleaning definitions
-    const fetchCleaningDefinitions = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('cleaning_service_definitions')
-          .select('task_type, description');
-          
-        if (error) throw error;
-        
-        const definitions: Record<string, string> = {};
-        (data || []).forEach((item: any) => {
-          definitions[item.task_type] = item.description;
-        });
-        
-        setCleaningDefinitions(definitions);
-      } catch (error) {
-        console.error('Error fetching cleaning definitions:', error);
       }
     };
 
@@ -194,7 +194,7 @@ const HousekeepingDashboard = () => {
       setTasks(prevTasks => 
         prevTasks.map(task => 
           task.id === taskId 
-            ? { ...task, status: newStatus } 
+            ? { ...task, status: newStatus as 'pending' | 'in-progress' | 'done' } 
             : task
         )
       );

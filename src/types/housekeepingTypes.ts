@@ -26,3 +26,8 @@ export interface KanbanColumnProps {
   onAssignTask: (taskId: string, staffMember: string) => Promise<void>;
   cleaningDefinitions: Record<string, string>;
 }
+
+export interface CleaningDefinition {
+  task_type: string;
+  description: string;
+}
