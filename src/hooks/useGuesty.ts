@@ -9,7 +9,7 @@ export function useGuesty() {
 
   const { data: listings, isLoading: listingsLoading } = useQuery({
     queryKey: ['guesty-listings'],
-    queryFn: () => guestyService.fetchListings(),
+    queryFn: () => guestyService.getGuestyListings(),
     retry: 1,
   });
 
@@ -17,7 +17,7 @@ export function useGuesty() {
     setIsLoading(true);
     setError(null);
     try {
-      await guestyService.fetchListings();
+      await guestyService.getGuestyListings();
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to refresh listings'));
     } finally {
