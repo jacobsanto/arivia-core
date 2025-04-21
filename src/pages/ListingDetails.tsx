@@ -89,6 +89,16 @@ const ListingDetails = () => {
     );
   }
 
+  // Parse the address if it's a string (JSON)
+  const addressObj = typeof listing.address === 'string' 
+    ? JSON.parse(listing.address) 
+    : listing.address;
+
+  // Get full address display
+  const fullAddress = addressObj && typeof addressObj === 'object' && addressObj.full 
+    ? addressObj.full 
+    : 'No address provided';
+
   return (
     <div className="container mx-auto p-6">
       <Button 
@@ -118,7 +128,7 @@ const ListingDetails = () => {
           <div className="space-y-4">
             <div>
               <h3 className="font-medium text-sm text-muted-foreground">Address</h3>
-              <p className="mt-1">{listing.address?.full || 'No address provided'}</p>
+              <p className="mt-1">{fullAddress}</p>
             </div>
 
             <Separator />
