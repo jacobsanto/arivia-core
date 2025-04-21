@@ -1,6 +1,4 @@
 
-import { GuestyProperty } from '@/integrations/guesty/types';
-
 export interface Property {
   id: string;
   name: string;
@@ -17,8 +15,6 @@ export interface Property {
   price_per_night: number;
   created_at: string;
   updated_at: string;
-  guesty_id?: string;
-  guesty_data?: GuestyProperty;
 }
 
 export interface PropertyFormData {

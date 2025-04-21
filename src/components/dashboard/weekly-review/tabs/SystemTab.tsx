@@ -58,25 +58,21 @@ const SystemTab: React.FC = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Guesty API Connection Status</CardTitle>
+          <CardTitle>API Connection Status</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span>Connection Status</span>
-              <Badge variant="outline" className="bg-green-50 text-green-800 border-green-200">Active</Badge>
+              <Badge variant="outline" className="bg-red-50 text-red-800 border-red-200">Offline</Badge>
             </div>
             <div className="flex items-center justify-between">
               <span>Last Sync</span>
-              <span className="text-sm">Today at 08:30 AM</span>
+              <span className="text-sm">Not available</span>
             </div>
             <div className="flex items-center justify-between">
-              <span>Bookings Synced</span>
-              <span className="text-sm">12 bookings</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span>Properties Synced</span>
-              <span className="text-sm">5 properties</span>
+              <span>External Services</span>
+              <span className="text-sm">None configured</span>
             </div>
           </div>
         </CardContent>

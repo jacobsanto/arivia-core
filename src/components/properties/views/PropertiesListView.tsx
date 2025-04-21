@@ -98,7 +98,6 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-      {/* Guesty Integration section was removed */}
     </div>
   );
 };

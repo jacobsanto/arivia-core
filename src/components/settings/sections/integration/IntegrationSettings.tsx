@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Switch } from "@/components/ui/switch";
 
 const IntegrationSettings: React.FC = () => {
-  // Remove Guesty integration settings, showing only upcoming integrations
   return (
     <SettingsLayout
       title="Integration Settings"
