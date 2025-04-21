@@ -10,7 +10,7 @@ export class GuestyService {
   private accessToken: string | null = null;
   private tokenExpiry: number | null = null;
 
-  private async ensureValidToken(): Promise<string> {
+  async ensureValidToken(): Promise<string> {
     const now = Date.now();
     
     // If we have a valid token that hasn't expired, return it
