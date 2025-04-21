@@ -2,12 +2,9 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Check, AlertTriangle, X } from "lucide-react";
+import { GuestyStatusBadgeProps } from "./types";
 
-interface GuestyStatusBadgeProps {
-  status?: string;
-}
-
-const GuestyStatusBadge = ({ status }: GuestyStatusBadgeProps) => {
+const GuestyStatusBadge: React.FC<GuestyStatusBadgeProps> = ({ status }) => {
   switch (status) {
     case 'connected':
       return (

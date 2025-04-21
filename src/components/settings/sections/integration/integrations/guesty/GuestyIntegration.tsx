@@ -1,13 +1,14 @@
-
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { guestyService } from "@/services/guesty/guesty.service";
 import GuestyStatusBadge from "./GuestyStatusBadge";
 import GuestySyncControls from "./GuestySyncControls";
 import GuestyPropertyList from "./GuestyPropertyList";
+import { IntegrationHealthData } from "./types";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -27,7 +28,7 @@ const GuestyIntegration = () => {
         console.error('Error fetching integration health:', error);
         return null;
       }
-      return data;
+      return data as IntegrationHealthData;
     }
   });
 

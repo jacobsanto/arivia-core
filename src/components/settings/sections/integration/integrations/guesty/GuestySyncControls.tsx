@@ -2,22 +2,15 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCcw } from "lucide-react";
+import { GuestySyncControlsProps } from "./types";
 
-interface GuestySyncControlsProps {
-  onTest: () => void;
-  onSync: () => void;
-  isTesting: boolean;
-  isSyncing: boolean;
-  isConnected: boolean;
-}
-
-const GuestySyncControls = ({
+const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
   onTest,
   onSync,
   isTesting,
   isSyncing,
   isConnected
-}: GuestySyncControlsProps) => {
+}) => {
   return (
     <div className="flex items-center gap-2">
       <Button 
