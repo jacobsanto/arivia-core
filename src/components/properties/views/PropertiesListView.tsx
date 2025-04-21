@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { toast } from "sonner";
 import PropertyForm from "@/components/properties/property-form";
 import { useProperties } from "@/hooks/useProperties";
-import type { Property } from "@/types/property.types";
+import type { Property, UnifiedProperty } from "@/types/property.types";
 import PropertyHeader from "@/components/properties/PropertyHeader";
 import PropertyFilters from "@/components/properties/PropertyFilters";
 import PropertyList from "@/components/properties/PropertyList";
@@ -34,6 +34,13 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     deleteProperty 
   } = useProperties();
 
+  // Convert Property[] to UnifiedProperty[] for compatibility with usePropertyFiltering
+  const unifiedProperties: UnifiedProperty[] = properties.map(property => ({
+    ...property,
+    source: 'local', // Add the required source property
+    last_synced: property.updated_at // Use updated_at as fallback for last_synced
+  }));
+
   const {
     searchQuery,
     setSearchQuery,
@@ -45,7 +52,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     totalPages,
     paginatedProperties,
     activeFiltersCount
-  } = usePropertyFiltering(properties);
+  } = usePropertyFiltering(unifiedProperties);
 
   const handleAddProperty = () => {
     setIsAddPropertyOpen(true);
@@ -72,6 +79,9 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     }
   };
 
+  // Convert UnifiedProperty back to Property for the property list
+  const convertedPaginatedProperties = paginatedProperties as unknown as Property[];
+
   return (
     <div className="space-y-8">
       <PropertyHeader onAddProperty={handleAddProperty} />
@@ -86,7 +96,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
       />
 
       <PropertyList 
-        properties={paginatedProperties}
+        properties={convertedPaginatedProperties}
         isLoading={isLoading}
         onViewDetails={onViewDetails}
         onBookingManagement={onBookingManagement}
