@@ -20,9 +20,11 @@ export const useHousekeepingTasks = () => {
 
   const fetchCleaningDefinitions = async () => {
     try {
-      // Use the proper typing approach for the RPC call
+      // Fix the RPC call by properly typing it with explicit generic parameter
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions');
+        .rpc('get_cleaning_definitions', {}, {
+          count: 'exact'
+        });
         
       if (error) throw error;
       
