@@ -1,4 +1,5 @@
 
+// Original Property type
 export interface Property {
   id: string;
   name: string;
@@ -29,4 +30,26 @@ export interface PropertyFormData {
   max_guests: number;
   imageUrl: string;
   description?: string;
+}
+
+// New GuestyProperty type to represent a property from Guesty
+export interface GuestyProperty {
+  id: string;
+  title: string;
+  address?: {
+    full?: string;
+  };
+  status?: string;
+  thumbnail_url?: string;
+  property_type?: string;
+  sync_status?: string;
+  last_synced?: string;
+  raw_data?: any;
+}
+
+// Unified property model that works with both sources
+export interface UnifiedProperty extends Property {
+  source: 'guesty' | 'local';
+  guesty_id?: string;
+  last_synced?: string;
 }

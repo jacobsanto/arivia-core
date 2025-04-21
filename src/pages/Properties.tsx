@@ -1,35 +1,58 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { Property } from "@/types/property.types";
-import PropertiesListView from "@/components/properties/views/PropertiesListView";
+import { UnifiedProperty } from "@/types/property.types";
 import PropertyDetailsView from "@/components/properties/views/PropertyDetailsView";
 import PropertyBookingsView from "@/components/properties/views/PropertyBookingsView";
 import PropertyPricingView from "@/components/properties/views/PropertyPricingView";
 import PropertyGuestsView from "@/components/properties/views/PropertyGuestsView";
-import { GuestyListings } from "@/components/properties/GuestyListings";
-import { Separator } from "@/components/ui/separator";
+import { useUnifiedProperties } from "@/hooks/useUnifiedProperties";
+import UnifiedPropertyHeader from "@/components/properties/UnifiedPropertyHeader";
+import { PropertyFilters } from "@/components/properties/PropertyFilters";
+import UnifiedPropertiesList from "@/components/properties/UnifiedPropertiesList";
+import { usePropertyFiltering } from "@/hooks/usePropertyFiltering";
+import PropertyPagination from "@/components/properties/PropertyPagination";
 
 const Properties = () => {
-  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<UnifiedProperty | null>(null);
   const [activeView, setActiveView] = useState("properties");
+  
+  const { 
+    properties, 
+    isLoading, 
+    lastSynced,
+    syncWithGuesty
+  } = useUnifiedProperties();
 
-  const handleViewDetails = (property: Property) => {
+  const {
+    searchQuery,
+    setSearchQuery,
+    activeTab,
+    setActiveTab,
+    handleAdvancedFilters,
+    currentPage,
+    setCurrentPage,
+    totalPages,
+    paginatedProperties,
+    activeFiltersCount
+  } = usePropertyFiltering(properties);
+
+  const handleViewDetails = (property: UnifiedProperty) => {
     setSelectedProperty(property);
     setActiveView("details");
   };
 
-  const handleBookingManagement = (property: Property) => {
+  const handleBookingManagement = (property: UnifiedProperty) => {
     setSelectedProperty(property);
     setActiveView("bookings");
   };
   
-  const handlePricingConfig = (property: Property) => {
+  const handlePricingConfig = (property: UnifiedProperty) => {
     setSelectedProperty(property);
     setActiveView("pricing");
   };
   
-  const handleGuestManagement = (property: Property) => {
+  const handleGuestManagement = (property: UnifiedProperty) => {
     setSelectedProperty(property);
     setActiveView("guests");
   };
@@ -37,6 +60,15 @@ const Properties = () => {
   const handleBackToProperties = () => {
     setActiveView("properties");
     setSelectedProperty(null);
+  };
+
+  const handleSync = async () => {
+    try {
+      await syncWithGuesty();
+      toast.success("Properties synced successfully from Guesty");
+    } catch (error) {
+      toast.error("Failed to sync properties");
+    }
   };
 
   // Render the appropriate view based on the activeView state
@@ -58,16 +90,36 @@ const Properties = () => {
 
   return (
     <div className="space-y-8">
-      <PropertiesListView 
+      <UnifiedPropertyHeader 
+        onSync={handleSync} 
+        isLoading={isLoading} 
+        lastSynced={lastSynced} 
+      />
+      
+      <PropertyFilters 
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        onAdvancedFilters={handleAdvancedFilters}
+        activeFiltersCount={activeFiltersCount}
+      />
+
+      <UnifiedPropertiesList 
+        properties={paginatedProperties}
+        isLoading={isLoading}
         onViewDetails={handleViewDetails}
         onBookingManagement={handleBookingManagement}
         onPricingConfig={handlePricingConfig}
         onGuestManagement={handleGuestManagement}
+        onSync={handleSync}
       />
       
-      <Separator />
-      
-      <GuestyListings />
+      <PropertyPagination 
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
