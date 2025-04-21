@@ -10,9 +10,12 @@ import GuestyPropertyList from "./integrations/guesty/GuestyPropertyList";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 
+// Define a type for the connection status to ensure type safety
+type ConnectionStatus = 'idle' | 'success' | 'error' | 'rate-limited' | 'auth-error' | 'server-error';
+
 const IntegrationSettings = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error' | 'rate-limited' | 'auth-error' | 'server-error'>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
@@ -253,6 +256,7 @@ const IntegrationSettings = () => {
               </Alert>
             )}
             
+            {/* FIX: Changed the condition to use the defined ConnectionStatus type correctly */}
             {connectionStatus === 'error' && errorMessage && connectionStatus !== 'auth-error' && connectionStatus !== 'server-error' && (
               <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-300">
                 <AlertTriangle className="h-4 w-4" />
