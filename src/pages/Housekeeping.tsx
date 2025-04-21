@@ -30,14 +30,16 @@ const HousekeepingDashboard = () => {
   const fetchCleaningDefinitions = async () => {
     try {
       const { data, error } = await supabase
-        .rpc<CleaningDefinition[]>('get_cleaning_definitions');
+        .rpc<CleaningDefinition[], Record<string, never>>('get_cleaning_definitions', {});
         
       if (error) throw error;
       
       const definitions: Record<string, string> = {};
-      (data || []).forEach((item: CleaningDefinition) => {
-        definitions[item.task_type] = item.description;
-      });
+      if (data && Array.isArray(data)) {
+        data.forEach((item: CleaningDefinition) => {
+          definitions[item.task_type] = item.description;
+        });
+      }
       
       setCleaningDefinitions(definitions);
     } catch (error) {
