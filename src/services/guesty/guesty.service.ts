@@ -18,6 +18,9 @@ export interface GuestyListing {
   cleaningStatus?: {
     value: string;
   };
+  picture?: {
+    thumbnail?: string;
+  };
 }
 
 export interface GuestyListingsResponse {
