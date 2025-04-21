@@ -8,7 +8,7 @@ import PropertyPricingView from "@/components/properties/views/PropertyPricingVi
 import PropertyGuestsView from "@/components/properties/views/PropertyGuestsView";
 import { useUnifiedProperties } from "@/hooks/useUnifiedProperties";
 import UnifiedPropertyHeader from "@/components/properties/UnifiedPropertyHeader";
-import { PropertyFilters } from "@/components/properties/PropertyFilters";
+import PropertyFilters from "@/components/properties/PropertyFilters";
 import UnifiedPropertiesList from "@/components/properties/UnifiedPropertiesList";
 import { usePropertyFiltering } from "@/hooks/usePropertyFiltering";
 import PropertyPagination from "@/components/properties/PropertyPagination";

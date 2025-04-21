@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Property } from "@/types/property.types";
+import { UnifiedProperty } from "@/types/property.types";
 
 interface AdvancedFilters {
   priceRange: [number, number];
@@ -9,7 +10,7 @@ interface AdvancedFilters {
   locations: string[];
 }
 
-export const usePropertyFiltering = (properties: Property[]) => {
+export const usePropertyFiltering = (properties: UnifiedProperty[]) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters | null>(null);
