@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { DateRange } from "@/components/reports/DateRangeSelector";
 import { startOfDay, endOfDay, addDays } from "date-fns";
@@ -25,50 +24,44 @@ export const useDashboard = () => {
   const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-    
+
     // Set a timeout to ensure we don't display loading state indefinitely
     const timeout = setTimeout(() => {
-      console.log("Dashboard data fetch timeout reached, using fallback data");
       // If we still don't have data after MAX_LOADING_TIME, use default data
       setDashboardData(prev => prev || getDefaultDashboardData());
       setIsLoading(false);
       setError("Data fetch timeout - showing default data");
     }, MAX_LOADING_TIME);
-    
+
     setLoadingTimeout(timeout);
-    
+
     try {
       const safeRange = {
         from: dateRange.from || new Date(),
         to: dateRange.to || new Date()
       };
-      
+
       const data = await fetchDashboardData(selectedProperty, safeRange);
-      
-      // Clear the timeout as we got data successfully
+
       if (loadingTimeout) clearTimeout(loadingTimeout);
-      
+
       setDashboardData(data);
       setLastRefreshed(new Date());
       return data;
     } catch (err) {
-      // If we get an error but still don't have data, use fallback data
-      if (!dashboardData) {
-        console.log("Error fetching dashboard data, using fallback data", err);
-        setDashboardData(getDefaultDashboardData());
-      }
-      
+      // Always set fallback data, so dashboardData is never null
+      setDashboardData(getDefaultDashboardData());
+
       const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
       setError(errorMessage);
-      throw err;
+      // Do not re-throw here!
+      return null;
     } finally {
-      // Clear the timeout if it hasn't fired yet
       if (loadingTimeout) clearTimeout(loadingTimeout);
       setIsLoading(false);
     }
-  }, [selectedProperty, dateRange, loadingTimeout, dashboardData]);
+  }, [selectedProperty, dateRange, loadingTimeout]);
 
-  // Clean up timeout on unmount
   useEffect(() => {
     return () => {
       if (loadingTimeout) clearTimeout(loadingTimeout);
@@ -77,12 +70,13 @@ export const useDashboard = () => {
 
   useEffect(() => {
     let isMounted = true;
-    
+
     loadDashboardData().catch(err => {
       if (!isMounted) return;
+      // We purposely do NOT want to throw or rethrow any error here, fallback already set
       console.error("Dashboard data load error:", err);
     });
-    
+
     return () => {
       isMounted = false;
     };
