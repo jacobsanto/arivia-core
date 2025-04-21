@@ -39,6 +39,19 @@ serve(async (req) => {
       .filter(result => result.status === 'fulfilled')
       .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
 
+    // Update integration health for successful sync
+    await supabase
+      .from('integration_health')
+      .upsert({
+        provider: 'guesty',
+        status: 'connected',
+        last_synced: new Date().toISOString(),
+        last_error: null,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'provider'
+      });
+
     console.log('Sync completed successfully');
 
     // Return success response
@@ -53,6 +66,23 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Sync error:', error);
+
+    // Update integration health for failed sync
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    await supabase
+      .from('integration_health')
+      .upsert({
+        provider: 'guesty',
+        status: 'error',
+        last_error: error instanceof Error ? error.message : 'Unknown error',
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'provider'
+      });
+
     return new Response(JSON.stringify({
       success: false,
       error: error.message
