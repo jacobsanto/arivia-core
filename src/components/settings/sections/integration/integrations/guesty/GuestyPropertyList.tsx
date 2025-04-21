@@ -5,25 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCcw, Home, Map, BedDouble, Calendar } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface GuestyProperty {
-  id: string;
-  title: string;
-  address?: {
-    full?: string;
-    city?: string;
-    country?: string;
-  };
-  bedrooms?: number;
-  accommodates?: number;
-  picture?: {
-    thumbnail?: string;
-  };
-}
+import { GuestyListing } from "@/services/guesty/guesty.service";
 
 const GuestyPropertyList: React.FC = () => {
   const { listings, isLoading, error, refreshListings } = useGuesty();
-  const properties = listings?.results as GuestyProperty[] || [];
+  const properties = listings?.results || [];
 
   return (
     <div className="space-y-4">
@@ -58,21 +44,13 @@ const GuestyPropertyList: React.FC = () => {
       )}
 
       <div className="grid gap-4">
-        {properties.map((property: GuestyProperty) => (
-          <Card key={property.id} className="overflow-hidden hover:shadow-md transition-shadow">
+        {properties.map((property: GuestyListing) => (
+          <Card key={property._id} className="overflow-hidden hover:shadow-md transition-shadow">
             <CardContent className="p-0">
               <div className="flex">
-                {property.picture?.thumbnail ? (
-                  <img 
-                    src={property.picture.thumbnail} 
-                    alt={property.title} 
-                    className="h-32 w-32 object-cover"
-                  />
-                ) : (
-                  <div className="h-32 w-32 bg-slate-100 flex items-center justify-center">
-                    <Home className="h-6 w-6 text-slate-400" />
-                  </div>
-                )}
+                <div className="h-32 w-32 bg-slate-100 flex items-center justify-center">
+                  <Home className="h-6 w-6 text-slate-400" />
+                </div>
                 <div className="p-4 flex-1">
                   <h4 className="font-medium truncate">{property.title}</h4>
                   
@@ -84,16 +62,12 @@ const GuestyPropertyList: React.FC = () => {
                       </div>
                     )}
                     
-                    {(property.bedrooms || property.accommodates) && (
-                      <div className="flex items-center gap-1">
-                        <BedDouble className="h-3.5 w-3.5" />
-                        <span>
-                          {property.bedrooms ? `${property.bedrooms} bedroom${property.bedrooms > 1 ? 's' : ''}` : ''}
-                          {property.bedrooms && property.accommodates ? ' · ' : ''}
-                          {property.accommodates ? `Sleeps ${property.accommodates}` : ''}
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      <BedDouble className="h-3.5 w-3.5" />
+                      <span>
+                        {property.status && `Status: ${property.status}`}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>

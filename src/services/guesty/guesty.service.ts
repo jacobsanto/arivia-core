@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyAuthResponse {
@@ -5,7 +6,7 @@ interface GuestyAuthResponse {
   expires_in: number;
 }
 
-interface GuestyListing {
+export interface GuestyListing {
   _id: string;
   title: string;
   address?: {
@@ -19,7 +20,7 @@ interface GuestyListing {
   };
 }
 
-interface GuestyListingsResponse {
+export interface GuestyListingsResponse {
   results: GuestyListing[];
 }
 
