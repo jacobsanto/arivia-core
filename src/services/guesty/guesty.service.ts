@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyAuthResponse {
@@ -78,6 +77,29 @@ export class GuestyService {
       return await response.json();
     } catch (error) {
       console.error('Error fetching Guesty listings:', error);
+      throw error;
+    }
+  }
+
+  async getGuestyListing(listingId: string): Promise<GuestyListing | null> {
+    try {
+      const token = await this.ensureValidToken();
+
+      const response = await fetch(`https://open-api.guesty.com/v1/listings/${listingId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Guesty API error: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching Guesty listing:', error);
       throw error;
     }
   }
