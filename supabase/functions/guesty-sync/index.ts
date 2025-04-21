@@ -20,6 +20,46 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log('Checking last sync time...');
+
+    // Check for recent syncs
+    const fifteenMinutesAgo = new Date();
+    fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+
+    const { data: recentSync } = await supabase
+      .from('sync_logs')
+      .select('*')
+      .eq('service', 'guesty')
+      .eq('status', 'completed')
+      .gt('start_time', fifteenMinutesAgo.toISOString())
+      .order('start_time', { ascending: false })
+      .limit(1);
+
+    if (recentSync && recentSync.length > 0) {
+      console.log('Recent sync found, enforcing cooldown period');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Please wait before syncing again. A sync was performed in the last 15 minutes.'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 429
+        }
+      );
+    }
+
+    // Create new sync log entry
+    const { data: syncLog } = await supabase
+      .from('sync_logs')
+      .insert({
+        service: 'guesty',
+        status: 'in_progress',
+        start_time: new Date().toISOString()
+      })
+      .select()
+      .single();
+
     console.log('Starting Guesty sync process...');
 
     // Get token using the new caching logic
@@ -39,7 +79,18 @@ serve(async (req) => {
       .filter(result => result.status === 'fulfilled')
       .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
 
-    // Update integration health for successful sync
+    // Update sync log with results
+    await supabase
+      .from('sync_logs')
+      .update({
+        status: 'completed',
+        end_time: new Date().toISOString(),
+        listings_created: listings.length,
+        bookings_created: totalBookingsSynced
+      })
+      .eq('id', syncLog.id);
+
+    // Update integration health
     await supabase
       .from('integration_health')
       .upsert({
@@ -71,6 +122,19 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Update sync log with error
+    if (error instanceof Error) {
+      await supabase
+        .from('sync_logs')
+        .update({
+          status: 'failed',
+          end_time: new Date().toISOString(),
+          error_message: error.message
+        })
+        .eq('service', 'guesty')
+        .eq('status', 'in_progress');
+    }
 
     await supabase
       .from('integration_health')
