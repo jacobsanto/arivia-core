@@ -342,6 +342,92 @@ export type Database = {
         }
         Relationships: []
       }
+      guesty_bookings: {
+        Row: {
+          check_in: string
+          check_out: string
+          created_at: string | null
+          guest_name: string | null
+          id: string
+          last_synced: string | null
+          listing_id: string
+          raw_data: Json | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          check_in: string
+          check_out: string
+          created_at?: string | null
+          guest_name?: string | null
+          id: string
+          last_synced?: string | null
+          listing_id: string
+          raw_data?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          check_in?: string
+          check_out?: string
+          created_at?: string | null
+          guest_name?: string | null
+          id?: string
+          last_synced?: string | null
+          listing_id?: string
+          raw_data?: Json | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guesty_bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guesty_listings: {
+        Row: {
+          address: Json | null
+          created_at: string | null
+          id: string
+          last_synced: string | null
+          property_type: string | null
+          raw_data: Json | null
+          status: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: Json | null
+          created_at?: string | null
+          id: string
+          last_synced?: string | null
+          property_type?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: Json | null
+          created_at?: string | null
+          id?: string
+          last_synced?: string | null
+          property_type?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       housekeeping_tasks: {
         Row: {
           assigned_to: string | null

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,9 +7,11 @@ import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import GuestyPropertyList from "./integrations/guesty/GuestyPropertyList";
 
+type ConnectionStatus = 'idle' | 'success' | 'error';
+
 const IntegrationSettings = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
   const [showPropertyList, setShowPropertyList] = useState(false);
 
   const testGuestyConnection = async () => {
