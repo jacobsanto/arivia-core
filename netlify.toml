@@ -33,5 +33,5 @@
 
 [functions]
   node_bundler = "esbuild"
-  external_node_modules = ["@supabase/supabase-js", "stripe", "react-helmet-async"]
+  external_node_modules = ["@supabase/supabase-js"]
 
