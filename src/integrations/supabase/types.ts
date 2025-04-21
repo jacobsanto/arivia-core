@@ -176,6 +176,36 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaning_service_definitions: {
+        Row: {
+          checklist: Json | null
+          created_at: string | null
+          description: string
+          estimated_duration: number | null
+          id: string
+          task_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          checklist?: Json | null
+          created_at?: string | null
+          description: string
+          estimated_duration?: number | null
+          id?: string
+          task_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          checklist?: Json | null
+          created_at?: string | null
+          description?: string
+          estimated_duration?: number | null
+          id?: string
+          task_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       damage_report_media: {
         Row: {
           created_at: string

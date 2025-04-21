@@ -32,7 +32,9 @@ const HousekeepingDashboard = () => {
     try {
       // Use .rpc() method with explicit type casting
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions' as 'get_cleaning_definitions');
+        .rpc('get_cleaning_definitions', {}, { 
+          count: null 
+        });
         
       if (error) throw error;
       
