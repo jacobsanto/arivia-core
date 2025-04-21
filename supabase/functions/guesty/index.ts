@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.31.0';
 import { corsHeaders } from '../_shared/cors.ts';
 
-const GUESTY_API_URL = Deno.env.get('GUESTY_API_URL') || 'https://api.guesty.com/api/v2';
+const GUESTY_API_URL = Deno.env.get('GUESTY_API_URL') || 'https://app.guesty.com/api/v3';
 const GUESTY_CLIENT_ID = Deno.env.get('GUESTY_CLIENT_ID');
 const GUESTY_SECRET = Deno.env.get('GUESTY_SECRET');
 
@@ -43,7 +43,8 @@ async function getGuestyToken(): Promise<string> {
   try {
     const authString = btoa(`${GUESTY_CLIENT_ID}:${GUESTY_SECRET}`);
     
-    const response = await fetch(`${GUESTY_API_URL}/authentication/token`, {
+    // Updated to use v3 auth endpoint
+    const response = await fetch(`${GUESTY_API_URL}/auth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -101,14 +102,21 @@ async function handleListings(req: Request): Promise<Response> {
   try {
     const token = await getGuestyToken();
     
-    // Get query parameters from request
-    const url = new URL(req.url);
-    const limit = url.searchParams.get('limit') || '20';
-    const offset = url.searchParams.get('offset') || '0';
+    // Get query parameters from request body
+    const body = await req.json();
+    const limit = body.limit || 20;
+    const cursor = body.cursor || null;
     
-    const response = await fetch(`${GUESTY_API_URL}/listings?limit=${limit}&offset=${offset}`, {
+    // Updated to use v3 listings endpoint with cursor pagination
+    let apiUrl = `${GUESTY_API_URL}/listings?limit=${limit}`;
+    if (cursor) {
+      apiUrl += `&cursor=${cursor}`;
+    }
+    
+    const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       }
     });
 
@@ -125,8 +133,15 @@ async function handleListings(req: Request): Promise<Response> {
     const data = await response.json();
     await logGuestyAction('fetch_listings', true, `Successfully fetched ${data.results?.length || 0} listings`);
     
+    // Return consistent response format
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ 
+        data: data,
+        pagination: {
+          next_cursor: data.pagination?.next_cursor,
+          has_more: !!data.pagination?.next_cursor
+        }
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -142,14 +157,19 @@ async function handleBookings(req: Request): Promise<Response> {
   try {
     const token = await getGuestyToken();
     
-    // Get query parameters from request
-    const url = new URL(req.url);
-    const limit = url.searchParams.get('limit') || '20';
-    const offset = url.searchParams.get('offset') || '0';
-    const startDate = url.searchParams.get('startDate');
-    const endDate = url.searchParams.get('endDate');
+    // Get query parameters from request body
+    const body = await req.json();
+    const limit = body.limit || 20;
+    const cursor = body.cursor || null;
+    const startDate = body.startDate;
+    const endDate = body.endDate;
     
-    let apiUrl = `${GUESTY_API_URL}/reservations?limit=${limit}&offset=${offset}`;
+    // Updated to use v3 reservations endpoint with cursor pagination
+    let apiUrl = `${GUESTY_API_URL}/reservations?limit=${limit}`;
+    
+    if (cursor) {
+      apiUrl += `&cursor=${cursor}`;
+    }
     
     if (startDate) {
       apiUrl += `&startDate=${startDate}`;
@@ -161,7 +181,8 @@ async function handleBookings(req: Request): Promise<Response> {
     
     const response = await fetch(apiUrl, {
       headers: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json'
       }
     });
 
@@ -178,8 +199,15 @@ async function handleBookings(req: Request): Promise<Response> {
     const data = await response.json();
     await logGuestyAction('fetch_bookings', true, `Successfully fetched ${data.results?.length || 0} bookings`);
     
+    // Return consistent response format
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ 
+        data: data,
+        pagination: {
+          next_cursor: data.pagination?.next_cursor,
+          has_more: !!data.pagination?.next_cursor
+        }
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -191,6 +219,7 @@ async function handleBookings(req: Request): Promise<Response> {
   }
 }
 
+// Keep the existing property mapping functions as they interact with our database, not Guesty API
 async function handleSyncProperty(req: Request): Promise<Response> {
   if (req.method !== 'POST') {
     return new Response(
@@ -260,6 +289,7 @@ async function handleSyncProperty(req: Request): Promise<Response> {
   }
 }
 
+// Keep existing mappings functions intact
 async function handleGetMappings(req: Request): Promise<Response> {
   try {
     const { data, error } = await supabase
@@ -319,32 +349,74 @@ async function handleDeleteMapping(req: Request): Promise<Response> {
   }
 }
 
+// Implement rate limiting and retry logic
+async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3, delay = 1000): Promise<Response> {
+  let lastError;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      
+      // Handle rate limiting (429 Too Many Requests)
+      if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+        console.log(`Rate limited. Retrying after ${retryAfter} seconds. Attempt ${attempt}/${maxRetries}`);
+        await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+        continue;
+      }
+      
+      return response;
+    } catch (error) {
+      lastError = error;
+      console.error(`Request failed (attempt ${attempt}/${maxRetries}):`, error);
+      if (attempt < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, delay * attempt));
+      }
+    }
+  }
+  throw lastError || new Error('Request failed after multiple retries');
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
   
-  const url = new URL(req.url);
-  const path = url.pathname.replace('/guesty', '').replace(/^\/+/, '');
-
   try {
-    // Route handling based on path
-    if (path === 'listings' || path === '/listings') {
-      return await handleListings(req);
-    } else if (path === 'bookings' || path === '/bookings') {
-      return await handleBookings(req);
-    } else if (path === 'sync-property' || path === '/sync-property') {
-      return await handleSyncProperty(req);
-    } else if (path === 'get-mappings' || path === '/get-mappings') {
-      return await handleGetMappings(req);
-    } else if (path === 'delete-mapping' || path === '/delete-mapping') {
-      return await handleDeleteMapping(req);
-    } else {
-      return new Response(
-        JSON.stringify({ error: 'Not found', path }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    // Parse body here to determine the action
+    const contentType = req.headers.get('content-type') || '';
+    let action = '';
+    
+    if (contentType.includes('application/json')) {
+      try {
+        const body = await req.clone().json();
+        action = body.action || '';
+      } catch (e) {
+        console.error('Error parsing JSON body:', e);
+      }
+    }
+    
+    // Route handling based on action from body
+    switch (action) {
+      case 'listings':
+        return await handleListings(req);
+      case 'bookings':
+        return await handleBookings(req);
+      case 'sync-property':
+        return await handleSyncProperty(req);
+      case 'get-mappings':
+        return await handleGetMappings(req);
+      case 'delete-mapping':
+        return await handleDeleteMapping(req);
+      default:
+        return new Response(
+          JSON.stringify({ 
+            error: 'Not found', 
+            action: action || 'none specified',
+            message: 'Unknown action requested. Valid actions are: listings, bookings, sync-property, get-mappings, delete-mapping'
+          }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
     }
   } catch (error) {
     console.error('Error processing request:', error);

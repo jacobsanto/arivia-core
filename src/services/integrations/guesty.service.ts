@@ -9,21 +9,34 @@ export interface GuestyCredentials extends Record<string, Json> {
 }
 
 export interface GuestyListingItem {
-  id: string;
+  id: string; // Using id for backwards compatibility, but maps to _id in v3 API
+  _id?: string;
   title: string;
   nickname?: string;
-  picture?: string;
+  picture?: {
+    thumbnail?: string;
+    full?: string;
+  };
   address?: {
     full: string;
     city: string;
     country: string;
+    location?: {
+      coordinates: [number, number];
+      type: string;
+    };
   };
 }
 
 export interface GuestyBookingItem {
-  id: string;
+  id: string; // Using id for backwards compatibility, but maps to _id in v3 API
+  _id?: string;
   status: string;
-  guestName: string;
+  guest: {
+    fullName: string;
+    email?: string;
+    phone?: string;
+  };
   checkInDateLocalized: string;
   checkOutDateLocalized: string;
   listingId: string;
@@ -33,7 +46,7 @@ export interface GuestyBookingItem {
   };
 }
 
-export interface GuestyPropertyMapping {
+export interface GuestyPropertyMappingType {
   property_id: string;
   guesty_listing_id: string;
   created_at: string;
@@ -102,19 +115,38 @@ class GuestyService {
     }
   }
 
-  async fetchListings(limit = 20, offset = 0): Promise<GuestyListingItem[]> {
+  async fetchListings(limit = 20, cursor?: string): Promise<GuestyListingItem[]> {
     try {
+      const body: Record<string, any> = {
+        action: 'listings',
+        limit
+      };
+      
+      if (cursor) {
+        body.cursor = cursor;
+      }
+      
       const response = await supabase.functions.invoke('guesty', {
-        body: {
-          action: 'listings',
-          limit,
-          offset
-        }
+        body
       });
 
       if (response.error) throw new Error(response.error.message);
-      // Compatible with the edge function return shape
-      return response.data?.results || response.data?.data?.results || [];
+      
+      // Map response based on new v3 API format
+      const results = response.data?.data?.results || response.data?.results || [];
+      
+      // Format listings to maintain backward compatibility
+      return results.map((listing: any) => ({
+        id: listing._id || listing.id,
+        _id: listing._id || listing.id,
+        title: listing.title || listing.name || '',
+        nickname: listing.nickname || '',
+        picture: {
+          thumbnail: listing.picture?.thumbnail || listing.picture || '',
+          full: listing.picture?.full || listing.picture || '',
+        },
+        address: listing.address || {}
+      }));
     } catch (error) {
       console.error('Failed to fetch Guesty listings:', error);
       throw error;
@@ -123,30 +155,55 @@ class GuestyService {
 
   async fetchBookings(
     limit = 20, 
-    offset = 0,
+    cursor?: string,
     startDate?: string,
     endDate?: string
   ): Promise<GuestyBookingItem[]> {
     try {
+      const body: Record<string, any> = {
+        action: 'bookings',
+        limit
+      };
+      
+      if (cursor) {
+        body.cursor = cursor;
+      }
+      
+      if (startDate) {
+        body.startDate = startDate;
+      }
+      
+      if (endDate) {
+        body.endDate = endDate;
+      }
+      
       const response = await supabase.functions.invoke('guesty', {
-        body: {
-          action: 'bookings',
-          limit,
-          offset,
-          startDate,
-          endDate
-        }
+        body
       });
 
       if (response.error) throw new Error(response.error.message);
-      return response.data?.results || response.data?.data?.results || [];
+      
+      // Map response based on new v3 API format
+      const results = response.data?.data?.results || response.data?.results || [];
+      
+      // Format bookings to maintain backward compatibility
+      return results.map((booking: any) => ({
+        id: booking._id || booking.id,
+        _id: booking._id || booking.id,
+        status: booking.status,
+        guest: booking.guest || { fullName: booking.guestName || 'Guest' },
+        checkInDateLocalized: booking.checkInDateLocalized || booking.checkIn,
+        checkOutDateLocalized: booking.checkOutDateLocalized || booking.checkOut,
+        listingId: booking.listingId || booking.accommodationId,
+        money: booking.money || { totalPaid: 0, currency: 'USD' }
+      }));
     } catch (error) {
       console.error('Failed to fetch Guesty bookings:', error);
       throw error;
     }
   }
 
-  async syncProperty(propertyId: string, guestyListingId: string): Promise<GuestyPropertyMapping> {
+  async syncProperty(propertyId: string, guestyListingId: string): Promise<GuestyPropertyMappingType> {
     try {
       const response = await supabase.functions.invoke('guesty', {
         body: {
@@ -170,7 +227,7 @@ class GuestyService {
   }
 
   // Always use edge function, not direct table for mappings.
-  async getMappings(): Promise<GuestyPropertyMapping[]> {
+  async getMappings(): Promise<GuestyPropertyMappingType[]> {
     try {
       const response = await supabase.functions.invoke('guesty', {
         body: {

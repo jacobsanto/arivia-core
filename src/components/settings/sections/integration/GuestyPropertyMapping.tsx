@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -10,8 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { guestyService, GuestyListingItem } from '@/services/integrations/guesty.service';
-import type { GuestyPropertyMapping } from '@/services/integrations/guesty.service';
+import { guestyService, GuestyListingItem, type GuestyPropertyMappingType } from '@/services/integrations/guesty.service';
 import { useProperties } from '@/hooks/useProperties';
 import { Property } from '@/types/property.types';
 import { Loader2, Link, Trash2 } from "lucide-react";
@@ -20,7 +18,7 @@ const GuestyPropertyMapping = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [guestyListings, setGuestyListings] = useState<GuestyListingItem[]>([]);
-  const [mappings, setMappings] = useState<GuestyPropertyMapping[]>([]);
+  const [mappings, setMappings] = useState<GuestyPropertyMappingType[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [selectedListing, setSelectedListing] = useState<string | undefined>();
   
