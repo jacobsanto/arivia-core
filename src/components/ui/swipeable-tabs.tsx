@@ -4,7 +4,7 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import * as LucideIcons from "lucide-react";
 import { SwipeableTabsProvider } from "@/components/ui/tabs";
-import { LucideProps } from "lucide-react";
+import { LucideIcon, LucideProps } from "lucide-react";
 
 // Define proper type for icon names
 type IconName = keyof typeof LucideIcons;
@@ -33,14 +33,14 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start md:justify-center px-2 py-1">
           {tabs.map((tab) => {
             let iconElement = null;
-            if (tab.icon && typeof tab.icon === "string") {
-              // Check if the icon exists in Lucide icons
-              const IconComp = LucideIcons[tab.icon];
-              // Only render if it's a valid component
-              if (IconComp && typeof IconComp === 'function') {
-                iconElement = <IconComp className="h-4 w-4" />;
+            if (tab.icon) {
+              // Get the icon component directly from the imported icons
+              const IconComponent = LucideIcons[tab.icon] as React.ComponentType<LucideProps>;
+              if (IconComponent) {
+                iconElement = <IconComponent className="h-4 w-4" />;
               }
             }
+            
             return (
               <TabsTrigger
                 key={tab.value}
