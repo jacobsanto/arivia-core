@@ -21,6 +21,10 @@ const handleCors = (req: Request) => {
   }
 };
 
+// Retry configuration
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY = 1000; // 1 second
+
 // Main serve function
 serve(async (req: Request) => {
   // Check for CORS preflight requests
@@ -42,24 +46,60 @@ serve(async (req: Request) => {
     // Get token is the only supported action for now
     if (action === 'get-token') {
       try {
-        const { access_token, expires_in } = await getGuestyToken();
-        return new Response(JSON.stringify({ access_token, expires_in }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        });
-      } catch (error) {
-        console.error('Guesty auth function error:', error);
+        // Try to get token with retries
+        let lastError;
+        for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+          try {
+            console.log(`Attempt ${attempt + 1} to get Guesty token`);
+            
+            // Add delay for retries (not for first attempt)
+            if (attempt > 0) {
+              const delay = INITIAL_RETRY_DELAY * Math.pow(2, attempt - 1);
+              console.log(`Waiting ${delay}ms before retry`);
+              await new Promise(resolve => setTimeout(resolve, delay));
+            }
+            
+            const { access_token, expires_in } = await getGuestyToken();
+            
+            console.log("Successfully obtained Guesty token after attempt", attempt + 1);
+            return new Response(JSON.stringify({ access_token, expires_in }), {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 200,
+            });
+          } catch (error) {
+            lastError = error;
+            
+            // Only retry on rate limit errors (429)
+            if (!error.message || !error.message.includes('429')) {
+              console.error(`Non-retryable error on attempt ${attempt + 1}:`, error);
+              break;
+            }
+            
+            console.warn(`Rate limited on attempt ${attempt + 1}, will retry`);
+          }
+        }
+        
+        // If we got here, all retry attempts failed
+        console.error('All retry attempts failed:', lastError);
         
         // Check if rate limited
-        if (error.message && error.message.includes('429')) {
+        if (lastError.message && lastError.message.includes('429')) {
           return new Response(JSON.stringify({ 
             error: 'Rate limit exceeded',
-            message: 'Too many requests to Guesty API. Please try again later.'
+            message: 'Too many requests to Guesty API. Please try again later.',
+            retryAfter: 60 // Suggest waiting 60 seconds
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 429,
           });
         }
+        
+        return new Response(JSON.stringify({ error: lastError.message }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        });
+      } catch (error) {
+        console.error('Guesty auth function error:', error);
         
         return new Response(JSON.stringify({ error: error.message }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -3,14 +3,24 @@ import React, { useState } from "react";
 import { useGuesty } from "@/hooks/useGuesty";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Home, Map, BedDouble, ChevronLeft, ChevronRight } from "lucide-react";
+import { RefreshCcw, Home, Map, BedDouble, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GuestyListing } from "@/services/guesty/guesty.service";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 const GuestyPropertyList: React.FC = () => {
-  const { listings, isLoading, error, refreshListings } = useGuesty();
+  const { listings, isLoading, error, refreshListings, isRateLimited } = useGuesty();
   const properties = listings?.results || [];
   const [activeImageIndex, setActiveImageIndex] = useState<Record<string, number>>({});
+
+  const handleRefresh = () => {
+    toast.promise(refreshListings(), {
+      loading: 'Refreshing Guesty properties...',
+      success: 'Properties refreshed successfully',
+      error: (err) => `Refresh failed: ${err instanceof Error ? err.message : 'Unknown error'}`
+    });
+  };
 
   const nextImage = (propertyId: string, imagesArray: string[]) => {
     setActiveImageIndex(prev => ({
@@ -61,17 +71,35 @@ const GuestyPropertyList: React.FC = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h3 className="text-lg font-medium">Guesty Properties</h3>
-        <Button variant="outline" size="sm" onClick={refreshListings} disabled={isLoading}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh} 
+          disabled={isLoading || isRateLimited}
+        >
           <RefreshCcw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           {isLoading ? 'Loading...' : 'Refresh'}
         </Button>
       </div>
 
-      {error && (
-        <div className="rounded-md bg-red-50 p-4 border border-red-200 text-red-700">
-          <p className="font-medium">Error loading properties</p>
-          <p className="text-sm">{error.message || 'Unknown error occurred'}</p>
-        </div>
+      {isRateLimited && (
+        <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Rate Limit Reached</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Too many requests. Please try again later.'}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {error && !isRateLimited && (
+        <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-300">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error loading properties</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Unknown error occurred'}
+          </AlertDescription>
+        </Alert>
       )}
 
       {isLoading && (
@@ -106,6 +134,11 @@ const GuestyPropertyList: React.FC = () => {
                           src={currentImage} 
                           alt={`${property.title} - Photo ${currentImageIndex + 1}`}
                           className="h-full w-full object-cover"
+                          onError={(e) => {
+                            // Handle image loading errors
+                            e.currentTarget.src = '/placeholder.svg';
+                            e.currentTarget.alt = 'Image failed to load';
+                          }}
                         />
                         
                         {images.length > 1 && (

@@ -2,26 +2,47 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { RefreshCcw, MapPin } from "lucide-react";
+import { RefreshCcw, MapPin, AlertTriangle } from "lucide-react";
 import { useQuery } from '@tanstack/react-query';
 import { guestyService } from '@/services/guesty/guesty.service';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "sonner";
 
 export function GuestyListings() {
-  const { data, isLoading, error, refetch } = useQuery({
+  // Use React Query with better error handling
+  const { data, isLoading, error, refetch, isError } = useQuery({
     queryKey: ['guesty-listings'],
     queryFn: () => guestyService.getGuestyListings(),
-    retry: 1
+    retry: 1,
+    refetchOnWindowFocus: false,
+    meta: {
+      onError: (error: Error) => {
+        // Show toast for rate limit errors
+        if (error.message && error.message.includes('Rate limit')) {
+          const match = error.message.match(/try again in (\d+) seconds/);
+          const waitTime = match ? match[1] : '60';
+          
+          toast.error('Guesty API Rate Limit', {
+            description: `Too many requests. Please wait ${waitTime} seconds before trying again.`,
+            duration: 5000,
+          });
+        }
+      }
+    },
   });
 
-  if (error) {
-    return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
-        <p className="font-medium">Error loading Guesty listings</p>
-        <p className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
-      </div>
-    );
-  }
+  const handleRefresh = () => {
+    toast.promise(refetch(), {
+      loading: 'Syncing Guesty listings...',
+      success: 'Listings synchronized successfully',
+      error: (err) => `Sync failed: ${err instanceof Error ? err.message : 'Unknown error'}`
+    });
+  };
+
+  // Check if rate limited
+  const isRateLimited = error instanceof Error && error.message && 
+    error.message.includes('Rate limit');
 
   return (
     <div className="space-y-4">
@@ -30,13 +51,31 @@ export function GuestyListings() {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => refetch()}
-          disabled={isLoading}
+          onClick={handleRefresh}
+          disabled={isLoading || isRateLimited}
         >
           <RefreshCcw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
           Sync Listings
         </Button>
       </div>
+
+      {isRateLimited && (
+        <Alert variant="warning" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Rate Limit Reached</AlertTitle>
+          <AlertDescription>{error.message}</AlertDescription>
+        </Alert>
+      )}
+
+      {isError && !isRateLimited && (
+        <Alert variant="destructive" className="bg-red-50 text-red-800 border-red-300">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Error loading Guesty listings</AlertTitle>
+          <AlertDescription>
+            {error instanceof Error ? error.message : 'Unknown error occurred'}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {isLoading ? (
         <div className="space-y-3">
@@ -73,13 +112,13 @@ export function GuestyListings() {
             </Card>
           ))}
         </div>
-      ) : (
+      ) : !isError ? (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
             No Guesty listings found
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }
