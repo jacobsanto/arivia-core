@@ -3,7 +3,7 @@ import React from "react";
 import { useGuesty } from "@/hooks/useGuesty";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, Home, Map, BedDouble, Calendar } from "lucide-react";
+import { RefreshCcw, Home, Map, BedDouble } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GuestyListing } from "@/services/guesty/guesty.service";
 
@@ -30,9 +30,9 @@ const GuestyPropertyList: React.FC = () => {
 
       {isLoading && (
         <div className="space-y-3">
-          <Skeleton className="h-20 w-full rounded-md" />
-          <Skeleton className="h-20 w-full rounded-md" />
-          <Skeleton className="h-20 w-full rounded-md" />
+          <Skeleton className="h-48 w-full rounded-md" />
+          <Skeleton className="h-48 w-full rounded-md" />
+          <Skeleton className="h-48 w-full rounded-md" />
         </div>
       )}
 
@@ -48,22 +48,32 @@ const GuestyPropertyList: React.FC = () => {
           <Card key={property._id} className="overflow-hidden hover:shadow-md transition-shadow">
             <CardContent className="p-0">
               <div className="flex">
-                <div className="h-32 w-32 bg-slate-100 flex items-center justify-center">
-                  <Home className="h-6 w-6 text-slate-400" />
+                <div className="h-48 w-48 relative">
+                  {property.picture?.regular ? (
+                    <img 
+                      src={property.picture.regular} 
+                      alt={property.title}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-slate-100 flex items-center justify-center">
+                      <Home className="h-8 w-8 text-slate-400" />
+                    </div>
+                  )}
                 </div>
-                <div className="p-4 flex-1">
-                  <h4 className="font-medium truncate">{property.title}</h4>
+                <div className="p-6 flex-1">
+                  <h4 className="text-lg font-medium truncate">{property.title}</h4>
                   
-                  <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                  <div className="mt-4 space-y-2 text-sm text-muted-foreground">
                     {property.address?.full && (
-                      <div className="flex items-center gap-1">
-                        <Map className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-2">
+                        <Map className="h-4 w-4" />
                         <span className="truncate">{property.address.full}</span>
                       </div>
                     )}
                     
-                    <div className="flex items-center gap-1">
-                      <BedDouble className="h-3.5 w-3.5" />
+                    <div className="flex items-center gap-2">
+                      <BedDouble className="h-4 w-4" />
                       <span>
                         {property.status && `Status: ${property.status}`}
                       </span>
