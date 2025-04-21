@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+
+import React, { useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Info, Settings, Check, Loader2 } from "lucide-react";
+import { Info, Settings, Check, Loader2, RefreshCcw } from "lucide-react";
 import { guestyService } from "@/services/guesty/guesty.service";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
 import GuestyPropertyList from "./integrations/guesty/GuestyPropertyList";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 type ConnectionStatus = 'idle' | 'success' | 'error';
 
@@ -13,6 +16,22 @@ const IntegrationSettings = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
   const [showPropertyList, setShowPropertyList] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Query latest sync status
+  const { data: latestSync, refetch: refetchSync } = useQuery({
+    queryKey: ['sync-logs'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('sync_logs')
+        .select('*')
+        .eq('service', 'guesty')
+        .order('start_time', { ascending: false })
+        .limit(1)
+        .single();
+      return data;
+    }
+  });
 
   const testGuestyConnection = async () => {
     setIsTestingConnection(true);
@@ -34,6 +53,22 @@ const IntegrationSettings = () => {
       setIsTestingConnection(false);
     }
   };
+
+  const handleSync = useCallback(async () => {
+    setIsSyncing(true);
+    try {
+      const result = await guestyService.syncListings();
+      await refetchSync();
+      toast.success('Listings sync completed', {
+        description: `Created: ${result.listingsCount} listings`
+      });
+    } catch (error) {
+      console.error('Error syncing listings:', error);
+      toast.error('Failed to sync listings');
+    } finally {
+      setIsSyncing(false);
+    }
+  }, [refetchSync]);
 
   return (
     <div className="space-y-6">
@@ -63,7 +98,14 @@ const IntegrationSettings = () => {
           <Separator />
 
           <div className="space-y-4">
-            <h3 className="text-lg font-medium">Guesty Integration</h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium">Guesty Integration</h3>
+              {latestSync && (
+                <div className="text-sm text-muted-foreground">
+                  Last sync: {new Date(latestSync.end_time).toLocaleString()}
+                </div>
+              )}
+            </div>
             
             <div className="flex justify-between items-center space-x-4 rounded-lg border p-4">
               <div>
@@ -72,27 +114,56 @@ const IntegrationSettings = () => {
                   Test your connection to the Guesty API
                 </p>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={testGuestyConnection} 
-                disabled={isTestingConnection}
-                className="shrink-0"
-              >
-                {isTestingConnection ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Testing...
-                  </>
-                ) : connectionStatus === 'success' ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2 text-green-500" />
-                    Connected
-                  </>
-                ) : (
-                  'Test Connection'
-                )}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={testGuestyConnection} 
+                  disabled={isTestingConnection}
+                  className="shrink-0"
+                >
+                  {isTestingConnection ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Testing...
+                    </>
+                  ) : connectionStatus === 'success' ? (
+                    <>
+                      <Check className="h-4 w-4 mr-2 text-green-500" />
+                      Connected
+                    </>
+                  ) : (
+                    'Test Connection'
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleSync}
+                  disabled={isSyncing || connectionStatus !== 'success'}
+                  className="shrink-0"
+                >
+                  <RefreshCcw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+                  {isSyncing ? 'Syncing...' : 'Sync Now'}
+                </Button>
+              </div>
             </div>
+
+            {latestSync && (
+              <div className="grid grid-cols-3 gap-4 mt-4">
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Created</div>
+                  <div className="text-2xl font-semibold">{latestSync.listings_created}</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Updated</div>
+                  <div className="text-2xl font-semibold">{latestSync.listings_updated}</div>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <div className="text-sm text-muted-foreground">Deleted</div>
+                  <div className="text-2xl font-semibold">{latestSync.listings_deleted}</div>
+                </div>
+              </div>
+            )}
             
             {connectionStatus === 'success' && (
               <Button 

@@ -423,11 +423,14 @@ export type Database = {
         Row: {
           address: Json | null
           created_at: string | null
+          first_synced_at: string | null
           id: string
+          is_deleted: boolean | null
           last_synced: string | null
           property_type: string | null
           raw_data: Json | null
           status: string | null
+          sync_status: string | null
           thumbnail_url: string | null
           title: string
           updated_at: string | null
@@ -435,11 +438,14 @@ export type Database = {
         Insert: {
           address?: Json | null
           created_at?: string | null
+          first_synced_at?: string | null
           id: string
+          is_deleted?: boolean | null
           last_synced?: string | null
           property_type?: string | null
           raw_data?: Json | null
           status?: string | null
+          sync_status?: string | null
           thumbnail_url?: string | null
           title: string
           updated_at?: string | null
@@ -447,11 +453,14 @@ export type Database = {
         Update: {
           address?: Json | null
           created_at?: string | null
+          first_synced_at?: string | null
           id?: string
+          is_deleted?: boolean | null
           last_synced?: string | null
           property_type?: string | null
           raw_data?: Json | null
           status?: string | null
+          sync_status?: string | null
           thumbnail_url?: string | null
           title?: string
           updated_at?: string | null
@@ -984,6 +993,54 @@ export type Database = {
           recipients?: string[] | null
           status?: string | null
           type?: string
+        }
+        Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          bookings_created: number | null
+          bookings_deleted: number | null
+          bookings_updated: number | null
+          created_at: string | null
+          end_time: string | null
+          error_message: string | null
+          id: string
+          listings_created: number | null
+          listings_deleted: number | null
+          listings_updated: number | null
+          service: string
+          start_time: string | null
+          status: string | null
+        }
+        Insert: {
+          bookings_created?: number | null
+          bookings_deleted?: number | null
+          bookings_updated?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          error_message?: string | null
+          id?: string
+          listings_created?: number | null
+          listings_deleted?: number | null
+          listings_updated?: number | null
+          service: string
+          start_time?: string | null
+          status?: string | null
+        }
+        Update: {
+          bookings_created?: number | null
+          bookings_deleted?: number | null
+          bookings_updated?: number | null
+          created_at?: string | null
+          end_time?: string | null
+          error_message?: string | null
+          id?: string
+          listings_created?: number | null
+          listings_deleted?: number | null
+          listings_updated?: number | null
+          service?: string
+          start_time?: string | null
+          status?: string | null
         }
         Relationships: []
       }
