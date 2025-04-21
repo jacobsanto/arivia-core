@@ -71,7 +71,7 @@ const HousekeepingFilters: React.FC<HousekeepingFiltersProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Staff</SelectItem>
-              <SelectItem value="">Unassigned</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
               {staffOptions.map(staff => (
                 <SelectItem key={staff} value={staff}>{staff}</SelectItem>
               ))}

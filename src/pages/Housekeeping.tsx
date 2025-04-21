@@ -27,14 +27,10 @@ const HousekeepingDashboard = () => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
-  // Fetch cleaning definitions from database using a raw query
   const fetchCleaningDefinitions = async () => {
     try {
-      // Use .rpc() method with explicit type casting
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions', {}, { 
-          count: null 
-        });
+        .rpc('get_cleaning_definitions', {});
         
       if (error) throw error;
       
@@ -49,7 +45,6 @@ const HousekeepingDashboard = () => {
     }
   };
 
-  // Fetch tasks from Supabase
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -76,7 +71,6 @@ const HousekeepingDashboard = () => {
         setTasks(formattedTasks);
         setFilteredTasks(formattedTasks);
         
-        // Extract unique task types and staff members for filters
         const uniqueTaskTypes = [...new Set(formattedTasks.map(task => task.task_type))];
         setTaskTypeOptions(uniqueTaskTypes);
         
@@ -97,10 +91,8 @@ const HousekeepingDashboard = () => {
     fetchTasks();
     fetchCleaningDefinitions();
     
-    // Check for overdue tasks and notify
     checkOverdueTasks();
     
-    // Set up real-time subscription for task updates
     const tasksSubscription = supabase
       .channel('housekeeping_tasks_changes')
       .on('postgres_changes', {
@@ -115,21 +107,21 @@ const HousekeepingDashboard = () => {
     };
   }, [toast]);
   
-  // Apply filters whenever filter state changes
   useEffect(() => {
     let filtered = [...tasks];
     
-    // Apply task type filter
     if (taskTypeFilter !== 'all') {
       filtered = filtered.filter(task => task.task_type === taskTypeFilter);
     }
     
-    // Apply assigned to filter
     if (assignedToFilter !== 'all') {
-      filtered = filtered.filter(task => task.assigned_to === assignedToFilter);
+      if (assignedToFilter === 'unassigned') {
+        filtered = filtered.filter(task => !task.assigned_to);
+      } else {
+        filtered = filtered.filter(task => task.assigned_to === assignedToFilter);
+      }
     }
     
-    // Apply date range filter
     if (dateRange && dateRange.from) {
       const startDate = new Date(dateRange.from);
       startDate.setHours(0, 0, 0, 0);
@@ -148,7 +140,6 @@ const HousekeepingDashboard = () => {
     setFilteredTasks(filtered);
   }, [tasks, taskTypeFilter, assignedToFilter, dateRange]);
   
-  // Check for overdue tasks
   const checkOverdueTasks = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -181,7 +172,6 @@ const HousekeepingDashboard = () => {
     }
   };
   
-  // Handle task status update
   const handleTaskStatusUpdate = async (taskId: string, newStatus: string) => {
     try {
       const { error } = await supabase
@@ -191,7 +181,6 @@ const HousekeepingDashboard = () => {
         
       if (error) throw error;
       
-      // Update local state
       setTasks(prevTasks => 
         prevTasks.map(task => 
           task.id === taskId 
@@ -214,7 +203,6 @@ const HousekeepingDashboard = () => {
     }
   };
   
-  // Handle task assignment
   const handleAssignTask = async (taskId: string, staffMember: string) => {
     try {
       const { error } = await supabase
@@ -224,7 +212,6 @@ const HousekeepingDashboard = () => {
         
       if (error) throw error;
       
-      // Update local state
       setTasks(prevTasks => 
         prevTasks.map(task => 
           task.id === taskId 
