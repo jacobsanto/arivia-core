@@ -1,9 +1,26 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyAuthResponse {
   access_token: string;
   expires_in: number;
+}
+
+interface GuestyListing {
+  _id: string;
+  title: string;
+  address?: {
+    full?: string;
+    city?: string;
+    country?: string;
+  };
+  status?: string;
+  cleaningStatus?: {
+    value: string;
+  };
+}
+
+interface GuestyListingsResponse {
+  results: GuestyListing[];
 }
 
 export class GuestyService {
@@ -13,7 +30,6 @@ export class GuestyService {
   async ensureValidToken(): Promise<string> {
     const now = Date.now();
     
-    // If we have a valid token that hasn't expired, return it
     if (this.accessToken && this.tokenExpiry && now < this.tokenExpiry) {
       return this.accessToken;
     }
@@ -30,8 +46,7 @@ export class GuestyService {
       if (!data) throw new Error('No data received from auth function');
 
       this.accessToken = data.access_token;
-      // Set expiry time slightly before actual expiry to ensure token validity
-      this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Subtract 1 minute for safety
+      this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
 
       return this.accessToken;
     } catch (error) {
@@ -40,7 +55,7 @@ export class GuestyService {
     }
   }
 
-  async fetchListings() {
+  async getGuestyListings(): Promise<GuestyListingsResponse> {
     try {
       const token = await this.ensureValidToken();
 
@@ -62,9 +77,6 @@ export class GuestyService {
       throw error;
     }
   }
-
-  // Add more Guesty API methods as needed...
 }
 
-// Export a singleton instance
 export const guestyService = new GuestyService();

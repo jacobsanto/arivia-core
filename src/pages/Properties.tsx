@@ -7,6 +7,8 @@ import PropertyDetailsView from "@/components/properties/views/PropertyDetailsVi
 import PropertyBookingsView from "@/components/properties/views/PropertyBookingsView";
 import PropertyPricingView from "@/components/properties/views/PropertyPricingView";
 import PropertyGuestsView from "@/components/properties/views/PropertyGuestsView";
+import { GuestyListings } from "@/components/properties/GuestyListings";
+import { Separator } from "@/components/ui/separator";
 
 const Properties = () => {
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -55,12 +57,18 @@ const Properties = () => {
   }
 
   return (
-    <PropertiesListView 
-      onViewDetails={handleViewDetails}
-      onBookingManagement={handleBookingManagement}
-      onPricingConfig={handlePricingConfig}
-      onGuestManagement={handleGuestManagement}
-    />
+    <div className="space-y-8">
+      <PropertiesListView 
+        onViewDetails={handleViewDetails}
+        onBookingManagement={handleBookingManagement}
+        onPricingConfig={handlePricingConfig}
+        onGuestManagement={handleGuestManagement}
+      />
+      
+      <Separator />
+      
+      <GuestyListings />
+    </div>
   );
 };
 
