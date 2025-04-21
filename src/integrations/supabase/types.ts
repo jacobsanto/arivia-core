@@ -518,6 +518,30 @@ export type Database = {
           },
         ]
       }
+      integration_health: {
+        Row: {
+          last_error: string | null
+          last_synced: string | null
+          provider: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          last_error?: string | null
+          last_synced?: string | null
+          provider: string
+          status: string
+          updated_at?: string | null
+        }
+        Update: {
+          last_error?: string | null
+          last_synced?: string | null
+          provider?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       integration_tokens: {
         Row: {
           access_token: string

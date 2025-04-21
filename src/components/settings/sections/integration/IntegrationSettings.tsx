@@ -9,12 +9,10 @@ import { Separator } from "@/components/ui/separator";
 import GuestyPropertyList from "./integrations/guesty/GuestyPropertyList";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-type ConnectionStatus = 'idle' | 'success' | 'error';
+import { Badge } from "@/components/ui/badge";
 
 const IntegrationSettings = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('idle');
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -33,19 +31,67 @@ const IntegrationSettings = () => {
     }
   });
 
+  // Query integration health status
+  const { data: integrationHealth, refetch: refetchHealth } = useQuery({
+    queryKey: ['integration-health'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('integration_health')
+        .select('*')
+        .eq('provider', 'guesty')
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching integration health:', error);
+        return null;
+      }
+      return data;
+    }
+  });
+
   const testGuestyConnection = async () => {
     setIsTestingConnection(true);
-    setConnectionStatus('idle');
     
     try {
       await guestyService.ensureValidToken();
-      setConnectionStatus('success');
+      
+      // Update integration health
+      const { error } = await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'connected',
+          last_synced: new Date().toISOString(),
+          last_error: null
+        }, { onConflict: 'provider' });
+
+      if (error) {
+        console.error('Error updating integration health:', error);
+      }
+
+      await refetchHealth();
+      
       toast.success("Guesty connection successful", {
         description: "Successfully authenticated with Guesty API"
       });
     } catch (error) {
       console.error("Guesty connection test failed:", error);
-      setConnectionStatus('error');
+      
+      // Update integration health with error
+      const { error: updateError } = await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'error',
+          last_error: error instanceof Error ? error.message : 'Unknown error'
+        }, { onConflict: 'provider' });
+
+      if (updateError) {
+        console.error('Error updating integration health:', updateError);
+      }
+
+      await refetchHealth();
+      
       toast.error("Guesty connection failed", {
         description: error instanceof Error ? error.message : "Could not connect to Guesty API"
       });
@@ -59,6 +105,7 @@ const IntegrationSettings = () => {
     try {
       const result = await guestyService.syncListings();
       await refetchSync();
+      
       toast.success('Listings sync completed', {
         description: `Created: ${result.listingsCount} listings`
       });
@@ -69,6 +116,15 @@ const IntegrationSettings = () => {
       setIsSyncing(false);
     }
   }, [refetchSync]);
+
+  const getStatusBadgeVariant = (status?: string) => {
+    switch (status) {
+      case 'connected': return 'success';
+      case 'error': return 'destructive';
+      case 'expired': return 'warning';
+      default: return 'secondary';
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -114,7 +170,14 @@ const IntegrationSettings = () => {
                   Test your connection to the Guesty API
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <Badge 
+                  variant={getStatusBadgeVariant(integrationHealth?.status)} 
+                  className="mr-2"
+                >
+                  {integrationHealth?.status || 'Unknown'}
+                </Badge>
+                
                 <Button 
                   variant="outline" 
                   onClick={testGuestyConnection} 
@@ -126,11 +189,6 @@ const IntegrationSettings = () => {
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Testing...
                     </>
-                  ) : connectionStatus === 'success' ? (
-                    <>
-                      <Check className="h-4 w-4 mr-2 text-green-500" />
-                      Connected
-                    </>
                   ) : (
                     'Test Connection'
                   )}
@@ -139,7 +197,7 @@ const IntegrationSettings = () => {
                 <Button
                   variant="outline"
                   onClick={handleSync}
-                  disabled={isSyncing || connectionStatus !== 'success'}
+                  disabled={isSyncing || integrationHealth?.status !== 'connected'}
                   className="shrink-0"
                 >
                   <RefreshCcw className={`h-4 w-4 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
@@ -165,7 +223,7 @@ const IntegrationSettings = () => {
               </div>
             )}
             
-            {connectionStatus === 'success' && (
+            {integrationHealth?.status === 'connected' && (
               <Button 
                 variant="secondary" 
                 onClick={() => setShowPropertyList(!showPropertyList)}
@@ -175,7 +233,7 @@ const IntegrationSettings = () => {
               </Button>
             )}
             
-            {showPropertyList && connectionStatus === 'success' && (
+            {showPropertyList && integrationHealth?.status === 'connected' && (
               <GuestyPropertyList />
             )}
           </div>
@@ -186,3 +244,4 @@ const IntegrationSettings = () => {
 };
 
 export default IntegrationSettings;
+
