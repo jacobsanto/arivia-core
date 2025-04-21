@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ const GuestyPropertyMapping = () => {
   const [mappings, setMappings] = useState<GuestyPropertyMappingType[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<string | undefined>();
   const [selectedListing, setSelectedListing] = useState<string | undefined>();
-  
+
   const { properties } = useProperties();
   const { toast } = useToast();
 
@@ -29,10 +30,11 @@ const GuestyPropertyMapping = () => {
     const loadData = async () => {
       try {
         setIsLoading(true);
-        
-        const listings = await guestyService.fetchListings(100, 0);
+
+        // Fix: always pass string for cursor param
+        const listings = await guestyService.fetchListings(100, "0");
         setGuestyListings(listings);
-        
+
         const existingMappings = await guestyService.getMappings();
         setMappings(existingMappings);
       } catch (error) {
@@ -59,12 +61,12 @@ const GuestyPropertyMapping = () => {
       });
       return;
     }
-    
+
     try {
       setIsSyncing(true);
-      
+
       const result = await guestyService.syncProperty(selectedProperty, selectedListing);
-      
+
       setMappings(prev => {
         const existingIndex = prev.findIndex(m => m.property_id === selectedProperty);
         if (existingIndex >= 0) {
@@ -76,10 +78,10 @@ const GuestyPropertyMapping = () => {
         }
         return [...prev, result];
       });
-      
+
       setSelectedProperty(undefined);
       setSelectedListing(undefined);
-      
+
       toast({
         title: "Success",
         description: "Property successfully mapped to Guesty listing",
@@ -99,10 +101,10 @@ const GuestyPropertyMapping = () => {
   const handleDeleteMapping = async (propertyId: string) => {
     try {
       const success = await guestyService.deleteMapping(propertyId);
-      
+
       if (success) {
         setMappings(prev => prev.filter(m => m.property_id !== propertyId));
-        
+
         toast({
           title: "Success",
           description: "Mapping successfully removed",
@@ -123,7 +125,7 @@ const GuestyPropertyMapping = () => {
   const getPropertyDetails = (propertyId: string): Property | undefined => {
     return properties.find(p => p.id === propertyId);
   };
-  
+
   const getListingDetails = (listingId: string): GuestyListingItem | undefined => {
     return guestyListings.find(l => l.id === listingId);
   };
@@ -142,11 +144,12 @@ const GuestyPropertyMapping = () => {
         <CardHeader>
           <CardTitle>Map Properties to Guesty</CardTitle>
           <CardDescription>
-            Connect your properties to Guesty listings for synchronization
+            Connect your internal properties to Guesty listings for synchronization. Please select one internal property and the Guesty listing to link it with.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Property Dropdown */}
             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Property" />
@@ -156,12 +159,18 @@ const GuestyPropertyMapping = () => {
                   .filter(p => !mappings.some(m => m.property_id === p.id))
                   .map(property => (
                     <SelectItem key={property.id} value={property.id}>
-                      {property.name}
+                      <span className="flex flex-col text-left">
+                        <span className="font-medium">{property.name}</span>
+                        {property.address && (
+                          <span className="text-xs text-muted-foreground">{property.address.full}</span>
+                        )}
+                      </span>
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
-            
+
+            {/* Guesty Listing Dropdown */}
             <Select value={selectedListing} onValueChange={setSelectedListing}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Guesty Listing" />
@@ -169,15 +178,24 @@ const GuestyPropertyMapping = () => {
               <SelectContent>
                 {guestyListings.map(listing => (
                   <SelectItem key={listing.id} value={listing.id}>
-                    {listing.title || listing.nickname}
+                    <span className="flex flex-col text-left">
+                      <span className="font-medium">
+                        {listing.title || listing.nickname || "Untitled"}
+                      </span>
+                      {listing.address?.full && (
+                        <span className="text-xs text-muted-foreground">{listing.address.full}</span>
+                      )}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            
-            <Button 
-              onClick={handleSyncProperty} 
+
+            {/* Map Button */}
+            <Button
+              onClick={handleSyncProperty}
               disabled={!selectedProperty || !selectedListing || isSyncing}
+              className="w-full md:w-auto"
             >
               {isSyncing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Map Property
@@ -185,13 +203,13 @@ const GuestyPropertyMapping = () => {
           </div>
         </CardContent>
       </Card>
-      
+
       {mappings.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Current Property Mappings</CardTitle>
             <CardDescription>
-              Properties currently linked to Guesty listings
+              Properties currently linked to Guesty listings below. You can remove or update these mappings at any time.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -201,6 +219,7 @@ const GuestyPropertyMapping = () => {
                   <tr className="border-b">
                     <th className="px-4 py-2 text-left">Property</th>
                     <th className="px-4 py-2 text-left">Guesty Listing</th>
+                    <th className="px-4 py-2 text-left">Guesty Address</th>
                     <th className="px-4 py-2 text-left">Last Updated</th>
                     <th className="px-4 py-2 text-right">Actions</th>
                   </tr>
@@ -209,20 +228,36 @@ const GuestyPropertyMapping = () => {
                   {mappings.map(mapping => {
                     const property = getPropertyDetails(mapping.property_id);
                     const listing = getListingDetails(mapping.guesty_listing_id);
-                    
+
                     return (
                       <tr key={mapping.property_id} className="border-b">
                         <td className="px-4 py-2">
-                          {property?.name || mapping.property_id}
+                          <span className="font-medium">{property?.name || mapping.property_id}</span>
+                          {property?.address?.full && (
+                            <div className="text-xs text-muted-foreground">{property.address.full}</div>
+                          )}
                         </td>
                         <td className="px-4 py-2">
                           {listing ? (
-                            <div className="flex items-center">
-                              {listing.title || listing.nickname}
-                              <Link className="ml-2 h-4 w-4 text-muted-foreground" />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{listing.title || listing.nickname}</span>
+                              {listing.picture?.thumbnail && (
+                                <img
+                                  src={listing.picture.thumbnail}
+                                  alt={listing.title}
+                                  className="w-8 h-8 object-cover mt-1 rounded"
+                                />
+                              )}
                             </div>
                           ) : (
-                            mapping.guesty_listing_id
+                            <span>{mapping.guesty_listing_id}</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-2">
+                          {listing?.address?.full ? (
+                            <span>{listing.address.full}</span>
+                          ) : (
+                            <span className="text-muted-foreground">No address</span>
                           )}
                         </td>
                         <td className="px-4 py-2 text-muted-foreground">

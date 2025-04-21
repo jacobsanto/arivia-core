@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +43,6 @@ const GuestyIntegration = () => {
     },
   });
 
-  // Load existing settings
   useEffect(() => {
     const loadSettings = async () => {
       try {
@@ -96,10 +94,8 @@ const GuestyIntegration = () => {
   const testConnection = async () => {
     setIsTesting(true);
     setConnectionStatus('untested');
-    
     try {
-      // Use the fetch listings endpoint as a way to test connection
-      await guestyService.fetchListings(1, 0);
+      await guestyService.fetchListings(1, "0");
       setConnectionStatus('success');
       toast({
         title: "Connection successful",
@@ -265,7 +261,12 @@ const GuestyIntegration = () => {
         </TabsContent>
         
         <TabsContent value="properties">
-          <GuestyPropertyMapping />
+          {!isConfigured && (
+            <div className="p-4 bg-yellow-50 border border-yellow-300 text-yellow-800 rounded mb-4">
+              <span>Please enter valid Guesty API credentials and save before mapping properties.</span>
+            </div>
+          )}
+          {isConfigured && <GuestyPropertyMapping />}
         </TabsContent>
       </Tabs>
     </div>
