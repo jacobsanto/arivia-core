@@ -1,4 +1,3 @@
-
 import { GuestyPaginatedResponse, GuestyProperty, GuestyReservation, GuestyTask } from "./types";
 
 // Base URL for Guesty API
@@ -36,13 +35,28 @@ export class GuestyApiService {
         },
         body: body ? JSON.stringify(body) : undefined
       });
-      
+
+      // Ensure response is ok and content-type is application/json before parsing
+      const contentType = response.headers.get('content-type');
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Guesty API error: ${errorData.message || response.statusText}`);
+        // Try to parse JSON error, else get text
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          throw new Error(`Guesty API error: ${errorData.message || JSON.stringify(errorData) || response.statusText}`);
+        } else {
+          // Probably an HTML error page (Netlify 404, etc)
+          const errorText = await response.text();
+          throw new Error(`Guesty API error (non-JSON): ${errorText || response.statusText}`);
+        }
       }
-      
-      return await response.json() as T;
+
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json() as T;
+      } else {
+        // Not a JSON response, probably a server error
+        const text = await response.text();
+        throw new Error(`Guesty API returned non-JSON: ${text}`);
+      }
     } catch (error) {
       console.error('Error calling Guesty API:', error);
       throw error;
