@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyAuthResponse {
@@ -15,7 +14,7 @@ export interface GuestyListing {
     country?: string;
   };
   status?: string;
-  propertyType?: string;  // Added this line
+  propertyType?: string;
   cleaningStatus?: {
     value: string;
   };
@@ -85,21 +84,14 @@ export class GuestyService {
 
   async getGuestyListing(listingId: string): Promise<GuestyListing | null> {
     try {
-      const token = await this.ensureValidToken();
-
-      const response = await fetch(`https://open-api.guesty.com/v1/listings/${listingId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+      const { data, error } = await supabase.functions.invoke('guesty-listing', {
+        body: { listingId }
       });
 
-      if (!response.ok) {
-        throw new Error(`Guesty API error: ${response.statusText}`);
-      }
+      if (error) throw error;
+      if (!data) throw new Error('No data received from listing function');
 
-      return await response.json();
+      return data;
     } catch (error) {
       console.error('Error fetching Guesty listing:', error);
       throw error;
