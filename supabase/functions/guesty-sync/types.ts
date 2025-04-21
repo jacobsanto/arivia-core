@@ -1,63 +1,44 @@
+
+// Guesty Listing Type
 export interface GuestyListing {
   _id: string;
   title: string;
   address?: {
     full?: string;
+    city?: string;
+    country?: string;
   };
   status?: string;
   propertyType?: string;
+  cleaningStatus?: {
+    value: string;
+  };
   picture?: {
     thumbnail?: string;
   };
 }
 
+// Guesty Booking Type
 export interface GuestyBooking {
   _id: string;
-  guest: {
-    fullName: string;
-  };
   checkIn: string;
   checkOut: string;
   status: string;
   listing: {
     _id: string;
   };
+  guest: {
+    fullName: string;
+    phone?: string;
+    email?: string;
+  };
 }
 
-export interface BookingObject {
-  id: string;
-  property_id: string;
-  listing_id?: string;
-  check_in_date: string | Date;
-  check_out_date: string | Date;
-  guest_name: string;
-  [key: string]: any;
+// Guesty API Response Types
+export interface GuestyListingsResponse {
+  results: GuestyListing[];
 }
 
-export interface TaskGenerationResult {
-  tasksCreated: {
-    id: string;
-    task_type: string;
-    due_date: string;
-  }[];
-  tasksSkipped: {
-    task_type: string;
-    due_date: string;
-    reason: string;
-  }[];
-  manual_schedule_required: boolean;
-}
-
-export interface GuestyAuthResponse {
-  access_token: string;
-  expires_in: number;
-}
-
-export interface SyncResult {
-  listingsCreated: number;
-  listingsUpdated: number;
-  listingsArchived: number;
-  bookingsCreated: number;
-  bookingsUpdated: number;
-  bookingsCancelled: number;
+export interface GuestyBookingsResponse {
+  results: GuestyBooking[];
 }

@@ -5,6 +5,10 @@ export interface IntegrationHealthData {
   last_error?: string;
   provider: string;
   updated_at?: string;
+  remaining_requests?: number;
+  rate_limit_reset?: string;
+  request_count?: number;
+  is_rate_limited?: boolean;
 }
 
 export interface GuestyStatusBadgeProps {

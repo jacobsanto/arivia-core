@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -8,6 +9,7 @@ import { guestyService } from "@/services/guesty/guesty.service";
 import GuestyStatusBadge from "./GuestyStatusBadge";
 import GuestySyncControls from "./GuestySyncControls";
 import GuestyPropertyList from "./GuestyPropertyList";
+import GuestyApiMonitor from "./GuestyApiMonitor";
 import { IntegrationHealthData } from "./types";
 
 const GuestyIntegration = () => {
@@ -54,16 +56,26 @@ const GuestyIntegration = () => {
     setIsSyncing(true);
     try {
       const result = await guestyService.syncListings();
-      toast.success('Listings sync completed', {
-        description: `Created: ${result.listingsCount} listings`
-      });
+      if (result.success) {
+        toast.success('Listings sync completed', {
+          description: `Synced: ${result.listingsCount} listings`
+        });
+      } else {
+        // Display the specific error message from the API
+        toast.error('Sync operation failed', {
+          description: result.message || 'Failed to sync with Guesty API'
+        });
+      }
     } catch (error) {
       console.error('Error syncing listings:', error);
-      toast.error('Failed to sync listings');
+      toast.error('Failed to sync listings', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      });
     } finally {
       setIsSyncing(false);
+      refetchHealth();
     }
-  }, []);
+  }, [refetchHealth]);
 
   return (
     <div className="space-y-4">
@@ -96,6 +108,8 @@ const GuestyIntegration = () => {
           isConnected={integrationHealth?.status === 'connected'}
         />
       </div>
+      
+      <GuestyApiMonitor />
 
       {integrationHealth?.status === 'connected' && (
         <Button 

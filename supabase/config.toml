@@ -10,3 +10,5 @@ verify_jwt = false
 [functions.guesty-sync]
 verify_jwt = false
 
+[functions.guesty-health-check]
+verify_jwt = false

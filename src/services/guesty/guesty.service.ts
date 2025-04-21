@@ -28,6 +28,14 @@ export interface GuestyListingsResponse {
   results: GuestyListing[];
 }
 
+export interface GuestySyncResponse {
+  success: boolean;
+  message: string;
+  listingsCount?: number;
+  bookingsSynced?: number;
+  nextRetryTime?: string;
+}
+
 export class GuestyService {
   private accessToken: string | null = null;
   private tokenExpiry: number | null = null;
@@ -99,17 +107,63 @@ export class GuestyService {
     }
   }
 
-  async syncListings(): Promise<{ listingsCount: number }> {
+  async checkApiHealth(): Promise<any> {
     try {
-      const { data, error } = await supabase.functions.invoke('guesty-sync');
+      const { data, error } = await supabase.functions.invoke('guesty-health-check');
       
       if (error) throw error;
-      if (!data) throw new Error('No data received from sync function');
-
+      if (!data) throw new Error('No data received from health check function');
+      
       return data;
     } catch (error) {
-      console.error('Error syncing Guesty listings:', error);
+      console.error('Error checking API health:', error);
       throw error;
+    }
+  }
+
+  async syncListings(): Promise<GuestySyncResponse> {
+    try {
+      const { data, error } = await supabase.functions.invoke<GuestySyncResponse>('guesty-sync');
+      
+      if (error) {
+        // Format error response
+        if (error.message.includes('429')) {
+          // Extract retry time from message if available
+          const matches = error.message.match(/wait approximately (\d+) minutes/);
+          const waitTime = matches ? matches[1] : '15';
+          
+          return {
+            success: false,
+            message: `Rate limit reached. Please wait approximately ${waitTime} minutes before retrying.`,
+            nextRetryTime: new Date(Date.now() + parseInt(waitTime) * 60 * 1000).toISOString()
+          };
+        }
+        
+        return { 
+          success: false, 
+          message: error.message || 'Sync operation failed' 
+        };
+      }
+      
+      if (!data) {
+        return { 
+          success: false, 
+          message: 'No response from sync function' 
+        };
+      }
+      
+      return {
+        success: data.success,
+        message: data.message,
+        listingsCount: data.listingsCount,
+        bookingsSynced: data.bookingsSynced
+      };
+    } catch (error) {
+      console.error('Error syncing Guesty listings:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error during sync operation'
+      };
     }
   }
 }

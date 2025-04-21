@@ -1,10 +1,14 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { GuestyListing } from './types.ts';
+import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export async function syncGuestyListings(supabase: any, token: string): Promise<GuestyListing[]> {
+export async function syncGuestyListings(supabase: any, token: string): Promise<{
+  listings: GuestyListing[];
+  rateLimitInfo: RateLimitInfo | null;
+}> {
   try {
     console.log('Starting Guesty listings sync...');
     
@@ -24,6 +28,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     let created = 0;
     let updated = 0;
     let archived = 0;
+    let rateLimitInfo: RateLimitInfo | null = null;
 
     // Get all active listings from Guesty
     while (hasMore) {
@@ -35,6 +40,9 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
           },
         });
 
+        // Extract rate limit info from headers
+        rateLimitInfo = extractRateLimitInfo(response.headers);
+        
         if (!response.ok) {
           if (response.status === 429) {
             console.log('Rate limited, waiting before retry...');
@@ -93,6 +101,11 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         }
 
         page++;
+        
+        // Add a small delay between pages to reduce risk of rate limiting
+        if (rateLimitInfo && rateLimitInfo.remaining < 10) {
+          await delay(1000);
+        }
 
       } catch (error) {
         console.error(`Error processing page ${page}:`, error);
@@ -116,7 +129,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
       .eq('id', syncLog.id);
 
     console.log(`Sync completed: ${created} created, ${updated} updated, ${archived} archived`);
-    return totalListings;
+    return { listings: totalListings, rateLimitInfo };
 
   } catch (error) {
     console.error('Error in syncGuestyListings:', error);

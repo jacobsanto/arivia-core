@@ -1,4 +1,6 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { extractRateLimitInfo } from './utils.ts';
 
 export async function getGuestyToken(): Promise<string> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -45,6 +47,24 @@ export async function getGuestyToken(): Promise<string> {
 
   const data = await response.json();
   const expiresAt = new Date(Date.now() + data.expires_in * 1000);
+
+  // Extract and store rate limit information
+  const rateLimitInfo = extractRateLimitInfo(response.headers);
+  if (rateLimitInfo) {
+    try {
+      await supabase
+        .from('guesty_api_usage')
+        .insert({
+          endpoint: 'auth',
+          limit: rateLimitInfo.limit,
+          remaining: rateLimitInfo.remaining,
+          reset: rateLimitInfo.reset,
+          timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+      console.error('Error storing rate limit info:', error);
+    }
+  }
 
   // Upsert the new token
   const { error: upsertError } = await supabase

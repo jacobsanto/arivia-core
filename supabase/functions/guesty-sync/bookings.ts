@@ -1,7 +1,6 @@
 
+import { extractRateLimitInfo, delay } from './utils.ts';
 import { GuestyBooking } from './types.ts';
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function syncGuestyBookingsForListing(supabase: any, token: string, listingId: string): Promise<number> {
   try {
@@ -20,6 +19,24 @@ export async function syncGuestyBookingsForListing(supabase: any, token: string,
         },
       }
     );
+
+    // Extract and store rate limit information
+    const rateLimitInfo = extractRateLimitInfo(response.headers);
+    if (rateLimitInfo) {
+      try {
+        await supabase
+          .from('guesty_api_usage')
+          .insert({
+            endpoint: 'bookings',
+            limit: rateLimitInfo.limit,
+            remaining: rateLimitInfo.remaining,
+            reset: rateLimitInfo.reset,
+            timestamp: new Date().toISOString()
+          });
+      } catch (error) {
+        console.error('Error storing rate limit info:', error);
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
