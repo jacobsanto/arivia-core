@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { GuestyListing } from './types.ts';
 
@@ -100,32 +99,8 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
       }
     }
 
-    // Get IDs of all listings fetched from Guesty
-    const activeListingIds = new Set(totalListings.map(l => l._id));
-
-    // Find listings in Supabase that are not in the active set
-    const { data: localListings } = await supabase
-      .from('guesty_listings')
-      .select('id')
-      .eq('sync_status', 'active')
-      .eq('is_deleted', false);
-
-    if (localListings) {
-      // Mark listings as archived if they're not in the active set
-      const listingsToArchive = localListings.filter(l => !activeListingIds.has(l.id));
-      
-      if (listingsToArchive.length > 0) {
-        await supabase
-          .from('guesty_listings')
-          .update({
-            sync_status: 'archived',
-            is_deleted: true,
-            last_synced: new Date().toISOString()
-          })
-          .in('id', listingsToArchive.map(l => l.id));
-        archived = listingsToArchive.length;
-      }
-    }
+    // Clean up obsolete listings
+    await cleanObsoleteListings(supabase, totalListings);
 
     // Update sync log with final counts
     await supabase
@@ -157,6 +132,40 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         .eq('id', syncLog.id);
     }
     
+    throw error;
+  }
+}
+
+async function cleanObsoleteListings(supabase: any, activeFetchedListings: GuestyListing[]) {
+  try {
+    // Get IDs of all listings fetched from Guesty
+    const activeListingIds = new Set(activeFetchedListings.map(l => l._id));
+
+    // Find listings in Supabase that are not in the active set
+    const { data: localListings } = await supabase
+      .from('guesty_listings')
+      .select('id')
+      .eq('sync_status', 'active')
+      .eq('is_deleted', false);
+
+    if (localListings) {
+      // Mark listings as archived if they're not in the active set
+      const listingsToArchive = localListings.filter(l => !activeListingIds.has(l.id));
+      
+      if (listingsToArchive.length > 0) {
+        console.log(`Marking ${listingsToArchive.length} listings as archived...`);
+        await supabase
+          .from('guesty_listings')
+          .update({
+            sync_status: 'archived',
+            is_deleted: true,
+            last_synced: new Date().toISOString()
+          })
+          .in('id', listingsToArchive.map(l => l.id));
+      }
+    }
+  } catch (error) {
+    console.error('Error cleaning obsolete listings:', error);
     throw error;
   }
 }

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
@@ -69,7 +68,7 @@ serve(async (req) => {
 
     console.log('Starting Guesty sync process...');
 
-    // Get token using the new caching logic
+    // Get token using the caching logic
     const token = await getGuestyToken();
     
     // Sync listings
@@ -168,4 +167,3 @@ serve(async (req) => {
     });
   }
 });
-

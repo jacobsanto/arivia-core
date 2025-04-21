@@ -1,4 +1,3 @@
-
 import { GuestyBooking } from './types.ts';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -29,6 +28,9 @@ export async function syncGuestyBookingsForListing(supabase: any, token: string,
     const bookings = data.results as GuestyBooking[];
 
     console.log(`Found ${bookings.length} bookings for listing ${listingId}`);
+
+    // Clean up obsolete bookings
+    await cleanObsoleteBookings(supabase, listingId, bookings);
 
     // Create a Set of active booking IDs from Guesty
     const activeBookingIds = new Set(bookings.map(b => b._id));
@@ -101,6 +103,40 @@ export async function syncGuestyBookingsForListing(supabase: any, token: string,
 
   } catch (error) {
     console.error(`Error in syncGuestyBookingsForListing for ${listingId}:`, error);
+    throw error;
+  }
+}
+
+async function cleanObsoleteBookings(supabase: any, listingId: string, activeBookings: GuestyBooking[]) {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    // Create a Set of active booking IDs from Guesty
+    const activeBookingIds = new Set(activeBookings.map(b => b._id));
+
+    // Find local bookings for this listing that are not in Guesty's active set
+    const { data: localBookings } = await supabase
+      .from('guesty_bookings')
+      .select('id')
+      .eq('listing_id', listingId)
+      .gt('check_out', today)
+      .neq('status', 'cancelled');
+
+    if (localBookings) {
+      const bookingsToCancel = localBookings.filter(b => !activeBookingIds.has(b.id));
+      
+      if (bookingsToCancel.length > 0) {
+        console.log(`Marking ${bookingsToCancel.length} bookings as cancelled for listing ${listingId}`);
+        await supabase
+          .from('guesty_bookings')
+          .update({
+            status: 'cancelled',
+            last_synced: new Date().toISOString()
+          })
+          .in('id', bookingsToCancel.map(b => b.id));
+      }
+    }
+  } catch (error) {
+    console.error(`Error cleaning obsolete bookings for listing ${listingId}:`, error);
     throw error;
   }
 }
