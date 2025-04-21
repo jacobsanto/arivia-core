@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch existing token from database
+    // Check for existing valid token
     const { data: existingToken, error: fetchError } = await supabase
       .from('integration_tokens')
       .select('*')
@@ -30,7 +30,7 @@ serve(async (req) => {
       throw fetchError;
     }
 
-    // Check if existing token is still valid
+    // If token exists and is still valid, return it
     if (existingToken && new Date(existingToken.expires_at) > new Date()) {
       return new Response(JSON.stringify({
         access_token: existingToken.access_token,
@@ -40,7 +40,7 @@ serve(async (req) => {
       });
     }
 
-    // Fetch new token if no valid token exists
+    // If no valid token exists, get a new one
     const clientId = Deno.env.get('GUESTY_CLIENT_ID')!;
     const clientSecret = Deno.env.get('GUESTY_CLIENT_SECRET')!;
 
