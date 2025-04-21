@@ -7,18 +7,37 @@ import { useQuery } from '@tanstack/react-query';
 import { guestyService } from '@/services/guesty/guesty.service';
 import { Skeleton } from "@/components/ui/skeleton";
 import GuestyListingCard from './GuestyListingCard';
+import { supabase } from '@/integrations/supabase/client';
 
 export function GuestyListings() {
-  const { data, isLoading, error, refetch } = useQuery({
+  // Query to fetch listings from Supabase
+  const { data: listings, isLoading, error, refetch } = useQuery({
     queryKey: ['guesty-listings'],
-    queryFn: () => guestyService.getGuestyListings(),
-    retry: 1
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('guesty_listings')
+        .select('*')
+        .order('title');
+      
+      if (error) throw error;
+      return data;
+    }
   });
+
+  // Sync with Guesty API
+  const handleSync = async () => {
+    try {
+      await guestyService.syncListings();
+      refetch();
+    } catch (error) {
+      console.error('Error syncing listings:', error);
+    }
+  };
 
   if (error) {
     return (
       <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
-        <p className="font-medium">Error loading Guesty listings</p>
+        <p className="font-medium">Error loading listings</p>
         <p className="text-sm">{error instanceof Error ? error.message : 'Unknown error'}</p>
       </div>
     );
@@ -27,11 +46,11 @@ export function GuestyListings() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Guesty Listings</h2>
+        <h2 className="text-lg font-semibold">Property Listings</h2>
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => refetch()}
+          onClick={handleSync}
           disabled={isLoading}
         >
           <RefreshCcw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -45,16 +64,16 @@ export function GuestyListings() {
             <Skeleton key={i} className="h-[300px] w-full" />
           ))}
         </div>
-      ) : data?.results?.length ? (
+      ) : listings?.length ? (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {data.results.map((listing) => (
-            <GuestyListingCard key={listing._id} listing={listing} />
+          {listings.map((listing) => (
+            <GuestyListingCard key={listing.id} listing={listing} />
           ))}
         </div>
       ) : (
         <Card>
           <CardContent className="p-6 text-center text-muted-foreground">
-            No Guesty listings found
+            No listings found
           </CardContent>
         </Card>
       )}

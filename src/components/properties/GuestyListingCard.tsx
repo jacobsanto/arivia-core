@@ -4,25 +4,32 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin } from "lucide-react";
-import { GuestyListing } from '@/services/guesty/guesty.service';
 
 interface GuestyListingCardProps {
-  listing: GuestyListing;
+  listing: {
+    id: string;
+    title: string;
+    address?: {
+      full?: string;
+    };
+    status?: string;
+    thumbnail_url?: string;
+  };
 }
 
 const GuestyListingCard = ({ listing }: GuestyListingCardProps) => {
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-    navigate(`/properties/listings/${listing._id}`);
+    navigate(`/properties/listings/${listing.id}`);
   };
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow">
       <div className="h-48 bg-slate-100 relative">
-        {listing.picture?.thumbnail ? (
+        {listing.thumbnail_url ? (
           <img
-            src={listing.picture.thumbnail}
+            src={listing.thumbnail_url}
             alt={listing.title}
             className="w-full h-full object-cover"
           />
