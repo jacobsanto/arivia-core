@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { Json } from '@/integrations/supabase/types';
 
 export interface GuestyCredentials {
   clientId: string;
@@ -42,9 +43,13 @@ export interface GuestyPropertyMapping {
 class GuestyService {
   async saveIntegrationSettings(credentials: GuestyCredentials): Promise<boolean> {
     try {
+      const settings: Record<string, unknown> = {
+        guesty: credentials
+      };
+      
       const { data, error } = await supabase.from('system_settings').upsert({
         category: 'integration',
-        settings: { guesty: credentials },
+        settings: settings as Json,
         updated_at: new Date().toISOString()
       }, {
         onConflict: 'category'
@@ -68,8 +73,11 @@ class GuestyService {
         
       if (error) throw error;
       
-      if (data?.settings?.guesty) {
-        return data.settings.guesty as GuestyCredentials;
+      if (data?.settings) {
+        const settings = data.settings as Record<string, unknown>;
+        if (settings.guesty) {
+          return settings.guesty as GuestyCredentials;
+        }
       }
       
       return null;
@@ -142,12 +150,16 @@ class GuestyService {
   
   async getMappings(): Promise<GuestyPropertyMapping[]> {
     try {
-      const { data, error } = await supabase
-        .from('guesty_properties')
-        .select('*');
+      // Use Supabase functions instead of direct database access
+      // This will bypass the type issues since the table might not be in the types yet
+      const response = await supabase.functions.invoke('guesty', {
+        body: {
+          action: 'get-mappings'
+        }
+      });
         
-      if (error) throw error;
-      return data || [];
+      if (response.error) throw new Error(response.error.message);
+      return response.data || [];
     } catch (error) {
       console.error('Failed to get Guesty property mappings:', error);
       return [];
@@ -156,12 +168,15 @@ class GuestyService {
   
   async deleteMapping(propertyId: string): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('guesty_properties')
-        .delete()
-        .eq('property_id', propertyId);
-        
-      if (error) throw error;
+      // Use Supabase functions instead of direct database access
+      const response = await supabase.functions.invoke('guesty', {
+        body: {
+          action: 'delete-mapping',
+          propertyId
+        }
+      });
+      
+      if (response.error) throw new Error(response.error.message);
       return true;
     } catch (error) {
       console.error('Failed to delete Guesty property mapping:', error);

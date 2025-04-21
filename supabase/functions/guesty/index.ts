@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.31.0';
 import { corsHeaders } from '../_shared/cors.ts';
 
@@ -261,6 +260,65 @@ async function handleSyncProperty(req: Request): Promise<Response> {
   }
 }
 
+async function handleGetMappings(req: Request): Promise<Response> {
+  try {
+    const { data, error } = await supabase
+      .from('guesty_properties')
+      .select('*');
+      
+    if (error) throw error;
+    
+    return new Response(
+      JSON.stringify({ success: true, data: data || [] }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error in get mappings handler:', error);
+    await logGuestyAction('get_mappings', false, `Error: ${error.message}`);
+    
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+async function handleDeleteMapping(req: Request): Promise<Response> {
+  try {
+    const body = await req.json();
+    const { propertyId } = body;
+    
+    if (!propertyId) {
+      return new Response(
+        JSON.stringify({ error: 'Missing property ID' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const { error } = await supabase
+      .from('guesty_properties')
+      .delete()
+      .eq('property_id', propertyId);
+      
+    if (error) throw error;
+    
+    await logGuestyAction('delete_mapping', true, `Successfully deleted mapping for property ${propertyId}`);
+    
+    return new Response(
+      JSON.stringify({ success: true }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  } catch (error) {
+    console.error('Error in delete mapping handler:', error);
+    await logGuestyAction('delete_mapping', false, `Error: ${error.message}`);
+    
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -278,6 +336,10 @@ Deno.serve(async (req) => {
       return await handleBookings(req);
     } else if (path === 'sync-property' || path === '/sync-property') {
       return await handleSyncProperty(req);
+    } else if (path === 'get-mappings' || path === '/get-mappings') {
+      return await handleGetMappings(req);
+    } else if (path === 'delete-mapping' || path === '/delete-mapping') {
+      return await handleDeleteMapping(req);
     } else {
       return new Response(
         JSON.stringify({ error: 'Not found', path }),
