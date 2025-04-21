@@ -1,4 +1,3 @@
-
 export interface GuestyListing {
   _id: string;
   title: string;
@@ -47,4 +46,18 @@ export interface TaskGenerationResult {
     reason: string;
   }[];
   manual_schedule_required: boolean;
+}
+
+export interface GuestyAuthResponse {
+  access_token: string;
+  expires_in: number;
+}
+
+export interface SyncResult {
+  listingsCreated: number;
+  listingsUpdated: number;
+  listingsArchived: number;
+  bookingsCreated: number;
+  bookingsUpdated: number;
+  bookingsCancelled: number;
 }

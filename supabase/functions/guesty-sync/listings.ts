@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { GuestyListing } from './types.ts';
 
@@ -119,19 +120,6 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
 
   } catch (error) {
     console.error('Error in syncGuestyListings:', error);
-    
-    // Update sync log with error
-    if (syncLog?.id) {
-      await supabase
-        .from('sync_logs')
-        .update({
-          end_time: new Date().toISOString(),
-          status: 'error',
-          error_message: error.message
-        })
-        .eq('id', syncLog.id);
-    }
-    
     throw error;
   }
 }

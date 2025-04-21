@@ -1,3 +1,4 @@
+
 import { GuestyBooking } from './types.ts';
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
