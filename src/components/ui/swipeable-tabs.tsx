@@ -41,11 +41,12 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
       >
         <TabsList className="w-full overflow-x-auto flex-nowrap justify-start md:justify-center px-2 py-1">
           {tabs.map((tab) => {
-            // Get the icon component properly
-            let IconComponent = null;
-            if (tab.icon && LucideIcons[tab.icon]) {
-              const Icon = LucideIcons[tab.icon];
-              IconComponent = <Icon className="h-4 w-4" />;
+            // Create a proper icon element if an icon name is provided
+            let iconElement = null;
+            if (tab.icon && tab.icon in LucideIcons) {
+              const IconComponent = LucideIcons[tab.icon];
+              // IconComponent is now a valid React component that we can render
+              iconElement = <IconComponent className="h-4 w-4" />;
             }
             
             return (
@@ -55,7 +56,7 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
                 disabled={tab.disabled}
                 className="flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5"
               >
-                {IconComponent}
+                {iconElement}
                 <span>{tab.label}</span>
               </TabsTrigger>
             );
