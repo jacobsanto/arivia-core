@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Task, CleaningDefinition } from "@/types/housekeepingTypes";
@@ -19,9 +20,9 @@ export const useHousekeepingTasks = () => {
 
   const fetchCleaningDefinitions = async () => {
     try {
-      // Properly type the RPC call with both param and return types
+      // Use the proper typing approach for the RPC call
       const { data, error } = await supabase
-        .rpc<Record<string, never>, CleaningDefinition[]>('get_cleaning_definitions', {});
+        .rpc('get_cleaning_definitions');
         
       if (error) throw error;
       
