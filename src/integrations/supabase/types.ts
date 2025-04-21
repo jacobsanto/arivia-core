@@ -518,6 +518,27 @@ export type Database = {
           },
         ]
       }
+      integration_tokens: {
+        Row: {
+          access_token: string
+          expires_at: string
+          provider: string
+          updated_at: string | null
+        }
+        Insert: {
+          access_token: string
+          expires_at: string
+          provider: string
+          updated_at?: string | null
+        }
+        Update: {
+          access_token?: string
+          expires_at?: string
+          provider?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inventory_categories: {
         Row: {
           created_at: string
