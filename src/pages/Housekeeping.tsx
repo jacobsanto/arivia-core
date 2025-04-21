@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,9 +30,9 @@ const HousekeepingDashboard = () => {
   // Fetch cleaning definitions from database using a raw query
   const fetchCleaningDefinitions = async () => {
     try {
-      // Use a raw SQL query instead since the table isn't in the TypeScript definitions
+      // Use .rpc() method with explicit type casting
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions');
+        .rpc('get_cleaning_definitions' as 'get_cleaning_definitions');
         
       if (error) throw error;
       
