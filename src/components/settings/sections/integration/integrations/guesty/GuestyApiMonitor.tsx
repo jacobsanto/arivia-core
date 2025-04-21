@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistance } from "date-fns";
@@ -9,14 +8,7 @@ import { Loader2, AlertTriangle, CheckCircle, RefreshCw, TrendingUp, BarChart3 }
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-interface ApiUsage {
-  endpoint: string;
-  limit: number;
-  remaining: number;
-  reset: string;
-  timestamp: string;
-}
+import { ApiUsage } from "./types";
 
 interface SyncLog {
   id: string;
