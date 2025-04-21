@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,8 +30,9 @@ const HousekeepingDashboard = () => {
   
   const fetchCleaningDefinitions = async () => {
     try {
+      // Explicitly type the RPC call with type parameters to match the SQL function
       const { data, error } = await supabase
-        .rpc('get_cleaning_definitions');
+        .rpc<CleaningDefinition[]>('get_cleaning_definitions');
         
       if (error) throw error;
       
