@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 
@@ -17,6 +16,19 @@ interface GuestyListing {
   propertyType?: string;
   picture?: {
     thumbnail?: string;
+  };
+}
+
+interface GuestyBooking {
+  _id: string;
+  guest: {
+    fullName: string;
+  };
+  checkIn: string;
+  checkOut: string;
+  status: string;
+  listing: {
+    _id: string;
   };
 }
 
@@ -76,8 +88,44 @@ async function syncGuestyListings(supabase: any, token: string) {
   return listings;
 }
 
+async function syncGuestyBookingsForListing(supabase: any, token: string, listingId: string): Promise<number> {
+  const response = await fetch(`https://open-api.guesty.com/v1/bookings?listingId=${listingId}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  const bookings = data.results as GuestyBooking[];
+
+  const upsertPromises = bookings.map(async (booking) => {
+    const { error } = await supabase.from('guesty_bookings').upsert({
+      id: booking._id,
+      listing_id: booking.listing._id,
+      guest_name: booking.guest.fullName,
+      check_in: booking.checkIn,
+      check_out: booking.checkOut,
+      status: booking.status,
+      last_synced: new Date().toISOString(),
+      raw_data: booking,
+    });
+
+    if (error) {
+      console.error(`Error upserting booking ${booking._id}:`, error);
+    }
+  });
+
+  await Promise.allSettled(upsertPromises);
+
+  return bookings.length;
+}
+
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -90,10 +138,21 @@ serve(async (req) => {
     const token = await getGuestyToken();
     const listings = await syncGuestyListings(supabase, token);
 
+    const bookingSyncPromises = listings.map(listing => 
+      syncGuestyBookingsForListing(supabase, token, listing._id)
+    );
+    
+    const bookingResults = await Promise.allSettled(bookingSyncPromises);
+
+    const totalBookingsSynced = bookingResults
+      .filter(result => result.status === 'fulfilled')
+      .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
+
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Sync completed successfully',
-      listingsCount: listings.length 
+      listingsCount: listings.length,
+      bookingsSynced: totalBookingsSynced
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
@@ -108,4 +167,3 @@ serve(async (req) => {
     });
   }
 });
-
