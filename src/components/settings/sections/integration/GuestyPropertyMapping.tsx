@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -10,7 +9,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { guestyService, GuestyListingItem, type GuestyPropertyMapping } from '@/services/integrations/guesty.service';
+import { guestyService, GuestyListingItem } from '@/services/integrations/guesty.service';
 import { useProperties } from '@/hooks/useProperties';
 import { Property } from '@/types/property.types';
 import { Loader2, Link, Trash2 } from "lucide-react";
@@ -26,17 +25,14 @@ const GuestyPropertyMapping = () => {
   const { properties } = useProperties();
   const { toast } = useToast();
 
-  // Load Guesty listings and existing mappings
   useEffect(() => {
     const loadData = async () => {
       try {
         setIsLoading(true);
         
-        // Load Guesty listings
         const listings = await guestyService.fetchListings(100, 0);
         setGuestyListings(listings);
         
-        // Load existing mappings
         const existingMappings = await guestyService.getMappings();
         setMappings(existingMappings);
       } catch (error) {
@@ -69,22 +65,18 @@ const GuestyPropertyMapping = () => {
       
       const result = await guestyService.syncProperty(selectedProperty, selectedListing);
       
-      // Update local mappings
       setMappings(prev => {
         const existingIndex = prev.findIndex(m => m.property_id === selectedProperty);
         if (existingIndex >= 0) {
-          // Replace existing mapping
           return [
             ...prev.slice(0, existingIndex),
             result,
             ...prev.slice(existingIndex + 1)
           ];
         }
-        // Add new mapping
         return [...prev, result];
       });
       
-      // Reset selection
       setSelectedProperty(undefined);
       setSelectedListing(undefined);
       
@@ -109,7 +101,6 @@ const GuestyPropertyMapping = () => {
       const success = await guestyService.deleteMapping(propertyId);
       
       if (success) {
-        // Update local mappings
         setMappings(prev => prev.filter(m => m.property_id !== propertyId));
         
         toast({
@@ -129,7 +120,6 @@ const GuestyPropertyMapping = () => {
     }
   };
 
-  // Find property and listing details for display
   const getPropertyDetails = (propertyId: string): Property | undefined => {
     return properties.find(p => p.id === propertyId);
   };
