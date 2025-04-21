@@ -1059,6 +1059,12 @@ export type Database = {
         | "compensation_required"
         | "compensation_paid"
         | "closed"
+      housekeeping_task_status: "pending" | "in-progress" | "done"
+      housekeeping_task_type:
+        | "Standard Cleaning"
+        | "Full Cleaning"
+        | "Linen & Towel Change"
+        | "Custom Cleaning Schedule"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1181,6 +1187,13 @@ export const Constants = {
         "compensation_required",
         "compensation_paid",
         "closed",
+      ],
+      housekeeping_task_status: ["pending", "in-progress", "done"],
+      housekeeping_task_type: [
+        "Standard Cleaning",
+        "Full Cleaning",
+        "Linen & Towel Change",
+        "Custom Cleaning Schedule",
       ],
     },
   },
