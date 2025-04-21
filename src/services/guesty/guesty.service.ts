@@ -97,6 +97,20 @@ export class GuestyService {
       throw error;
     }
   }
+
+  async syncListings(): Promise<{ listingsCount: number }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('guesty-sync');
+      
+      if (error) throw error;
+      if (!data) throw new Error('No data received from sync function');
+
+      return data;
+    } catch (error) {
+      console.error('Error syncing Guesty listings:', error);
+      throw error;
+    }
+  }
 }
 
 export const guestyService = new GuestyService();

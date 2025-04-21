@@ -20,19 +20,6 @@ interface GuestyListing {
   };
 }
 
-interface GuestyBooking {
-  _id: string;
-  guest: {
-    fullName: string;
-  };
-  checkIn: string;
-  checkOut: string;
-  status: string;
-  listing: {
-    _id: string;
-  };
-}
-
 async function getGuestyToken(): Promise<string> {
   const clientId = Deno.env.get('GUESTY_CLIENT_ID');
   const clientSecret = Deno.env.get('GUESTY_CLIENT_SECRET');
@@ -89,37 +76,6 @@ async function syncGuestyListings(supabase: any, token: string) {
   return listings;
 }
 
-async function syncGuestyBookingsForListing(supabase: any, token: string, listingId: string) {
-  const response = await fetch(`https://open-api.guesty.com/v1/bookings?listingId=${listingId}`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
-  }
-
-  const data = await response.json();
-  const bookings = data.results as GuestyBooking[];
-
-  for (const booking of bookings) {
-    await supabase.from('guesty_bookings').upsert({
-      id: booking._id,
-      listing_id: booking.listing._id,
-      guest_name: booking.guest.fullName,
-      check_in: booking.checkIn,
-      check_out: booking.checkOut,
-      status: booking.status,
-      last_synced: new Date().toISOString(),
-      raw_data: booking,
-    });
-  }
-
-  return bookings;
-}
-
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -133,13 +89,6 @@ serve(async (req) => {
 
     const token = await getGuestyToken();
     const listings = await syncGuestyListings(supabase, token);
-
-    // Sync bookings for each listing
-    const bookingSyncPromises = listings.map(listing => 
-      syncGuestyBookingsForListing(supabase, token, listing._id)
-    );
-    
-    await Promise.allSettled(bookingSyncPromises);
 
     return new Response(JSON.stringify({ 
       success: true, 
@@ -159,3 +108,4 @@ serve(async (req) => {
     });
   }
 });
+
