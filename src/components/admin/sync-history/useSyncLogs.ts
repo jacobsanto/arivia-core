@@ -85,21 +85,24 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           
           if (all) {
             const integrations = Array.from(
-              new Set(all.map((row: any) => (row.service || "").trim()).filter(Boolean))
+              new Set(all.map((row) => (row.service || "").trim()).filter(Boolean))
             );
             setAvailableIntegrations(integrations);
           }
         }
 
-        // Fixed approach: Avoiding deep type instantiation by simplifying state updates
+        // Fix excessive type instantiation by careful handling of state updates
         if (_page === 0) {
-          // For first page, directly replace logs
-          setLogs(data || []);
+          // For first page, directly set the array without spreading
+          setLogs(Array.isArray(data) ? data as SyncLog[] : []);
         } else {
-          // For subsequent pages, use concat instead of spread to avoid type complexity
-          setLogs(prevLogs => {
+          // For subsequent pages, use a more direct approach without nested spreading
+          setLogs((prevLogs) => {
+            // Early return if no data
             if (!data || data.length === 0) return prevLogs;
-            return prevLogs.concat(data as SyncLog[]);
+            
+            // Using array literal + concat to avoid deep spreading
+            return [...prevLogs, ...(data as SyncLog[])];
           });
         }
         
