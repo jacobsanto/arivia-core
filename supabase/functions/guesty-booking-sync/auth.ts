@@ -1,29 +1,23 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
-import { extractRateLimitInfo } from './utils.ts';
 
 export async function getGuestyToken(): Promise<string> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  // Query existing token
-  const { data: existingToken, error: fetchError } = await supabase
+  // Try to get existing token
+  const { data: tokenData, error: tokenError } = await supabase
     .from('integration_tokens')
     .select('*')
     .eq('provider', 'guesty')
     .maybeSingle();
 
-  if (fetchError) {
-    console.error('Error fetching token:', fetchError);
-    throw fetchError;
+  // If we have a valid token that's not expired, use it
+  if (tokenData && new Date(tokenData.expires_at) > new Date()) {
+    return tokenData.access_token;
   }
 
-  // If token exists and is still valid, return it
-  if (existingToken && new Date(existingToken.expires_at) > new Date()) {
-    return existingToken.access_token;
-  }
-
-  // Otherwise get a new token
+  // Otherwise, get a new token
   const clientId = Deno.env.get('GUESTY_CLIENT_ID')!;
   const clientSecret = Deno.env.get('GUESTY_CLIENT_SECRET')!;
 
@@ -41,45 +35,22 @@ export async function getGuestyToken(): Promise<string> {
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to get Guesty token: ${response.statusText}`);
+    throw new Error(`Failed to get Guesty token: ${response.status} ${response.statusText}`);
   }
 
   const data = await response.json();
-  const expiresAt = new Date(Date.now() + data.expires_in * 1000);
+  const expires_at = new Date(Date.now() + data.expires_in * 1000).toISOString();
 
-  // Extract and store rate limit information
-  const rateLimitInfo = extractRateLimitInfo(response.headers);
-  if (rateLimitInfo) {
-    try {
-      await supabase
-        .from('guesty_api_usage')
-        .insert({
-          endpoint: 'auth',
-          rate_limit: rateLimitInfo.rate_limit,
-          remaining: rateLimitInfo.remaining,
-          reset: rateLimitInfo.reset,
-          timestamp: new Date().toISOString()
-        });
-    } catch (error) {
-      console.error('Error storing rate limit info:', error);
-    }
-  }
-
-  // Upsert the new token
-  const { error: upsertError } = await supabase
+  // Store the new token
+  await supabase
     .from('integration_tokens')
     .upsert({
       provider: 'guesty',
       access_token: data.access_token,
-      expires_at: expiresAt.toISOString()
+      expires_at: expires_at
     }, {
       onConflict: 'provider'
     });
-
-  if (upsertError) {
-    console.error('Error storing token:', upsertError);
-    throw upsertError;
-  }
 
   return data.access_token;
 }
