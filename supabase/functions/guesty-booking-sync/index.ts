@@ -1,8 +1,8 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
-import { getGuestyToken } from '../guesty-sync/auth.ts';
-import { extractRateLimitInfo, delay } from '../guesty-sync/utils.ts';
+import { getGuestyToken } from './auth.ts';
+import { extractRateLimitInfo, delay } from './utils.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -130,7 +130,7 @@ serve(async (req) => {
         error: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
-        status: error.message?.includes('429') ? 429 : 500,
+        status: error instanceof Error && error.message?.includes('429') ? 429 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       }
     );
