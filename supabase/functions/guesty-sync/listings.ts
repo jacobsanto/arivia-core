@@ -1,8 +1,10 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
-import { GuestyListing } from './types.ts';
-import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
 
-// Export as before.
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import type { GuestyListing } from './types.ts';
+import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
+import { processListing } from './processListing.ts';
+import { cleanObsoleteListings } from './cleanObsoleteListings.ts';
+
 export async function syncGuestyListings(supabase: any, token: string): Promise<{
   listings: GuestyListing[];
   rateLimitInfo: RateLimitInfo | null;
@@ -65,7 +67,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
           throw new Error('Invalid response format from Guesty API');
         }
 
-        const listings = data.results as GuestyListing[];
+        const listings: GuestyListing[] = data.results;
         
         if (listings.length === 0) {
           console.log('No more listings found, ending pagination');
@@ -77,67 +79,14 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
 
         for (const listing of listings) {
           try {
-            if (!listing._id) {
-              console.error('Listing missing ID, skipping:', listing);
-              continue;
-            }
+            const opResult = await processListing(supabase, listing);
 
-            const { data: existingListing, error: lookupError } = await supabase
-              .from('guesty_listings')
-              .select('id, last_synced')
-              .eq('id', listing._id)
-              .single();
+            if (opResult === 'created') created++;
+            else if (opResult === 'updated') updated++;
 
-            if (lookupError && lookupError.code !== 'PGRST116') { // Not found error is acceptable
-              console.error(`Error looking up existing listing ${listing._id}:`, lookupError);
-            }
-
-            // Choose highest available resolution: prefer picture.original > picture.large > picture.thumbnail
-            const largeImage = listing.picture?.original || listing.picture?.large || listing.picture?.thumbnail || null;
-
-            const listingData = {
-              id: listing._id,
-              title: listing.title || 'Untitled Listing',
-              address: listing.address || {},
-              status: listing.status || 'unknown',
-              property_type: listing.propertyType || 'unknown',
-              thumbnail_url: listing.picture?.thumbnail || null,
-              highres_url: largeImage, // <-- new field for high-res images
-              last_synced: new Date().toISOString(),
-              raw_data: listing,
-              sync_status: 'active',
-              is_deleted: false
-            };
-
-            if (!existingListing) {
-              // New listing
-              const { error: insertError } = await supabase.from('guesty_listings').insert({
-                ...listingData,
-                first_synced_at: new Date().toISOString()
-              });
-              
-              if (insertError) {
-                console.error(`Error inserting new listing ${listing._id}:`, insertError);
-              } else {
-                created++;
-              }
-            } else {
-              // Update existing listing
-              const { error: updateError } = await supabase.from('guesty_listings')
-                .update(listingData)
-                .eq('id', listing._id);
-              
-              if (updateError) {
-                console.error(`Error updating listing ${listing._id}:`, updateError);
-              } else {
-                updated++;
-              }
-            }
-
-            totalListings = [...totalListings, listing];
+            totalListings.push(listing);
           } catch (err) {
             console.error(`Error processing listing ${listing._id || 'unknown'}:`, err);
-            // Continue with next listing
           }
         }
 
@@ -157,7 +106,8 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
 
     // Clean up obsolete listings
     try {
-      await cleanObsoleteListings(supabase, totalListings);
+      const archivedCount = await cleanObsoleteListings(supabase, totalListings);
+      archived = archivedCount || 0;
     } catch (err) {
       console.error('Error cleaning obsolete listings:', err);
     }
@@ -189,45 +139,3 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
   }
 }
 
-async function cleanObsoleteListings(supabase: any, activeFetchedListings: GuestyListing[]) {
-  try {
-    // Get IDs of all listings fetched from Guesty
-    const activeListingIds = new Set(activeFetchedListings.map(l => l._id));
-
-    // Find listings in Supabase that are not in the active set
-    const { data: localListings, error: queryError } = await supabase
-      .from('guesty_listings')
-      .select('id')
-      .eq('sync_status', 'active')
-      .eq('is_deleted', false);
-
-    if (queryError) {
-      console.error('Error querying local listings:', queryError);
-      return;
-    }
-
-    if (localListings) {
-      // Mark listings as archived if they're not in the active set
-      const listingsToArchive = localListings.filter(l => !activeListingIds.has(l.id));
-      
-      if (listingsToArchive.length > 0) {
-        console.log(`Marking ${listingsToArchive.length} listings as archived...`);
-        const { error: updateError } = await supabase
-          .from('guesty_listings')
-          .update({
-            sync_status: 'archived',
-            is_deleted: true,
-            last_synced: new Date().toISOString()
-          })
-          .in('id', listingsToArchive.map(l => l.id));
-        
-        if (updateError) {
-          console.error('Error archiving obsolete listings:', updateError);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Error cleaning obsolete listings:', error);
-    throw error;
-  }
-}
