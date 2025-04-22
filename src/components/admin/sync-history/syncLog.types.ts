@@ -1,14 +1,5 @@
-export type SyncLog = {
-  id: string;
-  integration: string;
-  status: string;
-  message: string;
-  synced_at: string;
-  duration_ms?: number;
-  total_listings?: number;
-  total_bookings?: number;
-};
 
+// The single source of truth for SyncLog
 export interface SyncLog {
   id: string;
   service: string;
@@ -45,3 +36,4 @@ export interface RetrySyncOptions {
   service: string;
   syncType?: string | null;
 }
+
