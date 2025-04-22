@@ -23,9 +23,9 @@ const BookingStatusContent = ({ property }: BookingStatusContentProps) => {
         
         const today = new Date();
         
-        // For Guesty bookings, the field names are different
-        const isGuestyProperty = property.source === 'guesty' || 
-          (property.id && !property.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
+        // Detect if the property ID is from Guesty (non-UUID format)
+        const isGuestyProperty = property.id && 
+          !property.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
         
         if (isGuestyProperty) {
           // Handle Guesty bookings
@@ -64,7 +64,7 @@ const BookingStatusContent = ({ property }: BookingStatusContentProps) => {
     if (property.id) {
       fetchBookings();
     }
-  }, [property.id, property.source]);
+  }, [property.id]);
 
   if (isLoading) {
     return (
