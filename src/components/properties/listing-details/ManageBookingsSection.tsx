@@ -1,114 +1,11 @@
+
 import React from 'react';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle
-} from "@/components/ui/card";
-import { 
-  Calendar, 
-  ClipboardList, 
-  Brush, 
-  Check, 
-  Loader2
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Loader2 } from "lucide-react";
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { formatDate } from '@/services/dataFormatService';
-import { guestyService } from '@/services/guesty/guesty.service';
 import { toast } from 'sonner';
-
-interface BookingItemProps {
-  booking: any;
-  onTriggerCleaning: (bookingId: string) => void;
-  onMarkCleaned: (bookingId: string) => void;
-  isCleaningTriggered?: boolean;
-}
-
-const BookingItem: React.FC<BookingItemProps> = ({ 
-  booking, 
-  onTriggerCleaning, 
-  onMarkCleaned,
-  isCleaningTriggered = false 
-}) => {
-  const checkInDate = formatDate(booking.check_in);
-  const checkOutDate = formatDate(booking.check_out);
-  
-  const getBadgeVariant = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'confirmed': return 'default';
-      case 'canceled': case 'cancelled': return 'destructive';
-      case 'pending': return 'outline';
-      default: return 'secondary';
-    }
-  };
-  
-  return (
-    <Card className="mb-4 overflow-hidden">
-      <CardContent className="p-0">
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-base font-medium">{booking.guest_name || 'Guest'}</h3>
-            <Badge variant={getBadgeVariant(booking.status)}>
-              {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || 'Unknown'}
-            </Badge>
-          </div>
-          
-          <div className="text-sm text-muted-foreground mb-3">
-            <div className="flex items-center">
-              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              <span>Check-in: {checkInDate}</span>
-            </div>
-            <div className="flex items-center mt-1">
-              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              <span>Check-out: {checkOutDate}</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-2 mt-2">
-            {isCleaningTriggered ? (
-              <Badge variant="outline" className="flex items-center bg-muted/20">
-                <Check className="h-3 w-3 mr-1" />
-                Cleaning Scheduled
-              </Badge>
-            ) : (
-              <>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => onTriggerCleaning(booking.id)}
-                >
-                  <Brush className="h-3.5 w-3.5 mr-1.5" />
-                  Schedule Cleaning
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => onMarkCleaned(booking.id)}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1.5" />
-                  Mark as Cleaned
-                </Button>
-              </>
-            )}
-            
-            <Button 
-              size="sm"
-              variant="ghost"
-              className="text-xs"
-            >
-              <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
-              Details
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
+import { guestyService } from '@/services/guesty/guesty.service';
+import { BookingsListSection } from './BookingsListSection';
 
 interface ManageBookingsSectionProps {
   listing: any;
@@ -116,23 +13,23 @@ interface ManageBookingsSectionProps {
   isLoading: boolean;
 }
 
-const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({ 
-  listing, 
-  bookings, 
-  isLoading 
+const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
+  listing,
+  bookings,
+  isLoading
 }) => {
   const [triggeredCleanings, setTriggeredCleanings] = React.useState<string[]>([]);
   const [isSyncing, setIsSyncing] = React.useState(false);
-  
+
   const today = new Date();
   const upcomingBookings = bookings
     .filter(booking => new Date(booking.check_in) >= today)
     .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
-  
+
   const pastBookings = bookings
     .filter(booking => new Date(booking.check_out) < today)
     .sort((a, b) => new Date(b.check_out).getTime() - new Date(a.check_out).getTime());
-  
+
   const handleSyncBookings = async () => {
     setIsSyncing(true);
     try {
@@ -154,21 +51,21 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       setIsSyncing(false);
     }
   };
-  
+
   const handleTriggerCleaning = (bookingId: string) => {
     setTriggeredCleanings(prev => [...prev, bookingId]);
     toast.success("Cleaning scheduled", {
       description: "A cleaning task has been created"
     });
   };
-  
+
   const handleMarkCleaned = (bookingId: string) => {
     setTriggeredCleanings(prev => [...prev, bookingId]);
     toast.success("Marked as cleaned", {
       description: "The property has been marked as cleaned"
     });
   };
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-32">
@@ -176,13 +73,13 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Bookings</h2>
-        <Button 
-          onClick={handleSyncBookings} 
+        <Button
+          onClick={handleSyncBookings}
           disabled={isSyncing}
           variant="outline"
           size="sm"
@@ -200,52 +97,33 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
           )}
         </Button>
       </div>
-      
+
       {upcomingBookings.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Bookings</h3>
-          <div className="space-y-3">
-            {upcomingBookings.slice(0, 3).map((booking) => (
-              <BookingItem 
-                key={booking.id}
-                booking={booking}
-                onTriggerCleaning={handleTriggerCleaning}
-                onMarkCleaned={handleMarkCleaned}
-                isCleaningTriggered={triggeredCleanings.includes(booking.id)}
-              />
-            ))}
-            
-            {upcomingBookings.length > 3 && (
-              <Button variant="ghost" className="w-full text-sm">
-                View All {upcomingBookings.length} Upcoming Bookings
-              </Button>
-            )}
-          </div>
-        </div>
+        <BookingsListSection
+          title="Upcoming Bookings"
+          bookings={upcomingBookings}
+          maxToShow={3}
+          showViewAll={upcomingBookings.length > 3}
+          viewAllLabel={`View All ${upcomingBookings.length} Upcoming Bookings`}
+          onTriggerCleaning={handleTriggerCleaning}
+          onMarkCleaned={handleMarkCleaned}
+          triggeredCleanings={triggeredCleanings}
+        />
       )}
-      
+
       {pastBookings.length > 0 && (
-        <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">Past Bookings</h3>
-          <div className="space-y-3">
-            {pastBookings.slice(0, 2).map((booking) => (
-              <BookingItem 
-                key={booking.id}
-                booking={booking}
-                onTriggerCleaning={handleTriggerCleaning}
-                onMarkCleaned={handleMarkCleaned}
-              />
-            ))}
-            
-            {pastBookings.length > 2 && (
-              <Button variant="ghost" className="w-full text-sm">
-                View All {pastBookings.length} Past Bookings
-              </Button>
-            )}
-          </div>
-        </div>
+        <BookingsListSection
+          title="Past Bookings"
+          bookings={pastBookings}
+          maxToShow={2}
+          showViewAll={pastBookings.length > 2}
+          viewAllLabel={`View All ${pastBookings.length} Past Bookings`}
+          onTriggerCleaning={handleTriggerCleaning}
+          onMarkCleaned={handleMarkCleaned}
+          triggeredCleanings={triggeredCleanings}
+        />
       )}
-      
+
       {bookings.length === 0 && (
         <Card className="border border-dashed">
           <CardContent className="flex flex-col items-center justify-center p-6 text-center">
