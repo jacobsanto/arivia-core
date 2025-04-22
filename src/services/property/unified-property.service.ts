@@ -15,6 +15,10 @@ export const unifiedPropertyService = {
           next_booking:guesty_bookings(
             check_in,
             status
+          ),
+          housekeeping_tasks!housekeeping_tasks_listing_id_fkey(
+            id,
+            status
           )
         `)
         .eq('is_deleted', false)
@@ -40,9 +44,14 @@ export const unifiedPropertyService = {
 
       const guestyProperties = (guestyListings || []).map(listing => {
         const nextBooking = listing.next_booking?.[0];
+        const hasActiveTasks = listing.housekeeping_tasks?.some(
+          (task: any) => task.status === 'pending' || task.status === 'in-progress'
+        );
+        
         return {
           ...this.transformGuestyToUnified(listing),
-          next_check_in: nextBooking?.check_in || null
+          next_check_in: nextBooking?.check_in || null,
+          has_active_cleaning: hasActiveTasks || false
         };
       });
 

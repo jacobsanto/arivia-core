@@ -53,4 +53,5 @@ export interface UnifiedProperty extends Property {
   guesty_id?: string;
   last_synced?: string;
   next_check_in?: string | null;
+  has_active_cleaning?: boolean;
 }

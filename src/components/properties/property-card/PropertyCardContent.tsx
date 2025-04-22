@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { UnifiedProperty } from "@/types/property.types";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { format } from "date-fns";
+import { Broom } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PropertyCardContentProps {
   property: UnifiedProperty;
@@ -25,6 +27,20 @@ export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
       <div className="flex items-center justify-between text-sm">
         <div className="flex items-center space-x-2">
           <Badge variant="outline">{property.type}</Badge>
+          {property.has_active_cleaning && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <div className="text-yellow-600">
+                    <Broom className="h-4 w-4" />
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cleaning task scheduled</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           {property.last_synced && (
             <span className="text-xs text-muted-foreground">
               Last sync: {formatTimeAgo(property.last_synced)}
