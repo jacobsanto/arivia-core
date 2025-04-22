@@ -1,111 +1,23 @@
-import React, { useState } from 'react';
-import { useQuery } from "@tanstack/react-query";
-import { format, formatDistance, isValid, parseISO } from "date-fns";
+
+import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, CheckCircle, RefreshCw, TrendingUp, BarChart3 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Progress } from "@/components/ui/progress";
+import { Loader2, AlertTriangle, RefreshCw, TrendingUp, BarChart3 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ApiUsage } from "./types";
-
-interface SyncLog {
-  id: string;
-  status: 'in_progress' | 'completed' | 'error';
-  start_time: string;
-  end_time?: string;
-  duration?: number;
-  message?: string;
-  retry_count?: number;
-  next_retry_time?: string;
-}
-
-interface HealthCheckResponse {
-  status: string;
-  lastSynced: string | null;
-  lastError: string | null;
-  isRateLimited: boolean;
-  remainingRequests: number | null;
-  nextSyncTime: string | null;
-  quotaUsage: Record<string, {
-    total: number;
-    remaining: number;
-    limit: number;
-  }>;
-  recentSyncs: SyncLog[];
-}
-
-// Helper function to safely format dates
-const safeFormatDate = (dateString: string | undefined | null, formatStr: string = 'MMM d, h:mm a'): string => {
-  if (!dateString) return 'N/A';
-  
-  try {
-    const date = parseISO(dateString);
-    if (!isValid(date)) return 'Invalid date';
-    
-    return format(date, formatStr);
-  } catch (error) {
-    console.error('Date formatting error:', error, 'for date string:', dateString);
-    return 'Invalid date';
-  }
-};
+import { useGuestyApiMonitor } from './hooks/useGuestyApiMonitor';
+import { ApiUsageTab } from './components/ApiUsageTab';
+import { SyncHistoryTab } from './components/SyncHistoryTab';
 
 const GuestyApiMonitor: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("usage");
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['guesty-health-check'],
-    queryFn: async () => {
-      const { data } = await supabase.functions.invoke<{
-        success: boolean;
-        health: HealthCheckResponse;
-      }>('guesty-health-check');
-      
-      return data?.health;
-    },
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  });
-  
-  const { data: apiUsage, isLoading: isLoadingUsage, refetch: refetchApiUsage } = useQuery({
-    queryKey: ['guesty-api-usage'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('guesty_api_usage')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(50);
-        
-      if (error) throw error;
-      return data as ApiUsage[];
-    }
-  });
-  
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([
-        refetch(),
-        refetchApiUsage()
-      ]);
-    } catch (err) {
-      console.error("Error refreshing data:", err);
-    } finally {
-      setIsRefreshing(false);
-    }
-  };
-  
-  const getStatusColor = (status: string | undefined) => {
-    switch (status) {
-      case 'connected':
-        return 'bg-green-500 hover:bg-green-600';
-      case 'error':
-        return 'bg-red-500 hover:bg-red-600';
-      default:
-        return 'bg-amber-500 hover:bg-amber-600';
-    }
-  };
+  const {
+    data,
+    isLoading,
+    error,
+    activeTab,
+    setActiveTab,
+    handleRefresh,
+    isRefreshing
+  } = useGuestyApiMonitor();
   
   if (error) {
     return (
@@ -147,125 +59,34 @@ const GuestyApiMonitor: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="pb-2">
-        {isLoading || isRefreshing ? (
+        {isLoading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : data ? (
-          <>
-            <div className="flex items-center gap-2 mb-4">
-              <Badge className={getStatusColor(data.status)}>
-                {data.status === 'connected' ? (
-                  <CheckCircle className="h-3.5 w-3.5 mr-1" />
-                ) : (
-                  <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-                )}
-                {data.status || 'Unknown'}
-              </Badge>
-              
-              {data.isRateLimited && (
-                <Badge variant="destructive">Rate Limited</Badge>
-              )}
-              
-              {data.lastSynced && (
-                <span className="text-xs text-muted-foreground">
-                  Last synced: {formatDistance(parseISO(data.lastSynced), new Date(), { addSuffix: true })}
-                </span>
-              )}
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 mb-2">
+              <TabsTrigger value="usage">
+                <TrendingUp className="mr-1 h-4 w-4" />
+                API Usage
+              </TabsTrigger>
+              <TabsTrigger value="history">
+                <BarChart3 className="mr-1 h-4 w-4" />
+                Sync History
+              </TabsTrigger>
+            </TabsList>
             
-            {data.nextSyncTime && (
-              <div className="rounded-md bg-amber-50 p-2 border border-amber-200 text-amber-800 text-sm mb-4">
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span>Next sync available: {safeFormatDate(data.nextSyncTime, 'PPpp')}</span>
-                </div>
-              </div>
-            )}
+            <TabsContent value="usage">
+              <ApiUsageTab 
+                remainingRequests={data.remainingRequests}
+                quotaUsage={data.quotaUsage}
+              />
+            </TabsContent>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid grid-cols-2 mb-2">
-                <TabsTrigger value="usage">
-                  <TrendingUp className="mr-1 h-4 w-4" />
-                  API Usage
-                </TabsTrigger>
-                <TabsTrigger value="history">
-                  <BarChart3 className="mr-1 h-4 w-4" />
-                  Sync History
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="usage" className="space-y-4">
-                {data.remainingRequests !== null && (
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>API Quota Remaining</span>
-                      <span className="font-medium">{data.remainingRequests}</span>
-                    </div>
-                    <Progress value={data.remainingRequests} className="h-2" />
-                  </div>
-                )}
-                
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Endpoint Usage</h3>
-                  {Object.entries(data.quotaUsage).map(([endpoint, usage]) => (
-                    <div key={endpoint} className="text-xs">
-                      <div className="flex justify-between mb-1">
-                        <span>{endpoint}</span>
-                        <span>{usage.remaining}/{usage.limit} remaining</span>
-                      </div>
-                      <Progress 
-                        value={(usage.remaining / usage.limit) * 100} 
-                        className="h-1.5" 
-                      />
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="history">
-                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
-                  {data.recentSyncs?.map(sync => (
-                    <div 
-                      key={sync.id} 
-                      className="text-xs p-2 rounded-md border mb-1"
-                    >
-                      <div className="flex justify-between">
-                        <span className="font-medium">
-                          {safeFormatDate(sync.start_time, 'MMM d, h:mm a')}
-                        </span>
-                        <Badge 
-                          variant={
-                            sync.status === 'completed' ? 'success' : 
-                            sync.status === 'error' ? 'destructive' : 
-                            'outline'
-                          }
-                          className="text-[10px] h-5"
-                        >
-                          {sync.status}
-                        </Badge>
-                      </div>
-                      {sync.duration && (
-                        <div className="text-muted-foreground mt-1">
-                          Duration: {(sync.duration / 1000).toFixed(1)}s
-                        </div>
-                      )}
-                      {sync.retry_count > 0 && (
-                        <div className="text-amber-600 mt-1">
-                          Retry count: {sync.retry_count}
-                        </div>
-                      )}
-                      {sync.message && (
-                        <div className="text-muted-foreground mt-1 line-clamp-1">
-                          {sync.message}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-            </Tabs>
-          </>
+            <TabsContent value="history">
+              <SyncHistoryTab recentSyncs={data.recentSyncs} />
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="text-center py-4 text-muted-foreground">
             No API health data available
@@ -285,3 +106,4 @@ const GuestyApiMonitor: React.FC = () => {
 };
 
 export default GuestyApiMonitor;
+
