@@ -39,7 +39,7 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  // Use a simple array for logs instead of a nested structure
+  // Define explicit type for logs to avoid excessive type inference
   const [logs, setLogs] = useState<SyncLog[]>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
@@ -92,11 +92,20 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Update logs based on page
+        // Fixed: Update logs state in a way that avoids deep type instantiation
+        // For first page, replace logs array entirely
         if (_page === 0) {
           setLogs(data || []);
         } else {
-          setLogs(prev => [...prev, ...(data || [])]);
+          // For additional pages, create a new array instead of spreading
+          // This helps prevent TypeScript from creating excessively deep types
+          setLogs((prevLogs) => {
+            const newLogs = [...prevLogs];
+            if (data) {
+              data.forEach((item) => newLogs.push(item));
+            }
+            return newLogs;
+          });
         }
         
         setHasNextPage((data?.length || 0) === pageSize);
@@ -129,7 +138,9 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
   // Retry a failed sync
   const retrySync = async ({ logId, service, syncType }: RetrySyncOptions) => {
     try {
-      setIsRetrying(prev => ({ ...prev, [logId]: true }));
+      // Create a new object to avoid mutating existing state
+      const newRetrying = { ...isRetrying, [logId]: true };
+      setIsRetrying(newRetrying);
       
       // Call the appropriate edge function based on the service
       const functionName = service?.toLowerCase() === 'guesty' ? 'guesty-sync' : 'sync-service';
@@ -160,7 +171,8 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         variant: "destructive",
       });
     } finally {
-      setIsRetrying(prev => ({ ...prev, [logId]: false }));
+      // Create a new object again to avoid mutation
+      setIsRetrying((prev) => ({ ...prev, [logId]: false }));
     }
   };
 
