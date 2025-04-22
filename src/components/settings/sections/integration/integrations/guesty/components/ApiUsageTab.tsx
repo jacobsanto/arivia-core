@@ -46,6 +46,7 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
         {Object.keys(quotaUsage).length > 0 ? (
           Object.entries(quotaUsage).map(([endpoint, usage]) => {
             const percentage = getProgressValue(usage.remaining, usage.limit);
+            const colorClass = getProgressColor(percentage);
             return (
               <div key={endpoint} className="text-xs">
                 <div className="flex justify-between mb-1">
@@ -55,7 +56,7 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
                 <Progress 
                   value={percentage}
                   className="h-1.5" 
-                  indicatorClassName={getProgressColor(percentage)}
+                  style={{ "--progress-indicator-color": `var(--${colorClass.replace('bg-', '')})` } as React.CSSProperties}
                 />
               </div>
             );

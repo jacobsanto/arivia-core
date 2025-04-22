@@ -19,9 +19,7 @@ const Progress = React.forwardRef<
   >
     <ProgressPrimitive.Indicator
       className={cn(
-        "h-full w-full flex-1 transition-all",
-        // Use the CSS variable if defined, otherwise use bg-primary
-        {"bg-primary": !style?.["--progress-indicator-color"]}
+        "h-full w-full flex-1 transition-all bg-primary"
       )}
       style={{
         transform: `translateX(-${100 - (value || 0)}%)`,
