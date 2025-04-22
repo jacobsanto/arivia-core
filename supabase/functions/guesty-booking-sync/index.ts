@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
@@ -22,14 +21,12 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Parse request body
     const requestData = await req.json();
     const listingId = requestData.listingId;
     const syncAll = requestData.syncAll === true;
     
     console.log(`Starting Guesty bookings sync: ${syncAll ? 'Full sync' : `Single listing: ${listingId}`}`);
     
-    // Create sync log entry
     const { data: syncLog } = await supabase
       .from('sync_logs')
       .insert({
@@ -44,14 +41,11 @@ serve(async (req) => {
       .select()
       .single();
     
-    // Get token
     const token = await getGuestyToken();
     
-    // Determine which listings to sync
     let listingsToSync: string[] = [];
     
     if (syncAll) {
-      // Get all active listings
       const { data: listings, error: listingsError } = await supabase
         .from('guesty_listings')
         .select('id')
@@ -74,7 +68,6 @@ serve(async (req) => {
       throw new Error('No listings found to sync');
     }
     
-    // Sync bookings for each listing
     const results = [];
     let created = 0;
     let updated = 0;
@@ -95,10 +88,10 @@ serve(async (req) => {
           created: syncResult.created,
           updated: syncResult.updated, 
           deleted: syncResult.deleted,
+          endpoint: syncResult.endpoint,
           success: true 
         });
         
-        // Add small delay between listings to avoid rate limits
         if (listingsToSync.length > 1) {
           await delay(1000);
         }
@@ -112,7 +105,6 @@ serve(async (req) => {
       }
     }
     
-    // Update sync log with results
     await supabase
       .from('sync_logs')
       .update({
@@ -127,7 +119,6 @@ serve(async (req) => {
       })
       .eq('id', syncLog.id);
     
-    // Update integration health table with last successful bookings sync
     await supabase
       .from('integration_health')
       .update({
@@ -173,15 +164,15 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
   created: number;
   updated: number;
   deleted: number;
+  endpoint: string;
 }> {
   try {
     console.log(`Syncing bookings for listing ${listingId}...`);
     
-    // Get current date for filtering past bookings
     const today = new Date().toISOString().split('T')[0];
     
-    // Fetch bookings from Guesty API
-    const response = await fetch(
+    console.log('Attempting to fetch bookings using /v1/bookings endpoint...');
+    let response = await fetch(
       `https://open-api.guesty.com/v1/bookings?listingId=${listingId}&checkOut[gte]=${today}`, 
       {
         headers: {
@@ -191,14 +182,33 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
       }
     );
 
-    // Extract and store rate limit information
+    let data;
+    let endpoint = 'v1/bookings';
+
+    if (!response.ok || (response.ok && (await response.json()).results?.length === 0)) {
+      console.log('First attempt failed or returned no bookings, trying alternative endpoint...');
+      
+      await delay(1000);
+      
+      response = await fetch(
+        `https://open-api.guesty.com/v1/listings/${listingId}/bookings?checkOut[gte]=${today}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Accept': 'application/json',
+          },
+        }
+      );
+      endpoint = 'v1/listings/bookings';
+    }
+
     const rateLimitInfo = extractRateLimitInfo(response.headers);
     if (rateLimitInfo) {
       try {
         await supabase
           .from('guesty_api_usage')
           .insert({
-            endpoint: 'bookings',
+            endpoint: endpoint,
             rate_limit: rateLimitInfo.rate_limit,
             remaining: rateLimitInfo.remaining,
             reset: rateLimitInfo.reset,
@@ -213,7 +223,7 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
       throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText}`);
     }
 
-    const data = await response.json();
+    data = await response.json();
     
     if (!data || !Array.isArray(data.results)) {
       console.error('Invalid response format from Guesty API:', data);
@@ -222,12 +232,22 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
     
     const bookings = data.results || [];
 
-    console.log(`Found ${bookings.length} bookings for listing ${listingId}`);
+    console.log(`Found ${bookings.length} bookings for listing ${listingId} using ${endpoint}`);
 
-    // Mark local bookings not found in Guesty as cancelled
+    await supabase
+      .from('integration_health')
+      .update({
+        last_successful_endpoint: endpoint,
+        endpoint_stats: {
+          endpoint,
+          success_count: 1,
+          last_success: new Date().toISOString()
+        }
+      })
+      .eq('provider', 'guesty');
+
     const deleted = await cleanObsoleteBookings(supabase, listingId, bookings);
 
-    // Upsert active bookings
     let created = 0;
     let updated = 0;
 
@@ -237,7 +257,6 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
         continue;
       }
       
-      // Extract guest info
       const guestName = booking.guest?.fullName || 'Guest';
       
       const bookingData = {
@@ -289,7 +308,6 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
         console.error(`Error processing booking ${booking._id}:`, error);
       }
 
-      // Add small delay between operations to avoid rate limiting
       await delay(100);
     }
 
@@ -298,7 +316,8 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
       total: bookings.length,
       created, 
       updated, 
-      deleted
+      deleted,
+      endpoint
     };
 
   } catch (error) {
@@ -310,10 +329,8 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
 async function cleanObsoleteBookings(supabase: any, listingId: string, activeBookings: any[]): Promise<number> {
   try {
     const today = new Date().toISOString().split('T')[0];
-    // Create a Set of active booking IDs from Guesty
     const activeBookingIds = new Set(activeBookings.map(b => b._id));
 
-    // Find local bookings for this listing that are not in Guesty's active set
     const { data: localBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
