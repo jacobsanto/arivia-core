@@ -58,7 +58,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     setError(null);
   }, [status, integration, listingId]);
 
-  // Optimized fetch logs function
+  // Refactored fetch logs function to avoid type instantiation issues
   const fetchLogs = useCallback(
     async (_page: number) => {
       try {
@@ -92,32 +92,30 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Handle state updates efficiently
+        // Fix type instantiation issues by eliminating nested state updates
         if (_page === 0) {
-          // First page - simply replace the entire logs array
+          // For first page load, directly replace logs
           setLogs(fetchedData || []);
         } else {
-          // Later pages - use a reference-copy approach instead of spreads
-          setLogs((prevLogs) => {
-            if (!fetchedData || fetchedData.length === 0) {
-              return prevLogs;
-            }
+          // For pagination, use direct assignment instead of functional updates
+          // This avoids the deep type recursion that happens with functional updates
+          if (fetchedData && fetchedData.length > 0) {
+            // Create a completely new array without any nested updates
+            const newArray: SyncLog[] = [];
             
-            // Manual array construction to avoid type instantiation depth issues
-            const combinedLogs = new Array<SyncLog>(prevLogs.length + fetchedData.length);
+            // Add existing logs first
+            logs.forEach(log => {
+              newArray.push(log);
+            });
             
-            // Copy existing logs
-            for (let i = 0; i < prevLogs.length; i++) {
-              combinedLogs[i] = prevLogs[i];
-            }
+            // Add new logs
+            fetchedData.forEach(item => {
+              newArray.push(item as SyncLog);
+            });
             
-            // Copy new logs
-            for (let i = 0; i < fetchedData.length; i++) {
-              combinedLogs[prevLogs.length + i] = fetchedData[i] as SyncLog;
-            }
-            
-            return combinedLogs;
-          });
+            // Set the state with the new array
+            setLogs(newArray);
+          }
         }
         
         setHasNextPage((fetchedData?.length || 0) === pageSize);
@@ -129,7 +127,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         setIsFetchingNextPage(false);
       }
     },
-    [pageSize, status, integration, listingId]
+    [pageSize, status, integration, listingId, logs]  // Added logs as dependency
   );
 
   // Initial fetch and when filters change
@@ -147,13 +145,16 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     fetchLogs(nextPage);
   };
 
-  // Retry a failed sync with optimized state updates
+  // Retry a failed sync - completely rewritten to avoid type issues
   const retrySync = async ({ logId, service, syncType }: RetrySyncOptions) => {
     try {
-      // Update retrying state without object spread (which can cause type instantiation issues)
-      const newRetryingState = Object.assign({}, isRetrying);
-      newRetryingState[logId] = true;
-      setIsRetrying(newRetryingState);
+      // Create new object without using spread operator to avoid type issues
+      const updatedRetrying: Record<string, boolean> = {};
+      Object.keys(isRetrying).forEach(key => {
+        updatedRetrying[key] = isRetrying[key];
+      });
+      updatedRetrying[logId] = true;
+      setIsRetrying(updatedRetrying);
       
       // Call the appropriate edge function based on the service
       const functionName = service?.toLowerCase() === 'guesty' ? 'guesty-sync' : 'sync-service';
@@ -184,10 +185,13 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         variant: "destructive",
       });
     } finally {
-      // Update retrying state without object spread
-      const finalRetryingState = Object.assign({}, isRetrying);
-      finalRetryingState[logId] = false;
-      setIsRetrying(finalRetryingState);
+      // Update retrying state - again without using spread
+      const finalRetrying: Record<string, boolean> = {};
+      Object.keys(isRetrying).forEach(key => {
+        finalRetrying[key] = isRetrying[key];
+      });
+      finalRetrying[logId] = false;
+      setIsRetrying(finalRetrying);
     }
   };
 
