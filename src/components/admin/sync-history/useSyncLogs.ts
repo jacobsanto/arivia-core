@@ -1,28 +1,19 @@
 
-import { RetrySyncOptions, SyncLog, UseSyncLogsParams } from "./syncLog.types";
-import { useSyncLogRetry } from "./useSyncLogRetry";
-import { useSyncLogFetcher } from "./useSyncLogFetcher";
+import { useQuery } from '@tanstack/react-query';
+import { SyncLog } from './syncLog.types';
 
-// Composes fetcher and retry logic for sync logs usage
-export function useSyncLogs(params: UseSyncLogsParams) {
-  const fetcher = useSyncLogFetcher(params);
-  const retryHandler = useSyncLogRetry();
-
-  // Compose retrySync that refetches after retry
-  const retrySync = (opts: RetrySyncOptions) => 
-    retryHandler.retrySync(opts, fetcher.refetch);
-
-  return {
-    logs: fetcher.logs,
-    isLoading: fetcher.isLoading,
-    isFetchingNextPage: fetcher.isFetchingNextPage,
-    hasNextPage: fetcher.hasNextPage,
-    fetchNextPage: fetcher.fetchNextPage,
-    error: fetcher.error,
-    availableIntegrations: fetcher.availableIntegrations,
-    retrySync,
-    isRetrying: retryHandler.isRetrying,
-  };
+/**
+ * Fetches sync logs array from the /api/sync-logs endpoint.
+ * 
+ * NOTE: You must have a route or handler at /api/sync-logs that returns SyncLog[].
+ */
+export function useSyncLogs() {
+  return useQuery<SyncLog[]>({
+    queryKey: ['sync_logs'],
+    queryFn: async () => {
+      const res = await fetch('/api/sync-logs');
+      if (!res.ok) throw new Error('Failed to fetch logs');
+      return await res.json();
+    }
+  });
 }
-
-export type { SyncLog };

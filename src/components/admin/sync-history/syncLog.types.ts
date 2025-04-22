@@ -1,3 +1,13 @@
+export type SyncLog = {
+  id: string;
+  integration: string;
+  status: string;
+  message: string;
+  synced_at: string;
+  duration_ms?: number;
+  total_listings?: number;
+  total_bookings?: number;
+};
 
 export interface SyncLog {
   id: string;
