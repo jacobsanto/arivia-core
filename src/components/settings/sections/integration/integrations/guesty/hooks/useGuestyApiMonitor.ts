@@ -4,6 +4,31 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ApiUsage } from "../types";
 
+// Define interface for health check response
+interface HealthCheckResponse {
+  status: string;
+  lastSynced: string | null;
+  lastError: string | null;
+  isRateLimited: boolean;
+  remainingRequests: number | null;
+  nextSyncTime: string | null;
+  quotaUsage: Record<string, {
+    total: number;
+    remaining: number;
+    limit: number;
+  }>;
+  recentSyncs: Array<{
+    id: string;
+    status: 'in_progress' | 'completed' | 'error';
+    start_time: string;
+    end_time: string | null;
+    duration?: number;
+    message?: string;
+    retry_count?: number;
+    next_retry_time?: string | null;
+  }>;
+}
+
 export function useGuestyApiMonitor() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState("usage");
@@ -57,4 +82,3 @@ export function useGuestyApiMonitor() {
     isRefreshing
   };
 }
-
