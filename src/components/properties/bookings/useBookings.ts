@@ -18,6 +18,20 @@ export interface Booking {
   property_id: string;
 }
 
+// Define the Guesty booking type based on the actual table structure
+interface GuestyBooking {
+  id: string;
+  guest_name: string;
+  listing_id: string;
+  check_in: string;
+  check_out: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  last_synced: string;
+  raw_data: any;
+}
+
 export const useBookings = (propertyId: string) => {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,20 +56,26 @@ export const useBookings = (propertyId: string) => {
           if (error) throw new Error(error.message);
           
           // Transform Guesty booking format to match our Booking interface
-          const transformedBookings: Booking[] = (data || []).map(booking => ({
-            id: booking.id,
-            guest_name: booking.guest_name || 'Guest',
-            guest_email: booking.guest_email || 'email@example.com',
-            guest_phone: booking.guest_phone,
-            check_in_date: booking.check_in,
-            check_out_date: booking.check_out,
-            num_guests: booking.num_guests || 1,
-            total_price: booking.total_price || 0,
-            status: booking.status || 'confirmed',
-            created_at: booking.created_at,
-            updated_at: booking.updated_at || booking.created_at,
-            property_id: booking.listing_id
-          }));
+          const transformedBookings: Booking[] = (data as GuestyBooking[] || []).map(booking => {
+            // Extract guest info and other details from raw_data if available
+            const rawData = booking.raw_data || {};
+            const guestData = rawData.guest || {};
+            
+            return {
+              id: booking.id,
+              guest_name: booking.guest_name || guestData.fullName || 'Guest',
+              guest_email: guestData.email || 'email@example.com',
+              guest_phone: guestData.phone,
+              check_in_date: booking.check_in,
+              check_out_date: booking.check_out,
+              num_guests: rawData.guestsCount || 1,
+              total_price: rawData.money?.netAmount || 0,
+              status: booking.status || 'confirmed',
+              created_at: booking.created_at,
+              updated_at: booking.updated_at || booking.created_at,
+              property_id: booking.listing_id
+            };
+          });
           
           setBookings(transformedBookings);
         } else {

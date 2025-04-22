@@ -17,26 +17,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBookings } from "./useBookings";
+import { formatDate } from "@/services/dataFormatService";
 
 interface BookingsListProps {
   propertyId: string;
   selectedDate: Date | undefined;
 }
-
-// Helper function to safely format dates
-const formatDate = (dateString: string | undefined): string => {
-  if (!dateString) return 'N/A';
-  
-  try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Invalid date';
-    
-    return date.toLocaleDateString();
-  } catch (error) {
-    console.error('Date formatting error:', error);
-    return 'Invalid date';
-  }
-};
 
 export const BookingsList = ({ propertyId, selectedDate }: BookingsListProps) => {
   const { bookings, isLoading } = useBookings(propertyId);
@@ -137,7 +123,7 @@ export const BookingStatusBadge = ({ status }: { status: string }) => {
     status === 'cancelled' ? 'destructive' : 'secondary';
   
   return (
-    <Badge variant={variant}>
+    <Badge variant={variant as any}>
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
   );
