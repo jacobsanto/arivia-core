@@ -2,15 +2,12 @@
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import GuestInfoFields from "./form-fields/GuestInfoFields";
 import BookingDateFields from "./form-fields/BookingDateFields";
 import BookingDetailsFields from "./form-fields/BookingDetailsFields";
-import { bookingFormSchema } from "./schema";
-
-type BookingFormValues = z.infer<typeof bookingFormSchema>;
+import { bookingFormSchema, type BookingFormValues } from "./schema";
 
 interface BookingFormProps {
   propertyId: number;
