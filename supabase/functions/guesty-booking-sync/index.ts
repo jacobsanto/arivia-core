@@ -170,28 +170,16 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
     console.log(`Syncing bookings for listing ${listingId}...`);
     
     const today = new Date().toISOString().split('T')[0];
+    let allBookings: any[] = [];
+    let page = 1;
+    let hasMore = true;
+    let endpoint = 'v1/listings/bookings';
     
-    console.log('Attempting to fetch bookings using /v1/bookings endpoint...');
-    let response = await fetch(
-      `https://open-api.guesty.com/v1/bookings?listingId=${listingId}&checkOut[gte]=${today}`, 
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      }
-    );
-
-    let data;
-    let endpoint = 'v1/bookings';
-
-    if (!response.ok || (response.ok && (await response.json()).results?.length === 0)) {
-      console.log('First attempt failed or returned no bookings, trying alternative endpoint...');
+    while (hasMore) {
+      console.log(`Fetching page ${page} of bookings for listing ${listingId}...`);
       
-      await delay(1000);
-      
-      response = await fetch(
-        `https://open-api.guesty.com/v1/listings/${listingId}/bookings?checkOut[gte]=${today}`,
+      const response = await fetch(
+        `https://open-api.guesty.com/v1/listings/${listingId}/bookings?page=${page}&limit=100&startDate[gte]=${today}`, 
         {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -199,59 +187,60 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
           },
         }
       );
-      endpoint = 'v1/listings/bookings';
-    }
 
-    const rateLimitInfo = extractRateLimitInfo(response.headers);
-    if (rateLimitInfo) {
-      try {
-        await supabase
-          .from('guesty_api_usage')
-          .insert({
-            endpoint: endpoint,
-            rate_limit: rateLimitInfo.rate_limit,
-            remaining: rateLimitInfo.remaining,
-            reset: rateLimitInfo.reset,
-            timestamp: new Date().toISOString()
-          });
-      } catch (error) {
-        console.error('Error storing rate limit info:', error);
+      const rateLimitInfo = extractRateLimitInfo(response.headers);
+      if (rateLimitInfo) {
+        try {
+          await supabase
+            .from('guesty_api_usage')
+            .insert({
+              endpoint: endpoint,
+              rate_limit: rateLimitInfo.rate_limit,
+              remaining: rateLimitInfo.remaining,
+              reset: rateLimitInfo.reset,
+              timestamp: new Date().toISOString()
+            });
+        } catch (error) {
+          console.error('Error storing rate limit info:', error);
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data || !Array.isArray(data.results)) {
+        console.error('Invalid response format from Guesty API:', data);
+        throw new Error('Invalid response format from Guesty API');
+      }
+      
+      const validBookings = data.results.filter(booking => 
+        booking.status !== 'cancelled' && 
+        booking.status !== 'test'
+      );
+      
+      allBookings = [...allBookings, ...validBookings];
+      
+      if (data.results.length < 100) {
+        hasMore = false;
+      } else {
+        page++;
+        if (rateLimitInfo && rateLimitInfo.remaining < 10) {
+          await delay(1000);
+        }
       }
     }
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText}`);
-    }
+    console.log(`Found ${allBookings.length} valid bookings for listing ${listingId}`);
 
-    data = await response.json();
-    
-    if (!data || !Array.isArray(data.results)) {
-      console.error('Invalid response format from Guesty API:', data);
-      throw new Error('Invalid response format from Guesty API');
-    }
-    
-    const bookings = data.results || [];
-
-    console.log(`Found ${bookings.length} bookings for listing ${listingId} using ${endpoint}`);
-
-    await supabase
-      .from('integration_health')
-      .update({
-        last_successful_endpoint: endpoint,
-        endpoint_stats: {
-          endpoint,
-          success_count: 1,
-          last_success: new Date().toISOString()
-        }
-      })
-      .eq('provider', 'guesty');
-
-    const deleted = await cleanObsoleteBookings(supabase, listingId, bookings);
+    const deleted = await cleanObsoleteBookings(supabase, listingId, allBookings);
 
     let created = 0;
     let updated = 0;
 
-    for (const booking of bookings) {
+    for (const booking of allBookings) {
       if (!booking._id || !booking.listing || !booking.listing._id) {
         console.error('Invalid booking data received:', booking);
         continue;
@@ -313,7 +302,7 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
 
     console.log(`Sync completed for listing ${listingId}: ${created} created, ${updated} updated, ${deleted} deleted/cancelled`);
     return { 
-      total: bookings.length,
+      total: allBookings.length,
       created, 
       updated, 
       deleted,
