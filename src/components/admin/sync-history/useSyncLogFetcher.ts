@@ -1,5 +1,5 @@
 
-import { useInfiniteQuery, UseInfiniteQueryResult } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SyncLog, SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
@@ -144,14 +144,14 @@ export function useSyncLogFetcher(
 ): SyncLogHookResult {
   const { pageSize, ...filters } = params;
 
-  // Use type assertion to avoid complex type inference
+  // Use useInfiniteQuery with explicit typings to avoid deep type recursion
   const queryResult = useInfiniteQuery({
     queryKey: ['syncLogs', filters] as const,
     queryFn: ({ pageParam }) => fetchSyncLogs(Number(pageParam), pageSize, filters),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage,
     staleTime: 1000 * 60 * 5, // 5 minutes
-  }) as UseInfiniteQueryResult<PageResult, Error>;
+  });
 
   // Extract and flatten the results
   const logs = queryResult.data?.pages.flatMap(page => page.data) || [];
