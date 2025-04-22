@@ -26,6 +26,7 @@ export interface GuestyListingDB {
   status: string;
   property_type: string;
   thumbnail_url: string;
+  highres_url?: string;
   sync_status: string;
   last_synced: string;
   raw_data: any;

@@ -69,6 +69,9 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
             .eq('id', listing._id)
             .single();
 
+          // Choose highest available resolution: prefer picture.original > picture.large > picture.thumbnail
+          const largeImage = listing.picture?.original || listing.picture?.large || listing.picture?.thumbnail || null;
+
           const listingData = {
             id: listing._id,
             title: listing.title,
@@ -76,6 +79,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
             status: listing.status,
             property_type: listing.propertyType,
             thumbnail_url: listing.picture?.thumbnail,
+            highres_url: largeImage, // <-- new field for high-res images
             last_synced: new Date().toISOString(),
             raw_data: listing,
             sync_status: 'active',

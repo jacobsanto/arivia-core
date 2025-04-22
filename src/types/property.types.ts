@@ -41,6 +41,7 @@ export interface GuestyProperty {
   };
   status?: string;
   thumbnail_url?: string;
+  highres_url?: string; // <-- new: support high-res url if available
   property_type?: string;
   sync_status?: string;
   last_synced?: string;

@@ -71,14 +71,17 @@ export const unifiedPropertyService = {
     const address = typeof listing.address === 'object' ? listing.address : {};
     const fullAddress = address.full || '';
     const location = address.city || address.country || 'Greece';
-    
+
     // Extract property details from raw_data if available
     const rawData = listing.raw_data || {};
     const bedrooms = rawData.bedrooms || 0;
     const bathrooms = rawData.bathrooms || 0;
     const price = rawData.basePrice || 0;
     const maxGuests = rawData.accommodates || 0;
-    
+
+    // Use highres_url if available, otherwise fallback to thumbnail_url or placeholder
+    const imageUrl = listing.highres_url || listing.thumbnail_url || '/placeholder.svg';
+
     return {
       id: listing.id,
       name: listing.title,
@@ -89,7 +92,7 @@ export const unifiedPropertyService = {
       bathrooms: bathrooms,
       price: price,
       price_per_night: price,
-      imageUrl: listing.thumbnail_url || '/placeholder.svg',
+      imageUrl, // now may be highres
       description: rawData.description || '',
       address: fullAddress,
       max_guests: maxGuests,
