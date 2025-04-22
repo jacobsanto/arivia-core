@@ -2,22 +2,33 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, AlertTriangle, RefreshCw, TrendingUp, BarChart3 } from "lucide-react";
+import { Loader2, AlertTriangle, RefreshCw, TrendingUp, BarChart3, Info } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGuestyApiMonitor } from './hooks/useGuestyApiMonitor';
 import { ApiUsageTab } from './components/ApiUsageTab';
 import { SyncHistoryTab } from './components/SyncHistoryTab';
+import { toast } from 'sonner';
 
 const GuestyApiMonitor: React.FC = () => {
   const {
     data,
+    apiUsage,
     isLoading,
     error,
     activeTab,
     setActiveTab,
     handleRefresh,
-    isRefreshing
+    isRefreshing,
+    isLoadingUsage
   } = useGuestyApiMonitor();
+  
+  const refreshData = async () => {
+    toast.promise(handleRefresh(), {
+      loading: 'Refreshing API monitor data...',
+      success: 'API monitor data refreshed',
+      error: 'Failed to refresh API monitor data'
+    });
+  };
   
   if (error) {
     return (
@@ -30,7 +41,8 @@ const GuestyApiMonitor: React.FC = () => {
         </CardHeader>
         <CardContent>
           <p className="text-red-500">Failed to load Guesty API health status</p>
-          <Button onClick={handleRefresh} variant="outline" size="sm" className="mt-2">
+          <p className="text-xs text-muted-foreground mt-1">{error instanceof Error ? error.message : 'Unknown error'}</p>
+          <Button onClick={refreshData} variant="outline" size="sm" className="mt-2">
             Retry
           </Button>
         </CardContent>
@@ -51,7 +63,7 @@ const GuestyApiMonitor: React.FC = () => {
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={handleRefresh} 
+            onClick={refreshData} 
             disabled={isLoading || isRefreshing}
           >
             <RefreshCw className={`h-4 w-4 ${isLoading || isRefreshing ? 'animate-spin' : ''}`} />
@@ -77,14 +89,34 @@ const GuestyApiMonitor: React.FC = () => {
             </TabsList>
             
             <TabsContent value="usage">
-              <ApiUsageTab 
-                remainingRequests={data.remainingRequests}
-                quotaUsage={data.quotaUsage}
-              />
+              {isLoadingUsage ? (
+                <div className="flex justify-center py-4">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : Object.keys(data.quotaUsage).length > 0 ? (
+                <ApiUsageTab 
+                  remainingRequests={data.remainingRequests}
+                  quotaUsage={data.quotaUsage}
+                />
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Info className="mx-auto h-8 w-8 mb-2 text-muted-foreground/50" />
+                  <p>No API usage data available yet</p>
+                  <p className="text-xs mt-1">Usage data will appear after API calls are made</p>
+                </div>
+              )}
             </TabsContent>
             
             <TabsContent value="history">
-              <SyncHistoryTab recentSyncs={data.recentSyncs} />
+              {data.recentSyncs && data.recentSyncs.length > 0 ? (
+                <SyncHistoryTab recentSyncs={data.recentSyncs} />
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Info className="mx-auto h-8 w-8 mb-2 text-muted-foreground/50" />
+                  <p>No sync history available</p>
+                  <p className="text-xs mt-1">History will appear after syncs are performed</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         ) : (
@@ -106,4 +138,3 @@ const GuestyApiMonitor: React.FC = () => {
 };
 
 export default GuestyApiMonitor;
-

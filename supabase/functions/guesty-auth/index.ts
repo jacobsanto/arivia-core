@@ -64,13 +64,56 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     const expiresAt = new Date(Date.now() + tokenData.expires_in * 1000);
 
+    // Extract and store rate limit information from response headers
+    const rateLimitLimit = tokenResponse.headers.get('x-ratelimit-limit');
+    const rateLimitRemaining = tokenResponse.headers.get('x-ratelimit-remaining');
+    const rateLimitReset = tokenResponse.headers.get('x-ratelimit-reset');
+
+    if (rateLimitLimit && rateLimitRemaining) {
+      try {
+        await supabase
+          .from('guesty_api_usage')
+          .insert({
+            endpoint: 'auth/token',
+            rate_limit: parseInt(rateLimitLimit),
+            remaining: parseInt(rateLimitRemaining),
+            reset: rateLimitReset || new Date(Date.now() + 3600000).toISOString(),
+            timestamp: new Date().toISOString()
+          });
+      } catch (error) {
+        console.error('Error storing rate limit info:', error);
+        // Continue execution even if storing rate limit info fails
+      }
+    }
+
+    // Update integration health with rate limit info
+    try {
+      await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'connected',
+          updated_at: new Date().toISOString(),
+          last_synced: new Date().toISOString(),
+          remaining_requests: rateLimitRemaining ? parseInt(rateLimitRemaining) : null,
+          is_rate_limited: false,
+          last_error: null
+        }, {
+          onConflict: 'provider'
+        });
+    } catch (error) {
+      console.error('Error updating integration health:', error);
+      // Continue execution even if updating health fails
+    }
+
     // Upsert token in database
     const { error: upsertError } = await supabase
       .from('integration_tokens')
       .upsert({
         provider: 'guesty',
         access_token: tokenData.access_token,
-        expires_at: expiresAt.toISOString()
+        expires_at: expiresAt.toISOString(),
+        updated_at: new Date().toISOString()
       }, {
         onConflict: 'provider'
       });
@@ -89,6 +132,27 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Guesty auth function error:', error);
+    
+    // Update integration health to error state
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      
+      await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'error',
+          updated_at: new Date().toISOString(),
+          last_error: error instanceof Error ? error.message : 'Unknown error during authentication'
+        }, {
+          onConflict: 'provider'
+        });
+    } catch (healthError) {
+      console.error('Failed to update integration health:', healthError);
+    }
+    
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

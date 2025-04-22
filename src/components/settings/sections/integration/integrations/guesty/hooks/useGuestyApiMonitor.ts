@@ -36,14 +36,19 @@ export function useGuestyApiMonitor() {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['guesty-health-check'],
     queryFn: async () => {
-      const { data } = await supabase.functions.invoke<{
+      const { data, error } = await supabase.functions.invoke<{
         success: boolean;
         health: HealthCheckResponse;
       }>('guesty-health-check');
       
-      return data?.health;
+      if (error) throw error;
+      if (!data) throw new Error('No data returned from health check');
+      if (!data.success) throw new Error(data.health?.lastError || 'Health check failed');
+      
+      return data.health;
     },
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+    retry: 2, // Retry twice on failure
   });
   
   const { data: apiUsage, isLoading: isLoadingUsage, refetch: refetchApiUsage } = useQuery({
@@ -57,13 +62,18 @@ export function useGuestyApiMonitor() {
         
       if (error) throw error;
       return data as ApiUsage[];
-    }
+    },
+    retry: 2,
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([refetch(), refetchApiUsage()]);
+      await Promise.all([
+        refetch({ cancelRefetch: true }), 
+        refetchApiUsage({ cancelRefetch: true })
+      ]);
     } catch (err) {
       console.error("Error refreshing data:", err);
     } finally {
@@ -79,6 +89,7 @@ export function useGuestyApiMonitor() {
     activeTab,
     setActiveTab,
     handleRefresh,
-    isRefreshing
+    isRefreshing,
+    isLoadingUsage
   };
 }
