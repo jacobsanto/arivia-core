@@ -3,90 +3,125 @@ import { extractRateLimitInfo, delay } from '../utils.ts';
 import { GuestyBooking } from '../types.ts';
 import { cleanObsoleteBookings } from './cleanObsoleteBookings.ts';
 
-// Main booking sync logic, extracted for maintainability
+// Normalization helper for status values
+function normalizeStatus(status: string | undefined): string {
+  if (!status) return 'unknown';
+  const s = status.toLowerCase();
+  if (['cancelled', 'canceled'].includes(s)) return 'cancelled';
+  if (['pending', 'awaiting'].includes(s)) return 'pending';
+  if (['booked', 'confirmed', 'complete'].includes(s)) return 'confirmed';
+  return s;
+}
+
+/**
+ * Syncs Guesty reservations into Supabase for a specific listing.
+ * Uses updated endpoint: /v1/reservations?listingId={listingId}
+ */
 export async function syncGuestyBookingsForListing(supabase: any, token: string, listingId: string): Promise<number> {
   try {
-    console.log(`Syncing bookings for listing ${listingId}...`);
+    console.log(`[GuestySync] Fetching reservations for listing ${listingId}...`);
     const today = new Date().toISOString().split('T')[0];
-    const response = await fetch(
-      `https://open-api.guesty.com/v1/bookings?listingId=${listingId}&checkOut[gte]=${today}`, 
-      {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json',
-        },
-      }
-    );
+    const url = `https://open-api.guesty.com/v1/reservations?listingId=${listingId}&endDate[gte]=${today}`;
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    // Log rate limit info if present
     const rateLimitInfo = extractRateLimitInfo(response.headers);
     if (rateLimitInfo) {
       try {
         await supabase
           .from('guesty_api_usage')
           .insert({
-            endpoint: 'bookings',
+            endpoint: 'reservations',
             limit: rateLimitInfo.rate_limit,
             remaining: rateLimitInfo.remaining,
             reset: rateLimitInfo.reset,
             timestamp: new Date().toISOString()
           });
       } catch (error) {
-        console.error('Error storing rate limit info:', error);
+        console.error('[GuestySync] Error storing rate limit info:', error);
       }
     }
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText} - ${errorText}`);
+      throw new Error(`[GuestySync] Failed to fetch reservations for listing ${listingId}: ${response.status} ${response.statusText} - ${errorText}`);
     }
+
     const data = await response.json();
-    if (!data || !Array.isArray(data.results)) {
-      throw new Error(`Invalid booking response format for listing ${listingId}`);
-    }
-    const bookings = data.results as GuestyBooking[];
-    if (bookings.length === 0) {
+    const reservations: any[] = data?.results || [];
+    console.log(`[GuestySync] [${listingId}] ${reservations.length} reservations fetched from Guesty API`);
+
+    if (!Array.isArray(reservations) || reservations.length === 0) {
       await cleanObsoleteBookings(supabase, listingId, []);
       return 0;
     }
-    await cleanObsoleteBookings(supabase, listingId, bookings);
+
+    // Clean obsolete reservations ("bookings") in Supabase
+    await cleanObsoleteBookings(supabase, listingId, reservations);
+
     let created = 0;
     let updated = 0;
-    for (const booking of bookings) {
+    for (const reservation of reservations) {
       try {
-        if (!booking._id || !booking.listing || !booking.listing._id) continue;
+        // These are the key fields to sync:
+        // id, listingId, guest.fullName/email, startDate, endDate, status
+        const bookingId = reservation.id || reservation._id;
+        const propListingId = reservation.listingId || (reservation.listing && reservation.listing._id) || listingId;
+
+        if (!bookingId || !propListingId) continue;
+
+        const guest = reservation.guest || {};
+        const checkIn = reservation.startDate || reservation.checkIn;
+        const checkOut = reservation.endDate || reservation.checkOut;
+        const bookingStatus = normalizeStatus(reservation.status);
+
         const bookingData = {
-          id: booking._id,
-          listing_id: booking.listing._id,
-          guest_name: booking.guest?.fullName || 'Unknown Guest',
-          check_in: booking.checkIn,
-          check_out: booking.checkOut,
-          status: booking.status || 'unknown',
+          id: bookingId,
+          listing_id: propListingId,
+          guest_name: guest.fullName || guest.name || 'Unknown Guest',
+          check_in: checkIn,
+          check_out: checkOut,
+          status: bookingStatus,
           last_synced: new Date().toISOString(),
-          raw_data: booking
+          raw_data: reservation // Store original for possible notes, financial, etc.
         };
+
+        // Upsert booking into guesty_bookings
         const { data: existingBooking, error: lookupError } = await supabase
           .from('guesty_bookings')
           .select('id')
-          .eq('id', booking._id)
+          .eq('id', bookingId)
           .maybeSingle();
+
         if (!existingBooking) {
           const { error: insertError } = await supabase
             .from('guesty_bookings')
             .insert(bookingData);
           if (!insertError) created++;
+          else console.error(`[GuestySync] Failed to insert booking ${bookingId}:`, insertError);
         } else {
           const { error: updateError } = await supabase
             .from('guesty_bookings')
             .update(bookingData)
-            .eq('id', booking._id);
+            .eq('id', bookingId);
           if (!updateError) updated++;
+          else console.error(`[GuestySync] Failed to update booking ${bookingId}:`, updateError);
         }
-        await delay(50);
+
+        await delay(50); // brief rate limit friendly delay
       } catch (err) {
-        console.error(`Error processing booking ${booking._id || 'unknown'}:`, err);
+        console.error(`[GuestySync] Error processing reservation ${reservation.id || reservation._id || 'unknown'}:`, err);
       }
     }
-    return bookings.length;
+
+    console.log(`[GuestySync] [${listingId}] Reservations upserted: created=${created}, updated=${updated}`);
+    return reservations.length;
   } catch (error) {
-    console.error(`Error in syncGuestyBookingsForListing for ${listingId}:`, error);
+    console.error(`[GuestySync] Error in syncGuestyBookingsForListing for ${listingId}:`, error);
     throw error;
   }
 }

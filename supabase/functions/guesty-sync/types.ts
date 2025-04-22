@@ -1,3 +1,4 @@
+
 // Guesty Listing Type
 export interface GuestyListing {
   _id: string;
@@ -20,22 +21,20 @@ export interface GuestyListing {
   [key: string]: any; // Allow for other properties
 }
 
-// Guesty Booking Type
+// Guesty Reservation Type - updated for /v1/reservations
 export interface GuestyBooking {
-  _id: string;
-  status: string;
-  checkIn: string;
-  checkOut: string;
-  listing: {
-    _id: string;
-    title?: string;
-  };
-  guest: {
+  id: string;                  // reservation ID
+  listingId: string;           // property/listing ID
+  guest?: {
     fullName?: string;
     email?: string;
     phone?: string;
   };
-  [key: string]: any; // Allow for other properties
+  startDate?: string;          // check-in
+  endDate?: string;            // check-out
+  status?: string;
+  notes?: string;              // may be present
+  [key: string]: any;
 }
 
 // Guesty API Response Types
