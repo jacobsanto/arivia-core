@@ -27,6 +27,8 @@ serve(async (req) => {
     const listingId = requestData.listingId;
     const syncAll = requestData.syncAll === true;
     
+    console.log(`Starting Guesty bookings sync: ${syncAll ? 'Full sync' : `Single listing: ${listingId}`}`);
+    
     // Create sync log entry
     const { data: syncLog } = await supabase
       .from('sync_logs')
@@ -50,11 +52,15 @@ serve(async (req) => {
     
     if (syncAll) {
       // Get all active listings
-      const { data: listings } = await supabase
+      const { data: listings, error: listingsError } = await supabase
         .from('guesty_listings')
         .select('id')
         .eq('is_deleted', false)
         .eq('sync_status', 'active');
+      
+      if (listingsError) {
+        throw new Error(`Failed to fetch listings: ${listingsError.message}`);
+      }
         
       listingsToSync = listings?.map(listing => listing.id) || [];
       console.log(`Found ${listingsToSync.length} active listings to sync bookings for`);
@@ -64,13 +70,33 @@ serve(async (req) => {
       throw new Error('Either listingId or syncAll must be provided');
     }
     
+    if (listingsToSync.length === 0) {
+      throw new Error('No listings found to sync');
+    }
+    
     // Sync bookings for each listing
     const results = [];
+    let created = 0;
+    let updated = 0;
+    let deleted = 0;
+    
     for (const id of listingsToSync) {
       try {
-        const bookingsSynced = await syncBookingsForListing(supabase, token, id);
-        totalBookingsSynced += bookingsSynced;
-        results.push({ listingId: id, bookingsSynced, success: true });
+        console.log(`Processing listing: ${id}`);
+        const syncResult = await syncBookingsForListing(supabase, token, id);
+        totalBookingsSynced += syncResult.total;
+        created += syncResult.created;
+        updated += syncResult.updated;
+        deleted += syncResult.deleted;
+        
+        results.push({ 
+          listingId: id, 
+          bookingsSynced: syncResult.total, 
+          created: syncResult.created,
+          updated: syncResult.updated, 
+          deleted: syncResult.deleted,
+          success: true 
+        });
         
         // Add small delay between listings to avoid rate limits
         if (listingsToSync.length > 1) {
@@ -95,7 +121,9 @@ serve(async (req) => {
         items_count: totalBookingsSynced,
         sync_duration: Date.now() - startTime,
         message: `Successfully synced ${totalBookingsSynced} bookings across ${listingsToSync.length} listings`,
-        bookings_created: totalBookingsSynced // This is approximate as we don't track created vs updated
+        bookings_created: created,
+        bookings_updated: updated,
+        bookings_deleted: deleted
       })
       .eq('id', syncLog.id);
     
@@ -113,6 +141,9 @@ serve(async (req) => {
         message: `Successfully synced ${totalBookingsSynced} bookings`,
         bookingsSynced: totalBookingsSynced,
         listings: listingsToSync.length,
+        created: created,
+        updated: updated,
+        deleted: deleted,
         results: results
       }),
       {
@@ -137,7 +168,12 @@ serve(async (req) => {
   }
 });
 
-async function syncBookingsForListing(supabase: any, token: string, listingId: string): Promise<number> {
+async function syncBookingsForListing(supabase: any, token: string, listingId: string): Promise<{
+  total: number;
+  created: number;
+  updated: number;
+  deleted: number;
+}> {
   try {
     console.log(`Syncing bookings for listing ${listingId}...`);
     
@@ -174,53 +210,40 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
     }
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.statusText}`);
+      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    
+    if (!data || !Array.isArray(data.results)) {
+      console.error('Invalid response format from Guesty API:', data);
+      throw new Error('Invalid response format from Guesty API');
+    }
+    
     const bookings = data.results || [];
 
     console.log(`Found ${bookings.length} bookings for listing ${listingId}`);
 
-    // Clean up obsolete bookings
-    await cleanObsoleteBookings(supabase, listingId, bookings);
-
-    // Create a Set of active booking IDs from Guesty
-    const activeBookingIds = new Set(bookings.map(b => b._id));
-
     // Mark local bookings not found in Guesty as cancelled
-    const { data: localBookings } = await supabase
-      .from('guesty_bookings')
-      .select('id')
-      .eq('listing_id', listingId)
-      .gt('check_out', today)
-      .neq('status', 'cancelled');
-
-    if (localBookings) {
-      const bookingsToCancel = localBookings.filter(b => !activeBookingIds.has(b.id));
-      
-      if (bookingsToCancel.length > 0) {
-        await supabase
-          .from('guesty_bookings')
-          .update({
-            status: 'cancelled',
-            last_synced: new Date().toISOString()
-          })
-          .in('id', bookingsToCancel.map(b => b.id));
-        
-        console.log(`Marked ${bookingsToCancel.length} bookings as cancelled for listing ${listingId}`);
-      }
-    }
+    const deleted = await cleanObsoleteBookings(supabase, listingId, bookings);
 
     // Upsert active bookings
     let created = 0;
     let updated = 0;
 
     for (const booking of bookings) {
+      if (!booking._id || !booking.listing || !booking.listing._id) {
+        console.error('Invalid booking data received:', booking);
+        continue;
+      }
+      
+      // Extract guest info
+      const guestName = booking.guest?.fullName || 'Guest';
+      
       const bookingData = {
         id: booking._id,
         listing_id: booking.listing._id,
-        guest_name: booking.guest?.fullName || 'Guest',
+        guest_name: guestName,
         check_in: booking.checkIn,
         check_out: booking.checkOut,
         status: booking.status,
@@ -228,31 +251,55 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
         raw_data: booking
       };
 
-      const { data: existingBooking } = await supabase
-        .from('guesty_bookings')
-        .select('id')
-        .eq('id', booking._id)
-        .maybeSingle();
+      try {
+        const { data: existingBooking, error: selectError } = await supabase
+          .from('guesty_bookings')
+          .select('id')
+          .eq('id', booking._id)
+          .maybeSingle();
 
-      if (!existingBooking) {
-        await supabase
-          .from('guesty_bookings')
-          .insert(bookingData);
-        created++;
-      } else {
-        await supabase
-          .from('guesty_bookings')
-          .update(bookingData)
-          .eq('id', booking._id);
-        updated++;
+        if (selectError) {
+          console.error(`Error checking for existing booking ${booking._id}:`, selectError);
+          continue;
+        }
+
+        if (!existingBooking) {
+          const { error: insertError } = await supabase
+            .from('guesty_bookings')
+            .insert(bookingData);
+          
+          if (insertError) {
+            console.error(`Error inserting booking ${booking._id}:`, insertError);
+            continue;
+          }
+          created++;
+        } else {
+          const { error: updateError } = await supabase
+            .from('guesty_bookings')
+            .update(bookingData)
+            .eq('id', booking._id);
+          
+          if (updateError) {
+            console.error(`Error updating booking ${booking._id}:`, updateError);
+            continue;
+          }
+          updated++;
+        }
+      } catch (error) {
+        console.error(`Error processing booking ${booking._id}:`, error);
       }
 
       // Add small delay between operations to avoid rate limiting
       await delay(100);
     }
 
-    console.log(`Sync completed for listing ${listingId}: ${created} created, ${updated} updated`);
-    return bookings.length;
+    console.log(`Sync completed for listing ${listingId}: ${created} created, ${updated} updated, ${deleted} deleted/cancelled`);
+    return { 
+      total: bookings.length,
+      created, 
+      updated, 
+      deleted
+    };
 
   } catch (error) {
     console.error(`Error in syncBookingsForListing for ${listingId}:`, error);
@@ -260,36 +307,53 @@ async function syncBookingsForListing(supabase: any, token: string, listingId: s
   }
 }
 
-async function cleanObsoleteBookings(supabase: any, listingId: string, activeBookings: any[]) {
+async function cleanObsoleteBookings(supabase: any, listingId: string, activeBookings: any[]): Promise<number> {
   try {
     const today = new Date().toISOString().split('T')[0];
     // Create a Set of active booking IDs from Guesty
     const activeBookingIds = new Set(activeBookings.map(b => b._id));
 
     // Find local bookings for this listing that are not in Guesty's active set
-    const { data: localBookings } = await supabase
+    const { data: localBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
       .eq('listing_id', listingId)
       .gt('check_out', today)
       .neq('status', 'cancelled');
-
-    if (localBookings) {
-      const bookingsToCancel = localBookings.filter(b => !activeBookingIds.has(b.id));
       
-      if (bookingsToCancel.length > 0) {
-        console.log(`Marking ${bookingsToCancel.length} bookings as cancelled for listing ${listingId}`);
-        await supabase
-          .from('guesty_bookings')
-          .update({
-            status: 'cancelled',
-            last_synced: new Date().toISOString()
-          })
-          .in('id', bookingsToCancel.map(b => b.id));
-      }
+    if (error) {
+      console.error(`Error fetching local bookings for listing ${listingId}:`, error);
+      return 0;
     }
+
+    if (!localBookings || localBookings.length === 0) {
+      return 0;
+    }
+    
+    const bookingsToCancel = localBookings.filter(b => !activeBookingIds.has(b.id));
+    
+    if (bookingsToCancel.length === 0) {
+      return 0;
+    }
+    
+    console.log(`Marking ${bookingsToCancel.length} bookings as cancelled for listing ${listingId}`);
+    
+    const { error: updateError } = await supabase
+      .from('guesty_bookings')
+      .update({
+        status: 'cancelled',
+        last_synced: new Date().toISOString()
+      })
+      .in('id', bookingsToCancel.map(b => b.id));
+    
+    if (updateError) {
+      console.error(`Error cancelling obsolete bookings for listing ${listingId}:`, updateError);
+      return 0;
+    }
+    
+    return bookingsToCancel.length;
   } catch (error) {
     console.error(`Error cleaning obsolete bookings for listing ${listingId}:`, error);
-    throw error;
+    return 0;
   }
 }

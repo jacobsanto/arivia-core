@@ -41,13 +41,22 @@ export const useBookings = (propertyId: string) => {
 
   // Load bookings for the property
   const fetchBookings = async () => {
+    if (!propertyId) {
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
+    setError(null);
+    
     try {
+      console.log(`Fetching bookings for property ID: ${propertyId}`);
       // Detect if the property ID is from Guesty (non-UUID format)
       const isGuestyProperty = propertyId && 
         !propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
       if (isGuestyProperty) {
+        console.log(`Fetching Guesty bookings for listing: ${propertyId}`);
         // For Guesty properties, use the guesty_bookings table
         const { data, error } = await supabase
           .from('guesty_bookings')
@@ -55,6 +64,8 @@ export const useBookings = (propertyId: string) => {
           .eq('listing_id', propertyId);
         
         if (error) throw new Error(error.message);
+        
+        console.log(`Found ${data?.length || 0} Guesty bookings`);
         
         // Transform Guesty booking format to match our Booking interface
         const transformedBookings: Booking[] = (data as GuestyBooking[] || []).map(booking => {
@@ -72,8 +83,8 @@ export const useBookings = (propertyId: string) => {
             num_guests: rawData.guestsCount || 1,
             total_price: rawData.money?.netAmount || 0,
             status: booking.status || 'confirmed',
-            created_at: booking.created_at,
-            updated_at: booking.updated_at || booking.created_at,
+            created_at: booking.created_at || new Date().toISOString(),
+            updated_at: booking.updated_at || booking.last_synced || new Date().toISOString(),
             property_id: booking.listing_id
           };
         });
@@ -144,6 +155,9 @@ export const useBookings = (propertyId: string) => {
   useEffect(() => {
     if (propertyId) {
       fetchBookings();
+    } else {
+      setBookings([]);
+      setIsLoading(false);
     }
   }, [propertyId]);
 
