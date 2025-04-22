@@ -25,7 +25,7 @@ export const BookingCalendarView = ({
   selectedDate, 
   setSelectedDate 
 }: BookingCalendarViewProps) => {
-  const [isAddBookingDialogOpen, setIsAddBookingDialogOpen] = useState(false);
+  const [isAddBookingDialogOpen, setIsAddBookingDialogOpen] = useState<boolean>(false);
   const { bookings } = useBookings(propertyId);
 
   const getBookedDaysModifiers = () => {
@@ -60,7 +60,10 @@ export const BookingCalendarView = ({
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Calendar</span>
-          <Dialog open={isAddBookingDialogOpen} onOpenChange={setIsAddBookingDialogOpen}>
+          <Dialog 
+            open={isAddBookingDialogOpen} 
+            onOpenChange={(open: boolean) => setIsAddBookingDialogOpen(open)}
+          >
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
