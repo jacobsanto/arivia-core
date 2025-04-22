@@ -9,8 +9,9 @@ export function useSyncLogs(params: UseSyncLogsParams) {
   const retryHandler = useSyncLogRetry();
 
   // Compose retrySync that refetches after retry
-  const retrySync = (opts: RetrySyncOptions) =>
-    retryHandler.retrySync(opts, fetcher.refetch);
+  const retrySync = (opts: RetrySyncOptions) => {
+    return retryHandler.retrySync(opts, () => fetcher.refetch());
+  };
 
   return {
     logs: fetcher.logs as SyncLog[], // Explicit for clarity, matches app UI

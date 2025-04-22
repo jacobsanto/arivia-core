@@ -4,13 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { RetrySyncOptions } from "./syncLog.types";
 import { setRetryingFlag } from "./syncLog.state";
+import { QueryObserverResult } from "@tanstack/react-query";
+
+type RefetchFunction = () => Promise<unknown>;
 
 // Handles retrying logic and returns the retrySync function and loading state
 export function useSyncLogRetry() {
   const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  async function retrySync({ logId, service, syncType }: RetrySyncOptions, refetch?: () => Promise<void>) {
+  async function retrySync({ logId, service, syncType }: RetrySyncOptions, refetch?: RefetchFunction) {
     try {
       setIsRetrying(prev => setRetryingFlag(prev, logId, true));
       const functionName = service?.toLowerCase() === 'guesty' ? 'guesty-sync' : 'sync-service';

@@ -4,12 +4,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { SyncLog, SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
 
+// Define explicit return type for fetchSyncLogs to avoid excessive type instantiation
+interface FetchSyncLogsResult {
+  data: SyncLog[];
+  nextPage: number | null;
+  availableIntegrations: string[];
+}
+
 // Fetch function for use with React Query
 async function fetchSyncLogs(
   pageParam: number,
   pageSize: number,
   filters: SyncLogsFilters
-): Promise<{ data: SyncLog[]; nextPage: number | null; availableIntegrations: string[] }> {
+): Promise<FetchSyncLogsResult> {
   try {
     const { status, integration, listingId } = filters;
     const startIndex = pageParam * pageSize;
