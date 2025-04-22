@@ -42,8 +42,11 @@ export const BookingCalendarView = ({
           return;
         }
         
+        // Create a copy of the check-in date to iterate through
         const currentDate = new Date(checkInDate);
-        while (currentDate <= checkOutDate) {
+        
+        // Iterate through each day between check-in and check-out
+        while (currentDate.getTime() <= checkOutDate.getTime()) {
           bookedDays.push(new Date(currentDate));
           currentDate.setDate(currentDate.getDate() + 1);
         }
