@@ -11,8 +11,10 @@ interface BookingSyncResult {
 }
 
 /**
- * Syncs Guesty reservations for a listing using /v1/reservations?listingId=... API
- * Optionally run in "test mode" for one listing via POST param.
+ * Syncs Guesty reservations for a specific listing using optimized approach
+ * - Uses the /v1/reservations?listingId={listingId}&endDate[gte]={today} endpoint
+ * - Optimized database operations
+ * - Better error handling and logging
  */
 export async function syncBookingsForListing(
   supabase: any,
@@ -23,12 +25,12 @@ export async function syncBookingsForListing(
     console.log(`[GuestyBookingSync] Syncing bookings for listing ${listingId}...`);
 
     const today = new Date().toISOString().split('T')[0];
-    // Guesty recommended endpoint for all future/present bookings:
-    // /v1/reservations?listingId={listingId}&endDate[gte]={today}
     const url = `https://open-api.guesty.com/v1/reservations?listingId=${listingId}&endDate[gte]=${today}`;
-    let endpoint = '/v1/reservations';
+    const endpoint = '/v1/reservations';
 
     console.log(`[GuestyBookingSync] Fetching bookings URL: ${url}`);
+    
+    // Fetch bookings with proper error handling
     const response = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -36,7 +38,7 @@ export async function syncBookingsForListing(
       },
     });
 
-    // Rate limit logging
+    // Track API usage for rate limiting monitoring
     const rateLimitInfo = extractRateLimitInfo(response.headers);
     if (rateLimitInfo) {
       try {
@@ -54,10 +56,19 @@ export async function syncBookingsForListing(
       }
     }
 
+    // Enhanced error handling
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`[GuestyBookingSync] Failed to fetch bookings: ${response.status} ${response.statusText}`, errorText);
-      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${response.status} ${response.statusText} - ${errorText}`);
+      const status = response.status;
+      
+      console.error(`[GuestyBookingSync] Failed to fetch bookings: ${status} ${response.statusText}`, errorText);
+      
+      // Special handling for rate limits
+      if (status === 429) {
+        throw new Error(`Rate limit exceeded: ${errorText}`);
+      }
+      
+      throw new Error(`Failed to fetch bookings for listing ${listingId}: ${status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
@@ -66,84 +77,101 @@ export async function syncBookingsForListing(
       throw new Error('Invalid response format from Guesty reservations endpoint');
     }
 
+    // Filter out cancelled and test bookings
     const remoteBookings = (data.results as any[]).filter(booking =>
       booking.status !== 'cancelled' && booking.status !== 'test'
     );
 
     console.log(`[GuestyBookingSync] Got ${remoteBookings.length} bookings from Guesty for listing ${listingId}`);
 
-    // Clean obsolete bookings
+    // Clean obsolete bookings (mark as cancelled)
     const deleted = await cleanObsoleteBookings(supabase, listingId, remoteBookings);
 
+    // Process bookings in batches to improve efficiency
     let created = 0;
     let updated = 0;
 
-    // Write each booking to DB (upsert)
-    for (const booking of remoteBookings) {
-      try {
-        // Defensive checks
-        const bookingId = booking.id || booking._id;
-        const propListingId = booking.listingId || (booking.listing && booking.listing._id) || listingId;
-        const guest = booking.guest || {};
+    // Prepare booking data for batch processing
+    const bookingsToProcess = remoteBookings.map(booking => {
+      const bookingId = booking.id || booking._id;
+      const propListingId = booking.listingId || (booking.listing && booking.listing._id) || listingId;
+      const guest = booking.guest || {};
+      
+      if (!bookingId || !propListingId) {
+        console.warn("[GuestyBookingSync] Missing booking id or listing id, skipping", booking);
+        return null;
+      }
+      
+      const guestName = guest.fullName || guest.name || 'Unknown Guest';
+      const checkIn = booking.startDate || booking.checkIn;
+      const checkOut = booking.endDate || booking.checkOut;
+      const status = booking.status;
 
-        if (!bookingId || !propListingId) {
-          console.warn("[GuestyBookingSync] Missing booking id or listing id, skipping", booking);
-          continue;
-        }
-        const guestName = guest.fullName || guest.name || 'Unknown Guest';
-        const checkIn = booking.startDate || booking.checkIn;
-        const checkOut = booking.endDate || booking.checkOut;
-        const status = booking.status;
+      return {
+        id: bookingId,
+        listing_id: propListingId,
+        guest_name: guestName,
+        check_in: checkIn,
+        check_out: checkOut,
+        status: status,
+        last_synced: new Date().toISOString(),
+        raw_data: booking
+      };
+    }).filter(booking => booking !== null);
 
-        const bookingData = {
-          id: bookingId,
-          listing_id: propListingId,
-          guest_name: guestName,
-          check_in: checkIn,
-          check_out: checkOut,
-          status: status,
-          last_synced: new Date().toISOString(),
-          raw_data: booking
-        };
+    // Process bookings in smaller batches to reduce DB load
+    const BATCH_SIZE = 10;
+    for (let i = 0; i < bookingsToProcess.length; i += BATCH_SIZE) {
+      const batch = bookingsToProcess.slice(i, i + BATCH_SIZE);
+      
+      // First, check which bookings already exist
+      const bookingIds = batch.map(b => b.id);
+      const { data: existingBookings, error: selectError } = await supabase
+        .from('guesty_bookings')
+        .select('id')
+        .in('id', bookingIds);
 
-        // Upsert logic
-        const { data: existingBooking, error: selectError } = await supabase
+      if (selectError) {
+        console.error(`[GuestyBookingSync] Error checking for existing bookings:`, selectError);
+        continue;
+      }
+
+      const existingIds = new Set((existingBookings || []).map(b => b.id));
+
+      // Split into create and update operations
+      const bookingsToCreate = batch.filter(b => !existingIds.has(b.id));
+      const bookingsToUpdate = batch.filter(b => existingIds.has(b.id));
+
+      // Insert new bookings
+      if (bookingsToCreate.length > 0) {
+        const { error: insertError } = await supabase
           .from('guesty_bookings')
-          .select('id')
-          .eq('id', bookingId)
-          .maybeSingle();
+          .insert(bookingsToCreate);
 
-        if (selectError) {
-          console.error(`[GuestyBookingSync] Error checking for existing booking ${bookingId}:`, selectError);
+        if (insertError) {
+          console.error(`[GuestyBookingSync] Error inserting bookings:`, insertError);
+        } else {
+          created += bookingsToCreate.length;
+        }
+      }
+
+      // Update existing bookings
+      for (const booking of bookingsToUpdate) {
+        const { error: updateError } = await supabase
+          .from('guesty_bookings')
+          .update(booking)
+          .eq('id', booking.id);
+
+        if (updateError) {
+          console.error(`[GuestyBookingSync] Error updating booking ${booking.id}:`, updateError);
           continue;
         }
+        updated++;
+      }
 
-        if (!existingBooking) {
-          const { error: insertError } = await supabase
-            .from('guesty_bookings')
-            .insert(bookingData);
-
-          if (insertError) {
-            console.error(`[GuestyBookingSync] Error inserting booking ${bookingId}:`, insertError);
-            continue;
-          }
-          created++;
-        } else {
-          const { error: updateError } = await supabase
-            .from('guesty_bookings')
-            .update(bookingData)
-            .eq('id', bookingId);
-
-          if (updateError) {
-            console.error(`[GuestyBookingSync] Error updating booking ${bookingId}:`, updateError);
-            continue;
-          }
-          updated++;
-        }
-
-        await delay(75); // gentle throttle
-      } catch (err) {
-        console.error('[GuestyBookingSync] Error processing booking:', err);
+      // Short delay between batches to avoid overwhelming the database
+      if (i + BATCH_SIZE < bookingsToProcess.length) {
+        await delay(100);
       }
     }
 
@@ -161,7 +189,11 @@ export async function syncBookingsForListing(
   }
 }
 
-// Updated: Compare by both .id and ._id for max compatibility
+/**
+ * Clean obsolete bookings by marking them as cancelled
+ * - Identifies local bookings not present in the remote data
+ * - Only affects non-cancelled bookings with future checkout dates
+ */
 async function cleanObsoleteBookings(
   supabase: any,
   listingId: string,
@@ -170,21 +202,26 @@ async function cleanObsoleteBookings(
   try {
     const today = new Date().toISOString().split('T')[0];
     const activeIds = new Set(activeBookings.map(b => b.id || b._id));
+    
     const { data: localBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
       .eq('listing_id', listingId)
       .gt('check_out', today)
       .neq('status', 'cancelled');
+    
     if (error) {
       console.error(`[GuestyBookingSync] Error querying local bookings for obsolete cleanup for listing ${listingId}:`, error);
       return 0;
     }
+    
     if (!localBookings || localBookings.length === 0) return 0;
+    
     const bookingsToCancel = localBookings.filter(b => !activeIds.has(b.id));
     if (bookingsToCancel.length === 0) return 0;
 
     console.log(`[GuestyBookingSync] Marking ${bookingsToCancel.length} bookings as cancelled (obsolete)`);
+    
     const { error: updateError } = await supabase
       .from('guesty_bookings')
       .update({
@@ -192,10 +229,12 @@ async function cleanObsoleteBookings(
         last_synced: new Date().toISOString()
       })
       .in('id', bookingsToCancel.map(b => b.id));
+    
     if (updateError) {
       console.error(`[GuestyBookingSync] Error cancelling obsolete bookings:`, updateError);
       return 0;
     }
+    
     return bookingsToCancel.length;
   } catch (error) {
     console.error(`[GuestyBookingSync] Error in cleanObsoleteBookings:`, error);

@@ -6,7 +6,7 @@ import { guestyService } from "@/services/guesty/guesty.service";
 import { useBookingsWithTasks } from "./useBookingsWithTasks";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
-import { ManageBookingsList } from "./ManageBookingsList"; // Fixed import to use named export
+import { ManageBookingsList } from "./ManageBookingsList";
 
 interface ManageBookingsSectionProps {
   listing: any;
@@ -21,7 +21,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
 }) => {
   const [isSyncing, setIsSyncing] = React.useState(false);
 
-  const { bookingsWithTasks, loading, error } = useBookingsWithTasks(listing?.id);
+  const { bookingsWithTasks, loading, error, refetch } = useBookingsWithTasks(listing?.id);
 
   const sortedBookingsWithTasks = bookingsWithTasks
     .slice()
@@ -32,20 +32,29 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   const handleSyncBookings = async () => {
     setIsSyncing(true);
     try {
-      const result = await import("@/services/guesty/guesty.service").then(m =>
-        m.guestyService.syncBookingsForListing(listing.id)
-      );
+      const toastId = toast.loading("Syncing bookings...", {
+        description: "Fetching current bookings from Guesty"
+      });
+      
+      const result = await guestyService.syncBookingsForListing(listing.id);
+      
       if (result.success) {
         toast.success("Bookings synced successfully", {
+          id: toastId,
           description: `${result.bookingsSynced} bookings updated`,
         });
+        // Refresh the bookings data
+        refetch();
       } else {
         toast.error("Failed to sync bookings", {
-          description: result.message,
+          id: toastId,
+          description: result.error || "Could not sync with Guesty",
         });
       }
     } catch (error: any) {
-      toast.error("Sync error", { description: error.message || "Could not sync bookings" });
+      toast.error("Sync error", { 
+        description: error.message || "Could not sync bookings" 
+      });
     } finally {
       setIsSyncing(false);
     }
@@ -70,6 +79,9 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       toast.success("Cleaning task scheduled", {
         description: "A cleaning task has been created.",
       });
+      
+      // Refresh the data to show the new task
+      refetch();
     } catch (error: any) {
       toast.error("Could not schedule cleaning", {
         description: error.message,
@@ -86,6 +98,9 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       toast.success("Marked as cleaned", {
         description: "The cleaning task for this booking is marked done.",
       });
+      
+      // Refresh the data to reflect the updated task status
+      refetch();
     } catch (error: any) {
       toast.error("Could not mark as cleaned", {
         description: error.message,
@@ -97,6 +112,17 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
     return (
       <div className="flex justify-center items-center h-32">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-center text-destructive">
+        <p>Error loading bookings: {error.message}</p>
+        <Button variant="outline" onClick={() => refetch()} className="mt-2">
+          Try again
+        </Button>
       </div>
     );
   }

@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -16,6 +17,7 @@ const GuestyIntegration = () => {
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isSyncingBookings, setIsSyncingBookings] = useState(false);
+  const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
 
   const { data: integrationHealth, refetch: refetchHealth } = useQuery({
     queryKey: ['integration-health'],
@@ -81,24 +83,36 @@ const GuestyIntegration = () => {
 
   const handleSyncBookings = useCallback(async () => {
     setIsSyncingBookings(true);
+    setSyncProgress({ current: 0, total: 0 });
+    
+    // Show an initial toast that the sync has started
+    const toastId = toast.loading('Starting bookings sync...', {
+      description: 'This may take a few minutes to complete'
+    });
+    
     try {
       const result = await guestyService.syncAllBookings();
+      
       if (result.success) {
         toast.success('Bookings sync completed', {
-          description: `Synced: ${result.bookingsSynced} bookings`
+          description: `Synced: ${result.bookingsSynced} bookings across ${result.listingsCount} properties`,
+          id: toastId
         });
       } else {
         toast.error('Bookings sync failed', {
-          description: result.message || 'Failed to sync bookings with Guesty API'
+          description: result.message || 'Failed to sync bookings with Guesty API',
+          id: toastId
         });
       }
     } catch (error) {
       console.error('Error syncing bookings:', error);
       toast.error('Failed to sync bookings', {
-        description: error instanceof Error ? error.message : 'Unknown error'
+        description: error instanceof Error ? error.message : 'Unknown error',
+        id: toastId
       });
     } finally {
       setIsSyncingBookings(false);
+      setSyncProgress({ current: 0, total: 0 });
       refetchHealth();
     }
   }, [refetchHealth]);
@@ -123,6 +137,11 @@ const GuestyIntegration = () => {
           {integrationHealth?.last_error && (
             <p className="text-sm text-destructive mt-1">
               Error: {integrationHealth.last_error}
+            </p>
+          )}
+          {integrationHealth?.last_bookings_synced && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Last bookings sync: {format(new Date(integrationHealth.last_bookings_synced), 'PPp')}
             </p>
           )}
         </div>

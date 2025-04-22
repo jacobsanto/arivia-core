@@ -11,6 +11,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Maximum execution time to leave some buffer (Edge functions timeout at 60s)
+const MAX_EXECUTION_TIME = 50000; // 50 seconds in ms
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -19,11 +22,12 @@ serve(async (req) => {
   const startTime = Date.now();
   let totalBookingsSynced = 0;
   let syncLog;
+  let supabase;
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     const requestData = await req.json();
     const listingId = requestData.listingId;
@@ -46,6 +50,7 @@ serve(async (req) => {
     let listingsToSync: string[] = [];
     
     if (syncAll) {
+      // When syncing all listings, we will process them in batches to avoid timeout
       const { data: listings, error: listingsError } = await supabase
         .from('guesty_listings')
         .select('id')
@@ -58,6 +63,18 @@ serve(async (req) => {
         
       listingsToSync = listings?.map(listing => listing.id) || [];
       console.log(`Found ${listingsToSync.length} active listings to sync bookings for`);
+      
+      // Handle the first batch in this function call (up to 3 listings)
+      // Additional listings will need to be synced in separate function calls
+      listingsToSync = listingsToSync.slice(0, 3);
+      
+      // Record the total count for logging
+      const totalListingsCount = listings?.length || 0;
+      const remainingListings = totalListingsCount - listingsToSync.length;
+      
+      if (remainingListings > 0) {
+        console.log(`Processing first ${listingsToSync.length} listings in this run. ${remainingListings} listings will need additional sync requests.`);
+      }
     } else if (listingId) {
       listingsToSync = [listingId];
     } else {
@@ -75,6 +92,12 @@ serve(async (req) => {
     
     for (const id of listingsToSync) {
       try {
+        // Check if we're approaching timeout limit
+        if (Date.now() - startTime > MAX_EXECUTION_TIME) {
+          console.log(`[GuestyBookingSync] Approaching maximum execution time, stopping after ${results.length} listings`);
+          break;
+        }
+        
         console.log(`Processing listing: ${id}`);
         const syncResult = await syncBookingsForListing(supabase, token, id);
         totalBookingsSynced += syncResult.total;
@@ -92,6 +115,7 @@ serve(async (req) => {
           success: true 
         });
         
+        // Add a delay between processing listings to avoid overwhelming the API
         if (listingsToSync.length > 1) {
           await delay(1000);
         }
@@ -110,7 +134,7 @@ serve(async (req) => {
       end_time: new Date().toISOString(),
       items_count: totalBookingsSynced,
       sync_duration: Date.now() - startTime,
-      message: `Successfully synced ${totalBookingsSynced} bookings across ${listingsToSync.length} listings`,
+      message: `Successfully synced ${totalBookingsSynced} bookings across ${results.length} listings`,
       bookings_created: created,
       bookings_updated: updated,
       bookings_deleted: deleted
@@ -120,16 +144,22 @@ serve(async (req) => {
       last_bookings_synced: new Date().toISOString()
     });
     
+    // Determine if we need to continue with additional batches
+    const moreListingsToProcess = syncAll && results.length < (requestData.totalListings || 0);
+    
     return new Response(
       JSON.stringify({
         success: true,
         message: `Successfully synced ${totalBookingsSynced} bookings`,
         bookingsSynced: totalBookingsSynced,
-        listings: listingsToSync.length,
+        listings: results.length,
         created: created,
         updated: updated,
         deleted: deleted,
-        results: results
+        results: results,
+        moreListingsToProcess: moreListingsToProcess,
+        processedCount: results.length,
+        executionTime: Date.now() - startTime
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -139,7 +169,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Booking sync error:', error);
     
-    if (syncLog?.id) {
+    if (syncLog?.id && supabase) {
       await updateSyncLog(supabase, syncLog.id, {
         status: 'error',
         end_time: new Date().toISOString(),
@@ -151,11 +181,13 @@ serve(async (req) => {
     const isRateLimit = error instanceof Error && 
       (error.message?.includes('429') || error.message?.includes('Too Many Requests'));
     
-    await updateIntegrationHealth(supabase, {
-      status: 'error',
-      last_error: error instanceof Error ? error.message : 'Unknown error',
-      is_rate_limited: isRateLimit
-    });
+    if (supabase) {
+      await updateIntegrationHealth(supabase, {
+        status: 'error',
+        last_error: error instanceof Error ? error.message : 'Unknown error',
+        is_rate_limited: isRateLimit
+      });
+    }
     
     return new Response(
       JSON.stringify({
