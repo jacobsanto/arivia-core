@@ -12,24 +12,17 @@ interface AdvancedFilters {
 
 export const usePropertyFiltering = (properties: UnifiedProperty[]) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilters | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, activeTab, advancedFilters]);
+  }, [searchQuery, advancedFilters]);
 
   const filteredProperties = properties.filter((property) => {
     const matchesSearch = property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       property.location.toLowerCase().includes(searchQuery.toLowerCase());
-
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "occupied" && property.status === "Occupied") ||
-      (activeTab === "vacant" && property.status === "Vacant") ||
-      (activeTab === "maintenance" && property.status === "Maintenance");
 
     let matchesAdvancedFilters = true;
     if (advancedFilters) {
@@ -61,7 +54,7 @@ export const usePropertyFiltering = (properties: UnifiedProperty[]) => {
       }
     }
 
-    return matchesSearch && matchesTab && matchesAdvancedFilters;
+    return matchesSearch && matchesAdvancedFilters;
   });
 
   const totalPages = Math.ceil(filteredProperties.length / itemsPerPage);
@@ -75,8 +68,6 @@ export const usePropertyFiltering = (properties: UnifiedProperty[]) => {
   return {
     searchQuery,
     setSearchQuery,
-    activeTab,
-    setActiveTab,
     advancedFilters,
     handleAdvancedFilters,
     currentPage,

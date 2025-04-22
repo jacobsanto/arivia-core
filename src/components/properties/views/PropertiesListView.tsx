@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -34,24 +33,19 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     deleteProperty 
   } = useProperties();
 
-  // Convert Property[] to UnifiedProperty[] for compatibility with usePropertyFiltering
   const unifiedProperties: UnifiedProperty[] = properties.map(property => ({
     ...property,
-    source: 'local', // Add the required source property
-    last_synced: property.updated_at // Use updated_at as fallback for last_synced
+    source: 'local',
+    last_synced: property.updated_at
   }));
 
   const {
     searchQuery,
     setSearchQuery,
-    activeTab,
-    setActiveTab,
-    handleAdvancedFilters,
     currentPage,
     setCurrentPage,
     totalPages,
-    paginatedProperties,
-    activeFiltersCount
+    paginatedProperties
   } = usePropertyFiltering(unifiedProperties);
 
   const handleAddProperty = () => {
@@ -79,7 +73,6 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     }
   };
 
-  // Convert UnifiedProperty back to Property for the property list
   const convertedPaginatedProperties = paginatedProperties as unknown as Property[];
 
   return (
@@ -89,10 +82,6 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
       <PropertyFilters 
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        onAdvancedFilters={handleAdvancedFilters}
-        activeFiltersCount={activeFiltersCount}
       />
 
       <PropertyList 
