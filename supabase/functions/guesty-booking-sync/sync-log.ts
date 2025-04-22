@@ -10,6 +10,7 @@ interface SyncLog {
   message: string;
 }
 
+// Insert a sync log. Returns the inserted log object.
 export async function createSyncLog(supabase: any, data: Partial<SyncLog>) {
   const { data: syncLog } = await supabase
     .from('sync_logs')
@@ -20,6 +21,7 @@ export async function createSyncLog(supabase: any, data: Partial<SyncLog>) {
   return syncLog;
 }
 
+// Update a sync log by logId.
 export async function updateSyncLog(
   supabase: any, 
   logId: string, 
@@ -38,6 +40,7 @@ export async function updateSyncLog(
     .eq('id', logId);
 }
 
+// Optionally, a helper for updating the integration_health table
 export async function updateIntegrationHealth(supabase: any, data: {
   last_synced?: string;
   status?: string;
@@ -56,3 +59,4 @@ export async function updateIntegrationHealth(supabase: any, data: {
       onConflict: 'provider'
     });
 }
+
