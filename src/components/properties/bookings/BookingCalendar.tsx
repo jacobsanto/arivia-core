@@ -1,44 +1,73 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
-import type { Property } from "@/types/property.types";
-import { BookingCalendarView } from "./BookingCalendarView";
-import { BookingsList } from "./BookingsList";
+import { Calendar, Loader2, RefreshCcw } from "lucide-react";
+import BookingsList from "./BookingsList";
+import { useBookings } from "@/hooks/useBookings";
+import { Property } from "@/types/property.types";
 
 interface BookingCalendarProps {
   property: Property;
   onBack: () => void;
 }
 
-const BookingCalendar = ({ property, onBack }: BookingCalendarProps) => {
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) => {
+  const { 
+    bookings, 
+    isLoading, 
+    isSyncing, 
+    syncBookings, 
+    refreshBookings 
+  } = useBookings(property.id);
+
+  // Check if this is a Guesty property (non-UUID format)
+  const isGuestyProperty = property.id && 
+    !property.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" onClick={onBack}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b pb-4">
         <div>
-          <h1 className="text-2xl font-bold">{property.name}</h1>
-          <p className="text-muted-foreground">{property.location}</p>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={onBack} size="sm">
+              Back
+            </Button>
+            <h1 className="text-xl font-bold">Bookings - {property.name}</h1>
+          </div>
+          <p className="text-muted-foreground text-sm">{property.address}</p>
+        </div>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline"
+            onClick={refreshBookings}
+            disabled={isLoading}
+          >
+            <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+          
+          {isGuestyProperty && (
+            <Button 
+              onClick={syncBookings}
+              disabled={isSyncing}
+            >
+              {isSyncing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Syncing...
+                </>
+              ) : (
+                <>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Sync with Guesty
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-6">
-        <BookingCalendarView 
-          propertyId={property.id}
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-        />
-        <BookingsList 
-          propertyId={property.id}
-          selectedDate={selectedDate} 
-        />
-      </div>
+      <BookingsList bookings={bookings} isLoading={isLoading} />
     </div>
   );
 };

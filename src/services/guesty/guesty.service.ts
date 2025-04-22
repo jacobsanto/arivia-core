@@ -36,6 +36,12 @@ export interface GuestySyncResponse {
   nextRetryTime?: string;
 }
 
+export interface BookingSyncResponse {
+  success: boolean;
+  message: string;
+  bookingsSynced?: number;
+}
+
 export class GuestyService {
   private accessToken: string | null = null;
   private tokenExpiry: number | null = null;
@@ -163,6 +169,84 @@ export class GuestyService {
       return { 
         success: false, 
         message: error instanceof Error ? error.message : 'Unknown error during sync operation'
+      };
+    }
+  }
+
+  async syncBookingsForListing(listingId: string): Promise<BookingSyncResponse> {
+    try {
+      const { data, error } = await supabase.functions.invoke<BookingSyncResponse>('guesty-booking-sync', {
+        body: { listingId }
+      });
+      
+      if (error) {
+        if (error.message.includes('429')) {
+          return {
+            success: false,
+            message: 'Rate limit reached. Please try again later.'
+          };
+        }
+        
+        return { 
+          success: false, 
+          message: error.message || 'Booking sync operation failed' 
+        };
+      }
+      
+      if (!data) {
+        return { 
+          success: false, 
+          message: 'No response from booking sync function' 
+        };
+      }
+      
+      return {
+        success: data.success,
+        message: data.message,
+        bookingsSynced: data.bookingsSynced
+      };
+    } catch (error) {
+      console.error('Error syncing bookings for listing:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error during booking sync'
+      };
+    }
+  }
+
+  async syncAllBookings(): Promise<BookingSyncResponse> {
+    try {
+      const { data, error } = await supabase.functions.invoke<BookingSyncResponse>('guesty-booking-sync', {
+        body: { syncAll: true }
+      });
+      
+      if (error) {
+        if (error.message.includes('429')) {
+          return {
+            success: false,
+            message: 'Rate limit reached. Please try again later.'
+          };
+        }
+        
+        return { 
+          success: false, 
+          message: error.message || 'Booking sync operation failed' 
+        };
+      }
+      
+      if (!data) {
+        return { 
+          success: false, 
+          message: 'No response from booking sync function' 
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error('Error syncing all bookings:', error);
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error during booking sync'
       };
     }
   }

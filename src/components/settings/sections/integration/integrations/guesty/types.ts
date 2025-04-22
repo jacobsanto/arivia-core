@@ -2,6 +2,7 @@
 export interface IntegrationHealthData {
   status?: string;
   last_synced?: string;
+  last_bookings_synced?: string;
   last_error?: string;
   provider: string;
   updated_at?: string;
@@ -18,8 +19,10 @@ export interface GuestyStatusBadgeProps {
 export interface GuestySyncControlsProps {
   onTest: () => void;
   onSync: () => void;
+  onSyncBookings?: () => void;
   isTesting: boolean;
   isSyncing: boolean;
+  isSyncingBookings?: boolean;
   isConnected: boolean;
 }
 

@@ -16,6 +16,7 @@ const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isSyncingBookings, setIsSyncingBookings] = useState(false);
 
   const { data: integrationHealth, refetch: refetchHealth } = useQuery({
     queryKey: ['integration-health'],
@@ -58,7 +59,9 @@ const GuestyIntegration = () => {
       const result = await guestyService.syncListings();
       if (result.success) {
         toast.success('Listings sync completed', {
-          description: `Synced: ${result.listingsCount} listings`
+          description: `Synced: ${result.listingsCount} listings${
+            result.bookingsSynced ? ` and ${result.bookingsSynced} bookings` : ''
+          }`
         });
       } else {
         // Display the specific error message from the API
@@ -73,6 +76,30 @@ const GuestyIntegration = () => {
       });
     } finally {
       setIsSyncing(false);
+      refetchHealth();
+    }
+  }, [refetchHealth]);
+
+  const handleSyncBookings = useCallback(async () => {
+    setIsSyncingBookings(true);
+    try {
+      const result = await guestyService.syncAllBookings();
+      if (result.success) {
+        toast.success('Bookings sync completed', {
+          description: `Synced: ${result.bookingsSynced} bookings`
+        });
+      } else {
+        toast.error('Bookings sync failed', {
+          description: result.message || 'Failed to sync bookings with Guesty API'
+        });
+      }
+    } catch (error) {
+      console.error('Error syncing bookings:', error);
+      toast.error('Failed to sync bookings', {
+        description: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } finally {
+      setIsSyncingBookings(false);
       refetchHealth();
     }
   }, [refetchHealth]);
@@ -103,8 +130,10 @@ const GuestyIntegration = () => {
         <GuestySyncControls
           onTest={testGuestyConnection}
           onSync={handleSync}
+          onSyncBookings={handleSyncBookings}
           isTesting={isTestingConnection}
           isSyncing={isSyncing}
+          isSyncingBookings={isSyncingBookings}
           isConnected={integrationHealth?.status === 'connected'}
         />
       </div>
