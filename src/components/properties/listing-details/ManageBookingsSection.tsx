@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -5,7 +6,7 @@ import { guestyService } from "@/services/guesty/guesty.service";
 import { useBookingsWithTasks } from "./useBookingsWithTasks";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
-import ManageBookingsList from "./ManageBookingsList";
+import { ManageBookingsList } from "./ManageBookingsList"; // Fixed import to use named export
 
 interface ManageBookingsSectionProps {
   listing: any;

@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,11 +19,14 @@ export function useBookingsWithTasks(listingId: string | number | undefined) {
       setLoading(true);
       setError(null);
       try {
+        // Convert listingId to string if it's a number to satisfy TypeScript
+        const listingIdStr = String(listingId);
+        
         // 1. Fetch all bookings for property
         const { data: bookings, error: bookingError } = await supabase
           .from("guesty_bookings")
           .select("*")
-          .eq("listing_id", listingId)
+          .eq("listing_id", listingIdStr)
           .order("check_in", { ascending: true });
         if (bookingError) throw bookingError;
 
@@ -30,7 +34,7 @@ export function useBookingsWithTasks(listingId: string | number | undefined) {
         const { data: tasks, error: taskError } = await supabase
           .from("housekeeping_tasks")
           .select("*")
-          .eq("listing_id", listingId);
+          .eq("listing_id", listingIdStr);
         if (taskError) throw taskError;
 
         // 3. For each booking, find its related task (by booking_id)
