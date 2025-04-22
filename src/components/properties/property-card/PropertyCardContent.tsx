@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { UnifiedProperty } from "@/types/property.types";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { format } from "date-fns";
-import { Brush, Calendar, User, Ruler } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Home, User, Ruler, MapPin } from "lucide-react";
 
 interface PropertyCardContentProps {
   property: UnifiedProperty;
@@ -14,13 +13,13 @@ interface PropertyCardContentProps {
 export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
   // Format for the next check-in badge
   const nextCheckInBadge = property.next_check_in ? (
-    <Badge variant="outline" className="bg-green-50 flex items-center gap-1">
-      <Calendar className="h-3.5 w-3.5" />
+    <Badge variant="outline" className="bg-slate-50 flex items-center gap-1">
+      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
       <span>Next check-in: {format(new Date(property.next_check_in), 'MMM d')}</span>
     </Badge>
   ) : (
-    <Badge variant="outline" className="bg-gray-50 flex items-center gap-1">
-      <Calendar className="h-3.5 w-3.5" />
+    <Badge variant="outline" className="bg-slate-50 flex items-center gap-1">
+      <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
       <span>No upcoming stays</span>
     </Badge>
   );
@@ -33,46 +32,47 @@ export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
     </div>
   ) : null;
 
-  // Guest capacity information
-  const guestCapacity = (
-    <div className="flex items-center gap-1 text-xs">
-      <User className="h-3.5 w-3.5 text-muted-foreground" />
-      <span>Sleeps {property.max_guests}</span>
+  // Property type and capacity information
+  const propertyTypeAndCapacity = (
+    <div className="flex flex-wrap gap-4 mb-2">
+      <div className="flex items-center gap-1 text-xs">
+        <Home className="h-3.5 w-3.5 text-muted-foreground" />
+        <span>{property.type}</span>
+      </div>
+      <div className="flex items-center gap-1 text-xs">
+        <User className="h-3.5 w-3.5 text-muted-foreground" />
+        <span>Sleeps {property.max_guests}</span>
+      </div>
+      {squareMeters}
     </div>
   );
 
   return (
-    <div className="p-4 pt-2">
-      <div className="flex items-center justify-between text-sm mb-2">
-        <div className="flex items-center space-x-2">
-          <Badge variant="outline">{property.type}</Badge>
-          {property.has_active_cleaning && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger>
-                  <div className="text-yellow-600">
-                    <Brush className="h-4 w-4" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Cleaning task scheduled</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+    <div className="p-4 pt-2 space-y-3">
+      {/* Location */}
+      <div className="flex items-center gap-1 text-sm text-muted-foreground">
+        <MapPin className="h-3.5 w-3.5" />
+        <span className="line-clamp-1">{property.address}</span>
+      </div>
+
+      {/* Property Type, Capacity, and Area */}
+      {propertyTypeAndCapacity}
+      
+      {/* Bedrooms and Bathrooms */}
+      <div className="flex gap-4 mb-2">
+        <div className="flex items-center gap-1 text-xs">
+          <Bed className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{property.bedrooms} {property.bedrooms === 1 ? 'Bedroom' : 'Bedrooms'}</span>
         </div>
-        <div className="font-medium">€{property.price}/night</div>
+        <div className="flex items-center gap-1 text-xs">
+          <Bath className="h-3.5 w-3.5 text-muted-foreground" />
+          <span>{property.bathrooms} {property.bathrooms === 1 ? 'Bathroom' : 'Bathrooms'}</span>
+        </div>
       </div>
       
-      <div className="flex flex-col gap-2 mt-3">
-        <div className="flex flex-wrap gap-2 mb-1">
-          {guestCapacity}
-          {squareMeters}
-        </div>
-        
-        <div className="mt-1">
-          {nextCheckInBadge}
-        </div>
+      {/* Next Check-in Badge */}
+      <div className="mt-2">
+        {nextCheckInBadge}
       </div>
     </div>
   );

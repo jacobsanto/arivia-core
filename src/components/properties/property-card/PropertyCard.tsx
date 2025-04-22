@@ -3,7 +3,6 @@ import React from "react";
 import { UnifiedProperty } from "@/types/property.types";
 import { PropertyCardHeader } from "./PropertyCardHeader";
 import { PropertyCardContent } from "./PropertyCardContent";
-import { PropertyCardFooter } from "./PropertyCardFooter";
 import { Card } from "@/components/ui/card";
 
 interface PropertyCardProps {
@@ -22,7 +21,7 @@ const PropertyCard = ({
   onGuestManagement,
 }: PropertyCardProps) => {
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full mobile-scroll touch-feedback">
       <PropertyCardHeader 
         property={property}
         onViewDetails={onViewDetails}
@@ -31,7 +30,6 @@ const PropertyCard = ({
         onGuestManagement={onGuestManagement}
       />
       <PropertyCardContent property={property} />
-      <PropertyCardFooter property={property} />
     </Card>
   );
 };
