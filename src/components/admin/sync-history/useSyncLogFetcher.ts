@@ -135,7 +135,7 @@ interface SyncLogHookResult {
   error: string | null;
   hasNextPage: boolean;
   fetchNextPage: () => void;
-  refetch: () => void;
+  refetch: () => Promise<any>;
 }
 
 // Main hook with concrete types to avoid excessive type inference
