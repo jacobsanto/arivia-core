@@ -1,3 +1,4 @@
+
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -26,7 +27,7 @@ import AdminUsers from "@/pages/AdminUsers";
 import AdminPermissions from "@/pages/AdminPermissions";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminChecklists from "@/pages/AdminChecklists";
-import AdminSyncHistory from "@/pages/AdminSyncHistory";
+// Removed import for AdminSyncHistory
 
 function App() {
   return (
@@ -63,7 +64,7 @@ function App() {
               <Route path="/admin/permissions" element={<AdminPermissions />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/checklists" element={<AdminChecklists />} />
-              <Route path="/admin/sync-history" element={<AdminSyncHistory />} />
+              {/* Removed /admin/sync-history route */}
             </Route>
             
             {/* Catch all route */}
@@ -76,3 +77,4 @@ function App() {
 }
 
 export default App;
+
