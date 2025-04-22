@@ -548,6 +548,7 @@ export type Database = {
       integration_health: {
         Row: {
           is_rate_limited: boolean | null
+          last_bookings_synced: string | null
           last_error: string | null
           last_synced: string | null
           provider: string
@@ -559,6 +560,7 @@ export type Database = {
         }
         Insert: {
           is_rate_limited?: boolean | null
+          last_bookings_synced?: string | null
           last_error?: string | null
           last_synced?: string | null
           provider: string
@@ -570,6 +572,7 @@ export type Database = {
         }
         Update: {
           is_rate_limited?: boolean | null
+          last_bookings_synced?: string | null
           last_error?: string | null
           last_synced?: string | null
           provider?: string
