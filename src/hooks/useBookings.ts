@@ -51,19 +51,20 @@ export const useBookings = (propertyId: string) => {
     
     try {
       console.log(`Fetching bookings for property ID: ${propertyId}`);
+      
       // Detect if the property ID is from Guesty (non-UUID format)
       const isGuestyProperty = propertyId && 
         !propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
       if (isGuestyProperty) {
         console.log(`Fetching Guesty bookings for listing: ${propertyId}`);
-        // For Guesty properties, use the guesty_bookings table
+        // For Guesty properties, use the guesty_bookings table with listing_id filter
         const { data, error } = await supabase
           .from('guesty_bookings')
           .select('*')
           .eq('listing_id', propertyId);
         
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(`Error fetching Guesty bookings: ${error.message}`);
         
         console.log(`Found ${data?.length || 0} Guesty bookings`);
         
@@ -91,13 +92,13 @@ export const useBookings = (propertyId: string) => {
         
         setBookings(transformedBookings);
       } else {
-        // For regular properties, use the bookings table
+        // For regular properties, use the bookings table with proper UUID property_id filter
         const { data, error } = await supabase
           .from('bookings')
           .select('*')
           .eq('property_id', propertyId);
         
-        if (error) throw new Error(error.message);
+        if (error) throw new Error(`Error fetching regular bookings: ${error.message}`);
         
         setBookings(data || []);
       }

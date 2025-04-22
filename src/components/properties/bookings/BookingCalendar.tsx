@@ -16,6 +16,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
   const { 
     bookings, 
     isLoading, 
+    error,
     isSyncing, 
     syncBookings, 
     refreshBookings 
@@ -41,6 +42,11 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
             <h1 className="text-xl font-bold">Bookings - {property.name}</h1>
           </div>
           <p className="text-muted-foreground text-sm">{property.address}</p>
+          {isGuestyProperty && (
+            <p className="text-xs text-muted-foreground">
+              Guesty Property ID: {property.id}
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
@@ -76,6 +82,14 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
       {isLoading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 border rounded-md bg-red-50 border-red-200">
+          <p className="text-lg font-medium text-red-700">Error loading bookings</p>
+          <p className="text-muted-foreground text-red-600">{error}</p>
+          <Button onClick={handleRefresh} className="mt-4" variant="outline">
+            Try Again
+          </Button>
         </div>
       ) : bookings.length === 0 ? (
         <div className="text-center py-8 border rounded-md bg-muted/20">

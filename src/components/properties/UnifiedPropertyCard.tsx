@@ -42,46 +42,97 @@ const UnifiedPropertyCard = ({
 
   const [currentBooking, setCurrentBooking] = useState<any>(null);
   const [nextBooking, setNextBooking] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchBookings = async () => {
-      if (!property.guesty_id) return;
-      
-      const bookings = await unifiedPropertyService.getPropertyBookings(property.guesty_id);
-      
-      const today = new Date();
-      const current = bookings.find(booking => 
-        new Date(booking.check_in) <= today && 
-        new Date(booking.check_out) >= today
-      );
-      setCurrentBooking(current || null);
-      
-      const upcoming = bookings
-        .filter(booking => new Date(booking.check_in) > today)
-        .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime())[0];
-      setNextBooking(upcoming || null);
+      setIsLoading(true);
+      setError(null);
+      try {
+        // Use property.id for both Guesty and regular properties
+        const bookings = await unifiedPropertyService.getPropertyBookings(property.id);
+        
+        const today = new Date();
+        
+        // For Guesty bookings, the field names are different
+        const isGuestyProperty = property.source === 'guesty';
+        
+        if (isGuestyProperty) {
+          // Handle Guesty bookings
+          const current = bookings.find(booking => 
+            new Date(booking.check_in) <= today && 
+            new Date(booking.check_out) >= today
+          );
+          setCurrentBooking(current || null);
+          
+          const upcoming = bookings
+            .filter(booking => new Date(booking.check_in) > today)
+            .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime())[0];
+          setNextBooking(upcoming || null);
+        } else {
+          // Handle regular bookings
+          const current = bookings.find(booking => 
+            new Date(booking.check_in_date) <= today && 
+            new Date(booking.check_out_date) >= today
+          );
+          setCurrentBooking(current || null);
+          
+          const upcoming = bookings
+            .filter(booking => new Date(booking.check_in_date) > today)
+            .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
+          setNextBooking(upcoming || null);
+        }
+      } catch (err) {
+        console.error("Error fetching bookings for property:", property.id, err);
+        setError(err instanceof Error ? err.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     fetchBookings();
-  }, [property.id, property.guesty_id]);
+  }, [property.id, property.source]);
 
   const renderBookingInfo = () => {
+    if (isLoading) {
+      return (
+        <div className="mt-2 pt-2 border-t text-xs">
+          <p className="font-medium">Loading bookings...</p>
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="mt-2 pt-2 border-t text-xs text-red-600">
+          <p className="font-medium">Error loading bookings</p>
+        </div>
+      );
+    }
+    
     if (currentBooking) {
+      const checkInDate = currentBooking.check_in_date || currentBooking.check_in;
+      const checkOutDate = currentBooking.check_out_date || currentBooking.check_out;
+      
       return (
         <div className="mt-2 pt-2 border-t text-xs">
           <p className="font-medium">Currently occupied by:</p>
           <p className="text-muted-foreground">{currentBooking.guest_name}</p>
-          <p className="text-muted-foreground">Until {new Date(currentBooking.check_out).toLocaleDateString()}</p>
+          <p className="text-muted-foreground">Until {new Date(checkOutDate).toLocaleDateString()}</p>
         </div>
       );
     }
     
     if (nextBooking) {
+      const checkInDate = nextBooking.check_in_date || nextBooking.check_in;
+      const checkOutDate = nextBooking.check_out_date || nextBooking.check_out;
+      
       return (
         <div className="mt-2 pt-2 border-t text-xs">
           <p className="font-medium">Next booking:</p>
           <p className="text-muted-foreground">{nextBooking.guest_name}</p>
-          <p className="text-muted-foreground">From {new Date(nextBooking.check_in).toLocaleDateString()}</p>
+          <p className="text-muted-foreground">From {new Date(checkInDate).toLocaleDateString()}</p>
         </div>
       );
     }

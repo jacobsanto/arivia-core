@@ -90,16 +90,36 @@ export const unifiedPropertyService = {
 
   async getPropertyBookings(propertyId: string): Promise<any[]> {
     try {
-      const { data, error } = await supabase
-        .from('guesty_bookings')
-        .select('*')
-        .eq('listing_id', propertyId);
+      // Check if the property ID is from Guesty (non-UUID format)
+      const isGuestyProperty = propertyId && 
+        !propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
-      if (error) {
-        throw new Error(error.message);
+      if (isGuestyProperty) {
+        console.log(`Fetching Guesty bookings for listing: ${propertyId}`);
+        // For Guesty properties, use the listing_id field
+        const { data, error } = await supabase
+          .from('guesty_bookings')
+          .select('*')
+          .eq('listing_id', propertyId);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        return data || [];
+      } else {
+        // For regular properties, use the property_id field
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .eq('property_id', propertyId);
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        return data || [];
       }
-
-      return data || [];
     } catch (err: any) {
       console.error('Error fetching property bookings:', err);
       toastService.error('Failed to fetch bookings', {
