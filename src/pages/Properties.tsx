@@ -1,6 +1,4 @@
-
 import React, { useState } from "react";
-import { toast } from "sonner";
 import { useUnifiedProperties } from "@/hooks/useUnifiedProperties";
 import UnifiedPropertyHeader from "@/components/properties/UnifiedPropertyHeader";
 import UnifiedPropertiesList from "@/components/properties/UnifiedPropertiesList";
@@ -9,9 +7,12 @@ import { PropertySort } from "@/components/properties/PropertySort";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { GuestyStatusBadge } from "@/components/properties/GuestyStatusBadge";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MobileSyncButton } from "@/components/properties/MobileSyncButton";
 
 const Properties = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const isMobile = useIsMobile();
 
   const { data: integrationHealth } = useQuery({
     queryKey: ['integration-health'],
@@ -33,22 +34,14 @@ const Properties = () => {
     lastSynced,
     syncWithGuesty,
     currentSort,
-    handleSort
+    handleSort,
+    fetchProperties
   } = useUnifiedProperties(searchQuery);
-
-  const handleSync = async () => {
-    try {
-      await syncWithGuesty();
-      toast.success("Properties synced successfully from Guesty");
-    } catch (error) {
-      toast.error("Failed to sync properties");
-    }
-  };
 
   return (
     <div className="space-y-8">
       <UnifiedPropertyHeader 
-        onSync={handleSync} 
+        onSync={syncWithGuesty} 
         isLoading={isLoading} 
         lastSynced={lastSynced} 
       />
@@ -72,6 +65,10 @@ const Properties = () => {
         properties={properties}
         isLoading={isLoading}
       />
+
+      {isMobile && (
+        <MobileSyncButton onSyncComplete={fetchProperties} />
+      )}
     </div>
   );
 };

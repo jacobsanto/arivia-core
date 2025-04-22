@@ -65,6 +65,7 @@ export const useUnifiedProperties = (searchQuery: string = '') => {
     lastSynced,
     syncWithGuesty,
     currentSort: currentSort.value,
-    handleSort
+    handleSort,
+    fetchProperties
   };
 };
