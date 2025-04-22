@@ -8,13 +8,13 @@ export function useSyncLogs(params: UseSyncLogsParams) {
   const fetcher = useSyncLogFetcher(params);
   const retryHandler = useSyncLogRetry();
 
-  // Compose retrySync that refetches after retry
-  const retrySync = (opts: RetrySyncOptions) => {
+  // Modified to properly handle the Promise from retrySync
+  const retrySync = async (opts: RetrySyncOptions): Promise<unknown> => {
     return retryHandler.retrySync(opts, () => fetcher.refetch());
   };
 
   return {
-    logs: fetcher.logs as SyncLog[], // Explicit for clarity
+    logs: fetcher.logs,
     isLoading: fetcher.isLoading,
     isFetchingNextPage: fetcher.isFetchingNextPage,
     hasNextPage: fetcher.hasNextPage,
