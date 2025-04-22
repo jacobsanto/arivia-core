@@ -1,6 +1,7 @@
+
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SyncLog, SyncLogsFilters } from "./syncLog.types";
+import { SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
 
 // Define explicit return type for fetchSyncLogs to avoid excessive type instantiation

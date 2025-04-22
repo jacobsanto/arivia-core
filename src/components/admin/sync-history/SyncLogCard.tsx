@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { Check, X, RefreshCw } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { SyncLog } from "./syncLog.types";
+import { SyncLog } from "./useSyncLogFetcher";
 
 interface SyncLogCardProps {
   log: SyncLog;
@@ -49,20 +50,18 @@ const formatDuration = (durationMs: number | null | undefined) => {
 };
 
 export const SyncLogCard: React.FC<SyncLogCardProps> = ({ log, onRetrySync, isRetrying = false }) => {
-  const timestamp = log.end_time || log.start_time || log.created_at;
-  const msg = log.error_message || log.message;
+  const timestamp = log.synced_at;
+  const msg = log.message;
   
   // Calculate duration if possible
-  const duration = log.sync_duration 
-    ? formatDuration(log.sync_duration)
-    : (log.start_time && log.end_time)
-      ? formatDuration(new Date(log.end_time).getTime() - new Date(log.start_time).getTime())
-      : null;
+  const duration = log.duration_ms 
+    ? formatDuration(log.duration_ms)
+    : null;
   
-  // Calculate total synced items
-  const totalListings = (log.listings_created || 0) + (log.listings_updated || 0) + (log.listings_deleted || 0);
-  const totalBookings = (log.bookings_created || 0) + (log.bookings_updated || 0) + (log.bookings_deleted || 0);
-  const hasMetrics = duration || totalListings > 0 || totalBookings > 0 || log.items_count;
+  // Use simplified metrics
+  const totalListings = log.total_listings || 0;
+  const totalBookings = log.total_bookings || 0;
+  const hasMetrics = duration || totalListings > 0 || totalBookings > 0;
   
   const showRetryButton = 
     (log.status?.toLowerCase() === "error" || 
@@ -76,15 +75,9 @@ export const SyncLogCard: React.FC<SyncLogCardProps> = ({ log, onRetrySync, isRe
       md:grid md:grid-cols-[minmax(120px,170px)_1fr_minmax(140px,auto)] md:items-start md:gap-3"
       tabIndex={0}
     >
-      {/* Integration Name + Listing ID */}
+      {/* Integration Name */}
       <div className="font-semibold text-muted-foreground text-sm mb-2 md:mb-0">
-        <div>{log.service ?? "Unknown"}</div>
-        {log.listing_id && (
-          <div className="text-xs mt-1">ID: {log.listing_id}</div>
-        )}
-        {log.sync_type && (
-          <div className="text-xs mt-1 opacity-70">Type: {log.sync_type}</div>
-        )}
+        <div>{log.integration ?? "Unknown"}</div>
       </div>
 
       {/* Content Section - Status, Messages, Metrics */}
@@ -103,27 +96,15 @@ export const SyncLogCard: React.FC<SyncLogCardProps> = ({ log, onRetrySync, isRe
               </Badge>
             )}
             
-            {log.items_count !== undefined && log.items_count > 0 && (
-              <Badge variant="outline" className="text-xs bg-muted/30">
-                {log.items_count} item{log.items_count !== 1 ? 's' : ''}
-              </Badge>
-            )}
-            
             {totalListings > 0 && (
               <Badge variant="outline" className="text-xs bg-muted/30">
                 {totalListings} listing{totalListings !== 1 ? 's' : ''}
-                {log.listings_created ? ` (+${log.listings_created})` : ''}
-                {log.listings_updated ? ` (~${log.listings_updated})` : ''}
-                {log.listings_deleted ? ` (-${log.listings_deleted})` : ''}
               </Badge>
             )}
             
             {totalBookings > 0 && (
               <Badge variant="outline" className="text-xs bg-muted/30">
                 {totalBookings} booking{totalBookings !== 1 ? 's' : ''}
-                {log.bookings_created ? ` (+${log.bookings_created})` : ''}
-                {log.bookings_updated ? ` (~${log.bookings_updated})` : ''}
-                {log.bookings_deleted ? ` (-${log.bookings_deleted})` : ''}
               </Badge>
             )}
           </div>

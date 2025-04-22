@@ -1,7 +1,7 @@
 
-import { RetrySyncOptions, SyncLog, UseSyncLogsParams } from "./syncLog.types";
+import { RetrySyncOptions, SyncLogsFilters, UseSyncLogsParams } from "./syncLog.types";
 import { useSyncLogRetry } from "./useSyncLogRetry";
-import { useSyncLogFetcher } from "./useSyncLogFetcher";
+import { useSyncLogFetcher, SyncLog } from "./useSyncLogFetcher";
 
 // Main composed hook for sync logs (fetch + retry)
 export function useSyncLogs(params: UseSyncLogsParams) {

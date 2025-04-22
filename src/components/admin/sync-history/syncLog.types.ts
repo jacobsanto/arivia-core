@@ -36,4 +36,3 @@ export interface RetrySyncOptions {
   service: string;
   syncType?: string | null;
 }
-
