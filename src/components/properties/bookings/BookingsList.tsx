@@ -16,17 +16,20 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useBookings } from "./useBookings";
 import { formatDate } from "@/services/dataFormatService";
+import { Booking } from "@/hooks/useBookings";
 
 interface BookingsListProps {
-  propertyId: string;
-  selectedDate: Date | undefined;
+  bookings: Booking[];
+  isLoading: boolean;
+  selectedDate?: Date;
 }
 
-export const BookingsList = ({ propertyId, selectedDate }: BookingsListProps) => {
-  const { bookings, isLoading } = useBookings(propertyId);
-
+export const BookingsList: React.FC<BookingsListProps> = ({ 
+  bookings, 
+  isLoading,
+  selectedDate 
+}) => {
   // Filter bookings by month if a date is selected
   const filteredBookings = selectedDate 
     ? bookings.filter(booking => {
@@ -62,7 +65,7 @@ export const BookingsList = ({ propertyId, selectedDate }: BookingsListProps) =>
 };
 
 interface BookingsContentProps {
-  bookings: any[];
+  bookings: Booking[];
   isLoading: boolean;
 }
 

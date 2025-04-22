@@ -1,36 +1,30 @@
 
-export interface IntegrationHealthData {
-  status?: string;
-  last_synced?: string;
-  last_bookings_synced?: string;
-  last_error?: string;
-  provider: string;
-  updated_at?: string;
-  remaining_requests?: number;
-  rate_limit_reset?: string;
-  request_count?: number;
-  is_rate_limited?: boolean;
-}
-
-export interface GuestyStatusBadgeProps {
-  status?: string;
-}
-
-export interface GuestySyncControlsProps {
-  onTest: () => void;
-  onSync: () => void;
-  onSyncBookings?: () => void;
-  isTesting: boolean;
-  isSyncing: boolean;
-  isSyncingBookings?: boolean;
-  isConnected: boolean;
-}
-
 export interface ApiUsage {
   id: string;
   endpoint: string;
   rate_limit: number;
   remaining: number;
-  reset: string;
   timestamp: string;
+}
+
+export interface IntegrationHealthData {
+  id: string;
+  provider: string;
+  status: string;
+  last_synced?: string;
+  last_bookings_synced?: string;
+  is_rate_limited?: boolean;
+  error_message?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SyncHistory {
+  id: string;
+  provider: string;
+  entities_synced: number;
+  sync_type: 'listings' | 'bookings';
+  status: 'success' | 'partial' | 'failed';
+  error_message?: string;
+  created_at: string;
 }
