@@ -1,8 +1,8 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { GuestyListing } from './types.ts';
 import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
 
+// Export as before.
 export async function syncGuestyListings(supabase: any, token: string): Promise<{
   listings: GuestyListing[];
   rateLimitInfo: RateLimitInfo | null;
