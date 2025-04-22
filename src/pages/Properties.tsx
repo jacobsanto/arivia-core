@@ -5,13 +5,16 @@ import { useUnifiedProperties } from "@/hooks/useUnifiedProperties";
 import UnifiedPropertyHeader from "@/components/properties/UnifiedPropertyHeader";
 import UnifiedPropertiesList from "@/components/properties/UnifiedPropertiesList";
 import { PropertySearch } from "@/components/properties/PropertySearch";
+import { PropertySort } from "@/components/properties/PropertySort";
 
 const Properties = () => {
   const { 
     properties, 
     isLoading, 
     lastSynced,
-    syncWithGuesty
+    syncWithGuesty,
+    currentSort,
+    handleSort
   } = useUnifiedProperties();
 
   const handleSync = async () => {
@@ -31,7 +34,10 @@ const Properties = () => {
         lastSynced={lastSynced} 
       />
       
-      <PropertySearch />
+      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+        <PropertySearch />
+        <PropertySort onSortChange={handleSort} currentSort={currentSort} />
+      </div>
 
       <UnifiedPropertiesList 
         properties={properties}

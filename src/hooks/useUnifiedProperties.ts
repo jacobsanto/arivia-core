@@ -3,16 +3,23 @@ import { useState, useEffect } from 'react';
 import { unifiedPropertyService } from '@/services/property/unified-property.service';
 import { UnifiedProperty } from '@/types/property.types';
 import { toast } from 'sonner';
+import { SortOption } from '@/components/properties/PropertySort';
 
 export const useUnifiedProperties = () => {
   const [properties, setProperties] = useState<UnifiedProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
+  const [currentSort, setCurrentSort] = useState<SortOption>({
+    label: "Title (A-Z)",
+    value: "title-asc",
+    column: "title",
+    ascending: true
+  });
 
   const fetchProperties = async () => {
     setIsLoading(true);
     try {
-      const data = await unifiedPropertyService.fetchAllProperties();
+      const data = await unifiedPropertyService.fetchAllProperties(currentSort);
       setProperties(data);
       
       const mostRecentSync = data
@@ -33,7 +40,7 @@ export const useUnifiedProperties = () => {
 
   useEffect(() => {
     fetchProperties();
-  }, []);
+  }, [currentSort]);
 
   const syncWithGuesty = async () => {
     setIsLoading(true);
@@ -48,10 +55,16 @@ export const useUnifiedProperties = () => {
     setIsLoading(false);
   };
 
+  const handleSort = (option: SortOption) => {
+    setCurrentSort(option);
+  };
+
   return {
     properties,
     isLoading,
     lastSynced,
-    syncWithGuesty
+    syncWithGuesty,
+    currentSort: currentSort.value,
+    handleSort
   };
 };

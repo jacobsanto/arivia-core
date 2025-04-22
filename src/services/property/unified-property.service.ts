@@ -1,22 +1,30 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
-import { Property, GuestyProperty, UnifiedProperty } from '@/types/property.types';
+import { UnifiedProperty } from '@/types/property.types';
 import { guestyService } from '../guesty/guesty.service';
+import { SortOption } from '@/components/properties/PropertySort';
 
 export const unifiedPropertyService = {
-  async fetchAllProperties(): Promise<UnifiedProperty[]> {
+  async fetchAllProperties(sortOption?: SortOption): Promise<UnifiedProperty[]> {
     try {
-      // Fetch Guesty listings
-      const { data: guestyListings, error: guestyError } = await supabase
+      let query = supabase
         .from('guesty_listings')
         .select('*')
-        .eq('is_deleted', false)
-        .order('title');
+        .eq('is_deleted', false);
+
+      if (sortOption) {
+        query = query.order(sortOption.column, {
+          ascending: sortOption.ascending
+        });
+      } else {
+        query = query.order('title');
+      }
+
+      const { data: guestyListings, error: guestyError } = await query;
 
       if (guestyError) throw guestyError;
 
-      // Transform Guesty listings to unified format
       const guestyProperties = (guestyListings || []).map(listing => this.transformGuestyToUnified(listing));
 
       return guestyProperties;
