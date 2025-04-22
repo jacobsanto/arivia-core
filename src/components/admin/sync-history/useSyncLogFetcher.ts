@@ -1,7 +1,7 @@
 
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { SyncLogsFilters } from "./syncLog.types";
+import { SyncLog, SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
 
 // Define explicit return type for fetchSyncLogs to avoid excessive type instantiation
@@ -11,57 +11,41 @@ interface FetchSyncLogsResult {
   availableIntegrations: string[];
 }
 
-// Raw structure from the Supabase "sync_logs" table
-type RawSupabaseLog = {
-  id: string;
-  service: string;
-  sync_type?: string | null;
-  status?: string | null;
-  message?: string | null;
-  error_message?: string | null;
-  start_time?: string | null;
-  end_time?: string | null;
-  created_at?: string | null;
-  listing_id?: string | null;
-  sync_duration?: number | null;
-  bookings_created?: number | null;
-  bookings_updated?: number | null;
-  bookings_deleted?: number | null;
-  listings_created?: number | null;
-  listings_updated?: number | null;
-  listings_deleted?: number | null;
-  items_count?: number | null;
-};
-
-// Simplified sync log used throughout the UI/app
-export type SyncLog = {
-  id: string;
-  integration: string;
-  status: string;
-  message: string;
-  synced_at: string;
-  duration_ms?: number;
-  total_listings?: number;
-  total_bookings?: number;
-};
-
-// Transforms a raw Supabase row into a simplified SyncLog object
-function transformRawToSyncLog(raw: RawSupabaseLog): SyncLog {
+// Transform function to convert raw DB records to the UI SyncLog format
+function transformRawToSyncLog(raw: any): SyncLog {
   return {
+    // Original properties
     id: raw.id,
+    service: raw.service,
+    sync_type: raw.sync_type,
+    status: raw.status || "",
+    message: raw.message || raw.error_message || "",
+    error_message: raw.error_message,
+    start_time: raw.start_time,
+    end_time: raw.end_time,
+    created_at: raw.created_at,
+    listing_id: raw.listing_id,
+    sync_duration: raw.sync_duration,
+    bookings_created: raw.bookings_created,
+    bookings_updated: raw.bookings_updated,
+    bookings_deleted: raw.bookings_deleted,
+    listings_created: raw.listings_created,
+    listings_updated: raw.listings_updated,
+    listings_deleted: raw.listings_deleted,
+    items_count: raw.items_count,
+    
+    // UI friendly aliases
     integration: raw.service,
-    status: raw.status ?? "",
-    message: raw.message ?? raw.error_message ?? "",
-    synced_at: raw.end_time ?? raw.start_time ?? raw.created_at ?? "",
-    duration_ms: raw.sync_duration ?? undefined,
+    synced_at: raw.end_time || raw.start_time || raw.created_at || "",
+    duration_ms: raw.sync_duration,
     total_listings:
-      (raw.listings_created ?? 0) + (raw.listings_updated ?? 0) + (raw.listings_deleted ?? 0) || undefined,
+      (raw.listings_created || 0) + (raw.listings_updated || 0) + (raw.listings_deleted || 0) || undefined,
     total_bookings:
-      (raw.bookings_created ?? 0) + (raw.bookings_updated ?? 0) + (raw.bookings_deleted ?? 0) || undefined,
+      (raw.bookings_created || 0) + (raw.bookings_updated || 0) + (raw.bookings_deleted || 0) || undefined,
   };
 }
 
-// Fetch function for use with React Query that returns only simplified logs
+// Fetch function for use with React Query
 async function fetchSyncLogs(
   pageParam: number,
   pageSize: number,
@@ -105,8 +89,8 @@ async function fetchSyncLogs(
     const hasNextPage = logs && logs.length === pageSize;
     const nextPage = hasNextPage ? pageParam + 1 : null;
 
-    // Map raw result to simplified SyncLog type
-    const transformedLogs: SyncLog[] = (logs ?? []).map(transformRawToSyncLog);
+    // Map raw result to SyncLog type
+    const transformedLogs: SyncLog[] = (logs || []).map(transformRawToSyncLog);
 
     return {
       data: transformedLogs,
@@ -130,7 +114,7 @@ export function useSyncLogFetcher(params: { pageSize: number } & SyncLogsFilters
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  // Flatten pages of logs into a single array of simplified SyncLog
+  // Flatten pages of logs into a single array
   const logs = result.data?.pages.flatMap(page => page.data) || [];
   // Get available integrations from the first page
   const availableIntegrations = result.data?.pages[0]?.availableIntegrations || [];

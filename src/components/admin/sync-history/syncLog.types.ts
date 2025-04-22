@@ -4,8 +4,8 @@ export interface SyncLog {
   id: string;
   service: string;
   sync_type?: string | null;
-  status?: string | null;
-  message?: string | null;
+  status: string;
+  message: string;
   error_message?: string | null;
   start_time?: string | null;
   end_time?: string | null;
@@ -19,6 +19,13 @@ export interface SyncLog {
   listings_updated?: number | null;
   listings_deleted?: number | null;
   items_count?: number | null;
+  
+  // UI friendly properties
+  integration?: string;
+  synced_at?: string;
+  duration_ms?: number;
+  total_listings?: number;
+  total_bookings?: number;
 }
 
 export interface SyncLogsFilters {

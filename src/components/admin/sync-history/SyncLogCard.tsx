@@ -6,7 +6,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { Check, X, RefreshCw } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { SyncLog } from "./useSyncLogFetcher";
+import { SyncLog } from "./syncLog.types";
 
 interface SyncLogCardProps {
   log: SyncLog;
@@ -50,17 +50,25 @@ const formatDuration = (durationMs: number | null | undefined) => {
 };
 
 export const SyncLogCard: React.FC<SyncLogCardProps> = ({ log, onRetrySync, isRetrying = false }) => {
-  const timestamp = log.synced_at;
-  const msg = log.message;
+  // Use either UI-friendly properties or fall back to original properties
+  const timestamp = log.synced_at || log.end_time || log.start_time || log.created_at || "";
+  const msg = log.message || log.error_message || "";
+  const integration = log.integration || log.service || "";
   
   // Calculate duration if possible
-  const duration = log.duration_ms 
-    ? formatDuration(log.duration_ms)
+  const duration = log.duration_ms || log.sync_duration
+    ? formatDuration(log.duration_ms || log.sync_duration)
     : null;
   
-  // Use simplified metrics
-  const totalListings = log.total_listings || 0;
-  const totalBookings = log.total_bookings || 0;
+  // Use simplified metrics if available, otherwise calculate
+  const totalListings = log.total_listings !== undefined 
+    ? log.total_listings 
+    : ((log.listings_created || 0) + (log.listings_updated || 0) + (log.listings_deleted || 0)) || 0;
+    
+  const totalBookings = log.total_bookings !== undefined
+    ? log.total_bookings
+    : ((log.bookings_created || 0) + (log.bookings_updated || 0) + (log.bookings_deleted || 0)) || 0;
+    
   const hasMetrics = duration || totalListings > 0 || totalBookings > 0;
   
   const showRetryButton = 
@@ -77,7 +85,7 @@ export const SyncLogCard: React.FC<SyncLogCardProps> = ({ log, onRetrySync, isRe
     >
       {/* Integration Name */}
       <div className="font-semibold text-muted-foreground text-sm mb-2 md:mb-0">
-        <div>{log.integration ?? "Unknown"}</div>
+        <div>{integration || "Unknown"}</div>
       </div>
 
       {/* Content Section - Status, Messages, Metrics */}

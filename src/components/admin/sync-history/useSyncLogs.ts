@@ -1,7 +1,7 @@
 
-import { RetrySyncOptions, SyncLogsFilters, UseSyncLogsParams } from "./syncLog.types";
+import { RetrySyncOptions, SyncLog, SyncLogsFilters, UseSyncLogsParams } from "./syncLog.types";
 import { useSyncLogRetry } from "./useSyncLogRetry";
-import { useSyncLogFetcher, SyncLog } from "./useSyncLogFetcher";
+import { useSyncLogFetcher } from "./useSyncLogFetcher";
 
 // Main composed hook for sync logs (fetch + retry)
 export function useSyncLogs(params: UseSyncLogsParams) {
@@ -14,7 +14,7 @@ export function useSyncLogs(params: UseSyncLogsParams) {
   };
 
   return {
-    logs: fetcher.logs as SyncLog[], // Explicit for clarity, matches app UI
+    logs: fetcher.logs as SyncLog[], // Explicit for clarity
     isLoading: fetcher.isLoading,
     isFetchingNextPage: fetcher.isFetchingNextPage,
     hasNextPage: fetcher.hasNextPage,

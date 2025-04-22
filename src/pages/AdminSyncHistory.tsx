@@ -1,8 +1,10 @@
+
 import React, { useState } from "react";
 import { CardWithHeader } from "@/components/ui/card-with-header";
 import { SyncLogCard } from "@/components/admin/sync-history/SyncLogCard";
 import { SyncLogFilterBar } from "@/components/admin/sync-history/SyncLogFilterBar";
-import { useSyncLogs, SyncLog } from "@/components/admin/sync-history/useSyncLogs";
+import { useSyncLogs } from "@/components/admin/sync-history/useSyncLogs";
+import { SyncLog } from "@/components/admin/sync-history/syncLog.types";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -34,7 +36,7 @@ const AdminSyncHistory: React.FC = () => {
   const handleRetrySync = (log: SyncLog) => {
     retrySync({
       logId: log.id,
-      service: log.service || log.integration,
+      service: log.service || log.integration || "",
       syncType: log.sync_type || undefined
     });
   };
