@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Type for a sync log row (matches Supabase)
+// Simplified SyncLog type to avoid excessive type instantiations
 export interface SyncLog {
   id: string;
   service: string;
@@ -72,8 +72,8 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         if (integration) query.eq("service", integration);
         if (listingId) query.eq("listing_id", listingId);
 
-        const { data, error } = await query;
-        if (error) throw error;
+        const { data: fetchedData, error: fetchError } = await query;
+        if (fetchError) throw fetchError;
 
         // Build available integration names list for filtering
         if (_page === 0) {
@@ -91,22 +91,20 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Fix excessive type instantiation by careful handling of state updates
+        // Update logs state safely avoiding excessive type instantiations
         if (_page === 0) {
-          // For first page, directly set the array without spreading
-          setLogs(Array.isArray(data) ? data as SyncLog[] : []);
+          // For first page, directly set without type complications
+          setLogs(fetchedData ? fetchedData as SyncLog[] : []);
         } else {
-          // For subsequent pages, use a more direct approach without nested spreading
+          // For subsequent pages, update carefully to avoid deep type instantiations
           setLogs((prevLogs) => {
-            // Early return if no data
-            if (!data || data.length === 0) return prevLogs;
-            
-            // Using array literal + concat to avoid deep spreading
-            return [...prevLogs, ...(data as SyncLog[])];
+            if (!fetchedData || fetchedData.length === 0) return prevLogs;
+            // Use a different approach: create a new array with all items
+            return [...prevLogs, ...(fetchedData as SyncLog[])];
           });
         }
         
-        setHasNextPage((data?.length || 0) === pageSize);
+        setHasNextPage((fetchedData?.length || 0) === pageSize);
         setError(null);
       } catch (e: any) {
         setError(e.message || "Failed to fetch sync logs");
