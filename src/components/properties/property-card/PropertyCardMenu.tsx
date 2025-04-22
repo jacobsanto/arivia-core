@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from "react";
 import { UnifiedProperty } from "@/types/property.types";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,7 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
+  SheetTrigger,
 } from "@/components/ui/sheet";
 import { EllipsisVertical } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -42,7 +44,7 @@ export const PropertyCardMenu = ({
     // Render as bottom sheet with single action
     return (
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <Sheet.Trigger asChild>
+        <SheetTrigger asChild>
           <Button
             variant="ghost"
             className={menuTriggerClass + " touch-feedback"}
@@ -50,7 +52,7 @@ export const PropertyCardMenu = ({
           >
             <EllipsisVertical className="h-6 w-6" />
           </Button>
-        </Sheet.Trigger>
+        </SheetTrigger>
         <SheetContent
           side="bottom"
           className={mobileMenuContentClass + " border-none"}
