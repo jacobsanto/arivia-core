@@ -4,22 +4,63 @@ import { supabase } from "@/integrations/supabase/client";
 import { SyncLog, SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
 
-// Define explicit return type for fetchSyncLogs to avoid excessive type instantiation
-interface FetchSyncLogsResult {
+// Define explicit types for query responses to avoid excessive type inference
+interface SyncLogQueryPage {
   data: SyncLog[];
   nextPage: number | null;
   availableIntegrations: string[];
 }
 
+// Define raw log type to help with transformation
+interface RawSyncLog {
+  id: string;
+  service?: string | null;
+  sync_type?: string | null;
+  status?: string | null;
+  message?: string | null;
+  error_message?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  created_at?: string | null;
+  listing_id?: string | null;
+  sync_duration?: number | null;
+  bookings_created?: number | null;
+  bookings_updated?: number | null;
+  bookings_deleted?: number | null;
+  listings_created?: number | null;
+  listings_updated?: number | null;
+  listings_deleted?: number | null;
+  items_count?: number | null;
+}
+
 // Transform function to convert raw DB records to the UI SyncLog format
-function transformRawToSyncLog(raw: any): SyncLog {
+function transformRawToSyncLog(raw: RawSyncLog): SyncLog {
+  // Handle null values safely
+  const service = raw.service || "";
+  const status = raw.status || "";
+  const message = raw.message || raw.error_message || "";
+  const syncedAt = raw.end_time || raw.start_time || raw.created_at || "";
+  
+  // Calculate totals safely
+  const totalListings = (
+    (raw.listings_created || 0) + 
+    (raw.listings_updated || 0) + 
+    (raw.listings_deleted || 0)
+  ) || undefined;
+  
+  const totalBookings = (
+    (raw.bookings_created || 0) + 
+    (raw.bookings_updated || 0) + 
+    (raw.bookings_deleted || 0)
+  ) || undefined;
+  
   return {
     // Original properties
     id: raw.id,
-    service: raw.service,
+    service,
     sync_type: raw.sync_type,
-    status: raw.status || "",
-    message: raw.message || raw.error_message || "",
+    status,
+    message,
     error_message: raw.error_message,
     start_time: raw.start_time,
     end_time: raw.end_time,
@@ -35,22 +76,20 @@ function transformRawToSyncLog(raw: any): SyncLog {
     items_count: raw.items_count,
     
     // UI friendly aliases
-    integration: raw.service,
-    synced_at: raw.end_time || raw.start_time || raw.created_at || "",
+    integration: service,
+    synced_at: syncedAt,
     duration_ms: raw.sync_duration,
-    total_listings:
-      (raw.listings_created || 0) + (raw.listings_updated || 0) + (raw.listings_deleted || 0) || undefined,
-    total_bookings:
-      (raw.bookings_created || 0) + (raw.bookings_updated || 0) + (raw.bookings_deleted || 0) || undefined,
+    total_listings: totalListings,
+    total_bookings: totalBookings,
   };
 }
 
-// Fetch function for use with React Query
+// Fetch function with explicit return type
 async function fetchSyncLogs(
   pageParam: number,
   pageSize: number,
   filters: SyncLogsFilters
-): Promise<FetchSyncLogsResult> {
+): Promise<SyncLogQueryPage> {
   try {
     const { status, integration, listingId } = filters;
     const startIndex = pageParam * pageSize;
@@ -90,7 +129,9 @@ async function fetchSyncLogs(
     const nextPage = hasNextPage ? pageParam + 1 : null;
 
     // Map raw result to SyncLog type
-    const transformedLogs: SyncLog[] = (logs || []).map(transformRawToSyncLog);
+    const transformedLogs: SyncLog[] = (logs || []).map(raw => 
+      transformRawToSyncLog(raw as RawSyncLog)
+    );
 
     return {
       data: transformedLogs,
@@ -103,10 +144,23 @@ async function fetchSyncLogs(
   }
 }
 
-export function useSyncLogFetcher(params: { pageSize: number } & SyncLogsFilters) {
+// Type for hook return value to avoid excessive type inference
+interface SyncLogFetcherResult {
+  logs: SyncLog[];
+  availableIntegrations: string[];
+  isLoading: boolean;
+  isFetchingNextPage: boolean;
+  error: string | null;
+  hasNextPage: boolean;
+  fetchNextPage: () => void;
+  refetch: () => void;
+}
+
+// Main hook with explicitly typed return value
+export function useSyncLogFetcher(params: { pageSize: number } & SyncLogsFilters): SyncLogFetcherResult {
   const { pageSize, ...filters } = params;
 
-  const result = useInfiniteQuery({
+  const result = useInfiniteQuery<SyncLogQueryPage, Error>({
     queryKey: ['syncLogs', filters],
     queryFn: ({ pageParam = 0 }) => fetchSyncLogs(pageParam, pageSize, filters),
     initialPageParam: 0,
