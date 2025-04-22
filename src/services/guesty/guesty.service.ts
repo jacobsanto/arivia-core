@@ -9,12 +9,17 @@ export interface GuestyListingDB {
     full?: string;
     city?: string;
     country?: string;
-  };
+  } | null;
   property_type?: string;
   raw_data?: Record<string, any>;
   thumbnail_url?: string;
   highres_url?: string;
   sync_status?: string;
+  is_deleted?: boolean;
+  last_synced?: string;
+  created_at?: string;
+  updated_at?: string;
+  first_synced_at?: string;
 }
 
 export interface GuestyBookingDB {
@@ -47,7 +52,14 @@ export const guestyService = {
         .order('title', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      
+      // Make sure we correctly cast the data to the GuestyListingDB type
+      return (data || []).map(item => ({
+        ...item,
+        address: typeof item.address === 'string' 
+          ? JSON.parse(item.address) 
+          : item.address
+      })) as GuestyListingDB[];
     } catch (error) {
       console.error('Error fetching Guesty listings:', error);
       throw error;
