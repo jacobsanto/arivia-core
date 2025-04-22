@@ -32,7 +32,7 @@ const AdminSyncHistory: React.FC = () => {
     listingId: listingIdFilter ? listingIdFilter : null,
   });
 
-  // Combine logs from all pages
+  // Flatten logs from all pages into a single array for rendering
   const allLogs = logs.flat();
 
   // Handle retrying a failed sync
@@ -56,8 +56,8 @@ const AdminSyncHistory: React.FC = () => {
               variant="outline" 
               className="gap-1"
               onClick={() => {
-                // Reload the first page of logs
-                logs.length > 0 && logs[0].length > 0 && fetchNextPage();
+                // Refresh the first page of logs
+                fetchNextPage();
               }}
             >
               <RefreshCw size={14} /> Refresh

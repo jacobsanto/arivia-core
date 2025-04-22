@@ -39,7 +39,7 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  const [logs, setLogs] = useState<SyncLog[][]>([]);
+  const [logs, setLogs] = useState<Array<Array<SyncLog>>>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,15 +88,20 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           setAvailableIntegrations(integrations);
         }
 
-        // Fixed the issue: proper type handling for the logs state update
-        setLogs((prev) => {
-          if (_page === 0) {
-            return [data || []];
-          } else {
-            // Create a new array to avoid excessive nesting that causes TypeScript errors
-            return [...prev, data || []];
-          }
-        });
+        // The problematic part - fixed to avoid deep nesting
+        if (_page === 0) {
+          // For the first page, just set a new array with one page
+          setLogs([data || []]);
+        } else {
+          // For subsequent pages, append without creating excessive nesting
+          setLogs(prevLogs => {
+            // Create a shallow copy of the previous logs array
+            const newLogs = [...prevLogs];
+            // Add the new page data
+            newLogs.push(data || []);
+            return newLogs;
+          });
+        }
         
         setHasNextPage((data?.length || 0) === pageSize);
         setError(null);
