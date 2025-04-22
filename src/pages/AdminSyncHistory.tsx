@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { CardWithHeader } from "@/components/ui/card-with-header";
 import { SyncLogCard } from "@/components/admin/sync-history/SyncLogCard";
@@ -32,7 +31,6 @@ const AdminSyncHistory: React.FC = () => {
     listingId: listingIdFilter ? listingIdFilter : null,
   });
 
-  // Handle retrying a failed sync
   const handleRetrySync = (log: SyncLog) => {
     retrySync({
       logId: log.id,
@@ -53,7 +51,6 @@ const AdminSyncHistory: React.FC = () => {
               variant="outline" 
               className="gap-1"
               onClick={() => {
-                // Refresh the first page of logs
                 fetchNextPage();
               }}
             >

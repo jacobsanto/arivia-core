@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { Check, X, RefreshCw } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { SyncLog } from "./useSyncLogs";
+import { SyncLog } from "./syncLog.types";
 
 interface SyncLogCardProps {
   log: SyncLog;
