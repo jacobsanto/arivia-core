@@ -1,11 +1,11 @@
-
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { guestyService } from "@/services/guesty/guesty.service";
-import BookingsListWrapper from "./BookingsListWrapper";
+import { useBookingsWithTasks } from "./useBookingsWithTasks";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
+import ManageBookingsList from "./ManageBookingsList";
 
 interface ManageBookingsSectionProps {
   listing: any;
@@ -18,22 +18,22 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   bookings,
   isLoading,
 }) => {
-  const [triggeredCleanings, setTriggeredCleanings] = React.useState<string[]>([]);
   const [isSyncing, setIsSyncing] = React.useState(false);
 
-  const today = new Date();
-  const upcomingBookings = bookings
-    .filter((booking) => new Date(booking.check_in) >= today)
-    .sort((a, b) => new Date(a.check_in).getTime() - new Date(b.check_in).getTime());
+  const { bookingsWithTasks, loading, error } = useBookingsWithTasks(listing?.id);
 
-  const pastBookings = bookings
-    .filter((booking) => new Date(booking.check_out) < today)
-    .sort((a, b) => new Date(b.check_out).getTime() - new Date(a.check_out).getTime());
+  const sortedBookingsWithTasks = bookingsWithTasks
+    .slice()
+    .sort((a, b) =>
+      new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
+    );
 
   const handleSyncBookings = async () => {
     setIsSyncing(true);
     try {
-      const result = await guestyService.syncBookingsForListing(listing.id);
+      const result = await import("@/services/guesty/guesty.service").then(m =>
+        m.guestyService.syncBookingsForListing(listing.id)
+      );
       if (result.success) {
         toast.success("Bookings synced successfully", {
           description: `${result.bookingsSynced} bookings updated`,
@@ -44,29 +44,55 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
         });
       }
     } catch (error: any) {
-      toast.error("An error occurred", {
-        description: error.message || "Could not sync bookings",
-      });
+      toast.error("Sync error", { description: error.message || "Could not sync bookings" });
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleTriggerCleaning = (bookingId: string) => {
-    setTriggeredCleanings((prev) => [...prev, bookingId]);
-    toast.success("Cleaning scheduled", {
-      description: "A cleaning task has been created",
-    });
+  const handleTriggerCleaning = async (bookingId: string) => {
+    try {
+      const { data, error } = await import("@/integrations/supabase/client").then(({ supabase }) =>
+        supabase
+          .from("housekeeping_tasks")
+          .insert([
+            {
+              status: "pending",
+              task_type: "Departure Cleaning",
+              listing_id: listing.id,
+              booking_id: bookingId,
+              due_date: new Date().toISOString().slice(0, 10),
+            },
+          ])
+      );
+      if (error) throw error;
+      toast.success("Cleaning task scheduled", {
+        description: "A cleaning task has been created.",
+      });
+    } catch (error: any) {
+      toast.error("Could not schedule cleaning", {
+        description: error.message,
+      });
+    }
   };
 
-  const handleMarkCleaned = (bookingId: string) => {
-    setTriggeredCleanings((prev) => [...prev, bookingId]);
-    toast.success("Marked as cleaned", {
-      description: "The property has been marked as cleaned",
-    });
+  const handleMarkCleaned = async (taskId: string) => {
+    try {
+      const { error } = await import("@/integrations/supabase/client").then(({ supabase }) =>
+        supabase.from("housekeeping_tasks").update({ status: "done" }).eq("id", taskId)
+      );
+      if (error) throw error;
+      toast.success("Marked as cleaned", {
+        description: "The cleaning task for this booking is marked done.",
+      });
+    } catch (error: any) {
+      toast.error("Could not mark as cleaned", {
+        description: error.message,
+      });
+    }
   };
 
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center h-32">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -74,35 +100,20 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
     );
   }
 
+  if (sortedBookingsWithTasks.length === 0) {
+    return (
+      <BookingsEmptyState onSync={handleSyncBookings} isSyncing={isSyncing} />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <ManageBookingsHeader onSync={handleSyncBookings} isSyncing={isSyncing} />
-
-      {upcomingBookings.length > 0 && (
-        <BookingsListWrapper
-          type="upcoming"
-          bookings={upcomingBookings}
-          maxToShow={3}
-          onTriggerCleaning={handleTriggerCleaning}
-          onMarkCleaned={handleMarkCleaned}
-          triggeredCleanings={triggeredCleanings}
-        />
-      )}
-
-      {pastBookings.length > 0 && (
-        <BookingsListWrapper
-          type="past"
-          bookings={pastBookings}
-          maxToShow={2}
-          onTriggerCleaning={handleTriggerCleaning}
-          onMarkCleaned={handleMarkCleaned}
-          triggeredCleanings={triggeredCleanings}
-        />
-      )}
-
-      {bookings.length === 0 && (
-        <BookingsEmptyState onSync={handleSyncBookings} isSyncing={isSyncing} />
-      )}
+      <ManageBookingsList
+        bookingsWithTasks={sortedBookingsWithTasks}
+        onTriggerCleaning={handleTriggerCleaning}
+        onMarkCleaned={handleMarkCleaned}
+      />
     </div>
   );
 };
