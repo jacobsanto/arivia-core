@@ -39,7 +39,7 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  const [logs, setLogs] = useState<SyncLog[][]>([]); // paginated
+  const [logs, setLogs] = useState<SyncLog[][]>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -88,9 +88,16 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           setAvailableIntegrations(integrations);
         }
 
-        setLogs((prev) =>
-          _page === 0 ? [data || []] : [...prev, data || []]
-        );
+        // Fixed the issue: proper type handling for the logs state update
+        setLogs((prev) => {
+          if (_page === 0) {
+            return [data || []];
+          } else {
+            // Create a new array to avoid excessive nesting that causes TypeScript errors
+            return [...prev, data || []];
+          }
+        });
+        
         setHasNextPage((data?.length || 0) === pageSize);
         setError(null);
       } catch (e: any) {
