@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Card, 
@@ -9,7 +8,7 @@ import {
 import { 
   Calendar, 
   ClipboardList, 
-  Broom, 
+  Brush, 
   Check, 
   Loader2
 } from "lucide-react";
@@ -33,11 +32,9 @@ const BookingItem: React.FC<BookingItemProps> = ({
   onMarkCleaned,
   isCleaningTriggered = false 
 }) => {
-  // Format dates for display
   const checkInDate = formatDate(booking.check_in);
   const checkOutDate = formatDate(booking.check_out);
   
-  // Determine status badge
   const getBadgeVariant = (status: string) => {
     switch(status?.toLowerCase()) {
       case 'confirmed': return 'default';
@@ -83,7 +80,7 @@ const BookingItem: React.FC<BookingItemProps> = ({
                   className="text-xs"
                   onClick={() => onTriggerCleaning(booking.id)}
                 >
-                  <Broom className="h-3.5 w-3.5 mr-1.5" />
+                  <Brush className="h-3.5 w-3.5 mr-1.5" />
                   Schedule Cleaning
                 </Button>
                 <Button 
@@ -127,7 +124,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   const [triggeredCleanings, setTriggeredCleanings] = React.useState<string[]>([]);
   const [isSyncing, setIsSyncing] = React.useState(false);
   
-  // Filter bookings by upcoming and past
   const today = new Date();
   const upcomingBookings = bookings
     .filter(booking => new Date(booking.check_in) >= today)
@@ -160,7 +156,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   };
   
   const handleTriggerCleaning = (bookingId: string) => {
-    // In a real implementation, this would call an API to schedule cleaning
     setTriggeredCleanings(prev => [...prev, bookingId]);
     toast.success("Cleaning scheduled", {
       description: "A cleaning task has been created"
@@ -168,7 +163,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   };
   
   const handleMarkCleaned = (bookingId: string) => {
-    // In a real implementation, this would call an API to mark as cleaned
     setTriggeredCleanings(prev => [...prev, bookingId]);
     toast.success("Marked as cleaned", {
       description: "The property has been marked as cleaned"
@@ -185,7 +179,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   
   return (
     <div className="space-y-6">
-      {/* Top Actions */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Bookings</h2>
         <Button 
@@ -208,7 +201,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
         </Button>
       </div>
       
-      {/* Upcoming Bookings Section */}
       {upcomingBookings.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Upcoming Bookings</h3>
@@ -232,7 +224,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
         </div>
       )}
       
-      {/* Past Bookings Section */}
       {pastBookings.length > 0 && (
         <div>
           <h3 className="text-sm font-medium text-muted-foreground mb-3">Past Bookings</h3>
@@ -255,7 +246,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
         </div>
       )}
       
-      {/* Empty State */}
       {bookings.length === 0 && (
         <Card className="border border-dashed">
           <CardContent className="flex flex-col items-center justify-center p-6 text-center">

@@ -7,11 +7,17 @@ import { useNavigate } from "react-router-dom";
 interface PropertyCardInfoProps {
   property: UnifiedProperty;
   onViewDetails: (property: UnifiedProperty) => void;
+  onBookingManagement?: (property: UnifiedProperty) => void;
+  onPricingConfig?: (property: UnifiedProperty) => void;
+  onGuestManagement?: (property: UnifiedProperty) => void;
 }
 
 export const PropertyCardInfo = ({
   property,
   onViewDetails,
+  onBookingManagement,
+  onPricingConfig,
+  onGuestManagement,
 }: PropertyCardInfoProps) => {
   const navigate = useNavigate();
   
