@@ -54,4 +54,5 @@ export interface UnifiedProperty extends Property {
   last_synced?: string;
   next_check_in?: string | null;
   has_active_cleaning?: boolean;
+  raw_data?: any; // Added to access additional data like area
 }

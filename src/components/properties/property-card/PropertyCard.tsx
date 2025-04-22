@@ -22,7 +22,7 @@ const PropertyCard = ({
   onGuestManagement,
 }: PropertyCardProps) => {
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full">
       <PropertyCardHeader 
         property={property}
         onViewDetails={onViewDetails}

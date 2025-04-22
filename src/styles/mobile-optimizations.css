@@ -37,6 +37,22 @@
     transform: scale(0.98);
     transition: transform 0.1s ease-in-out, opacity 0.1s ease-in-out;
   }
+  
+  /* Property card mobile optimizations */
+  .property-card-mobile {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .property-card-mobile .property-info {
+    padding: 16px;
+  }
+  
+  .property-card-mobile .property-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
 }
 
 /* Prevent text scaling */
@@ -150,5 +166,37 @@ html {
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;
+  }
+  
+  /* Property card mobile optimizations */
+  .property-card {
+    margin: 8px 0;
+    border-radius: 8px;
+  }
+  
+  .property-details {
+    flex-direction: column;
+  }
+  
+  .property-meta-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 16px;
+  }
+  
+  .property-meta-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 24px;
+    font-size: 14px;
   }
 }

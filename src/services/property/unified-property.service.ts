@@ -51,7 +51,8 @@ export const unifiedPropertyService = {
         return {
           ...this.transformGuestyToUnified(listing),
           next_check_in: nextBooking?.check_in || null,
-          has_active_cleaning: hasActiveTasks || false
+          has_active_cleaning: hasActiveTasks || false,
+          raw_data: listing.raw_data || {} // Ensure raw_data is passed to access area
         };
       });
 
@@ -96,7 +97,8 @@ export const unifiedPropertyService = {
       updated_at: listing.updated_at || new Date().toISOString(),
       source: 'guesty',
       guesty_id: listing.id,
-      last_synced: listing.last_synced
+      last_synced: listing.last_synced,
+      raw_data: rawData // Pass through raw_data to access additional fields
     };
   },
 
