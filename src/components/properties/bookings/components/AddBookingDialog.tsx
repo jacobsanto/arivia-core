@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import BookingForm from "../../booking-form";
+import { BookingFormValues } from "../../booking-form/schema";
 
 interface AddBookingDialogProps {
   propertyId: string;
@@ -38,8 +39,7 @@ export const AddBookingDialog = ({
           <BookingForm 
             propertyId={parseInt(propertyId, 10) || 0} 
             propertyName="" 
-            onSuccess={() => onOpenChange(false)} 
-            onSubmit={(data) => {
+            onSubmit={(data: BookingFormValues) => {
               console.log("Booking form submitted:", data);
               onOpenChange(false);
             }}
