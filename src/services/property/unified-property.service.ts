@@ -12,15 +12,15 @@ export const unifiedPropertyService = {
         .from('guesty_listings')
         .select(`
           *,
-          next_booking:guesty_bookings!guesty_bookings_listing_id_fkey(
+          next_booking:guesty_bookings(
             check_in,
             status
           )
         `)
         .eq('is_deleted', false)
-        .gte('guesty_bookings.check_in', new Date().toISOString().split('T')[0])
-        .neq('guesty_bookings.status', 'cancelled')
-        .order('guesty_bookings.check_in', { ascending: true, foreignTable: 'guesty_bookings' });
+        .gte('next_booking.check_in', new Date().toISOString().split('T')[0])
+        .neq('next_booking.status', 'cancelled')
+        .order('check_in', { ascending: true, foreignTable: 'next_booking' });
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,address->full.ilike.%${searchQuery}%`);
