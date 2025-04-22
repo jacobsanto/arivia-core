@@ -42,11 +42,12 @@ export function useSyncLogs({ pageSize, status, integration }: UseSyncLogsParams
   const fetchLogs = useCallback(
     async (_page: number) => {
       try {
+        // Modified to use supported options in the order() method
         const query = supabase
           .from("sync_logs")
           .select("*")
-          .order("end_time", { ascending: false, nullsLast: true })
-          .order("start_time", { ascending: false, nullsLast: true })
+          .order("end_time", { ascending: false }) // nullsLast is default behavior when ascending: false
+          .order("start_time", { ascending: false }) // nullsLast is default behavior when ascending: false
           .range(_page * pageSize, (_page + 1) * pageSize - 1); // 0-based pagination
 
         if (status) query.eq("status", status);
