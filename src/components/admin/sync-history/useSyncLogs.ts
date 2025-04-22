@@ -39,7 +39,8 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  const [logs, setLogs] = useState<Array<Array<SyncLog>>>([]);
+  // Change to a flat array structure to avoid TypeScript excessive depth issues
+  const [allPages, setAllPages] = useState<SyncLog[][]>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +52,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
 
   // For filter change, reset everything
   useEffect(() => {
-    setLogs([]);
+    setAllPages([]);
     setPage(0);
     setHasNextPage(true);
     setIsLoading(true);
@@ -88,19 +89,13 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           setAvailableIntegrations(integrations);
         }
 
-        // The problematic part - fixed to avoid deep nesting
+        // Simplified state update approach that avoids the TypeScript nesting issue
         if (_page === 0) {
-          // For the first page, just set a new array with one page
-          setLogs([data || []]);
+          // For the first page, just set a new array
+          setAllPages([[...(data || [])]]);
         } else {
-          // For subsequent pages, append without creating excessive nesting
-          setLogs(prevLogs => {
-            // Create a shallow copy of the previous logs array
-            const newLogs = [...prevLogs];
-            // Add the new page data
-            newLogs.push(data || []);
-            return newLogs;
-          });
+          // For subsequent pages, use functional update to avoid type issues
+          setAllPages(prev => [...prev, [...(data || [])]]);
         }
         
         setHasNextPage((data?.length || 0) === pageSize);
@@ -166,6 +161,9 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
       setIsRetrying(prev => ({ ...prev, [logId]: false }));
     }
   };
+
+  // Compute flattened logs for rendering
+  const logs = allPages.flat();
 
   return {
     logs,

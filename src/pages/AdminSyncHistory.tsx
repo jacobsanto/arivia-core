@@ -32,9 +32,6 @@ const AdminSyncHistory: React.FC = () => {
     listingId: listingIdFilter ? listingIdFilter : null,
   });
 
-  // Flatten logs from all pages into a single array for rendering
-  const allLogs = logs.flat();
-
   // Handle retrying a failed sync
   const handleRetrySync = (log: SyncLog) => {
     retrySync({
@@ -87,10 +84,10 @@ const AdminSyncHistory: React.FC = () => {
           )}
 
           <div className="flex flex-col gap-3 mt-4">
-            {allLogs.length === 0 && !isLoading ? (
+            {logs.length === 0 && !isLoading ? (
               <div className="text-muted-foreground text-center py-10">No sync logs found.</div>
             ) : (
-              allLogs.map((log) => (
+              logs.map((log) => (
                 <SyncLogCard 
                   key={log.id} 
                   log={log} 
