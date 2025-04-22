@@ -1,4 +1,3 @@
-
 // Types for rate limit information
 export interface RateLimitInfo {
   rate_limit: number;
@@ -27,6 +26,6 @@ export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
 }
 
 // Delay execution for a specified time (in milliseconds)
-export function delay(ms: number): Promise<void> {
+export async function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
