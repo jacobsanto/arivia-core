@@ -1,0 +1,58 @@
+
+/* Layout optimizations */
+.content-visibility-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 500px;
+}
+
+/* Hardware acceleration */
+.hardware-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize layouts */
+.contain-layout {
+  contain: layout;
+}
+
+/* Text scaling prevention */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* Property card mobile optimizations */
+@media (max-width: 768px) {
+  .property-card {
+    margin: 8px 0;
+    border-radius: 8px;
+  }
+  
+  .property-details {
+    flex-direction: column;
+  }
+  
+  .property-meta-mobile {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 16px 16px;
+  }
+  
+  .property-meta-row {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 24px;
+    font-size: 14px;
+  }
+}
