@@ -12,7 +12,7 @@ export function useSyncLogRetry() {
   const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  // Modified to return a Promise consistently
+  // Explicitly returning a Promise for consistent typing
   async function retrySync(
     { logId, service, syncType }: RetrySyncOptions, 
     refetch?: RefetchFunction

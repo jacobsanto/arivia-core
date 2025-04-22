@@ -1,5 +1,5 @@
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, UseInfiniteQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SyncLog, SyncLogsFilters } from "./syncLog.types";
 import { getAvailableIntegrations } from "./syncLog.state";
@@ -7,8 +7,8 @@ import { getAvailableIntegrations } from "./syncLog.state";
 // Simple type for raw database records
 type RawSyncLog = Record<string, any>;
 
-// Define explicit return type for the query function to reduce type inference depth
-interface QueryResult {
+// Explicitly define the structure of a page result
+interface PageResult {
   data: SyncLog[];
   nextPage: number | null;
   availableIntegrations: string[];
@@ -65,12 +65,12 @@ function transformRawToSyncLog(raw: RawSyncLog): SyncLog {
   };
 }
 
-// Explicit typing for the fetch function to avoid deep type inference
+// Simplified fetch function with explicit return type
 async function fetchSyncLogs(
   pageParam: number,
   pageSize: number,
   filters: SyncLogsFilters
-): Promise<QueryResult> {
+): Promise<PageResult> {
   try {
     const { status, integration, listingId } = filters;
     const startIndex = pageParam * pageSize;
@@ -126,7 +126,7 @@ async function fetchSyncLogs(
   }
 }
 
-// Explicitly define return type for the hook
+// Explicitly define the hook return type
 interface SyncLogHookResult {
   logs: SyncLog[];
   availableIntegrations: string[];
@@ -138,35 +138,36 @@ interface SyncLogHookResult {
   refetch: () => Promise<any>;
 }
 
-// Main hook with concrete types to avoid excessive type inference
+// Simplified hook implementation that avoids complex type inference
 export function useSyncLogFetcher(
   params: { pageSize: number } & SyncLogsFilters
 ): SyncLogHookResult {
   const { pageSize, ...filters } = params;
 
-  // Explicitly type the query result to avoid deep inference
-  const result = useInfiniteQuery({
+  // Use type assertion to avoid complex type inference
+  const queryResult = useInfiniteQuery({
     queryKey: ['syncLogs', filters] as const,
     queryFn: ({ pageParam }) => fetchSyncLogs(Number(pageParam), pageSize, filters),
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.nextPage,
     staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  }) as UseInfiniteQueryResult<PageResult, Error>;
 
-  // Flatten pages of logs into a single array with explicit typing
-  const logs = result.data?.pages.flatMap(page => page.data) || [];
+  // Extract and flatten the results
+  const logs = queryResult.data?.pages.flatMap(page => page.data) || [];
   
-  // Extract available integrations from the first page
-  const availableIntegrations = result.data?.pages[0]?.availableIntegrations || [];
+  // Get available integrations from the first page
+  const availableIntegrations = queryResult.data?.pages[0]?.availableIntegrations || [];
 
+  // Return a simplified result object
   return {
     logs,
     availableIntegrations,
-    isLoading: result.isLoading,
-    isFetchingNextPage: result.isFetchingNextPage,
-    error: result.error ? String(result.error) : null,
-    hasNextPage: !!result.hasNextPage,
-    fetchNextPage: result.fetchNextPage,
-    refetch: result.refetch
+    isLoading: queryResult.isLoading,
+    isFetchingNextPage: queryResult.isFetchingNextPage,
+    error: queryResult.error ? String(queryResult.error) : null,
+    hasNextPage: !!queryResult.hasNextPage,
+    fetchNextPage: queryResult.fetchNextPage,
+    refetch: queryResult.refetch
   };
 }
