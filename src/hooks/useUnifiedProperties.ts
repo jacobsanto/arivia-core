@@ -7,18 +7,14 @@ import { toast } from 'sonner';
 export const useUnifiedProperties = () => {
   const [properties, setProperties] = useState<UnifiedProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   const fetchProperties = async () => {
     setIsLoading(true);
-    setError(null);
-
     try {
       const data = await unifiedPropertyService.fetchAllProperties();
       setProperties(data);
       
-      // Set last synced date from the most recently synced property
       const mostRecentSync = data
         .filter(p => p.last_synced)
         .sort((a, b) => 
@@ -29,7 +25,7 @@ export const useUnifiedProperties = () => {
         setLastSynced(mostRecentSync.last_synced);
       }
     } catch (err: any) {
-      setError(err.message);
+      toast.error('Failed to fetch properties');
     } finally {
       setIsLoading(false);
     }
@@ -52,15 +48,10 @@ export const useUnifiedProperties = () => {
     setIsLoading(false);
   };
 
-  const getPropertyBookings = unifiedPropertyService.getPropertyBookings;
-
   return {
     properties,
     isLoading,
-    error,
     lastSynced,
-    fetchProperties,
-    syncWithGuesty,
-    getPropertyBookings
+    syncWithGuesty
   };
 };
