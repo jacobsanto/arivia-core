@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { UnifiedProperty } from "@/types/property.types";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { format } from "date-fns";
-import { Broom as BroomIcon } from "lucide-react";
+import { Brush } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PropertyCardContentProps {
@@ -32,7 +32,7 @@ export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
               <Tooltip>
                 <TooltipTrigger>
                   <div className="text-yellow-600">
-                    <BroomIcon className="h-4 w-4" />
+                    <Brush className="h-4 w-4" />
                   </div>
                 </TooltipTrigger>
                 <TooltipContent>
