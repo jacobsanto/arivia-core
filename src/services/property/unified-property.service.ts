@@ -6,12 +6,16 @@ import { guestyService } from '../guesty/guesty.service';
 import { SortOption } from '@/components/properties/PropertySort';
 
 export const unifiedPropertyService = {
-  async fetchAllProperties(sortOption?: SortOption): Promise<UnifiedProperty[]> {
+  async fetchAllProperties(sortOption?: SortOption, searchQuery?: string): Promise<UnifiedProperty[]> {
     try {
       let query = supabase
         .from('guesty_listings')
         .select('*')
         .eq('is_deleted', false);
+
+      if (searchQuery) {
+        query = query.or(`title.ilike.%${searchQuery}%,address->full.ilike.%${searchQuery}%`);
+      }
 
       if (sortOption) {
         query = query.order(sortOption.column, {

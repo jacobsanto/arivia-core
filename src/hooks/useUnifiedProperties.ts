@@ -5,7 +5,7 @@ import { UnifiedProperty } from '@/types/property.types';
 import { toast } from 'sonner';
 import { SortOption } from '@/components/properties/PropertySort';
 
-export const useUnifiedProperties = () => {
+export const useUnifiedProperties = (searchQuery: string = '') => {
   const [properties, setProperties] = useState<UnifiedProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSynced, setLastSynced] = useState<string | null>(null);
@@ -19,7 +19,7 @@ export const useUnifiedProperties = () => {
   const fetchProperties = async () => {
     setIsLoading(true);
     try {
-      const data = await unifiedPropertyService.fetchAllProperties(currentSort);
+      const data = await unifiedPropertyService.fetchAllProperties(currentSort, searchQuery);
       setProperties(data);
       
       const mostRecentSync = data
@@ -40,7 +40,7 @@ export const useUnifiedProperties = () => {
 
   useEffect(() => {
     fetchProperties();
-  }, [currentSort]);
+  }, [currentSort, searchQuery]);
 
   const syncWithGuesty = async () => {
     setIsLoading(true);

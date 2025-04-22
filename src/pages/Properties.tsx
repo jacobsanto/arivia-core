@@ -8,7 +8,6 @@ import { PropertySearch } from "@/components/properties/PropertySearch";
 import { PropertySort } from "@/components/properties/PropertySort";
 
 const Properties = () => {
-  // State for search query
   const [searchQuery, setSearchQuery] = useState("");
 
   const { 
@@ -18,15 +17,7 @@ const Properties = () => {
     syncWithGuesty,
     currentSort,
     handleSort
-  } = useUnifiedProperties();
-
-  // Filter properties based on search query
-  const filteredProperties = searchQuery 
-    ? properties.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        (p.address && p.address.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : properties;
+  } = useUnifiedProperties(searchQuery);
 
   const handleSync = async () => {
     try {
@@ -54,7 +45,7 @@ const Properties = () => {
       </div>
 
       <UnifiedPropertiesList 
-        properties={filteredProperties}
+        properties={properties}
         isLoading={isLoading}
       />
     </div>
