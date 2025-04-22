@@ -91,16 +91,29 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Update logs state safely avoiding excessive type instantiations
+        // Fix for TypeScript type instantiation error
         if (_page === 0) {
-          // For first page, directly set without type complications
-          setLogs(fetchedData ? fetchedData as SyncLog[] : []);
+          // For first page, simply set the data directly
+          setLogs(fetchedData || []);
         } else {
-          // For subsequent pages, update carefully to avoid deep type instantiations
-          setLogs((prevLogs) => {
+          // For subsequent pages, use a more efficient approach to avoid deep type instantiation
+          setLogs(prevLogs => {
             if (!fetchedData || fetchedData.length === 0) return prevLogs;
-            // Use a different approach: create a new array with all items
-            return [...prevLogs, ...(fetchedData as SyncLog[])];
+            
+            // Create a brand new array instead of spreading
+            const newLogs = Array(prevLogs.length + fetchedData.length);
+            
+            // Copy previous logs
+            for (let i = 0; i < prevLogs.length; i++) {
+              newLogs[i] = prevLogs[i];
+            }
+            
+            // Copy new logs
+            for (let i = 0; i < fetchedData.length; i++) {
+              newLogs[prevLogs.length + i] = fetchedData[i];
+            }
+            
+            return newLogs;
           });
         }
         
@@ -134,10 +147,8 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
   // Retry a failed sync
   const retrySync = async ({ logId, service, syncType }: RetrySyncOptions) => {
     try {
-      setIsRetrying(prev => ({
-        ...prev,
-        [logId]: true
-      }));
+      // Create a new isRetrying object rather than modifying the existing one
+      setIsRetrying(prev => Object.assign({}, prev, { [logId]: true }));
       
       // Call the appropriate edge function based on the service
       const functionName = service?.toLowerCase() === 'guesty' ? 'guesty-sync' : 'sync-service';
@@ -168,10 +179,12 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         variant: "destructive",
       });
     } finally {
-      setIsRetrying(prev => ({
-        ...prev,
-        [logId]: false
-      }));
+      // Create a new isRetrying object when updating state
+      setIsRetrying(prev => {
+        const newState = { ...prev };
+        newState[logId] = false;
+        return newState;
+      });
     }
   };
 
