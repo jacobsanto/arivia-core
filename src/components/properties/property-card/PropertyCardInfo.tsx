@@ -1,4 +1,3 @@
-
 import React from "react";
 import { UnifiedProperty } from "@/types/property.types";
 import { PropertyCardMenu } from "./PropertyCardMenu";
@@ -21,13 +20,7 @@ export const PropertyCardInfo = ({
   return (
     <div className="flex justify-between items-start">
       <h3 className="text-lg font-medium line-clamp-1">{property.name}</h3>
-      <PropertyCardMenu 
-        property={property}
-        onViewDetails={onViewDetails}
-        onBookingManagement={onBookingManagement}
-        onPricingConfig={onPricingConfig}
-        onGuestManagement={onGuestManagement}
-      />
+      <PropertyCardMenu property={property} onViewDetails={onViewDetails} />
     </div>
   );
 };
