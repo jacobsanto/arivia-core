@@ -1,8 +1,8 @@
 
 import { useState } from "react";
-import { UseSyncLogsParams } from "./syncLog.types";
+import { SyncLogsFilters } from "./syncLog.types";
 
-export function useSyncLogFilters(initial?: Partial<Omit<UseSyncLogsParams, "pageSize">>) {
+export function useSyncLogFilters(initial?: Partial<SyncLogsFilters>) {
   const [status, setStatus] = useState<string | null>(initial?.status ?? null);
   const [integration, setIntegration] = useState<string | null>(initial?.integration ?? null);
   const [listingId, setListingId] = useState<string>(initial?.listingId ?? "");

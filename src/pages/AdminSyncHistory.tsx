@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { CardWithHeader } from "@/components/ui/card-with-header";
 import { SyncLogCard } from "@/components/admin/sync-history/SyncLogCard";
@@ -51,7 +52,7 @@ const AdminSyncHistory: React.FC = () => {
               variant="outline" 
               className="gap-1"
               onClick={() => {
-                fetchNextPage();
+                window.location.reload();
               }}
             >
               <RefreshCw size={14} /> Refresh
@@ -99,7 +100,7 @@ const AdminSyncHistory: React.FC = () => {
             <div className="flex justify-center mt-6">
               <button
                 className="px-4 py-2 rounded bg-muted hover:bg-muted/70 border border-input text-sm"
-                onClick={fetchNextPage}
+                onClick={() => fetchNextPage()}
                 disabled={isFetchingNextPage}
                 aria-label="Load more logs"
                 style={{ minHeight: 44 }}

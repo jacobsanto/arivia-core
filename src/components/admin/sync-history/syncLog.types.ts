@@ -20,11 +20,14 @@ export interface SyncLog {
   items_count?: number | null;
 }
 
-export interface UseSyncLogsParams {
-  pageSize: number;
+export interface SyncLogsFilters {
   status: string | null;
   integration: string | null;
-  listingId?: string | null;
+  listingId: string | null;
+}
+
+export interface UseSyncLogsParams extends SyncLogsFilters {
+  pageSize: number;
 }
 
 export interface RetrySyncOptions {
