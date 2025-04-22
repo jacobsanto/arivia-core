@@ -25,7 +25,7 @@ serve(async (req) => {
     const listingId = requestData.listingId;
     const syncAll = requestData.syncAll === true;
     
-    console.log(`Starting Guesty bookings sync: ${syncAll ? 'Full sync' : `Single listing: ${listingId}`}`);
+    console.log(`Starting Guesty bookings sync process...`);
     
     const { data: syncLog } = await supabase
       .from('sync_logs')

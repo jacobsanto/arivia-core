@@ -547,9 +547,11 @@ export type Database = {
       }
       integration_health: {
         Row: {
+          endpoint_stats: Json | null
           is_rate_limited: boolean | null
           last_bookings_synced: string | null
           last_error: string | null
+          last_successful_endpoint: string | null
           last_synced: string | null
           provider: string
           rate_limit_reset: string | null
@@ -559,9 +561,11 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          endpoint_stats?: Json | null
           is_rate_limited?: boolean | null
           last_bookings_synced?: string | null
           last_error?: string | null
+          last_successful_endpoint?: string | null
           last_synced?: string | null
           provider: string
           rate_limit_reset?: string | null
@@ -571,9 +575,11 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          endpoint_stats?: Json | null
           is_rate_limited?: boolean | null
           last_bookings_synced?: string | null
           last_error?: string | null
+          last_successful_endpoint?: string | null
           last_synced?: string | null
           provider?: string
           rate_limit_reset?: string | null
