@@ -451,6 +451,7 @@ export type Database = {
           address: Json | null
           created_at: string | null
           first_synced_at: string | null
+          highres_url: string | null
           id: string
           is_deleted: boolean | null
           last_synced: string | null
@@ -466,6 +467,7 @@ export type Database = {
           address?: Json | null
           created_at?: string | null
           first_synced_at?: string | null
+          highres_url?: string | null
           id: string
           is_deleted?: boolean | null
           last_synced?: string | null
@@ -481,6 +483,7 @@ export type Database = {
           address?: Json | null
           created_at?: string | null
           first_synced_at?: string | null
+          highres_url?: string | null
           id?: string
           is_deleted?: boolean | null
           last_synced?: string | null
