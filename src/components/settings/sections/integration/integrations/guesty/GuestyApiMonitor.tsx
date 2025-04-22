@@ -36,7 +36,7 @@ const GuestyApiMonitor = () => {
         .maybeSingle();
       
       if (error) throw error;
-      // Cast to IntegrationHealthData, ensuring all required fields are present
+      // Cast to IntegrationHealthData with the updated interface
       return data as IntegrationHealthData;
     }
   });

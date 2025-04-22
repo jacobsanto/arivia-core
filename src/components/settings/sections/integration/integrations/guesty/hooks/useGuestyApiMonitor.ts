@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ApiUsage } from "../types";
+import { ApiUsage, IntegrationHealthData } from "../types";
 
 // Define interface for health check response
 interface HealthCheckResponse {

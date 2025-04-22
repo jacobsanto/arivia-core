@@ -9,19 +9,20 @@ export interface ApiUsage {
 }
 
 export interface IntegrationHealthData {
-  id: string;
+  id?: string;
   provider: string;
   status: string;
   last_synced?: string;
   last_bookings_synced?: string;
   is_rate_limited?: boolean;
-  last_error?: string;  // Adding this to match existing code usage
-  error_message?: string;
-  created_at: string;
+  last_error?: string;
+  created_at?: string;
   updated_at: string;
-  remaining_requests?: number;  // Adding these fields to match existing code usage
+  remaining_requests?: number;
   rate_limit_reset?: string;
   request_count?: number;
+  endpoint_stats?: Record<string, any>;
+  last_successful_endpoint?: string;
 }
 
 export interface SyncHistory {
