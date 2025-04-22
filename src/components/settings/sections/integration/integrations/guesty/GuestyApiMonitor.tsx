@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApiUsageTab } from './components/ApiUsageTab';
 import { Loader2, Info } from 'lucide-react';
-import { ApiUsage } from './types';
+import { ApiUsage, IntegrationHealthData } from './types';
 
 const GuestyApiMonitor = () => {
   const [activeTab, setActiveTab] = useState("usage");
@@ -36,7 +36,7 @@ const GuestyApiMonitor = () => {
         .maybeSingle();
       
       if (error) throw error;
-      return data;
+      return data as IntegrationHealthData;
     }
   });
 
@@ -67,7 +67,10 @@ const GuestyApiMonitor = () => {
       )[0];
       
       if (latest && endpoint !== 'auth') { // Skip auth endpoint in the detailed list
-        const usage = apiUsage.find(item => item.id === latest.id);
+        const usage = apiUsage.find(item => 
+          item.endpoint === latest.endpoint && 
+          item.timestamp === latest.timestamp
+        );
         if (usage) {
           quotaUsage[endpoint] = {
             total: usage.rate_limit,

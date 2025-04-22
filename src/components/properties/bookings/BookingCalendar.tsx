@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar, Loader2, RefreshCcw } from "lucide-react";
-import BookingsList from "./BookingsList";
+import { BookingsList } from "./BookingsList";
 import { useBookings } from "@/hooks/useBookings";
 import { Property } from "@/types/property.types";
 
