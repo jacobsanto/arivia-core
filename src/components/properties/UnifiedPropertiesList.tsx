@@ -3,6 +3,7 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UnifiedProperty } from "@/types/property.types";
+import PropertyCard from "./property-card/PropertyCard";
 
 interface UnifiedPropertiesListProps {
   properties: UnifiedProperty[];
@@ -34,17 +35,14 @@ const UnifiedPropertiesList: React.FC<UnifiedPropertiesListProps> = ({
   return (
     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
       {properties.map((property) => (
-        <Card key={property.id} className="overflow-hidden">
-          <div className="p-6">
-            <h3 className="font-medium mb-2">{property.name}</h3>
-            {property.address && (
-              <p className="text-sm text-muted-foreground mb-4">{property.address}</p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              Last synced: {new Date(property.last_synced || property.updated_at).toLocaleDateString()}
-            </p>
-          </div>
-        </Card>
+        <PropertyCard
+          key={property.id}
+          property={property}
+          onViewDetails={() => {}}
+          onBookingManagement={() => {}}
+          onPricingConfig={() => {}}
+          onGuestManagement={() => {}}
+        />
       ))}
     </div>
   );
