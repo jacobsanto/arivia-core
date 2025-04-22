@@ -4,13 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
 interface PropertySearchProps {
-  searchQuery?: string;
-  setSearchQuery?: (query: string) => void;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
 }
 
 export const PropertySearch = ({ 
-  searchQuery = "", 
-  setSearchQuery = () => {} 
+  searchQuery, 
+  setSearchQuery 
 }: PropertySearchProps) => {
   return (
     <div className="relative w-full sm:w-72">

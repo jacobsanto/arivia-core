@@ -43,14 +43,6 @@ export const unifiedPropertyService = {
     const fullAddress = address.full || '';
     const location = address.city || address.country || 'Greece';
     
-    // Determine status 
-    let status = 'Vacant';
-    if (listing.status === 'active') {
-      status = 'Vacant'; // Default for active
-    } else if (listing.status === 'inactive' || listing.sync_status === 'archived') {
-      status = 'Maintenance';
-    }
-
     // Extract property details from raw_data if available
     const rawData = listing.raw_data || {};
     const bedrooms = rawData.bedrooms || 0;
@@ -62,7 +54,7 @@ export const unifiedPropertyService = {
       id: listing.id,
       name: listing.title,
       location: location,
-      status: status,
+      status: listing.status || 'Unknown',
       type: listing.property_type || 'Luxury Villa',
       bedrooms: bedrooms,
       bathrooms: bathrooms,
@@ -98,36 +90,17 @@ export const unifiedPropertyService = {
 
   async getPropertyBookings(propertyId: string): Promise<any[]> {
     try {
-      // Check if the property ID is from Guesty (non-UUID format)
-      const isGuestyProperty = propertyId && 
-        !propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      // For Guesty properties, use the listing_id field
+      const { data, error } = await supabase
+        .from('guesty_bookings')
+        .select('*')
+        .eq('listing_id', propertyId);
 
-      if (isGuestyProperty) {
-        console.log(`Fetching Guesty bookings for listing: ${propertyId}`);
-        // For Guesty properties, use the listing_id field
-        const { data, error } = await supabase
-          .from('guesty_bookings')
-          .select('*')
-          .eq('listing_id', propertyId);
-
-        if (error) {
-          throw new Error(error.message);
-        }
-
-        return data || [];
-      } else {
-        // For regular properties, use the property_id field
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('property_id', propertyId);
-
-        if (error) {
-          throw new Error(error.message);
-        }
-
-        return data || [];
+      if (error) {
+        throw new Error(error.message);
       }
+
+      return data || [];
     } catch (err: any) {
       console.error('Error fetching property bookings:', err);
       toastService.error('Failed to fetch bookings', {
