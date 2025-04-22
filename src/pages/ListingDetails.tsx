@@ -1,26 +1,21 @@
 
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowLeft, Calendar, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
+import PropertyInfoSection from '@/components/properties/listing-details/PropertyInfoSection';
+import ManageBookingsSection from '@/components/properties/listing-details/ManageBookingsSection';
+import GuestManagementSection from '@/components/properties/listing-details/GuestManagementSection';
 
 const ListingDetails = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("property-info");
 
   // Query the listing details
   const { data: listing, isLoading: listingLoading } = useQuery({
@@ -54,24 +49,32 @@ const ListingDetails = () => {
     enabled: !!listingId,
   });
 
-  if (listingLoading || bookingsLoading) {
+  if (listingLoading) {
     return (
-      <div className="container mx-auto p-6 space-y-6">
-        <Skeleton className="h-8 w-32" />
-        <Card>
-          <CardContent className="p-6 space-y-4">
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-4 w-2/3" />
-          </CardContent>
-        </Card>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex items-center justify-start h-10">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 p-0 flex items-center justify-center"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="animate-pulse space-y-4 mt-4">
+          <div className="h-8 bg-muted rounded w-3/4"></div>
+          <div className="h-28 bg-muted rounded"></div>
+          <div className="h-8 bg-muted rounded w-1/2"></div>
+          <div className="h-24 bg-muted rounded"></div>
+        </div>
       </div>
     );
   }
 
   if (!listing) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto px-4 py-6">
         <Button 
           variant="ghost" 
           onClick={() => navigate(-1)}
@@ -80,119 +83,78 @@ const ListingDetails = () => {
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Properties
         </Button>
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-muted-foreground">Listing not found</p>
-          </CardContent>
-        </Card>
+        <div className="text-center p-6 border rounded-lg">
+          <p className="text-muted-foreground">Listing not found</p>
+        </div>
       </div>
     );
   }
 
-  // Parse the address if it's a string (JSON)
-  const addressObj = typeof listing.address === 'string' 
-    ? JSON.parse(listing.address) 
-    : listing.address;
-
-  // Get full address display
-  const fullAddress = addressObj && typeof addressObj === 'object' && addressObj.full 
-    ? addressObj.full 
-    : 'No address provided';
-
   return (
-    <div className="container mx-auto p-6">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate(-1)}
-        className="mb-6"
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Back button and header */}
+      <div className="flex flex-col space-y-4">
+        <div className="flex items-center">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate(-1)}
+            className="w-10 h-10 p-0 mr-2 flex items-center justify-center"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-2xl font-bold truncate">{listing.title}</h1>
+        </div>
+      </div>
+
+      {/* Tabs UI */}
+      <Tabs
+        defaultValue="property-info"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
       >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Properties
-      </Button>
+        <TabsList className="grid grid-cols-3 w-full">
+          <TabsTrigger 
+            value="property-info" 
+            className="text-center py-2 flex flex-col items-center"
+          >
+            <span className="inline-block w-full text-center">Property</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="bookings" 
+            className="text-center py-2 flex flex-col items-center"
+          >
+            <span className="inline-block w-full text-center">Bookings</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="guests" 
+            className="text-center py-2 flex flex-col items-center"
+          >
+            <span className="inline-block w-full text-center">Guests</span>
+          </TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{listing.title}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {listing.thumbnail_url && (
-            <div className="aspect-video relative overflow-hidden rounded-lg">
-              <img 
-                src={listing.thumbnail_url} 
-                alt={listing.title}
-                className="object-cover w-full h-full"
-              />
-            </div>
-          )}
+        <TabsContent value="property-info" className="mt-6">
+          <PropertyInfoSection listing={listing} />
+        </TabsContent>
 
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Address</h3>
-              <p className="mt-1">{fullAddress}</p>
-            </div>
+        <TabsContent value="bookings" className="mt-6">
+          <ManageBookingsSection 
+            listing={listing} 
+            bookings={bookings || []} 
+            isLoading={bookingsLoading} 
+          />
+        </TabsContent>
 
-            <Separator />
-
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Property Type</h3>
-              <p className="mt-1">{listing.property_type || 'Not specified'}</p>
-            </div>
-
-            <Separator />
-
-            <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Status</h3>
-              <div className="mt-1">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                  ${listing.status === 'active' ? 'bg-green-100 text-green-800' : 
-                    listing.status === 'inactive' ? 'bg-gray-100 text-gray-800' : 
-                    'bg-yellow-100 text-yellow-800'}`}>
-                  {listing.status || 'Unknown'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <Separator className="my-6" />
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Bookings</h3>
-            {bookings && bookings.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Guest Name</TableHead>
-                      <TableHead>Check In</TableHead>
-                      <TableHead>Check Out</TableHead>
-                      <TableHead>Status</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {bookings.map((booking) => (
-                      <TableRow key={booking.id}>
-                        <TableCell>{booking.guest_name}</TableCell>
-                        <TableCell>{new Date(booking.check_in).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(booking.check_out).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                              booking.status === 'canceled' ? 'bg-red-100 text-red-800' : 
-                              'bg-yellow-100 text-yellow-800'}`}>
-                            {booking.status}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <p className="text-muted-foreground">No bookings found for this property</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        <TabsContent value="guests" className="mt-6">
+          <GuestManagementSection 
+            listing={listing} 
+            bookings={bookings || []} 
+            isLoading={bookingsLoading} 
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -90,7 +90,7 @@ export const PropertyCardMenu = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="z-50 bg-background">
         <DropdownMenuItem
-          onClick={() => onViewDetails(property)}
+          onClick={handleViewDetails}
           className="text-base min-h-[44px] flex items-center"
         >
           View Details
