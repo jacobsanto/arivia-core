@@ -58,6 +58,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     setError(null);
   }, [status, integration, listingId]);
 
+  // Optimized fetch logs function
   const fetchLogs = useCallback(
     async (_page: number) => {
       try {
@@ -91,29 +92,31 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Fix for TypeScript type instantiation error
+        // Handle state updates efficiently
         if (_page === 0) {
-          // For first page, simply set the data directly
+          // First page - simply replace the entire logs array
           setLogs(fetchedData || []);
         } else {
-          // For subsequent pages, use a more efficient approach to avoid deep type instantiation
-          setLogs(prevLogs => {
-            if (!fetchedData || fetchedData.length === 0) return prevLogs;
+          // Later pages - use a reference-copy approach instead of spreads
+          setLogs((prevLogs) => {
+            if (!fetchedData || fetchedData.length === 0) {
+              return prevLogs;
+            }
             
-            // Create a brand new array instead of spreading
-            const newLogs = Array(prevLogs.length + fetchedData.length);
+            // Manual array construction to avoid type instantiation depth issues
+            const combinedLogs = new Array<SyncLog>(prevLogs.length + fetchedData.length);
             
-            // Copy previous logs
+            // Copy existing logs
             for (let i = 0; i < prevLogs.length; i++) {
-              newLogs[i] = prevLogs[i];
+              combinedLogs[i] = prevLogs[i];
             }
             
             // Copy new logs
             for (let i = 0; i < fetchedData.length; i++) {
-              newLogs[prevLogs.length + i] = fetchedData[i];
+              combinedLogs[prevLogs.length + i] = fetchedData[i] as SyncLog;
             }
             
-            return newLogs;
+            return combinedLogs;
           });
         }
         
@@ -144,11 +147,13 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     fetchLogs(nextPage);
   };
 
-  // Retry a failed sync
+  // Retry a failed sync with optimized state updates
   const retrySync = async ({ logId, service, syncType }: RetrySyncOptions) => {
     try {
-      // Create a new isRetrying object rather than modifying the existing one
-      setIsRetrying(prev => Object.assign({}, prev, { [logId]: true }));
+      // Update retrying state without object spread (which can cause type instantiation issues)
+      const newRetryingState = Object.assign({}, isRetrying);
+      newRetryingState[logId] = true;
+      setIsRetrying(newRetryingState);
       
       // Call the appropriate edge function based on the service
       const functionName = service?.toLowerCase() === 'guesty' ? 'guesty-sync' : 'sync-service';
@@ -179,12 +184,10 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         variant: "destructive",
       });
     } finally {
-      // Create a new isRetrying object when updating state
-      setIsRetrying(prev => {
-        const newState = { ...prev };
-        newState[logId] = false;
-        return newState;
-      });
+      // Update retrying state without object spread
+      const finalRetryingState = Object.assign({}, isRetrying);
+      finalRetryingState[logId] = false;
+      setIsRetrying(finalRetryingState);
     }
   };
 
