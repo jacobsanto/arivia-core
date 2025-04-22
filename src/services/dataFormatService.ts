@@ -1,9 +1,8 @@
-
 /**
  * Data formatting utilities for consistent data presentation
  */
 
-import { format, parseISO, isValid } from "date-fns";
+import { format, formatDistance, parseISO, isValid } from "date-fns";
 
 /**
  * Format a date string in a consistent format
@@ -67,4 +66,31 @@ export const formatPercentage = (value: number | undefined | null, decimalPlaces
  */
 export const createUniqueId = (): string => {
   return Date.now().toString(36) + Math.random().toString(36).substring(2);
+};
+
+/**
+ * Format a timestamp to a human-readable "time ago" or specific date format
+ * @param dateString - ISO date string to format
+ * @returns Formatted time string like "2h ago" or "Apr 22, 10:45am"
+ */
+export const formatTimeAgo = (dateString: string | undefined | null): string => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = parseISO(dateString);
+    if (!isValid(date)) return 'N/A';
+    
+    const now = new Date();
+    const distanceInWords = formatDistance(date, now, { addSuffix: true });
+    
+    // If more than a week ago, show the specific date
+    if (now.getTime() - date.getTime() > 7 * 24 * 60 * 60 * 1000) {
+      return format(date, 'MMM d, h:mm a');
+    }
+    
+    return distanceInWords;
+  } catch (error) {
+    console.error('Error formatting time ago:', error);
+    return 'N/A';
+  }
 };
