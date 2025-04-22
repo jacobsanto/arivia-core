@@ -23,6 +23,11 @@ export const AddBookingDialog = ({
   isOpen, 
   onOpenChange 
 }: AddBookingDialogProps) => {
+  const handleSubmit = (data: BookingFormValues) => {
+    console.log("Booking form submitted:", data);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -39,13 +44,11 @@ export const AddBookingDialog = ({
           <BookingForm 
             propertyId={parseInt(propertyId, 10) || 0} 
             propertyName="" 
-            onSubmit={(data: BookingFormValues) => {
-              console.log("Booking form submitted:", data);
-              onOpenChange(false);
-            }}
+            onSubmit={handleSubmit}
           />
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
