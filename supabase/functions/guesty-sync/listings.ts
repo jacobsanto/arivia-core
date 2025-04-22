@@ -3,8 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { GuestyListing } from './types.ts';
 import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 export async function syncGuestyListings(supabase: any, token: string): Promise<{
   listings: GuestyListing[];
   rateLimitInfo: RateLimitInfo | null;
@@ -13,7 +11,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     console.log('Starting Guesty listings sync...');
     
     // Create sync log entry
-    const { data: syncLog } = await supabase
+    const { data: syncLog, error: syncLogError } = await supabase
       .from('sync_logs')
       .insert({
         service: 'guesty',
@@ -21,6 +19,10 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
       })
       .select()
       .single();
+
+    if (syncLogError) {
+      console.error('Error creating listing sync log:', syncLogError);
+    }
 
     let page = 1;
     let hasMore = true;
@@ -33,6 +35,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     // Get all active listings from Guesty
     while (hasMore) {
       try {
+        console.log(`Fetching listings page ${page}...`);
         const response = await fetch(`https://open-api.guesty.com/v1/listings?page=${page}&limit=100`, {
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -42,20 +45,30 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
 
         // Extract rate limit info from headers
         rateLimitInfo = extractRateLimitInfo(response.headers);
+        if (rateLimitInfo) {
+          console.log(`Rate limit info - Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.rate_limit}`);
+        }
         
         if (!response.ok) {
           if (response.status === 429) {
-            console.log('Rate limited, waiting before retry...');
+            console.error('Rate limited by Guesty API, waiting before retry...');
             await delay(5000); // Wait 5 seconds before retrying
             continue;
           }
-          throw new Error(`Failed to fetch listings: ${response.statusText}`);
+          const errorText = await response.text();
+          throw new Error(`Failed to fetch listings (HTTP ${response.status}): ${errorText || response.statusText}`);
         }
 
         const data = await response.json();
+        if (!data || !Array.isArray(data.results)) {
+          console.error('Unexpected response format from Guesty API:', data);
+          throw new Error('Invalid response format from Guesty API');
+        }
+
         const listings = data.results as GuestyListing[];
         
         if (listings.length === 0) {
+          console.log('No more listings found, ending pagination');
           hasMore = false;
           continue;
         }
@@ -63,76 +76,111 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         console.log(`Processing ${listings.length} listings from page ${page}...`);
 
         for (const listing of listings) {
-          const { data: existingListing } = await supabase
-            .from('guesty_listings')
-            .select('id, last_synced')
-            .eq('id', listing._id)
-            .single();
+          try {
+            if (!listing._id) {
+              console.error('Listing missing ID, skipping:', listing);
+              continue;
+            }
 
-          // Choose highest available resolution: prefer picture.original > picture.large > picture.thumbnail
-          const largeImage = listing.picture?.original || listing.picture?.large || listing.picture?.thumbnail || null;
+            const { data: existingListing, error: lookupError } = await supabase
+              .from('guesty_listings')
+              .select('id, last_synced')
+              .eq('id', listing._id)
+              .single();
 
-          const listingData = {
-            id: listing._id,
-            title: listing.title,
-            address: listing.address || {},
-            status: listing.status,
-            property_type: listing.propertyType,
-            thumbnail_url: listing.picture?.thumbnail,
-            highres_url: largeImage, // <-- new field for high-res images
-            last_synced: new Date().toISOString(),
-            raw_data: listing,
-            sync_status: 'active',
-            is_deleted: false
-          };
+            if (lookupError && lookupError.code !== 'PGRST116') { // Not found error is acceptable
+              console.error(`Error looking up existing listing ${listing._id}:`, lookupError);
+            }
 
-          if (!existingListing) {
-            // New listing
-            await supabase.from('guesty_listings').insert({
-              ...listingData,
-              first_synced_at: new Date().toISOString()
-            });
-            created++;
-          } else {
-            // Update existing listing
-            await supabase.from('guesty_listings')
-              .update(listingData)
-              .eq('id', listing._id);
-            updated++;
+            // Choose highest available resolution: prefer picture.original > picture.large > picture.thumbnail
+            const largeImage = listing.picture?.original || listing.picture?.large || listing.picture?.thumbnail || null;
+
+            const listingData = {
+              id: listing._id,
+              title: listing.title || 'Untitled Listing',
+              address: listing.address || {},
+              status: listing.status || 'unknown',
+              property_type: listing.propertyType || 'unknown',
+              thumbnail_url: listing.picture?.thumbnail || null,
+              highres_url: largeImage, // <-- new field for high-res images
+              last_synced: new Date().toISOString(),
+              raw_data: listing,
+              sync_status: 'active',
+              is_deleted: false
+            };
+
+            if (!existingListing) {
+              // New listing
+              const { error: insertError } = await supabase.from('guesty_listings').insert({
+                ...listingData,
+                first_synced_at: new Date().toISOString()
+              });
+              
+              if (insertError) {
+                console.error(`Error inserting new listing ${listing._id}:`, insertError);
+              } else {
+                created++;
+              }
+            } else {
+              // Update existing listing
+              const { error: updateError } = await supabase.from('guesty_listings')
+                .update(listingData)
+                .eq('id', listing._id);
+              
+              if (updateError) {
+                console.error(`Error updating listing ${listing._id}:`, updateError);
+              } else {
+                updated++;
+              }
+            }
+
+            totalListings = [...totalListings, listing];
+          } catch (err) {
+            console.error(`Error processing listing ${listing._id || 'unknown'}:`, err);
+            // Continue with next listing
           }
-
-          totalListings = [...totalListings, listing];
         }
 
         page++;
         
         // Add a small delay between pages to reduce risk of rate limiting
         if (rateLimitInfo && rateLimitInfo.remaining < 10) {
+          console.log('Low rate limit remaining, adding delay between requests');
           await delay(1000);
         }
 
       } catch (error) {
         console.error(`Error processing page ${page}:`, error);
-        throw error;
+        throw error; // Propagate to caller
       }
     }
 
     // Clean up obsolete listings
-    await cleanObsoleteListings(supabase, totalListings);
+    try {
+      await cleanObsoleteListings(supabase, totalListings);
+    } catch (err) {
+      console.error('Error cleaning obsolete listings:', err);
+    }
 
     // Update sync log with final counts
-    await supabase
-      .from('sync_logs')
-      .update({
-        end_time: new Date().toISOString(),
-        status: 'completed',
-        listings_created: created,
-        listings_updated: updated,
-        listings_deleted: archived
-      })
-      .eq('id', syncLog.id);
+    if (syncLog?.id) {
+      try {
+        await supabase
+          .from('sync_logs')
+          .update({
+            end_time: new Date().toISOString(),
+            status: 'completed',
+            listings_created: created,
+            listings_updated: updated,
+            listings_deleted: archived
+          })
+          .eq('id', syncLog.id);
+      } catch (err) {
+        console.error('Error updating listing sync log:', err);
+      }
+    }
 
-    console.log(`Sync completed: ${created} created, ${updated} updated, ${archived} archived`);
+    console.log(`Listings sync completed: ${created} created, ${updated} updated, ${archived} archived`);
     return { listings: totalListings, rateLimitInfo };
 
   } catch (error) {
@@ -147,11 +195,16 @@ async function cleanObsoleteListings(supabase: any, activeFetchedListings: Guest
     const activeListingIds = new Set(activeFetchedListings.map(l => l._id));
 
     // Find listings in Supabase that are not in the active set
-    const { data: localListings } = await supabase
+    const { data: localListings, error: queryError } = await supabase
       .from('guesty_listings')
       .select('id')
       .eq('sync_status', 'active')
       .eq('is_deleted', false);
+
+    if (queryError) {
+      console.error('Error querying local listings:', queryError);
+      return;
+    }
 
     if (localListings) {
       // Mark listings as archived if they're not in the active set
@@ -159,7 +212,7 @@ async function cleanObsoleteListings(supabase: any, activeFetchedListings: Guest
       
       if (listingsToArchive.length > 0) {
         console.log(`Marking ${listingsToArchive.length} listings as archived...`);
-        await supabase
+        const { error: updateError } = await supabase
           .from('guesty_listings')
           .update({
             sync_status: 'archived',
@@ -167,6 +220,10 @@ async function cleanObsoleteListings(supabase: any, activeFetchedListings: Guest
             last_synced: new Date().toISOString()
           })
           .in('id', listingsToArchive.map(l => l.id));
+        
+        if (updateError) {
+          console.error('Error archiving obsolete listings:', updateError);
+        }
       }
     }
   } catch (error) {

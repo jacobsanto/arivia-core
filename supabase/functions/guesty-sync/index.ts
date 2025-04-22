@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
@@ -17,11 +18,27 @@ serve(async (req) => {
 
   const startTime = Date.now();
   let syncLog;
+  let supabase: any;
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('Starting guesty-sync function');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    
+    // Validate required env variables
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing required environment variables: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Server configuration error: Missing required environment variables'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    supabase = createClient(supabaseUrl, supabaseServiceKey);
+    console.log('Supabase client created successfully');
 
     console.log('Checking last sync status...');
 
@@ -29,7 +46,7 @@ serve(async (req) => {
     const fifteenMinutesAgo = new Date();
     fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
 
-    const { data: recentSync } = await supabase
+    const { data: recentSync, error: recentSyncError } = await supabase
       .from('sync_logs')
       .select('*')
       .eq('service', 'guesty')
@@ -38,20 +55,32 @@ serve(async (req) => {
       .order('start_time', { ascending: false })
       .limit(1);
 
+    if (recentSyncError) {
+      console.error('Error checking recent syncs:', recentSyncError);
+    }
+
     // Get the latest sync regardless of status for backoff calculation
-    const { data: latestSync } = await supabase
+    const { data: latestSync, error: latestSyncError } = await supabase
       .from('sync_logs')
       .select('*')
       .eq('service', 'guesty')
       .order('start_time', { ascending: false })
       .limit(1);
     
+    if (latestSyncError) {
+      console.error('Error checking latest sync:', latestSyncError);
+    }
+    
     // Get integration health record
-    const { data: integrationHealth } = await supabase
+    const { data: integrationHealth, error: healthError } = await supabase
       .from('integration_health')
       .select('*')
       .eq('provider', 'guesty')
       .single();
+    
+    if (healthError) {
+      console.error('Error fetching integration health:', healthError);
+    }
     
     // Calculate backoff time based on previous failures
     let backoffTime = 15; // Default 15 minutes in minutes
@@ -111,77 +140,178 @@ serve(async (req) => {
     const nextRetryTime = new Date();
     nextRetryTime.setMinutes(nextRetryTime.getMinutes() + backoffTime);
 
-    const { data: newSyncLog } = await supabase
-      .from('sync_logs')
-      .insert({
-        service: 'guesty',
-        sync_type: 'full_sync',
-        status: 'in_progress',
-        start_time: new Date().toISOString(),
-        message: 'Starting Guesty full sync process',
-        retry_count: rateLimited ? retryCount : 0,
-        next_retry_time: nextRetryTime.toISOString()
-      })
-      .select()
-      .single();
+    try {
+      const { data: newSyncLog, error: syncLogError } = await supabase
+        .from('sync_logs')
+        .insert({
+          service: 'guesty',
+          sync_type: 'full_sync',
+          status: 'in_progress',
+          start_time: new Date().toISOString(),
+          message: 'Starting Guesty full sync process',
+          retry_count: rateLimited ? retryCount : 0,
+          next_retry_time: nextRetryTime.toISOString()
+        })
+        .select()
+        .single();
 
-    syncLog = newSyncLog;
+      if (syncLogError) {
+        console.error('Error creating sync log:', syncLogError);
+        throw new Error(`Failed to create sync log: ${syncLogError.message}`);
+      }
+
+      syncLog = newSyncLog;
+    } catch (err) {
+      console.error('Failed to create sync log entry:', err);
+      // Continue with sync even if log creation fails
+    }
 
     console.log('Starting Guesty sync process...');
 
     // Get token using the caching logic
-    const token = await getGuestyToken();
+    let token;
+    try {
+      token = await getGuestyToken();
+      console.log('Successfully obtained Guesty token');
+    } catch (err) {
+      console.error('Failed to obtain Guesty token:', err);
+      if (syncLog?.id) {
+        await updateSyncLogError(supabase, syncLog.id, 'Failed to obtain Guesty token', startTime);
+      }
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Failed to authenticate with Guesty API',
+        error: err instanceof Error ? err.message : String(err)
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     
     // Sync listings
-    const { listings, rateLimitInfo } = await syncGuestyListings(supabase, token);
+    let listings = [];
+    let rateLimitInfo = null;
 
-    // Store rate limit information
-    if (rateLimitInfo) {
-      await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
+    try {
+      const result = await syncGuestyListings(supabase, token);
+      listings = result.listings || [];
+      rateLimitInfo = result.rateLimitInfo;
+      
+      console.log(`Listings count: ${listings.length}`);
+      
+      // Store rate limit information
+      if (rateLimitInfo) {
+        await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
+      }
+    } catch (err) {
+      console.error('Failed to sync listings:', err);
+      if (syncLog?.id) {
+        await updateSyncLogError(supabase, syncLog.id, 'Failed to sync listings', startTime);
+      }
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Failed to sync listings from Guesty',
+        error: err instanceof Error ? err.message : String(err)
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    if (listings.length === 0) {
+      console.warn('No listings found in Guesty API response');
     }
 
     // Sync bookings for each listing
     console.log(`Syncing bookings for ${listings.length} listings...`);
     const bookingSyncPromises = listings.map(listing => 
       syncGuestyBookingsForListing(supabase, token, listing._id)
+        .catch(err => {
+          console.error(`Error syncing bookings for listing ${listing._id}:`, err);
+          return 0; // Return 0 bookings on error to continue with other listings
+        })
     );
     
-    const bookingResults = await Promise.allSettled(bookingSyncPromises);
+    let bookingResults;
+    try {
+      bookingResults = await Promise.allSettled(bookingSyncPromises);
+      console.log('All booking sync operations completed');
+    } catch (err) {
+      console.error('Error in booking sync operations:', err);
+      if (syncLog?.id) {
+        await updateSyncLogError(supabase, syncLog.id, 'Failed during booking sync operations', startTime);
+      }
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Error occurred during booking synchronization',
+        error: err instanceof Error ? err.message : String(err)
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     // Calculate total bookings synced
     const totalBookingsSynced = bookingResults
       .filter(result => result.status === 'fulfilled')
       .reduce((total, result) => total + (result as PromiseFulfilledResult<number>).value, 0);
+    
+    console.log(`Total bookings synced: ${totalBookingsSynced}`);
+
+    const failedBookings = bookingResults.filter(result => result.status === 'rejected').length;
+    if (failedBookings > 0) {
+      console.warn(`Failed to sync bookings for ${failedBookings} listings`);
+    }
 
     // Update sync log with results
-    await supabase
-      .from('sync_logs')
-      .update({
-        status: 'completed',
-        end_time: new Date().toISOString(),
-        items_count: listings.length + totalBookingsSynced,
-        sync_duration: Date.now() - startTime,
-        message: `Successfully synced ${listings.length} listings and ${totalBookingsSynced} bookings`,
-        sync_type: 'full_sync',
-        retry_count: 0 // Reset retry count on successful sync
-      })
-      .eq('id', syncLog.id);
+    try {
+      const { error: updateError } = await supabase
+        .from('sync_logs')
+        .update({
+          status: 'completed',
+          end_time: new Date().toISOString(),
+          items_count: listings.length + totalBookingsSynced,
+          sync_duration: Date.now() - startTime,
+          message: `Successfully synced ${listings.length} listings and ${totalBookingsSynced} bookings${
+            failedBookings > 0 ? ` (${failedBookings} booking syncs failed)` : ''
+          }`,
+          sync_type: 'full_sync',
+          retry_count: 0 // Reset retry count on successful sync
+        })
+        .eq('id', syncLog.id);
+      
+      if (updateError) {
+        console.error('Error updating sync log:', updateError);
+      }
+    } catch (err) {
+      console.error('Failed to update sync log:', err);
+    }
 
     // Update integration health
-    await supabase
-      .from('integration_health')
-      .upsert({
-        provider: 'guesty',
-        status: 'connected',
-        last_synced: new Date().toISOString(),
-        last_error: null,
-        updated_at: new Date().toISOString(),
-        remaining_requests: rateLimitInfo?.remaining || null,
-        rate_limit_reset: rateLimitInfo?.reset || null,
-        request_count: (integrationHealth?.request_count || 0) + 1
-      }, {
-        onConflict: 'provider'
-      });
+    try {
+      const { error: healthUpdateError } = await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'connected',
+          last_synced: new Date().toISOString(),
+          last_error: null,
+          updated_at: new Date().toISOString(),
+          remaining_requests: rateLimitInfo?.remaining || null,
+          rate_limit_reset: rateLimitInfo?.reset || null,
+          request_count: (integrationHealth?.request_count || 0) + 1
+        }, {
+          onConflict: 'provider'
+        });
+      
+      if (healthUpdateError) {
+        console.error('Error updating integration health:', healthUpdateError);
+      } else {
+        console.log('Successfully updated integration health status');
+      }
+    } catch (err) {
+      console.error('Failed to update integration health:', err);
+    }
 
     console.log('Sync completed successfully');
 
@@ -196,44 +326,41 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Sync error:', error);
-    const isRateLimit = error.message?.includes('Too Many Requests') || error.message?.includes('429');
+    // Catch-all for unexpected errors
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Unexpected sync error:', error);
+    
+    const isRateLimit = errorMessage.includes('Too Many Requests') || errorMessage.includes('429');
 
-    // Update sync log with error details
-    if (syncLog?.id) {
-      await supabase
-        .from('sync_logs')
-        .update({
-          status: 'error',
-          end_time: new Date().toISOString(),
-          message: error.message,
-          sync_type: 'full_sync',
-          sync_duration: Date.now() - startTime,
-          retry_count: isRateLimit ? (syncLog.retry_count || 0) + 1 : syncLog.retry_count || 0
-        })
-        .eq('id', syncLog.id);
+    // Update sync log with error details if we have a sync log
+    if (syncLog?.id && supabase) {
+      await updateSyncLogError(supabase, syncLog.id, errorMessage, startTime, isRateLimit ? (syncLog.retry_count || 0) + 1 : syncLog.retry_count || 0);
     }
 
     // Update integration health for failed sync
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    await supabase
-      .from('integration_health')
-      .upsert({
-        provider: 'guesty',
-        status: 'error',
-        last_error: error instanceof Error ? error.message : 'Unknown error',
-        updated_at: new Date().toISOString(),
-        is_rate_limited: isRateLimit
-      }, {
-        onConflict: 'provider'
-      });
+      await supabase
+        .from('integration_health')
+        .upsert({
+          provider: 'guesty',
+          status: 'error',
+          last_error: errorMessage,
+          updated_at: new Date().toISOString(),
+          is_rate_limited: isRateLimit
+        }, {
+          onConflict: 'provider'
+        });
+    } catch (err) {
+      console.error('Error updating integration health for failed sync:', err);
+    }
 
     return new Response(JSON.stringify({
       success: false,
-      error: error.message,
+      error: errorMessage,
       isRateLimit: isRateLimit
     }), {
       status: isRateLimit ? 429 : 500,
@@ -242,9 +369,28 @@ serve(async (req) => {
   }
 });
 
-async function storeRateLimitInfo(supabase: any, endpoint: string, rateLimitInfo: RateLimitInfo) {
+// Helper function to update sync log on error
+async function updateSyncLogError(supabase: any, syncLogId: string, errorMessage: string, startTime: number, retryCount?: number) {
   try {
     await supabase
+      .from('sync_logs')
+      .update({
+        status: 'error',
+        end_time: new Date().toISOString(),
+        message: errorMessage,
+        sync_type: 'full_sync',
+        sync_duration: Date.now() - startTime,
+        retry_count: retryCount
+      })
+      .eq('id', syncLogId);
+  } catch (err) {
+    console.error('Failed to update sync log with error details:', err);
+  }
+}
+
+async function storeRateLimitInfo(supabase: any, endpoint: string, rateLimitInfo: RateLimitInfo) {
+  try {
+    const { error } = await supabase
       .from('guesty_api_usage')
       .insert({
         endpoint,
@@ -253,7 +399,12 @@ async function storeRateLimitInfo(supabase: any, endpoint: string, rateLimitInfo
         reset: rateLimitInfo.reset,
         timestamp: new Date().toISOString()
       });
+    
+    if (error) {
+      console.error('Error storing rate limit info:', error);
+    }
   } catch (error) {
-    console.error('Error storing rate limit info:', error);
+    console.error('Exception while storing rate limit info:', error);
   }
 }
+

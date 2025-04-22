@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
 
@@ -39,8 +40,12 @@ export interface GuestyListingDB {
 export const guestyService = {
   ensureValidToken: async (): Promise<boolean> => {
     try {
+      console.log('Checking Guesty token validity');
       const { data, error } = await supabase.functions.invoke('guesty-health-check');
-      if (error) throw error;
+      if (error) {
+        console.error('Error validating Guesty token:', error);
+        throw error;
+      }
       
       return data?.health?.status === 'connected';
     } catch (err: any) {
@@ -51,16 +56,26 @@ export const guestyService = {
   
   syncListings: async () => {
     try {
+      console.log('Initiating Guesty sync...');
       const { data, error } = await supabase.functions.invoke<{
         success: boolean;
         message?: string;
         listingsCount: number;
         bookingsSynced: number;
+        error?: string;
       }>('guesty-sync');
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Failed to sync listings');
+      if (error) {
+        console.error('Error in guesty-sync function call:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('Guesty sync unsuccessful:', data);
+        throw new Error(data.message || data.error || 'Failed to sync listings');
+      }
 
+      console.log('Guesty sync completed successfully:', data);
       return {
         success: true,
         listingsCount: data.listingsCount || 0,
@@ -69,7 +84,11 @@ export const guestyService = {
       };
     } catch (err: any) {
       console.error('Error syncing Guesty listings:', err);
-      if (err.message?.includes('Please wait before syncing again')) {
+      
+      // Check for rate limit errors
+      if (err.message?.includes('Too Many Requests') || 
+          err.message?.includes('Rate limit') || 
+          err.message?.includes('Please wait before syncing again')) {
         return {
           success: false,
           listingsCount: 0,
@@ -77,6 +96,8 @@ export const guestyService = {
           message: 'Rate limit exceeded. Please wait a few minutes before trying again.'
         };
       }
+      
+      // For other errors provide the specific error message
       return {
         success: false,
         listingsCount: 0,
@@ -88,13 +109,19 @@ export const guestyService = {
   
   getGuestyListings: async (): Promise<GuestyListingDB[]> => {
     try {
+      console.log('Fetching Guesty listings from database');
       const { data, error } = await supabase
         .from('guesty_listings')
         .select('*')
         .eq('is_deleted', false)
         .order('title');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Database error fetching Guesty listings:', error);
+        throw error;
+      }
+      
+      console.log(`Retrieved ${data?.length || 0} Guesty listings`);
       return data || [];
     } catch (err: any) {
       console.error('Error fetching Guesty listings:', err);
@@ -107,6 +134,7 @@ export const guestyService = {
 
   syncAllBookings: async () => {
     try {
+      console.log('Initiating full Guesty bookings sync');
       const { data, error } = await supabase.functions.invoke<{
         success: boolean;
         message?: string;
@@ -114,14 +142,22 @@ export const guestyService = {
         created?: number;
         updated?: number;
         deleted?: number;
+        error?: string;
       }>('guesty-booking-sync', {
         body: { syncAll: true }
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Failed to sync bookings');
+      if (error) {
+        console.error('Error in guesty-booking-sync function call:', error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error('Guesty bookings sync unsuccessful:', data);
+        throw new Error(data.message || data.error || 'Failed to sync bookings');
+      }
 
-      console.log('Bookings sync result:', data);
+      console.log('Guesty bookings sync completed successfully:', data);
       
       return {
         success: true,
@@ -143,16 +179,27 @@ export const guestyService = {
 
   syncBookingsForListing: async (listingId: string) => {
     try {
+      console.log(`Syncing bookings for listing ${listingId}`);
       const { data, error } = await supabase.functions.invoke<{
         success: boolean;
         message?: string;
         bookingsSynced: number;
+        error?: string;
       }>('guesty-booking-sync', {
         body: { listingId }
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.message || 'Failed to sync bookings');
+      if (error) {
+        console.error(`Error in guesty-booking-sync function call for listing ${listingId}:`, error);
+        throw error;
+      }
+      
+      if (!data.success) {
+        console.error(`Guesty bookings sync unsuccessful for listing ${listingId}:`, data);
+        throw new Error(data.message || data.error || 'Failed to sync bookings');
+      }
+
+      console.log(`Guesty bookings sync completed for listing ${listingId}:`, data);
 
       return {
         success: true,

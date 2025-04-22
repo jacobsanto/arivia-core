@@ -1,8 +1,7 @@
-
 // Guesty Listing Type
 export interface GuestyListing {
   _id: string;
-  title: string;
+  title?: string;
   address?: {
     full?: string;
     city?: string;
@@ -15,23 +14,28 @@ export interface GuestyListing {
   };
   picture?: {
     thumbnail?: string;
+    large?: string;
+    original?: string;
   };
+  [key: string]: any; // Allow for other properties
 }
 
 // Guesty Booking Type
 export interface GuestyBooking {
   _id: string;
+  status: string;
   checkIn: string;
   checkOut: string;
-  status: string;
   listing: {
     _id: string;
+    title?: string;
   };
   guest: {
-    fullName: string;
-    phone?: string;
+    fullName?: string;
     email?: string;
+    phone?: string;
   };
+  [key: string]: any; // Allow for other properties
 }
 
 // Guesty API Response Types
