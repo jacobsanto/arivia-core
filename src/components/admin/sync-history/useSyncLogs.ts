@@ -91,21 +91,15 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           }
         }
 
-        // Fixed: Using direct state update to avoid TypeScript excessive deep instantiation
+        // Fixed approach: Avoiding deep type instantiation by simplifying state updates
         if (_page === 0) {
-          // For first page, simply replace the logs
+          // For first page, directly replace logs
           setLogs(data || []);
         } else {
-          // For additional pages, use a type-safe approach
-          setLogs(currentLogs => {
-            const newLogs = [...currentLogs];
-            if (data) {
-              // Manually add each new item to avoid deep type spreading
-              data.forEach(item => {
-                newLogs.push(item as SyncLog);
-              });
-            }
-            return newLogs;
+          // For subsequent pages, use concat instead of spread to avoid type complexity
+          setLogs(prevLogs => {
+            if (!data || data.length === 0) return prevLogs;
+            return prevLogs.concat(data as SyncLog[]);
           });
         }
         
@@ -139,7 +133,6 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
   // Retry a failed sync
   const retrySync = async ({ logId, service, syncType }: RetrySyncOptions) => {
     try {
-      // Create a new object to avoid mutating existing state
       setIsRetrying(prev => ({
         ...prev,
         [logId]: true
@@ -174,7 +167,6 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         variant: "destructive",
       });
     } finally {
-      // Update retry status without nested spread
       setIsRetrying(prev => ({
         ...prev,
         [logId]: false
