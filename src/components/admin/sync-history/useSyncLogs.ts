@@ -39,8 +39,8 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  // Use a simpler flat array approach to avoid type depth issues
-  const [flatLogs, setFlatLogs] = useState<SyncLog[]>([]);
+  // Use a simple array for logs instead of a nested structure
+  const [logs, setLogs] = useState<SyncLog[]>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,9 +50,9 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
   const [isRetrying, setIsRetrying] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
-  // For filter change, reset everything
+  // Reset everything when filter changes
   useEffect(() => {
-    setFlatLogs([]);
+    setLogs([]);
     setPage(0);
     setHasNextPage(true);
     setIsLoading(true);
@@ -65,9 +65,9 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         const query = supabase
           .from("sync_logs")
           .select("*")
-          .order("end_time", { ascending: false }) // nullsLast is default behavior when ascending: false
-          .order("start_time", { ascending: false }) // nullsLast is default behavior when ascending: false
-          .range(_page * pageSize, (_page + 1) * pageSize - 1); // 0-based pagination
+          .order("end_time", { ascending: false }) 
+          .order("start_time", { ascending: false }) 
+          .range(_page * pageSize, (_page + 1) * pageSize - 1);
 
         if (status) query.eq("status", status);
         if (integration) query.eq("service", integration);
@@ -76,24 +76,27 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
         const { data, error } = await query;
         if (error) throw error;
 
-        // Build available integration names list for filtering chip
+        // Build available integration names list for filtering
         if (_page === 0) {
           const { data: all } = await supabase
             .from("sync_logs")
             .select("service")
             .neq("service", "")
             .limit(1000);
-          const integrations = Array.from(
-            new Set((all || []).map((row: any) => (row.service || "").trim()).filter(Boolean))
-          );
-          setAvailableIntegrations(integrations);
+          
+          if (all) {
+            const integrations = Array.from(
+              new Set(all.map((row: any) => (row.service || "").trim()).filter(Boolean))
+            );
+            setAvailableIntegrations(integrations);
+          }
         }
 
-        // Use the simple approach that avoids the TypeScript nesting issue
+        // Update logs based on page
         if (_page === 0) {
-          setFlatLogs(data || []);
+          setLogs(data || []);
         } else {
-          setFlatLogs(prev => [...prev, ...(data || [])]);
+          setLogs(prev => [...prev, ...(data || [])]);
         }
         
         setHasNextPage((data?.length || 0) === pageSize);
@@ -108,14 +111,15 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     [pageSize, status, integration, listingId]
   );
 
-  // On mount and relevant filter/page change
+  // Initial fetch and when filters change
   useEffect(() => {
     fetchLogs(0);
   }, [fetchLogs]);
 
-  // Fetch next page
+  // Fetch next page of logs
   const fetchNextPage = () => {
     if (!hasNextPage || isFetchingNextPage) return;
+    
     const nextPage = page + 1;
     setIsFetchingNextPage(true);
     setPage(nextPage);
@@ -161,7 +165,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
   };
 
   return {
-    logs: flatLogs,
+    logs,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
