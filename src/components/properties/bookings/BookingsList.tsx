@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/services/dataFormatService";
 import { useBookings } from "./useBookings";
 
 interface BookingsListProps {
@@ -24,15 +23,35 @@ interface BookingsListProps {
   selectedDate: Date | undefined;
 }
 
+// Helper function to safely format dates
+const formatDate = (dateString: string | undefined): string => {
+  if (!dateString) return 'N/A';
+  
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid date';
+    
+    return date.toLocaleDateString();
+  } catch (error) {
+    console.error('Date formatting error:', error);
+    return 'Invalid date';
+  }
+};
+
 export const BookingsList = ({ propertyId, selectedDate }: BookingsListProps) => {
   const { bookings, isLoading } = useBookings(propertyId);
 
   // Filter bookings by month if a date is selected
   const filteredBookings = selectedDate 
     ? bookings.filter(booking => {
-        const bookingMonth = new Date(booking.check_in_date).getMonth();
-        const selectedMonth = selectedDate.getMonth();
-        return bookingMonth === selectedMonth;
+        try {
+          const bookingMonth = new Date(booking.check_in_date).getMonth();
+          const selectedMonth = selectedDate.getMonth();
+          return bookingMonth === selectedMonth;
+        } catch (error) {
+          console.error('Error filtering booking by month:', error);
+          return false;
+        }
       })
     : bookings;
 
@@ -98,8 +117,8 @@ export const BookingsContent = ({ bookings, isLoading }: BookingsContentProps) =
               </TableCell>
               <TableCell>{formatDate(booking.check_in_date)}</TableCell>
               <TableCell>{formatDate(booking.check_out_date)}</TableCell>
-              <TableCell>{booking.num_guests}</TableCell>
-              <TableCell>€{booking.total_price}</TableCell>
+              <TableCell>{booking.num_guests || 'N/A'}</TableCell>
+              <TableCell>€{booking.total_price || 0}</TableCell>
               <TableCell>
                 <BookingStatusBadge status={booking.status} />
               </TableCell>

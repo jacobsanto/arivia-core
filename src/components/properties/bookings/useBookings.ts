@@ -28,16 +28,47 @@ export const useBookings = (propertyId: string) => {
     const fetchBookings = async () => {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .eq('property_id', propertyId);
-        
-        if (error) {
-          throw new Error(error.message);
+        // Detect if the property ID is from Guesty (non-UUID format)
+        const isGuestyProperty = propertyId && 
+          !propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+
+        if (isGuestyProperty) {
+          // For Guesty properties, use the guesty_bookings table
+          const { data, error } = await supabase
+            .from('guesty_bookings')
+            .select('*')
+            .eq('listing_id', propertyId);
+          
+          if (error) throw new Error(error.message);
+          
+          // Transform Guesty booking format to match our Booking interface
+          const transformedBookings: Booking[] = (data || []).map(booking => ({
+            id: booking.id,
+            guest_name: booking.guest_name || 'Guest',
+            guest_email: booking.guest_email || 'email@example.com',
+            guest_phone: booking.guest_phone,
+            check_in_date: booking.check_in,
+            check_out_date: booking.check_out,
+            num_guests: booking.num_guests || 1,
+            total_price: booking.total_price || 0,
+            status: booking.status || 'confirmed',
+            created_at: booking.created_at,
+            updated_at: booking.updated_at || booking.created_at,
+            property_id: booking.listing_id
+          }));
+          
+          setBookings(transformedBookings);
+        } else {
+          // For regular properties, use the bookings table
+          const { data, error } = await supabase
+            .from('bookings')
+            .select('*')
+            .eq('property_id', propertyId);
+          
+          if (error) throw new Error(error.message);
+          
+          setBookings(data || []);
         }
-        
-        setBookings(data || []);
       } catch (err: any) {
         console.error('Error fetching bookings:', err);
         setError(err.message);

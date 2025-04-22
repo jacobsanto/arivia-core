@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,13 +32,23 @@ export const BookingCalendarView = ({
     const bookedDays: Date[] = [];
     
     bookings.forEach(booking => {
-      const checkInDate = new Date(booking.check_in_date);
-      const checkOutDate = new Date(booking.check_out_date);
-      
-      const currentDate = new Date(checkInDate);
-      while (currentDate <= checkOutDate) {
-        bookedDays.push(new Date(currentDate));
-        currentDate.setDate(currentDate.getDate() + 1);
+      try {
+        const checkInDate = new Date(booking.check_in_date);
+        const checkOutDate = new Date(booking.check_out_date);
+        
+        // Skip invalid dates
+        if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
+          console.warn("Invalid booking dates detected:", booking);
+          return;
+        }
+        
+        const currentDate = new Date(checkInDate);
+        while (currentDate <= checkOutDate) {
+          bookedDays.push(new Date(currentDate));
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+      } catch (error) {
+        console.error("Error processing booking dates:", error);
       }
     });
     
@@ -61,9 +72,10 @@ export const BookingCalendarView = ({
                 <DialogTitle>Add New Booking</DialogTitle>
               </DialogHeader>
               <div className="py-4">
-                <p className="text-center text-muted-foreground">
-                  Booking form would go here in a real implementation.
-                </p>
+                <BookingForm 
+                  propertyId={propertyId} 
+                  onSuccess={() => setIsAddBookingDialogOpen(false)} 
+                />
               </div>
             </DialogContent>
           </Dialog>
