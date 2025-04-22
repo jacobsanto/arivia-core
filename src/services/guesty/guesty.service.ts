@@ -1,6 +1,39 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
+
+export interface GuestyListing {
+  _id: string;
+  title: string;
+  address?: {
+    full?: string;
+    city?: string;
+    country?: string;
+  };
+  status?: string;
+  propertyType?: string;
+  cleaningStatus?: {
+    value: string;
+  };
+  picture?: {
+    thumbnail?: string;
+  };
+}
+
+export interface GuestyListingDB {
+  id: string;
+  title: string;
+  address: any;
+  status: string;
+  property_type: string;
+  thumbnail_url: string;
+  sync_status: string;
+  last_synced: string;
+  raw_data: any;
+  created_at: string;
+  updated_at: string;
+  first_synced_at: string;
+  is_deleted: boolean;
+}
 
 export const guestyService = {
   ensureValidToken: async (): Promise<boolean> => {
@@ -52,7 +85,7 @@ export const guestyService = {
     }
   },
   
-  getGuestyListings: async () => {
+  getGuestyListings: async (): Promise<GuestyListingDB[]> => {
     try {
       const { data, error } = await supabase
         .from('guesty_listings')

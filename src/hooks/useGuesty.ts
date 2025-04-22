@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { guestyService } from '@/services/guesty/guesty.service';
+import { guestyService, GuestyListingDB } from '@/services/guesty/guesty.service';
 
 export function useGuesty() {
   const [isLoading, setIsLoading] = useState(false);
