@@ -1,18 +1,9 @@
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus } from "lucide-react";
-import { useBookings } from "./useBookings";
-import BookingForm from "../booking-form";
+import { Calendar } from "@/components/ui/calendar";
+import { AddBookingDialog } from "./components/AddBookingDialog";
+import { useBookedDates } from "./hooks/useBookedDates";
 
 interface BookingCalendarViewProps {
   propertyId: string;
@@ -26,65 +17,18 @@ export const BookingCalendarView = ({
   setSelectedDate 
 }: BookingCalendarViewProps) => {
   const [isAddBookingDialogOpen, setIsAddBookingDialogOpen] = useState<boolean>(false);
-  const { bookings } = useBookings(propertyId);
-
-  const getBookedDaysModifiers = () => {
-    const bookedDays: Date[] = [];
-    
-    bookings.forEach(booking => {
-      try {
-        const checkInDate = new Date(booking.check_in_date);
-        const checkOutDate = new Date(booking.check_out_date);
-        
-        // Skip invalid dates
-        if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime())) {
-          console.warn("Invalid booking dates detected:", booking);
-          return;
-        }
-        
-        // Create a copy of the check-in date to iterate through
-        const currentDate = new Date(checkInDate);
-        
-        // Iterate through each day between check-in and check-out
-        while (currentDate.getTime() <= checkOutDate.getTime()) {
-          bookedDays.push(new Date(currentDate));
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-      } catch (error) {
-        console.error("Error processing booking dates:", error);
-      }
-    });
-    
-    return bookedDays;
-  };
+  const bookedDays = useBookedDates(propertyId);
 
   return (
     <Card className="h-fit">
       <CardHeader>
         <CardTitle className="flex justify-between items-center">
           <span>Calendar</span>
-          <Dialog 
-            open={isAddBookingDialogOpen} 
-            onOpenChange={(open: boolean) => setIsAddBookingDialogOpen(open)}
-          >
-            <DialogTrigger asChild>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Booking
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Add New Booking</DialogTitle>
-              </DialogHeader>
-              <div className="py-4">
-                <BookingForm 
-                  propertyId={propertyId} 
-                  onSuccess={() => setIsAddBookingDialogOpen(false)} 
-                />
-              </div>
-            </DialogContent>
-          </Dialog>
+          <AddBookingDialog
+            propertyId={propertyId}
+            isOpen={isAddBookingDialogOpen}
+            onOpenChange={setIsAddBookingDialogOpen}
+          />
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -98,7 +42,7 @@ export const BookingCalendarView = ({
             booked: 'bg-blue-100 text-blue-900 rounded-md'
           }}
           modifiers={{
-            booked: getBookedDaysModifiers()
+            booked: bookedDays
           }}
         />
       </CardContent>
