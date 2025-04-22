@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { UnifiedProperty } from "@/types/property.types";
 import { formatTimeAgo } from "@/services/dataFormatService";
 import { format } from "date-fns";
-import { Home, User, Ruler, MapPin } from "lucide-react";
+import { Home, User, Ruler, MapPin, Calendar, Bed, Bath } from "lucide-react";
 
 interface PropertyCardContentProps {
   property: UnifiedProperty;
