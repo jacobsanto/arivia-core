@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { format, formatDistance, isValid, parseISO } from "date-fns";
@@ -54,6 +53,7 @@ const safeFormatDate = (dateString: string | undefined | null, formatStr: string
 
 const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['guesty-health-check'],
@@ -68,7 +68,7 @@ const GuestyApiMonitor: React.FC = () => {
     refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
   });
   
-  const { data: apiUsage, isLoading: isLoadingUsage } = useQuery({
+  const { data: apiUsage, isLoading: isLoadingUsage, refetch: refetchApiUsage } = useQuery({
     queryKey: ['guesty-api-usage'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,8 +82,18 @@ const GuestyApiMonitor: React.FC = () => {
     }
   });
   
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        refetch(),
+        refetchApiUsage()
+      ]);
+    } catch (err) {
+      console.error("Error refreshing data:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
   
   const getStatusColor = (status: string | undefined) => {
@@ -126,13 +136,18 @@ const GuestyApiMonitor: React.FC = () => {
               Track API usage and rate limit status
             </CardDescription>
           </div>
-          <Button variant="ghost" size="icon" onClick={handleRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleRefresh} 
+            disabled={isLoading || isRefreshing}
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading || isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
         </div>
       </CardHeader>
       <CardContent className="pb-2">
-        {isLoading ? (
+        {isLoading || isRefreshing ? (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
