@@ -10,8 +10,17 @@ export const unifiedPropertyService = {
     try {
       let query = supabase
         .from('guesty_listings')
-        .select('*')
-        .eq('is_deleted', false);
+        .select(`
+          *,
+          next_booking:guesty_bookings!guesty_bookings_listing_id_fkey(
+            check_in,
+            status
+          )
+        `)
+        .eq('is_deleted', false)
+        .gte('guesty_bookings.check_in', new Date().toISOString().split('T')[0])
+        .neq('guesty_bookings.status', 'cancelled')
+        .order('guesty_bookings.check_in', { ascending: true, foreignTable: 'guesty_bookings' });
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,address->full.ilike.%${searchQuery}%`);
@@ -29,7 +38,13 @@ export const unifiedPropertyService = {
 
       if (guestyError) throw guestyError;
 
-      const guestyProperties = (guestyListings || []).map(listing => this.transformGuestyToUnified(listing));
+      const guestyProperties = (guestyListings || []).map(listing => {
+        const nextBooking = listing.next_booking?.[0];
+        return {
+          ...this.transformGuestyToUnified(listing),
+          next_check_in: nextBooking?.check_in || null
+        };
+      });
 
       return guestyProperties;
     } catch (err: any) {

@@ -3,12 +3,23 @@ import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { UnifiedProperty } from "@/types/property.types";
 import { formatTimeAgo } from "@/services/dataFormatService";
+import { format } from "date-fns";
 
 interface PropertyCardContentProps {
   property: UnifiedProperty;
 }
 
 export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
+  const nextCheckInBadge = property.next_check_in ? (
+    <Badge variant="outline" className="bg-green-50">
+      Next Check-in: {format(new Date(property.next_check_in), 'MMM d')}
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="bg-gray-50">
+      No upcoming stays
+    </Badge>
+  );
+
   return (
     <div className="p-4 pt-2">
       <div className="flex items-center justify-between text-sm">
@@ -21,6 +32,9 @@ export const PropertyCardContent = ({ property }: PropertyCardContentProps) => {
           )}
         </div>
         <div className="font-medium">€{property.price}/night</div>
+      </div>
+      <div className="mt-2">
+        {nextCheckInBadge}
       </div>
     </div>
   );

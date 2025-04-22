@@ -52,4 +52,5 @@ export interface UnifiedProperty extends Property {
   source: 'guesty' | 'local';
   guesty_id?: string;
   last_synced?: string;
+  next_check_in?: string | null;
 }
