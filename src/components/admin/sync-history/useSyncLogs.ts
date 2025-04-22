@@ -39,8 +39,8 @@ interface RetrySyncOptions {
 }
 
 export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyncLogsParams) {
-  // Change to a flat array structure to avoid TypeScript excessive depth issues
-  const [allPages, setAllPages] = useState<SyncLog[][]>([]);
+  // Use a simpler flat array approach to avoid type depth issues
+  const [flatLogs, setFlatLogs] = useState<SyncLog[]>([]);
   const [page, setPage] = useState(0);
   const [isFetchingNextPage, setIsFetchingNextPage] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -52,7 +52,7 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
 
   // For filter change, reset everything
   useEffect(() => {
-    setAllPages([]);
+    setFlatLogs([]);
     setPage(0);
     setHasNextPage(true);
     setIsLoading(true);
@@ -89,13 +89,11 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
           setAvailableIntegrations(integrations);
         }
 
-        // Simplified state update approach that avoids the TypeScript nesting issue
+        // Use the simple approach that avoids the TypeScript nesting issue
         if (_page === 0) {
-          // For the first page, just set a new array
-          setAllPages([[...(data || [])]]);
+          setFlatLogs(data || []);
         } else {
-          // For subsequent pages, use functional update to avoid type issues
-          setAllPages(prev => [...prev, [...(data || [])]]);
+          setFlatLogs(prev => [...prev, ...(data || [])]);
         }
         
         setHasNextPage((data?.length || 0) === pageSize);
@@ -162,11 +160,8 @@ export function useSyncLogs({ pageSize, status, integration, listingId }: UseSyn
     }
   };
 
-  // Compute flattened logs for rendering
-  const logs = allPages.flat();
-
   return {
-    logs,
+    logs: flatLogs,
     isLoading,
     isFetchingNextPage,
     hasNextPage,
