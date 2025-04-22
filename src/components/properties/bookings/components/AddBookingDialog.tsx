@@ -36,8 +36,13 @@ export const AddBookingDialog = ({
         </DialogHeader>
         <div className="py-4">
           <BookingForm 
-            propertyId={propertyId} 
+            propertyId={parseInt(propertyId, 10) || 0} 
+            propertyName="" 
             onSuccess={() => onOpenChange(false)} 
+            onSubmit={(data) => {
+              console.log("Booking form submitted:", data);
+              onOpenChange(false);
+            }}
           />
         </div>
       </DialogContent>
