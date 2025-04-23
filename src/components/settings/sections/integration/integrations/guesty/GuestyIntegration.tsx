@@ -1,100 +1,124 @@
 
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { guestyService } from "@/services/guesty/guesty.service";
 import GuestyStatusBadge from "./GuestyStatusBadge";
-import GuestySyncControls from "./GuestySyncControls";
-import GuestyPropertyList from "./GuestyPropertyList";
-import GuestyApiMonitor from "./GuestyApiMonitor";
-import { IntegrationHealthData } from "./types";
-import { Progress } from "@/components/ui/progress";
-import { Loader2, RefreshCcw, AlertTriangle, HelpCircle, CalendarIcon } from "lucide-react";
 import GuestyMonitorPanel from "./components/GuestyMonitorPanel";
 import { useGuestyMonitor } from "./hooks/useGuestyMonitor";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { RefreshCcw, AlertTriangle, CalendarIcon, AlertCircle } from "lucide-react";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
-  const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data: integrationHealth, refetch: refetchHealth } = useQuery({
-    queryKey: ['integration-health'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('integration_health')
-        .select('*')
-        .eq('provider', 'guesty')
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error fetching integration health:', error);
-        return null;
-      }
-      return data as IntegrationHealthData;
-    }
-  });
-
-  const testGuestyConnection = async () => {
-    setIsTestingConnection(true);
-    try {
-      await guestyService.ensureValidToken();
-      await refetchHealth();
-      toast.success("Guesty connection successful", {
-        description: "Successfully authenticated with Guesty API"
-      });
-    } catch (error) {
-      console.error("Guesty connection test failed:", error);
-      toast.error("Guesty connection failed", {
-        description: error instanceof Error ? error.message : "Could not connect to Guesty API"
-      });
-    } finally {
-      setIsTestingConnection(false);
-    }
-  };
+  // Use the monitor hook for panel data
+  const { 
+    data: monitor, 
+    isLoading: monitorLoading, 
+    refetch: refetchMonitor 
+  } = useGuestyMonitor();
 
   const handleSync = useCallback(async () => {
+    // Clear any existing error state and countdown
+    setSyncError(null);
+    setRetryCountdown(null);
+    
+    if (retryTimerRef.current) {
+      clearInterval(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    
     setIsSyncing(true);
+    
     try {
-      const result = await guestyService.syncListings();
-      if (result.success) {
-        toast.success('Listings sync completed', {
-          description: `Synced: ${result.listingsCount} listings${
-            result.bookingsSynced ? ` and ${result.bookingsSynced} bookings` : ''
-          }`
-        });
-      } else {
-        // Display the specific error message from the API
-        toast.error('Sync operation failed', {
-          description: result.message || 'Failed to sync with Guesty API'
-        });
+      // Call the Edge Function directly
+      const { data, error } = await supabase.functions.invoke('guesty-listing-sync', {
+        method: 'POST'
+      });
+      
+      if (error) {
+        throw new Error(error.message || 'Failed to invoke sync function');
       }
+      
+      if (!data?.success) {
+        throw new Error(data?.error || 'Sync operation returned unsuccessful status');
+      }
+      
+      // Success case
+      toast.success('Listings sync completed', {
+        description: `Successfully synced ${data.synced || 0} listings${
+          data.archived > 0 ? ` and archived ${data.archived} obsolete listings` : ''
+        }`
+      });
+      
+      // Refetch monitor data to show updated stats
+      refetchMonitor();
+      
     } catch (error) {
       console.error('Error syncing listings:', error);
+      
+      // Determine if it's an auth error
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const isAuthError = errorMessage.toLowerCase().includes('auth') || 
+                         errorMessage.toLowerCase().includes('token') ||
+                         errorMessage.toLowerCase().includes('credentials') ||
+                         errorMessage.toLowerCase().includes('unauthorized');
+      
+      // Set appropriate error message
+      setSyncError(
+        isAuthError 
+          ? 'Authentication failed. Check Guesty API credentials in environment variables.' 
+          : `Failed to sync with Guesty API: ${errorMessage}`
+      );
+      
+      // Set up retry countdown
+      setRetryCountdown(5);
+      retryTimerRef.current = setInterval(() => {
+        setRetryCountdown(prev => {
+          if (prev === null || prev <= 1) {
+            if (retryTimerRef.current) {
+              clearInterval(retryTimerRef.current);
+              retryTimerRef.current = null;
+            }
+            return null;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      
+      // Show toast notification
       toast.error('Failed to sync listings', {
-        description: error instanceof Error ? error.message : 'Unknown error'
+        description: isAuthError 
+          ? 'Authentication failed. Check Guesty API credentials.'
+          : errorMessage
       });
     } finally {
       setIsSyncing(false);
-      refetchHealth();
     }
-  }, [refetchHealth]);
+  }, [refetchMonitor]);
 
-  const progressPercent = syncProgress.total > 0 
-    ? Math.min(100, Math.round((syncProgress.current / syncProgress.total) * 100))
-    : 0;
+  // Cleanup interval on unmount
+  React.useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) {
+        clearInterval(retryTimerRef.current);
+      }
+    };
+  }, []);
 
-  // Use new hook for monitor panel data
-  const { data: monitor, isLoading: monitorLoading, refetch: refetchMonitor } = useGuestyMonitor();
-
-  // Responsive: stack monitor panel on mobile; controls below
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Guesty Integration</h3>
+      
       <GuestyMonitorPanel
         isConnected={monitor?.isConnected ?? false}
         lastListingSync={monitor?.lastListingSync}
@@ -106,7 +130,28 @@ const GuestyIntegration = () => {
         isLoading={monitorLoading}
       />
 
-      {/* --- Manual Controls: stacked for mobile/flex-row for desktop --- */}
+      {/* Error display */}
+      {syncError && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Sync Failed</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{syncError}</p>
+            {retryCountdown !== null && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full sm:w-auto mt-2" 
+                onClick={handleSync}
+              >
+                Retry Now {retryCountdown > 0 ? `(${retryCountdown}s)` : ''}
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Manual Controls: stacked for mobile/flex-row for desktop */}
       <div className="flex flex-col md:flex-row gap-2 mt-6">
         <Button
           variant="default"
@@ -116,8 +161,8 @@ const GuestyIntegration = () => {
         >
           {isSyncing ? (
             <>
-              <span className="mr-2">Syncing</span>
-              <RefreshCcw className="animate-spin h-4 w-4" />
+              <LoadingSpinner size="small" className="mr-2" />
+              <span>Syncing Listings...</span>
             </>
           ) : (
             <>
@@ -126,6 +171,7 @@ const GuestyIntegration = () => {
             </>
           )}
         </Button>
+        
         <Button
           variant="outline"
           className="w-full md:w-auto flex items-center justify-center"
@@ -135,14 +181,6 @@ const GuestyIntegration = () => {
           Send Test Webhook
         </Button>
       </div>
-      {/* --- End Controls --- */}
-
-      {/* You can add the old GuestyApiMonitor section optionally below if needed
-      <GuestyApiMonitor />
-      */}
-
-      {/* Show property list toggle if needed
-      */}
     </div>
   );
 };
