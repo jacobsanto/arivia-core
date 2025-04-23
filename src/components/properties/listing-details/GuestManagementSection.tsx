@@ -37,12 +37,18 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
       ? rawData.guest 
       : {};
     
+    // Helper function to safely convert Json to string
+    const safeString = (value: any): string | null => {
+      if (value === null || value === undefined) return null;
+      return String(value);
+    };
+
     return {
       id: booking.id,
       name: booking.guest_name || 
-           (guestData && typeof guestData === 'object' && 'fullName' in guestData ? guestData.fullName : "Guest"),
-      email: guestData && typeof guestData === 'object' && 'email' in guestData ? guestData.email : null,
-      phone: guestData && typeof guestData === 'object' && 'phone' in guestData ? guestData.phone : null,
+           (guestData && typeof guestData === 'object' && 'fullName' in guestData ? safeString(guestData.fullName) : "Guest"),
+      email: guestData && typeof guestData === 'object' && 'email' in guestData ? safeString(guestData.email) : null,
+      phone: guestData && typeof guestData === 'object' && 'phone' in guestData ? safeString(guestData.phone) : null,
       check_in: booking.check_in,
       check_out: booking.check_out,
       isVip: Boolean(
@@ -50,9 +56,9 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
         (rawData && typeof rawData === 'object' && 'vip' in rawData ? rawData.vip : false)
       ),
       notes: rawData && typeof rawData === 'object' && 'notes' in rawData 
-        ? rawData.notes 
+        ? safeString(rawData.notes) 
         : guestData && typeof guestData === 'object' && 'comments' in guestData 
-          ? guestData.comments 
+          ? safeString(guestData.comments) 
           : undefined,
     };
   });
