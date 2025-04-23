@@ -23,7 +23,12 @@ export const guestySyncService = {
       });
 
       if (response.error) throw new Error(response.error.message);
-      return response.data as GuestySyncResponse;
+      return {
+        success: true,
+        message: response.data?.message || 'Sync completed successfully',
+        listingsCount: response.data?.listingsCount || 0,
+        bookingsSynced: response.data?.bookingsSynced || 0
+      };
     } catch (error) {
       console.error('Error syncing Guesty listings:', error);
       return {
@@ -36,44 +41,45 @@ export const guestySyncService = {
   async getSyncStatus(): Promise<{
     lastSync: string | null;
     isInProgress: boolean;
-    status: 'connected' | 'error' | 'disconnected'
+    status: 'connected' | 'error' | 'disconnected';
   }> {
     try {
-      const { data: inProgressSyncs, error: syncError } = await supabase
-        .from('sync_logs')
-        .select('id')
-        .eq('status', 'in_progress')
-        .eq('service', 'guesty')
-        .limit(1);
+      const [inProgressSyncs, lastCompletedSync, healthStatus] = await Promise.all([
+        supabase
+          .from('sync_logs')
+          .select('id')
+          .eq('status', 'in_progress')
+          .eq('provider', 'guesty')
+          .limit(1),
+        
+        supabase
+          .from('sync_logs')
+          .select('start_time')
+          .eq('status', 'completed')
+          .eq('provider', 'guesty')
+          .order('start_time', { ascending: false })
+          .limit(1),
+        
+        supabase
+          .from('integration_health')
+          .select('status, last_synced')
+          .eq('provider', 'guesty')
+          .single()
+      ]);
 
-      if (syncError) throw syncError;
+      if (inProgressSyncs.error) throw inProgressSyncs.error;
+      if (lastCompletedSync.error) throw lastCompletedSync.error;
 
-      const { data: lastSync, error: lastSyncError } = await supabase
-        .from('sync_logs')
-        .select('start_time')
-        .eq('status', 'completed')
-        .eq('service', 'guesty')
-        .order('start_time', { ascending: false })
-        .limit(1);
+      const lastSyncTime = lastCompletedSync.data?.[0]?.start_time || healthStatus.data?.last_synced || null;
+      const isInProgress = (inProgressSyncs.data?.length || 0) > 0;
 
-      if (lastSyncError) throw lastSyncError;
-
-      const { data: health, error: healthError } = await supabase
-        .from('integration_health')
-        .select('status, last_synced')
-        .eq('provider', 'guesty')
-        .single();
-
-      if (healthError && healthError.code !== 'PGRST116') throw healthError;
-
-      const connectionStatus: 'connected' | 'error' | 'disconnected' =
-        health?.status === 'connected' ? 'connected' :
-        health?.status === 'error' ? 'error' :
-        'disconnected';
+      const connectionStatus = healthStatus.data?.status === 'connected' ? 'connected' :
+                             healthStatus.data?.status === 'error' ? 'error' :
+                             'disconnected';
 
       return {
-        lastSync: (lastSync && lastSync.length > 0) ? lastSync[0].start_time : health?.last_synced || null,
-        isInProgress: (inProgressSyncs && inProgressSyncs.length > 0),
+        lastSync: lastSyncTime,
+        isInProgress,
         status: connectionStatus
       };
     } catch (error) {
@@ -86,3 +92,4 @@ export const guestySyncService = {
     }
   }
 };
+
