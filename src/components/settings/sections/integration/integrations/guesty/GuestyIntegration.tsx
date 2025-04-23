@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -19,6 +18,7 @@ const GuestyIntegration = () => {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [isSendingTestWebhook, setIsSendingTestWebhook] = useState(false);
 
   // Use the monitor hook for panel data
   const { 
@@ -106,6 +106,59 @@ const GuestyIntegration = () => {
     }
   }, [refetchMonitor]);
 
+  // Helper to send mock test webhook
+  const handleSendTestWebhook = useCallback(async () => {
+    setIsSendingTestWebhook(true);
+    // Sample test payload
+    const testPayload = {
+      id: "test-reservation-id-123",
+      listingId: "test-listing-999",
+      guest: {
+        fullName: "Jane Testuser",
+        email: "testuser@example.com",
+        phone: "+1234567890"
+      },
+      guest_name: "Jane Testuser",
+      startDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
+      endDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],  // day after
+      status: "confirmed"
+    };
+
+    try {
+      // Call the Edge Function: guesty-reservation-webhook (public endpoint via Supabase Functions)
+      const { data, error } = await supabase.functions.invoke('guesty-reservation-webhook', {
+        method: 'POST',
+        body: testPayload,
+        headers: {
+          // This endpoint requires authorization; in prod set the right secret!
+          // For TEST: send a secret matching GUESTY_WEBHOOK_SECRET (if required)
+          // If you're using auth in local .env, add: authorization: `Bearer ${import.meta.env.VITE_GUESTY_WEBHOOK_SECRET}`
+        }
+      });
+
+      if (error) throw new Error(error.message || "Error sending webhook");
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Test webhook not successful");
+      }
+
+      toast.success("Webhook sent successfully (test)", {
+        description: "The mock reservation webhook was sent and logged.",
+      });
+
+      // Optionally refetch monitoring panel/logs if you want
+      refetchMonitor();
+
+    } catch (err) {
+      toast.error("Webhook test failed", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+      console.error("Test Webhook error:", err);
+    } finally {
+      setIsSendingTestWebhook(false);
+    }
+  }, [refetchMonitor]);
+
   // Cleanup interval on unmount
   React.useEffect(() => {
     return () => {
@@ -175,10 +228,20 @@ const GuestyIntegration = () => {
         <Button
           variant="outline"
           className="w-full md:w-auto flex items-center justify-center"
-          onClick={() => toast.info("Dev feature: Send Test Webhook not implemented yet")}
+          onClick={handleSendTestWebhook}
+          disabled={isSendingTestWebhook}
         >
-          <CalendarIcon className="h-4 w-4 mr-2" />
-          Send Test Webhook
+          {isSendingTestWebhook ? (
+            <>
+              <LoadingSpinner size="small" className="mr-2" />
+              <span>Sending Webhook...</span>
+            </>
+          ) : (
+            <>
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Send Test Webhook
+            </>
+          )}
         </Button>
       </div>
     </div>
