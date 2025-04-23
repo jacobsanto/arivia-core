@@ -1,6 +1,5 @@
 
-import { supabase } from '@supabase/supabase-js';
-import { ListingProcessResult } from './types';
+import { ListingProcessResult } from './types.ts';
 
 export async function processListing(
   supabase: any,
@@ -8,7 +7,7 @@ export async function processListing(
   listingId: string
 ): Promise<ListingProcessResult> {
   try {
-    const { syncBookingsForListing } = await import('./booking-sync');
+    const { syncBookingsForListing } = await import('./booking-sync.ts');
     
     const result = await syncBookingsForListing(supabase, token, listingId);
     

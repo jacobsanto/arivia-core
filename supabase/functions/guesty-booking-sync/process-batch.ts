@@ -1,7 +1,7 @@
 
-import { delay } from './utils';
-import { processListing } from './process-listing';
-import { ListingProcessResult, ProcessingResult } from './types';
+import { delay } from './utils.ts';
+import { processListing } from './process-listing.ts';
+import { ListingProcessResult, ProcessingResult } from './types.ts';
 
 export async function processBatch(
   supabase: any,

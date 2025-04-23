@@ -1,6 +1,6 @@
 
-import { processBatch } from './process-batch';
-import type { ProcessingResult } from './types';
+import { processBatch } from './process-batch.ts';
+import type { ProcessingResult } from './types.ts';
 
 export async function processListings(
   supabase: any, 

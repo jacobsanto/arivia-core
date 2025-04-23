@@ -58,7 +58,17 @@ serve(async (req) => {
       const result = await processListings(
         supabase, token, [listingId], startTime, MAX_RUNTIME_MS
       );
-      return createSuccessResponse(result);
+      
+      // Use the imported function from sync-result-handlers.ts
+      const { createSuccessResponse } = await import('./sync-result-handlers.ts');
+      return createSuccessResponse(
+        result.totalBookingsSynced,
+        result.results,
+        result.created,
+        result.updated,
+        result.deleted,
+        startTime
+      );
     } else {
       const { data: listings, error } = await supabase
         .from('guesty_listings')
@@ -73,11 +83,20 @@ serve(async (req) => {
       const result = await processListings(
         supabase, token, listings.map(l => l.id), startTime, MAX_RUNTIME_MS
       );
-      return createSuccessResponse(result);
+      
+      // Use the imported function from sync-result-handlers.ts
+      const { createSuccessResponse } = await import('./sync-result-handlers.ts');
+      return createSuccessResponse(
+        result.totalBookingsSynced,
+        result.results,
+        result.created,
+        result.updated,
+        result.deleted,
+        startTime
+      );
     }
 
   } catch (error) {
     return handleError(error, supabase, syncLog, startTime);
   }
 });
-
