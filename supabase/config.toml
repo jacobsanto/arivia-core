@@ -12,3 +12,7 @@ verify_jwt = false
 
 [functions.guesty-auth]
 verify_jwt = false
+
+[functions.guesty-auth-check]
+verify_jwt = false
+
