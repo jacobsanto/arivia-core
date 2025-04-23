@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -11,7 +10,7 @@ import GuestyStatusBadge from "./GuestyStatusBadge";
 import GuestyMonitorPanel from "./components/GuestyMonitorPanel";
 import { useGuestyMonitor } from "./hooks/useGuestyMonitor";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RefreshCcw, AlertTriangle, CalendarIcon, AlertCircle, X, Log } from "lucide-react";
+import { RefreshCcw, AlertTriangle, CalendarIcon, AlertCircle, X, Logs } from "lucide-react";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -22,14 +21,12 @@ const GuestyIntegration = () => {
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSendingTestWebhook, setIsSendingTestWebhook] = useState(false);
 
-  // Use the monitor hook for panel data
   const { 
     data: monitor, 
     isLoading: monitorLoading, 
     refetch: refetchMonitor 
   } = useGuestyMonitor();
 
-  // Fetch last error log from sync_logs
   const { data: lastSyncErrorLog } = useQuery({
     queryKey: ["guesty-last-error-log"],
     queryFn: async () => {
@@ -43,7 +40,7 @@ const GuestyIntegration = () => {
       if (error) return null;
       return data;
     },
-    refetchInterval: 10000 // fresh error log every 10s
+    refetchInterval: 10000
   });
 
   const handleSync = useCallback(async () => {
@@ -59,17 +56,14 @@ const GuestyIntegration = () => {
     setIsSyncing(true);
 
     try {
-      // Call the Edge Function directly
       const { data, error } = await supabase.functions.invoke('guesty-listing-sync', {
         method: 'POST'
       });
 
-      // Top-level error from Supabase
       if (error) {
         throw new Error(error.message || 'Failed to invoke sync function');
       }
 
-      // API returned unsuccessful status
       if (!data?.success) {
         throw new Error(data?.error || 'Sync operation returned unsuccessful status');
       }
@@ -87,7 +81,6 @@ const GuestyIntegration = () => {
 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      // Recognize error type
       let type: string | null = null;
       if (/missing.*env|environment variable/i.test(errorMessage)) {
         type = "Missing Environment Variables";
@@ -132,7 +125,6 @@ const GuestyIntegration = () => {
     }
   }, [refetchMonitor, syncErrorType]);
 
-  // Helper to send mock test webhook
   const handleSendTestWebhook = useCallback(async () => {
     setIsSendingTestWebhook(true);
     const testPayload = {
@@ -144,8 +136,8 @@ const GuestyIntegration = () => {
         phone: "+1234567890"
       },
       guest_name: "Jane Testuser",
-      startDate: new Date(Date.now() + 86400000).toISOString().split('T')[0], // tomorrow
-      endDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],  // day after
+      startDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 172800000).toISOString().split('T')[0],
       status: "confirmed"
     };
 
@@ -178,7 +170,6 @@ const GuestyIntegration = () => {
     }
   }, [refetchMonitor]);
 
-  // Cleanup interval on unmount
   React.useEffect(() => {
     return () => {
       if (retryTimerRef.current) {
@@ -201,7 +192,6 @@ const GuestyIntegration = () => {
         isLoading={monitorLoading}
       />
 
-      {/* Manual Controls: stacked for mobile/flex-row for desktop */}
       <div className="flex flex-col md:flex-row gap-2 mt-6">
         <Button
           variant="default"
@@ -242,7 +232,6 @@ const GuestyIntegration = () => {
         </Button>
       </div>
 
-      {/* Inline sync error display: red ❌ + error message below sync controls */}
       {syncError && (
         <div
           className="flex items-center gap-2 mt-2 px-4 py-2 bg-red-50 text-red-800 rounded border border-red-200 text-sm"
@@ -263,10 +252,9 @@ const GuestyIntegration = () => {
         </div>
       )}
 
-      {/* Show last sync error log if exists */}
       {lastSyncErrorLog && (
         <Alert variant="destructive" className="mt-4 border-2 border-red-400 bg-red-50">
-          <Log className="h-4 w-4" />
+          <Logs className="h-4 w-4" />
           <AlertTitle className="flex gap-2 items-center">
             Sync Failure: <span className="text-xs font-normal text-muted-foreground">{lastSyncErrorLog.sync_type && lastSyncErrorLog.sync_type.replace("_", " ")}</span>
             <span className="ml-1 text-xs">{lastSyncErrorLog.start_time ? format(new Date(lastSyncErrorLog.start_time), "PPpp") : null}</span>
@@ -281,4 +269,3 @@ const GuestyIntegration = () => {
 };
 
 export default GuestyIntegration;
-
