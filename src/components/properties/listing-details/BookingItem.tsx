@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, ClipboardList, Brush, Check } from "lucide-react";
+import { Calendar, Users, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate } from '@/services/dataFormatService';
 
 interface BookingItemProps {
@@ -22,6 +22,17 @@ export const BookingItem: React.FC<BookingItemProps> = ({
   onMarkCleaned,
   isCleaningTriggered = false,
 }) => {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const totalGuests = 
+    (booking.raw_data?.guests?.adults || 0) + 
+    (booking.raw_data?.guests?.children || 0);
+  const infantCount = booking.raw_data?.guests?.infants || 0;
+  
+  const guestDetails = [
+    totalGuests > 0 ? `${totalGuests} ${totalGuests === 1 ? 'Guest' : 'Guests'}` : '',
+    infantCount > 0 ? `${infantCount} ${infantCount === 1 ? 'Infant' : 'Infants'}` : ''
+  ].filter(Boolean).join(', ');
+
   const checkInDate = formatDate(booking.check_in);
   const checkOutDate = formatDate(booking.check_out);
 
@@ -39,62 +50,105 @@ export const BookingItem: React.FC<BookingItemProps> = ({
     }
   };
 
+  const formatAmount = (rawData: any) => {
+    if (!rawData?.money) return 'N/A';
+    const amount = rawData.money.netAmount;
+    const currency = rawData.money.currency || 'EUR';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+
   return (
     <Card className="mb-4 overflow-hidden">
-      <CardContent className="p-0">
-        <div className="p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-base font-medium">{booking.guest_name || "Guest"}</h3>
-            <Badge variant={getBadgeVariant(booking.status)}>
-              {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Unknown"}
+      <CardContent className="p-4">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-base font-medium">{booking.guest_name || "Guest"}</h3>
+          <Badge variant={getBadgeVariant(booking.status)}>
+            {booking.status?.charAt(0).toUpperCase() + booking.status?.slice(1) || "Unknown"}
+          </Badge>
+        </div>
+
+        <div className="text-sm text-muted-foreground space-y-2">
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2" />
+            <span>Check-in: {checkInDate}</span>
+          </div>
+          <div className="flex items-center">
+            <Calendar className="h-4 w-4 mr-2" />
+            <span>Check-out: {checkOutDate}</span>
+          </div>
+          <div className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            <span>{guestDetails || 'No guest info'}</span>
+          </div>
+          <div className="flex items-center">
+            <DollarSign className="h-4 w-4 mr-2" />
+            <span>{formatAmount(booking.raw_data)}</span>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-4 pt-4 border-t border-border">
+            <div className="space-y-2 text-sm">
+              {booking.raw_data?.guest?.email && (
+                <div>
+                  <span className="font-medium">Email:</span>{' '}
+                  {booking.raw_data.guest.email}
+                </div>
+              )}
+              {booking.raw_data?.guest?.phone && (
+                <div>
+                  <span className="font-medium">Phone:</span>{' '}
+                  {booking.raw_data.guest.phone}
+                </div>
+              )}
+              {booking.raw_data?.note && (
+                <div>
+                  <span className="font-medium">Notes:</span>
+                  <p className="mt-1 text-muted-foreground">{booking.raw_data.note}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-2 mt-4">
+          {isCleaningTriggered ? (
+            <Badge variant="outline" className="bg-muted/20">
+              Cleaning Scheduled
             </Badge>
-          </div>
-
-          <div className="text-sm text-muted-foreground mb-3">
-            <div className="flex items-center">
-              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              <span>Check-in: {checkInDate}</span>
-            </div>
-            <div className="flex items-center mt-1">
-              <Calendar className="h-3.5 w-3.5 mr-1.5" />
-              <span>Check-out: {checkOutDate}</span>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2 mt-2">
-            {isCleaningTriggered ? (
-              <Badge variant="outline" className="flex items-center bg-muted/20">
-                <Check className="h-3 w-3 mr-1" />
-                Cleaning Scheduled
-              </Badge>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onTriggerCleaning(booking.id)}
+              >
+                Schedule Cleaning
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onMarkCleaned(booking.id)}
+              >
+                Mark as Cleaned
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="ml-auto"
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
             ) : (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => onTriggerCleaning(booking.id)}
-                >
-                  <Brush className="h-3.5 w-3.5 mr-1.5" />
-                  Schedule Cleaning
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="text-xs"
-                  onClick={() => onMarkCleaned(booking.id)}
-                >
-                  <Check className="h-3.5 w-3.5 mr-1.5" />
-                  Mark as Cleaned
-                </Button>
-              </>
+              <ChevronDown className="h-4 w-4" />
             )}
-
-            <Button size="sm" variant="ghost" className="text-xs">
-              <ClipboardList className="h-3.5 w-3.5 mr-1.5" />
-              Details
-            </Button>
-          </div>
+          </Button>
         </div>
       </CardContent>
     </Card>

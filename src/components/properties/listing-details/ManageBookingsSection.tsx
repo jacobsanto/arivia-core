@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -25,6 +24,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
     onSyncComplete: refetch
   });
 
+  // Sort bookings by check-in date
   const sortedBookingsWithTasks = bookingsWithTasks.slice().sort((a, b) =>
     new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
   );
