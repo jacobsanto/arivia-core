@@ -4,8 +4,9 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { createSyncLog } from './sync-log.ts';
 import { handleError } from './error-handlers.ts';
 import { processListings } from './listing-processor.ts';
-import { corsHeaders } from './utils.ts';
+import { corsHeaders, calculateBackoff } from './utils.ts';
 import { getGuestyToken } from './auth.ts';
+import { createRateLimitResponse } from './sync-result-handlers.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -45,11 +46,18 @@ serve(async (req) => {
     
     const { listingId, syncAll, startIndex = 0, totalListings = 0 } = requestBody as any;
 
-    // Get Guesty access token
+    // Get Guesty access token with retry mechanism
     let token;
     try {
-      token = await getGuestyToken();
+      token = await getGuestyToken(MAX_RETRIES);
     } catch (tokenError) {
+      console.error('Error getting Guesty token:', tokenError);
+      
+      // Check if it's a rate limit error
+      if (tokenError.message && tokenError.message.includes('Too Many Requests')) {
+        return createRateLimitResponse(null, 60000, startTime);
+      }
+      
       return handleError(tokenError, supabase, syncLog, startTime);
     }
 
@@ -67,7 +75,9 @@ serve(async (req) => {
         result.created,
         result.updated,
         result.deleted,
-        startTime
+        startTime,
+        syncLog,
+        supabase
       );
     } else {
       const { data: listings, error } = await supabase
@@ -92,7 +102,9 @@ serve(async (req) => {
         result.created,
         result.updated,
         result.deleted,
-        startTime
+        startTime,
+        syncLog,
+        supabase
       );
     }
 

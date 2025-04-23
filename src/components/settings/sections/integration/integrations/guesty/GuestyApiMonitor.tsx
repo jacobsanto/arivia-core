@@ -1,167 +1,135 @@
 
-import React, { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { format, formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/integrations/supabase/client';
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { AlertTriangle, Clock, ArrowDownCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ApiUsageTab } from './components/ApiUsageTab';
-import { Loader2, Info } from 'lucide-react';
-import { ApiUsage, IntegrationHealthData } from './types';
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const GuestyApiMonitor = () => {
-  const [activeTab, setActiveTab] = useState("usage");
-
-  const { data: apiUsage, isLoading: isLoadingUsage } = useQuery({
-    queryKey: ['guesty-api-usage'],
+const GuestyApiMonitor: React.FC = () => {
+  const { data: apiUsage, isLoading } = useQuery({
+    queryKey: ["guesty-api-usage"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('guesty_api_usage')
-        .select('*')
-        .order('timestamp', { ascending: false })
+        .from("guesty_api_usage")
+        .select("*")
+        .order("timestamp", { ascending: false })
         .limit(50);
-      
       if (error) throw error;
-      return data as ApiUsage[];
+      return data;
     },
+    refetchInterval: 10000,
   });
 
-  const { data: integrationHealth } = useQuery({
-    queryKey: ['integration-health'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('integration_health')
-        .select('*')
-        .eq('provider', 'guesty')
-        .maybeSingle();
-      
-      if (error) throw error;
-      // Safely cast to IntegrationHealthData
-      return data as IntegrationHealthData;
-    }
-  });
-
-  const processApiUsage = () => {
-    if (!apiUsage?.length) return { remainingRequests: null, quotaUsage: {} };
-
-    let remainingRequests = null;
-    const latestAuthUsage = apiUsage.find(item => item.endpoint === 'auth');
-    if (latestAuthUsage) {
-      remainingRequests = latestAuthUsage.remaining;
-    }
-
-    // Group by endpoint and get the latest data for each endpoint
-    const endpoints: Record<string, { endpoint: string; timestamp: string }[]> = {};
-    apiUsage.forEach(item => {
-      if (!endpoints[item.endpoint]) {
-        endpoints[item.endpoint] = [];
-      }
-      endpoints[item.endpoint].push(item);
-    });
-
-    // Create quota usage object with the latest data for each endpoint
-    const quotaUsage: Record<string, { total: number; remaining: number; limit: number }> = {};
-    Object.keys(endpoints).forEach(endpoint => {
-      // Sort by timestamp desc and get the latest
-      const latest = endpoints[endpoint].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      )[0];
-      
-      if (latest && endpoint !== 'auth') { // Skip auth endpoint in the detailed list
-        const usage = apiUsage.find(item => 
-          item.endpoint === latest.endpoint && 
-          item.timestamp === latest.timestamp
-        );
-        if (usage) {
-          quotaUsage[endpoint] = {
-            total: usage.rate_limit,
-            remaining: usage.remaining,
-            limit: usage.rate_limit
-          };
-        }
+  const getLatestUsageByEndpoint = () => {
+    if (!apiUsage) return [];
+    const endpointMap = new Map();
+    
+    apiUsage.forEach((usage) => {
+      if (!endpointMap.has(usage.endpoint)) {
+        endpointMap.set(usage.endpoint, usage);
       }
     });
-
-    return { remainingRequests, quotaUsage };
+    
+    return Array.from(endpointMap.values());
   };
 
-  const { remainingRequests, quotaUsage } = processApiUsage();
+  const latestUsage = getLatestUsageByEndpoint();
+  const isRateLimited = latestUsage.some(
+    (usage) => usage.remaining && usage.remaining < 10
+  );
+  
+  const formatEndpointName = (endpoint: string) => {
+    if (!endpoint) return "Unknown";
+    return endpoint.replace(/^\/v\d+\//, "").replace(/-/g, " ");
+  };
+  
+  const calculateTimeToReset = (reset: number | null) => {
+    if (!reset) return "Unknown";
+    const now = Math.floor(Date.now() / 1000);
+    const diffSeconds = reset - now;
+    
+    if (diffSeconds <= 0) return "Available now";
+    
+    const minutes = Math.floor(diffSeconds / 60);
+    const seconds = diffSeconds % 60;
+    return `${minutes}m ${seconds}s`;
+  };
+
+  if (isLoading) {
+    return (
+      <Card className="bg-muted/30 overflow-hidden">
+        <CardHeader>
+          <CardTitle className="flex justify-between items-center">
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-6 w-24" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[1, 2].map((i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!apiUsage || apiUsage.length === 0) {
+    return null;
+  }
 
   return (
-    <Card className="mt-4">
+    <Card className={`bg-muted/30 overflow-hidden ${isRateLimited ? "border-yellow-300" : ""}`}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">API Monitoring</CardTitle>
+        <CardTitle className="flex justify-between items-center text-base md:text-lg">
+          <span>Guesty API Status</span>
+          {isRateLimited && (
+            <Badge variant="warning" className="gap-1">
+              <AlertTriangle className="h-3 w-3" />
+              <span>Rate Limited</span>
+            </Badge>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="usage">API Usage</TabsTrigger>
-            <TabsTrigger value="sync">Sync Status</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="usage" className="mt-0">
-            {isLoadingUsage ? (
-              <div className="flex justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <ApiUsageTab 
-                remainingRequests={remainingRequests} 
-                quotaUsage={quotaUsage}
-              />
-            )}
-          </TabsContent>
-          
-          <TabsContent value="sync" className="mt-0">
-            <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-medium mb-1">Last Listing Sync</h3>
-                <p className="text-sm text-muted-foreground">
-                  {integrationHealth?.last_synced ? (
-                    <>
-                      {format(new Date(integrationHealth.last_synced), "PPpp")}
-                      <span className="text-xs ml-2">
-                        ({formatDistanceToNow(new Date(integrationHealth.last_synced), { addSuffix: true })})
-                      </span>
-                    </>
-                  ) : (
-                    "Never synced"
-                  )}
-                </p>
+        <div className="space-y-3 text-sm">
+          {latestUsage.map((usage) => (
+            <div key={usage.endpoint} className="space-y-1">
+              <div className="flex justify-between items-center">
+                <div className="font-medium capitalize">
+                  {formatEndpointName(usage.endpoint)}
+                </div>
+                <div className="flex items-center gap-1 text-xs">
+                  <Clock className="h-3.5 w-3.5" />
+                  <span>{calculateTimeToReset(usage.reset)}</span>
+                </div>
               </div>
               
-              <div>
-                <h3 className="text-sm font-medium mb-1">Last Bookings Sync</h3>
-                <p className="text-sm text-muted-foreground">
-                  {integrationHealth?.last_bookings_synced ? (
-                    <>
-                      {format(new Date(integrationHealth.last_bookings_synced), "PPpp")}
-                      <span className="text-xs ml-2">
-                        ({formatDistanceToNow(new Date(integrationHealth.last_bookings_synced), { addSuffix: true })})
-                      </span>
-                    </>
-                  ) : (
-                    "Never synced"
-                  )}
-                </p>
+              <div className="flex items-center gap-2">
+                <Progress
+                  value={
+                    usage.rate_limit 
+                      ? ((usage.rate_limit - (usage.remaining || 0)) / usage.rate_limit) * 100
+                      : 0
+                  }
+                  className="h-2"
+                />
+                <span className="text-xs whitespace-nowrap">
+                  {usage.remaining}/{usage.rate_limit} left
+                </span>
               </div>
-
-              {integrationHealth?.is_rate_limited && (
-                <div className="rounded-md bg-amber-50 p-3 text-sm border border-amber-200">
-                  <div className="flex gap-2">
-                    <Info className="h-5 w-5 text-amber-500 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-amber-800">Rate limit in effect</p>
-                      <p className="text-amber-700 mt-1">
-                        API rate limit reached. Please wait before attempting to sync again.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
-          </TabsContent>
-        </Tabs>
+          ))}
+
+          <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <ArrowDownCircle className="h-3.5 w-3.5" /> 
+            <span>Updated {new Date(latestUsage[0]?.timestamp).toLocaleTimeString()}</span>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

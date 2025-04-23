@@ -1,44 +1,55 @@
 
+/**
+ * Removes obsolete bookings from the database that are no longer present in Guesty API
+ */
 export async function cleanObsoleteBookings(
-  supabase: any, 
-  listingId: string, 
-  remoteBookings: any[]
+  supabase: any,
+  listingId: string,
+  activeBookingIds: Set<string> | string[]
 ): Promise<number> {
   try {
-    // Extract IDs of current bookings from remote response
-    const activeBookingIds = new Set(remoteBookings.map(b => b.id));
+    // Convert array to Set if needed for consistent interface
+    const activeIds = activeBookingIds instanceof Set ? activeBookingIds : new Set(activeBookingIds);
+    const today = new Date().toISOString().split('T')[0];
     
-    // Find bookings in our database for this listing that are no longer in Guesty
-    const { data: obsoleteBookings, error } = await supabase
+    // Get local bookings for this listing that are future/active
+    const { data: localBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
       .eq('listing_id', listingId)
-      .not('id', 'in', `(${Array.from(activeBookingIds).join(',')})`);
-      
+      .gt('check_out', today) // Only consider future/active bookings
+      .neq('status', 'cancelled'); // Don't touch already cancelled bookings
+    
     if (error) {
-      console.error(`Error finding obsolete bookings for listing ${listingId}:`, error);
+      console.error(`[GuestySync] Error querying local bookings for cleanup:`, error);
       return 0;
     }
     
-    if (!obsoleteBookings || obsoleteBookings.length === 0) {
-      return 0;
-    }
+    if (!localBookings || localBookings.length === 0) return 0;
     
-    // Delete obsolete bookings
-    const obsoleteIds = obsoleteBookings.map(b => b.id);
-    const { error: deleteError } = await supabase
+    // Find bookings that are in our database but no longer in Guesty (deleted or cancelled)
+    const bookingsToCancel = localBookings.filter(booking => !activeIds.has(booking.id));
+    if (bookingsToCancel.length === 0) return 0;
+
+    console.log(`[GuestySync] Marking ${bookingsToCancel.length} obsolete bookings as cancelled for listing ${listingId}`);
+    
+    // Update status to cancelled for obsolete bookings
+    const { error: updateError } = await supabase
       .from('guesty_bookings')
-      .delete()
-      .in('id', obsoleteIds);
-      
-    if (deleteError) {
-      console.error(`Error deleting obsolete bookings for listing ${listingId}:`, deleteError);
+      .update({
+        status: 'cancelled',
+        last_synced: new Date().toISOString()
+      })
+      .in('id', bookingsToCancel.map(b => b.id));
+    
+    if (updateError) {
+      console.error(`[GuestySync] Error cancelling obsolete bookings:`, updateError);
       return 0;
     }
     
-    return obsoleteBookings.length;
+    return bookingsToCancel.length;
   } catch (error) {
-    console.error(`Error cleaning obsolete bookings for listing ${listingId}:`, error);
+    console.error(`[GuestySync] Error in cleanObsoleteBookings:`, error);
     return 0;
   }
 }

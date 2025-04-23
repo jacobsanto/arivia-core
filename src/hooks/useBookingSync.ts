@@ -1,159 +1,131 @@
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface UseBookingSyncProps {
   onSyncComplete?: () => void;
 }
 
-interface SyncProgress {
-  currentListing: number;
-  totalListings: number;
-  bookingsSynced: number;
-  estimatedTimeLeft: string;
-}
-
-interface SyncResult {
-  success: boolean;
-  bookings_synced?: number;
-  listings_attempted?: number;
-  listings_synced?: number;
-  failed_listings?: string[];
-  time_taken?: string;
-  message?: string;
-  error?: string;
-  warning?: string;
-}
-
 export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
   const [isSyncing, setIsSyncing] = useState(false);
-  const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [failedListings, setFailedListings] = useState<string[]>([]);
-  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (retryCountdown !== null && retryCountdown > 0) {
-      const timer = setTimeout(() => {
-        setRetryCountdown(retryCountdown - 1);
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [retryCountdown]);
-
-  const calculateEstimatedTime = (current: number, total: number, startTime: number) => {
-    const elapsed = Date.now() - startTime;
-    const avgTimePerListing = elapsed / current;
-    const remainingListings = total - current;
-    const estimatedMs = avgTimePerListing * remainingListings;
+  const handleSyncError = useCallback((error: any, listingId?: string) => {
+    let errorMessage = error instanceof Error ? error.message : String(error);
     
-    const minutes = Math.floor(estimatedMs / 60000);
-    const seconds = Math.floor((estimatedMs % 60000) / 1000);
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
+    // Check if we hit rate limits
+    if (errorMessage.toLowerCase().includes('rate limit') || errorMessage.toLowerCase().includes('too many requests')) {
+      const retryAfterMatch = errorMessage.match(/(\d+)\s*seconds/i);
+      const retrySeconds = retryAfterMatch ? parseInt(retryAfterMatch[1], 10) : 60;
+      
+      toast.error('Rate limit exceeded', {
+        description: `The Guesty API rate limit was reached. Please try again in ${retrySeconds} seconds.`,
+        duration: 10000,
+      });
+      
+      if (listingId) {
+        setFailedListings(prev => [...prev, listingId]);
+      }
+      return;
+    }
+    
+    // Handle other errors
+    toast.error('Sync failed', {
+      description: errorMessage
+    });
+  }, []);
 
-  const syncBookings = async () => {
+  // Sync all bookings
+  const syncBookings = useCallback(async () => {
     if (isSyncing) return;
     
     setIsSyncing(true);
-    setError(null);
     setFailedListings([]);
-    setSyncProgress(null);
-    
     const startTime = Date.now();
-
+    
     try {
-      const response = await supabase.functions.invoke('guesty-booking-sync', {
+      const { data, error } = await supabase.functions.invoke('guesty-booking-sync', {
+        method: 'POST',
         body: { syncAll: true }
       });
 
-      // Check for response errors
-      if (response.error) {
-        throw new Error(response.error.message || 'Unknown error during sync');
-      }
-
-      const result = response.data as SyncResult;
+      if (error) throw error;
       
-      // Handle different result scenarios
-      if (result.success) {
-        // Full success
-        toast.success(`${result.bookings_synced} bookings synced from ${result.listings_synced} listings`);
-        setSyncProgress(null);
-        setFailedListings([]);
-        
-        if (onSyncComplete) {
-          onSyncComplete();
-        }
-      } else if (result.warning) {
-        // Partial success
-        setFailedListings(result.failed_listings || []);
-        toast.warning(result.message || 'Partial sync - some listings failed', {
-          description: `${result.failed_listings?.length} of ${result.listings_attempted} listings failed`
+      const timeElapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+      
+      if (data.success) {
+        toast.success('Bookings synced successfully', {
+          description: `Synced ${data.bookingsSynced} bookings across ${data.processedCount} listings in ${timeElapsed}s`
         });
+        
+        // Record any failed listings
+        if (data.results) {
+          const failed = data.results
+            .filter((r: any) => !r.success)
+            .map((r: any) => r.listingId);
+          
+          setFailedListings(failed);
+          
+          if (failed.length > 0) {
+            toast.warning(`${failed.length} listings failed to sync`, {
+              description: 'Some listings could not be synced. Try again later.'
+            });
+          }
+        }
         
         if (onSyncComplete) {
           onSyncComplete();
         }
       } else {
-        // Complete failure
-        throw new Error(result.message || result.error || 'All listings failed to sync');
+        throw new Error(data.error || 'Unknown error during sync');
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'Unknown error occurred';
-      setError(errorMessage);
-      setRetryCountdown(10);
-      toast.error('Sync failed', {
-        description: errorMessage
-      });
+      handleSyncError(err);
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [isSyncing, onSyncComplete, handleSyncError]);
 
-  const syncBookingsForListing = async (listingId: string) => {
+  // Sync bookings for a specific listing
+  const syncBookingsForListing = useCallback(async (listingId: string) => {
     if (isSyncing) return;
     
     setIsSyncing(true);
-    setError(null);
-    setFailedListings([]);
     
     try {
-      const response = await supabase.functions.invoke('guesty-booking-sync', {
+      const { data, error } = await supabase.functions.invoke('guesty-booking-sync', {
+        method: 'POST',
         body: { listingId }
       });
 
-      if (response.error) throw new Error(response.error.message || 'Unknown error during sync');
-
-      const result = response.data as SyncResult;
+      if (error) throw error;
       
-      if (result.success) {
-        toast.success(`Successfully synced ${result.bookings_synced} bookings for listing`);
+      if (data.success) {
+        toast.success('Bookings synced', {
+          description: `Synced ${data.bookingsSynced} bookings for this property`
+        });
+        
+        // Remove this listing from failed listings if it was there
+        setFailedListings(prev => prev.filter(id => id !== listingId));
         
         if (onSyncComplete) {
           onSyncComplete();
         }
       } else {
-        throw new Error(result.message || result.error || 'Failed to sync listing');
+        throw new Error(data.error || 'Unknown error during sync');
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'Unknown error occurred';
-      setError(errorMessage);
-      toast.error('Sync failed', {
-        description: errorMessage
-      });
+      handleSyncError(err, listingId);
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [isSyncing, onSyncComplete, handleSyncError]);
 
   return {
     isSyncing,
-    syncProgress,
-    error,
-    failedListings,
-    retryCountdown,
     syncBookings,
-    syncBookingsForListing
+    syncBookingsForListing,
+    failedListings
   };
 }
