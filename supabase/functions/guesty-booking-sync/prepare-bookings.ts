@@ -15,6 +15,15 @@ export function prepareBookings(remoteBookings: any[]): any[] {
           return null;
         }
 
+        // Normalize guest email with proper fallbacks
+        const guestEmail = guest.email || 
+          (booking.raw_data?.guest?.email) || 
+          (booking.guestDetails?.email) || null;
+
+        // Extract price details
+        const totalPrice = typeof price.totalPrice === 'number' ? price.totalPrice :
+                         typeof price.netAmount === 'number' ? price.netAmount : null;
+
         // Calculate total guests with proper fallbacks
         const totalGuests = 
           (parseInt(guests.adults) || 0) + 
@@ -24,15 +33,24 @@ export function prepareBookings(remoteBookings: any[]): any[] {
         // Normalize status
         const normalizedStatus = normalizeBookingStatus(booking.status);
         
+        // Enhanced logging for financial data
+        if (!totalPrice) {
+          console.warn(`[GuestySync] No price found for booking ${bookingId}`, {
+            priceData: price,
+            rawMoney: booking.money,
+            status: normalizedStatus
+          });
+        }
+
         return {
           id: bookingId,
           listing_id: propListingId,
           guest_name: guest.fullName || guest.name || 'Unknown Guest',
-          guest_email: guest.email || null,
+          guest_email: guestEmail,
           check_in: booking.startDate || booking.checkIn,
           check_out: booking.endDate || booking.checkOut,
           status: normalizedStatus,
-          amount_paid: price.totalPrice || null,
+          amount_paid: totalPrice,
           currency: price.currency || 'EUR',
           total_guests: totalGuests || 1,
           booking_created: booking.createdAt || null,
