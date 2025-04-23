@@ -9,7 +9,6 @@ import { GuestyListingDB } from "@/services/guesty/guesty.service";
 
 const GuestyPropertyList: React.FC = () => {
   const { listings, isLoading, error, refreshListings } = useGuesty();
-  // No more .results access since listings is already the array
   const properties = listings || [];
 
   return (

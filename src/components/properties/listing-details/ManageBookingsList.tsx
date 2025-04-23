@@ -10,6 +10,7 @@ export interface BookingWithTask {
   booking: any;
   cleaningTask: any | null;
 }
+
 interface Props {
   bookingsWithTasks: BookingWithTask[];
   onTriggerCleaning: (bookingId: string) => void;
