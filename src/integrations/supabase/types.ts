@@ -1099,6 +1099,7 @@ export type Database = {
           bookings_updated: number | null
           created_at: string | null
           end_time: string | null
+          entities_synced: number | null
           error_message: string | null
           id: string
           items_count: number | null
@@ -1107,11 +1108,12 @@ export type Database = {
           listings_updated: number | null
           message: string | null
           next_retry_time: string | null
+          provider: string
           retry_count: number | null
-          service: string
           start_time: string | null
           status: string | null
           sync_duration: number | null
+          sync_duration_ms: number | null
           sync_type: string | null
           webhook_data: Json | null
           webhook_event_type: string | null
@@ -1122,6 +1124,7 @@ export type Database = {
           bookings_updated?: number | null
           created_at?: string | null
           end_time?: string | null
+          entities_synced?: number | null
           error_message?: string | null
           id?: string
           items_count?: number | null
@@ -1130,11 +1133,12 @@ export type Database = {
           listings_updated?: number | null
           message?: string | null
           next_retry_time?: string | null
+          provider: string
           retry_count?: number | null
-          service: string
           start_time?: string | null
           status?: string | null
           sync_duration?: number | null
+          sync_duration_ms?: number | null
           sync_type?: string | null
           webhook_data?: Json | null
           webhook_event_type?: string | null
@@ -1145,6 +1149,7 @@ export type Database = {
           bookings_updated?: number | null
           created_at?: string | null
           end_time?: string | null
+          entities_synced?: number | null
           error_message?: string | null
           id?: string
           items_count?: number | null
@@ -1153,11 +1158,12 @@ export type Database = {
           listings_updated?: number | null
           message?: string | null
           next_retry_time?: string | null
+          provider?: string
           retry_count?: number | null
-          service?: string
           start_time?: string | null
           status?: string | null
           sync_duration?: number | null
+          sync_duration_ms?: number | null
           sync_type?: string | null
           webhook_data?: Json | null
           webhook_event_type?: string | null

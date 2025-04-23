@@ -1,39 +1,36 @@
 
 import { corsHeaders } from './utils.ts';
+import { updateSyncLog, updateIntegrationHealth } from './sync-log.ts';
 
-export const handleError = (error: unknown, supabase: any, syncLog: any | null, startTime: number) => {
-  console.error('Booking sync error:', error);
+export async function handleError(error: any, supabase: any, syncLog: any, startTime: number) {
+  console.error('Error in booking sync:', error);
   
-  if (syncLog?.id && supabase) {
-    updateSyncLog(supabase, syncLog.id, {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error during booking sync';
+  
+  if (syncLog?.id) {
+    await updateSyncLog(supabase, syncLog.id, {
       status: 'error',
       end_time: new Date().toISOString(),
-      message: error instanceof Error ? error.message : 'Unknown error',
-      sync_duration: Date.now() - startTime
+      message: errorMessage,
+      sync_duration_ms: Date.now() - startTime
     });
   }
-
-  const isRateLimit = error instanceof Error && 
-    (error.message?.includes('429') || error.message?.includes('Too Many Requests'));
   
-  if (supabase) {
-    updateIntegrationHealth(supabase, {
-      status: 'error',
-      last_error: error instanceof Error ? error.message : 'Unknown error',
-      is_rate_limited: isRateLimit
-    });
-  }
+  await updateIntegrationHealth(supabase, {
+    status: 'error',
+    last_error: errorMessage,
+    is_rate_limited: errorMessage.toLowerCase().includes('rate limit')
+  });
   
   return new Response(
     JSON.stringify({
       success: false,
-      message: error instanceof Error ? error.message : 'Unknown error during booking sync',
-      error: error instanceof Error ? error.message : 'Unknown error'
+      message: errorMessage,
+      error: errorMessage
     }),
     {
-      status: isRateLimit ? 429 : 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500
     }
   );
-};
-
+}

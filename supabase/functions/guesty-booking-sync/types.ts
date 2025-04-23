@@ -1,4 +1,12 @@
 
+export interface SyncLogData {
+  provider: string;
+  sync_type: string;
+  status: string;
+  start_time: string;
+  message: string;
+}
+
 export interface BookingSyncResult {
   total: number;
   created: number;
@@ -8,14 +16,6 @@ export interface BookingSyncResult {
   processedCount?: number;
   moreListingsToProcess?: boolean;
   executionTime?: number;
-}
-
-export interface SyncLogData {
-  service: string;
-  sync_type: string;
-  status: string;
-  start_time: string;
-  message: string;
 }
 
 export interface BookingData {
@@ -28,4 +28,3 @@ export interface BookingData {
   last_synced: string;
   raw_data: any;
 }
-

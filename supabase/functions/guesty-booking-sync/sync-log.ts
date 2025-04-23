@@ -10,7 +10,7 @@ export async function createSyncLog(
     const { data, error } = await supabase
       .from('sync_logs')
       .insert({
-        provider: logData.service,
+        provider: logData.provider,
         sync_type: logData.sync_type,
         status: logData.status,
         start_time: logData.start_time,
@@ -38,8 +38,8 @@ export async function updateSyncLog(
     status: string;
     end_time: string;
     message?: string;
-    items_count?: number;
-    sync_duration?: number;
+    entities_synced?: number;
+    sync_duration_ms?: number;
     bookings_created?: number;
     bookings_updated?: number;
     bookings_deleted?: number;
@@ -52,8 +52,8 @@ export async function updateSyncLog(
         status: updateData.status,
         end_time: updateData.end_time,
         message: updateData.message,
-        entities_synced: updateData.items_count || 0,
-        sync_duration_ms: updateData.sync_duration || 0,
+        entities_synced: updateData.entities_synced || 0,
+        sync_duration_ms: updateData.sync_duration_ms || 0,
         bookings_created: updateData.bookings_created || 0,
         bookings_updated: updateData.bookings_updated || 0,
         bookings_deleted: updateData.bookings_deleted || 0
@@ -93,4 +93,3 @@ export async function updateIntegrationHealth(
     console.error('Failed to update integration health', e);
   }
 }
-
