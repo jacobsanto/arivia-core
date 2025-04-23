@@ -1,5 +1,5 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 import { calculateNextRetryTime } from './utils.ts';
 
 // Check if a sync operation can proceed or needs to wait due to cooldown or rate limiting
@@ -62,41 +62,39 @@ export async function checkSyncCooldown(
   // Calculate backoff time for rate limited requests
   if (rateLimited) {
     backoffTime = calculateNextRetryTime(retryCount);
-  } 
-  // Check recent sync cooldown
-  else if (recentSync && recentSync.length > 0) {
-    console.log('Recent sync found, enforcing cooldown period');
+    const nextRetryTime = new Date();
+    nextRetryTime.setMinutes(nextRetryTime.getMinutes() + backoffTime);
+
     return {
       canProceed: false,
-      message: 'Please wait before syncing again. A sync was performed in the last 15 minutes.',
+      message: `Rate limited. Next retry in ${backoffTime} minutes`,
+      nextRetryTime: nextRetryTime.toISOString(),
       status: 429,
       retryCount,
       backoffTime
     };
   }
 
-  // Check if we need to wait due to rate limiting
-  if (rateLimited && latestSync && latestSync.length > 0) {
-    const nextRetryTime = new Date(latestSync[0].next_retry_time || latestSync[0].start_time);
-    nextRetryTime.setMinutes(nextRetryTime.getMinutes() + backoffTime);
-    
-    if (nextRetryTime > new Date()) {
-      const waitTimeMinutes = Math.ceil((nextRetryTime.getTime() - Date.now()) / (60 * 1000));
+  // If there's a recent successful sync, enforce cooldown
+  if (recentSync?.length > 0) {
+    const nextAllowed = new Date(recentSync[0].start_time);
+    nextAllowed.setMinutes(nextAllowed.getMinutes() + 15);
+
+    if (nextAllowed > new Date()) {
       return {
         canProceed: false,
-        message: `Rate limit cooldown in effect. Please wait approximately ${waitTimeMinutes} minutes before retrying.`,
-        nextRetryTime: nextRetryTime.toISOString(),
+        message: 'Sync cooldown period active',
+        nextRetryTime: nextAllowed.toISOString(),
         status: 429,
-        retryCount,
-        backoffTime
+        retryCount: 0,
+        backoffTime: 15
       };
     }
   }
 
-  // If we got here, the sync can proceed
   return {
     canProceed: true,
-    retryCount: rateLimited ? retryCount : 0,
-    backoffTime
+    retryCount,
+    backoffTime: 15
   };
 }

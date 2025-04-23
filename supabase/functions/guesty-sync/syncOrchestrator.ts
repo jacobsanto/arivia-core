@@ -1,7 +1,4 @@
 
-// Main orchestration logic for full Guesty sync.
-// This is extracted out of index.ts for cleaner design and better testability.
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 import { getGuestyToken } from './auth.ts';
 import { syncGuestyListings } from './listings.ts';
