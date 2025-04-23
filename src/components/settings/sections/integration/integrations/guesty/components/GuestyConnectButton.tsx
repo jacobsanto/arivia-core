@@ -150,5 +150,5 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
     </div>
   );
 };
-export default GuestyConnectButton;
 
+export default GuestyConnectButton;

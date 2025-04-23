@@ -1,6 +1,7 @@
+
 import React from "react";
-import { Check, X, RefreshCcw, Calendar, List, Info, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Check, X, RefreshCcw, Calendar, List, Info } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
 
 interface GuestyMonitorPanelProps {
@@ -13,13 +14,6 @@ interface GuestyMonitorPanelProps {
   logs: Array<any>;
   isLoading?: boolean;
 }
-
-const statusBadge = (isConnected: boolean) =>
-  isConnected ? (
-    <Badge variant="success" className="gap-1"><Check className="h-3.5 w-3.5" /> Connected</Badge>
-  ) : (
-    <Badge variant="destructive" className="gap-1"><X className="h-3.5 w-3.5" /> Disconnected</Badge>
-  );
 
 export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
   isConnected,
@@ -36,9 +30,17 @@ export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
       {/* Left: Connection/Last Syncs/Stats */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <PlugIcon />
+          <Info className="h-4 w-4 text-blue-600" />
           <span className="font-semibold text-sm">Connection Status:</span>
-          {statusBadge(isConnected)}
+          {isConnected ? (
+            <Badge variant="success" className="gap-1">
+              <Check className="h-3.5 w-3.5" /> Connected
+            </Badge>
+          ) : (
+            <Badge variant="destructive" className="gap-1">
+              <X className="h-3.5 w-3.5" /> Disconnected
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <RefreshCcw className="h-4 w-4 text-muted-foreground" />
@@ -88,7 +90,7 @@ export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
           </div>
         </div>
       </div>
-      {/* Right: Logs */}
+      {/* Right: Recent Sync Logs */}
       <div>
         <div className="font-semibold flex items-center gap-2 mb-2 text-sm">
           <List className="h-4 w-4" /> Recent Sync Logs
@@ -111,7 +113,7 @@ export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
               {log.status === "completed" ? (
                 <Check className="h-4 w-4 text-green-500" />
               ) : log.status === "error" ? (
-                <AlertTriangle className="h-4 w-4 text-red-500" />
+                <X className="h-4 w-4 text-red-500" />
               ) : (
                 <RefreshCcw className="h-4 w-4 text-muted-foreground" />
               )}
@@ -129,11 +131,5 @@ export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
     </div>
   );
 };
-
-// Simple plug icon for more "mobile" status indication
-function PlugIcon() {
-  // Only Lucide icons listed are available, so use Info with a blue color to indicate a plug.
-  return <Info className="h-5 w-5 text-blue-600" />;
-}
 
 export default GuestyMonitorPanel;

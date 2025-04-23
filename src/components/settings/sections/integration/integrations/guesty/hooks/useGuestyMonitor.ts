@@ -48,24 +48,12 @@ const getGuestyMonitorData = async () => {
     : null;
 
   // Connection status: last successful listing sync within past 12h
-  const lastListingSync = lastListingSyncRes.data
-    ? lastListingSyncRes.data
-    : Array.isArray(lastListingSyncRes.data) && lastListingSyncRes.data.length
-    ? lastListingSyncRes.data[0]
-    : null;
-
-  const isConnected = lastListingSync
-    ? lastListingSync.status === "completed" &&
-      new Date(lastListingSync.start_time).getTime() >=
-        Date.now() - 12 * 3600 * 1000
-    : false;
+  const lastListingSync = lastListingSyncRes.data;
+  const isConnected = lastListingSync?.status === "completed" &&
+    new Date(lastListingSync.start_time).getTime() >= Date.now() - 12 * 3600 * 1000;
 
   const logs = logsRes.data || [];
-  const lastBookingsWebhook = lastWebhookSyncRes.data
-    ? lastWebhookSyncRes.data
-    : Array.isArray(lastWebhookSyncRes.data) && lastWebhookSyncRes.data.length
-    ? lastWebhookSyncRes.data[0]
-    : null;
+  const lastBookingsWebhook = lastWebhookSyncRes.data;
 
   return {
     isConnected,
@@ -82,6 +70,6 @@ export function useGuestyMonitor() {
   return useQuery({
     queryKey: ["guesty-monitor"],
     queryFn: getGuestyMonitorData,
-    refetchInterval: 12000, // real-time poll every 12s
+    refetchInterval: 30000, // Poll every 30 seconds
   });
 }
