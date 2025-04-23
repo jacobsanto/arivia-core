@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import PropertyInfoSection from '@/components/properties/listing-details/PropertyInfoSection';
 import ManageBookingsSection from '@/components/properties/listing-details/ManageBookingsSection';
 import GuestManagementSection from '@/components/properties/listing-details/GuestManagementSection';
+import { BookingsSection } from '@/components/properties/listing-details/BookingsSection';
 
 const ListingDetails = () => {
   const { listingId } = useParams();
@@ -124,10 +124,7 @@ const ListingDetails = () => {
         </TabsContent>
 
         <TabsContent value="bookings" className="mt-6">
-          <ManageBookingsSection 
-            listing={listing} 
-            isLoading={listingLoading} 
-          />
+          <BookingsSection listingId={listing.id} />
         </TabsContent>
 
         <TabsContent value="guests" className="mt-6">
