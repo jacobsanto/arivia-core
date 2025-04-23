@@ -5,8 +5,7 @@ import {
   Loader2, 
   RefreshCcw, 
   AlertTriangle, 
-  HelpCircle,
-  CalendarIcon
+  HelpCircle
 } from "lucide-react";
 import { 
   Tooltip, 
@@ -18,20 +17,16 @@ import {
 interface GuestySyncControlsProps {
   onTest: () => void;
   onSync: () => void;
-  onSyncBookings?: () => void;
   isTesting: boolean;
   isSyncing: boolean;
-  isSyncingBookings?: boolean;
   isConnected: boolean;
 }
 
 const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
   onTest,
   onSync,
-  onSyncBookings,
   isTesting,
   isSyncing,
-  isSyncingBookings = false,
   isConnected
 }) => {
   return (
@@ -85,33 +80,6 @@ const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-
-      {onSyncBookings && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={onSyncBookings}
-                disabled={isSyncingBookings || !isConnected}
-                className="shrink-0 relative"
-              >
-                <CalendarIcon className={`h-4 w-4 mr-2 ${isSyncingBookings ? 'animate-spin' : ''}`} />
-                {isSyncingBookings ? 'Syncing...' : 'Sync Bookings'}
-                {!isConnected && (
-                  <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-md">
-                    <AlertTriangle className="h-4 w-4 text-amber-500 mr-1" />
-                    <span className="text-xs">Disconnected</span>
-                  </div>
-                )}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[250px]">
-              <p>Sync bookings for all properties. This will update all existing bookings and add any new ones.</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
 
       <TooltipProvider>
         <Tooltip>

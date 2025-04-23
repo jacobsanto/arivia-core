@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Check, X, RefreshCcw, Calendar, List, Info, Alert } from "lucide-react";
+import { Check, X, RefreshCcw, Calendar, List, Info, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -112,7 +111,7 @@ export const GuestyMonitorPanel: React.FC<GuestyMonitorPanelProps> = ({
               {log.status === "completed" ? (
                 <Check className="h-4 w-4 text-green-500" />
               ) : log.status === "error" ? (
-                <Alert className="h-4 w-4 text-red-500" />
+                <AlertTriangle className="h-4 w-4 text-red-500" />
               ) : (
                 <RefreshCcw className="h-4 w-4 text-muted-foreground" />
               )}

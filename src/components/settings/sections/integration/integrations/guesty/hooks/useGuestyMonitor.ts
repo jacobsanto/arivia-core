@@ -15,16 +15,15 @@ const getGuestyMonitorData = async () => {
     supabase.from("guesty_bookings").select("id", { count: "exact", head: true }),
     supabase.from("sync_logs")
       .select("id,status,message,sync_type,start_time,end_time,sync_duration", { count: "exact" })
-      .order("start_time", { ascending: false })
-      .limit(10),
+      .order("start_time", { ascending: false }),
     supabase.from("sync_logs")
-      .select("id,start_time,status", { count: 1 })
+      .select("id,start_time,status")
       .eq("sync_type", "listings")
       .order("start_time", { ascending: false })
       .limit(1)
       .maybeSingle(),
     supabase.from("sync_logs")
-      .select("id,start_time,status", { count: 1 })
+      .select("id,start_time,status")
       .eq("sync_type", "webhook")
       .order("start_time", { ascending: false })
       .limit(1)
@@ -38,7 +37,7 @@ const getGuestyMonitorData = async () => {
   const listingLogsRes = await supabase.from("sync_logs")
     .select("sync_duration")
     .eq("sync_type", "listings")
-    .is("sync_duration", null, false)
+    .not("sync_duration", "is", null)
     .order("start_time", { ascending: false })
     .limit(30);
   const listingDurations = (listingLogsRes.data || [])

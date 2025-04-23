@@ -19,7 +19,6 @@ const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [showPropertyList, setShowPropertyList] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isSyncingBookings, setIsSyncingBookings] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ current: 0, total: 0 });
 
   const { data: integrationHealth, refetch: refetchHealth } = useQuery({
@@ -80,53 +79,6 @@ const GuestyIntegration = () => {
       });
     } finally {
       setIsSyncing(false);
-      refetchHealth();
-    }
-  }, [refetchHealth]);
-
-  const handleSyncBookings = useCallback(async () => {
-    setIsSyncingBookings(true);
-    setSyncProgress({ current: 0, total: 0 });
-    
-    // Show an initial toast that the sync has started
-    const toastId = toast.loading('Starting bookings sync...', {
-      description: 'This may take a few minutes to complete'
-    });
-    
-    try {
-      // Get the total count of properties first
-      const { data: listings } = await supabase
-        .from('guesty_listings')
-        .select('id')
-        .eq('is_deleted', false)
-        .eq('sync_status', 'active');
-      
-      if (listings) {
-        setSyncProgress({ current: 0, total: listings.length });
-      }
-      
-      const result = await guestyService.syncAllBookings();
-      
-      if (result.success) {
-        toast.success('Bookings sync completed', {
-          description: `Synced: ${result.bookingsSynced} bookings across ${result.listingsCount} properties`,
-          id: toastId
-        });
-      } else {
-        toast.error('Bookings sync failed', {
-          description: result.message || 'Failed to sync bookings with Guesty API',
-          id: toastId
-        });
-      }
-    } catch (error) {
-      console.error('Error syncing bookings:', error);
-      toast.error('Failed to sync bookings', {
-        description: error instanceof Error ? error.message : 'Unknown error',
-        id: toastId
-      });
-    } finally {
-      setIsSyncingBookings(false);
-      setSyncProgress({ current: 0, total: 0 });
       refetchHealth();
     }
   }, [refetchHealth]);

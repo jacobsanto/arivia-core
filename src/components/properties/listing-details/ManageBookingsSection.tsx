@@ -3,7 +3,6 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { guestyService } from "@/services/guesty/guesty.service";
 import { useBookingsWithTasks } from "./useBookingsWithTasks";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
@@ -20,7 +19,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   bookings,
   isLoading,
 }) => {
-  const [isSyncing, setIsSyncing] = React.useState(false);
+  const [isSyncing] = React.useState(false); // Button is now disabled/not rendered
 
   const { bookingsWithTasks, loading, error, refetch } = useBookingsWithTasks(listing?.id);
 
@@ -29,37 +28,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
     .sort((a, b) =>
       new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
     );
-
-  const handleSyncBookings = async () => {
-    setIsSyncing(true);
-    try {
-      const toastId = toast.loading("Syncing bookings...", {
-        description: "Fetching current bookings from Guesty"
-      });
-      
-      const result = await guestyService.syncBookingsForListing(listing.id);
-      
-      if (result.success) {
-        toast.success("Bookings synced successfully", {
-          id: toastId,
-          description: `${result.bookingsSynced} bookings updated`,
-        });
-        // Refresh the bookings data
-        refetch();
-      } else {
-        toast.error("Failed to sync bookings", {
-          id: toastId,
-          description: result.error || "Could not sync with Guesty",
-        });
-      }
-    } catch (error: any) {
-      toast.error("Sync error", { 
-        description: error.message || "Could not sync bookings" 
-      });
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const handleTriggerCleaning = async (bookingId: string) => {
     try {
@@ -80,8 +48,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       toast.success("Cleaning task scheduled", {
         description: "A cleaning task has been created.",
       });
-      
-      // Refresh the data to show the new task
       refetch();
     } catch (error: any) {
       toast.error("Could not schedule cleaning", {
@@ -99,8 +65,6 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
       toast.success("Marked as cleaned", {
         description: "The cleaning task for this booking is marked done.",
       });
-      
-      // Refresh the data to reflect the updated task status
       refetch();
     } catch (error: any) {
       toast.error("Could not mark as cleaned", {
@@ -129,14 +93,15 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   }
 
   if (sortedBookingsWithTasks.length === 0) {
+    // Remove Sync Bookings button as sync is automatic
     return (
-      <BookingsEmptyState onSync={handleSyncBookings} isSyncing={isSyncing} />
+      <BookingsEmptyState onSync={undefined} isSyncing={false} />
     );
   }
 
   return (
     <div className="space-y-6">
-      <ManageBookingsHeader onSync={handleSyncBookings} isSyncing={isSyncing} />
+      <ManageBookingsHeader onSync={undefined} isSyncing={false} />
       <ManageBookingsList
         bookingsWithTasks={sortedBookingsWithTasks}
         onTriggerCleaning={handleTriggerCleaning}

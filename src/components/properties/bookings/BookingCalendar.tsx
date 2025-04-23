@@ -17,8 +17,6 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
     bookings, 
     isLoading, 
     error,
-    isSyncing, 
-    syncBookings, 
     refreshBookings 
   } = useBookings(property.id);
 
@@ -57,28 +55,8 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
             <RefreshCcw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
-          
-          {isGuestyProperty && (
-            <Button 
-              onClick={syncBookings}
-              disabled={isSyncing}
-            >
-              {isSyncing ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Syncing...
-                </>
-              ) : (
-                <>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Sync with Guesty
-                </>
-              )}
-            </Button>
-          )}
         </div>
       </div>
-
       {isLoading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -96,7 +74,7 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
           <p className="text-lg font-medium">No bookings found</p>
           <p className="text-muted-foreground">
             {isGuestyProperty 
-              ? "Try syncing with Guesty to fetch the latest bookings" 
+              ? "Bookings are synced automatically via Guesty." 
               : "Add bookings using the button above"}
           </p>
         </div>
