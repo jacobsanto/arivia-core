@@ -1,8 +1,7 @@
-
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
-import { syncBookingsForListing } from './booking-sync.ts';
+import { syncBookingsForListing } from '../guesty-sync/bookings/syncBookings.ts';
 import { createSyncLog, updateSyncLog, updateIntegrationHealth } from './sync-log.ts';
 import { delay } from './utils.ts';
 
@@ -96,7 +95,6 @@ serve(async (req) => {
     
     for (const id of listingsToSync) {
       try {
-        // Check if we're approaching timeout limit
         if (Date.now() - startTime > MAX_EXECUTION_TIME) {
           console.log(`[GuestyBookingSync] Approaching maximum execution time, stopping after ${results.length} listings`);
           break;
@@ -119,7 +117,6 @@ serve(async (req) => {
           success: true 
         });
         
-        // Add a delay between processing listings to avoid overwhelming the API
         if (listingsToSync.length > 1) {
           await delay(1000);
         }
@@ -148,7 +145,6 @@ serve(async (req) => {
       last_bookings_synced: new Date().toISOString()
     });
     
-    // Determine if we need to continue with additional batches
     const moreListingsToProcess = syncAll && startIndex + results.length < (requestData.totalListings || 0);
     
     return new Response(
