@@ -1,14 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { delay, extractRateLimitInfo } from './utils.ts';
-
-interface BookingSyncResult {
-  total: number;
-  created: number;
-  updated: number;
-  deleted: number;
-  endpoint: string;
-}
+import { BookingSyncResult, BookingData } from './types.ts';
 
 /**
  * Syncs Guesty reservations for a specific listing using optimized approach
@@ -117,7 +110,7 @@ export async function syncBookingsForListing(
         last_synced: new Date().toISOString(),
         raw_data: booking
       };
-    }).filter(booking => booking !== null);
+    }).filter(booking => booking !== null) as BookingData[];
 
     // Process bookings in smaller batches to reduce DB load
     const BATCH_SIZE = 10;

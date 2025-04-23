@@ -1,7 +1,10 @@
+
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
-import { syncBookingsForListing } from '../guesty-sync/bookings/syncBookings.ts';
+// The problematic import - importing from another function directory:
+// import { syncBookingsForListing } from '../guesty-sync/bookings/syncBookings.ts';
+import { syncBookingsForListing } from './booking-sync.ts'; // Fix: import from local file
 import { createSyncLog, updateSyncLog, updateIntegrationHealth } from './sync-log.ts';
 import { delay } from './utils.ts';
 
