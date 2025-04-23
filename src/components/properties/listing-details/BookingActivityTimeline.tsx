@@ -63,7 +63,7 @@ function groupByDay(events: BookingActivityEntry[]) {
   // sort descending by day
   return Object.entries(days)
     .sort(([a], [b]) => (a < b ? 1 : -1))
-    .map(([key, value]) => [key, value.sort((a, b) => b.synced_at.localeCompare(a.synced_at))] as const);
+    .map(([key, value]) => [key, value.sort((a, b) => b.synced_at.localeCompare(a.synced_at))] as [string, BookingActivityEntry[]]);
 }
 
 export default function BookingActivityTimeline({ listingId }: { listingId: string }) {

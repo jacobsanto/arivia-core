@@ -9,6 +9,14 @@ interface FinancialSummaryProps {
   listingId: string;
 }
 
+interface FinancialData {
+  revenue: number;
+  expenses: number;
+  profit: number;
+  margin: string;
+  currency: string;
+}
+
 export const FinancialSummary: React.FC<FinancialSummaryProps> = ({ listingId }) => {
   const { data, isLoading } = useQuery({
     queryKey: ['financials', listingId],
@@ -32,14 +40,14 @@ export const FinancialSummary: React.FC<FinancialSummaryProps> = ({ listingId })
         }
         
         return acc;
-      }, { revenue: 0, expenses: 0, profit: 0, currency: '' });
+      }, { revenue: 0, expenses: 0, profit: 0, currency: '', margin: '0%' });
       
       // Calculate the overall margin
       totals.margin = totals.revenue > 0 
         ? ((totals.profit / totals.revenue) * 100).toFixed(1) + '%' 
         : '0%';
       
-      return totals;
+      return totals as FinancialData;
     },
     enabled: !!listingId
   });

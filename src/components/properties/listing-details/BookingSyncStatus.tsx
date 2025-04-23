@@ -1,7 +1,7 @@
 
 import React from "react";
 import { format, formatDistanceToNow, isValid } from "date-fns";
-import { InfoCircle } from "lucide-react";
+import { Info } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BookingSyncStatusProps {
@@ -23,7 +23,7 @@ export const BookingSyncStatus: React.FC<BookingSyncStatusProps> = ({ lastSynced
       <Tooltip>
         <TooltipTrigger asChild>
           <span className="text-xs text-muted-foreground flex items-center">
-            <InfoCircle className="h-3 w-3 mr-1" /> 
+            <Info className="h-3 w-3 mr-1" /> 
             Last synced {timeAgo}
           </span>
         </TooltipTrigger>
