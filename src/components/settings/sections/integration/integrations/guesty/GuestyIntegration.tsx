@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -12,6 +11,9 @@ import GuestyPropertyList from "./GuestyPropertyList";
 import GuestyApiMonitor from "./GuestyApiMonitor";
 import { IntegrationHealthData } from "./types";
 import { Progress } from "@/components/ui/progress";
+import { Loader2, RefreshCcw, AlertTriangle, HelpCircle, CalendarIcon } from "lucide-react";
+import GuestyMonitorPanel from "./components/GuestyMonitorPanel";
+import { useGuestyMonitor } from "./hooks/useGuestyMonitor";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -133,73 +135,61 @@ const GuestyIntegration = () => {
     ? Math.min(100, Math.round((syncProgress.current / syncProgress.total) * 100))
     : 0;
 
+  // Use new hook for monitor panel data
+  const { data: monitor, isLoading: monitorLoading, refetch: refetchMonitor } = useGuestyMonitor();
+
+  // Responsive: stack monitor panel on mobile; controls below
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Guesty Integration</h3>
-        {integrationHealth?.last_synced && (
-          <div className="text-sm text-muted-foreground">
-            Last synced: {format(new Date(integrationHealth.last_synced), 'PPpp')}
-          </div>
-        )}
-      </div>
-      
-      <div className="flex justify-between items-center space-x-4 rounded-lg border p-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h4 className="font-medium">Guesty API Connection</h4>
-            <GuestyStatusBadge status={integrationHealth?.status} />
-          </div>
-          {integrationHealth?.last_error && (
-            <p className="text-sm text-destructive mt-1">
-              Error: {integrationHealth.last_error}
-            </p>
-          )}
-          {integrationHealth?.last_bookings_synced && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Last bookings sync: {format(new Date(integrationHealth.last_bookings_synced), 'PPp')}
-            </p>
-          )}
-        </div>
-        <GuestySyncControls
-          onTest={testGuestyConnection}
-          onSync={handleSync}
-          onSyncBookings={handleSyncBookings}
-          isTesting={isTestingConnection}
-          isSyncing={isSyncing}
-          isSyncingBookings={isSyncingBookings}
-          isConnected={integrationHealth?.status === 'connected'}
-        />
-      </div>
-      
-      {isSyncingBookings && syncProgress.total > 0 && (
-        <div className="p-4 border rounded-md">
-          <div className="flex justify-between items-center mb-2 text-sm">
-            <span>Syncing bookings...</span>
-            <span>{progressPercent}% complete</span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-          <p className="text-xs text-muted-foreground mt-2">
-            This process is running in batches to avoid timeouts. Please be patient.
-          </p>
-        </div>
-      )}
-      
-      <GuestyApiMonitor />
+      <h3 className="text-lg font-medium">Guesty Integration</h3>
+      <GuestyMonitorPanel
+        isConnected={monitor?.isConnected ?? false}
+        lastListingSync={monitor?.lastListingSync}
+        lastBookingsWebhook={monitor?.lastBookingsWebhook}
+        totalListings={monitor?.totalListings ?? 0}
+        totalBookings={monitor?.totalBookings ?? 0}
+        avgSyncDuration={monitor?.avgSyncDuration ?? null}
+        logs={monitor?.logs ?? []}
+        isLoading={monitorLoading}
+      />
 
-      {integrationHealth?.status === 'connected' && (
-        <Button 
-          variant="secondary" 
-          onClick={() => setShowPropertyList(!showPropertyList)}
-          className="w-full"
+      {/* --- Manual Controls: stacked for mobile/flex-row for desktop --- */}
+      <div className="flex flex-col md:flex-row gap-2 mt-6">
+        <Button
+          variant="default"
+          className="w-full md:w-auto flex items-center justify-center"
+          onClick={handleSync}
+          disabled={isSyncing}
         >
-          {showPropertyList ? 'Hide Properties' : 'Show Properties'}
+          {isSyncing ? (
+            <>
+              <span className="mr-2">Syncing</span>
+              <RefreshCcw className="animate-spin h-4 w-4" />
+            </>
+          ) : (
+            <>
+              <RefreshCcw className="h-4 w-4 mr-2" />
+              Sync Listings Now
+            </>
+          )}
         </Button>
-      )}
-      
-      {showPropertyList && integrationHealth?.status === 'connected' && (
-        <GuestyPropertyList />
-      )}
+        <Button
+          variant="outline"
+          className="w-full md:w-auto flex items-center justify-center"
+          onClick={() => toast.info("Dev feature: Send Test Webhook not implemented yet")}
+        >
+          <Calendar className="h-4 w-4 mr-2" />
+          Send Test Webhook
+        </Button>
+      </div>
+      {/* --- End Controls --- */}
+
+      {/* You can add the old GuestyApiMonitor section optionally below if needed
+      <GuestyApiMonitor />
+      */}
+
+      {/* Show property list toggle if needed
+      */}
     </div>
   );
 };
