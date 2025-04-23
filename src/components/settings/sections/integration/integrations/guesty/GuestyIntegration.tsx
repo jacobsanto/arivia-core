@@ -9,6 +9,7 @@ import GuestySyncErrorAlert from "./components/GuestySyncErrorAlert";
 import GuestyLastErrorAlert from "./components/GuestyLastErrorAlert";
 import { useGuestySyncActions } from "./hooks/useGuestySyncActions";
 import GuestyConnectButton from "./components/GuestyConnectButton";
+import BookingSyncDashboard from "./BookingSyncDashboard";
 
 const GuestyIntegration = () => {
   const {
@@ -81,6 +82,9 @@ const GuestyIntegration = () => {
       />
 
       <GuestyLastErrorAlert lastSyncErrorLog={lastSyncErrorLog} />
+
+      {/* --- Booking Sync History Dashboard --- */}
+      <BookingSyncDashboard />
     </div>
   );
 };
