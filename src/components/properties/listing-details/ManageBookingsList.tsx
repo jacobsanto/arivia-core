@@ -23,6 +23,7 @@ export function ManageBookingsList({ bookingsWithTasks, onTriggerCleaning, onMar
           onTriggerCleaning={onTriggerCleaning}
           onMarkCleaned={onMarkCleaned}
           isCleaningTriggered={!!item.cleaningTask}
+          cleaningTask={item.cleaningTask}
         />
       ))}
     </div>

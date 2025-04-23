@@ -8,12 +8,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate } from '@/services/dataFormatService';
+import { BookingTaskBadge } from "./BookingTaskBadge";
 
 interface BookingItemProps {
   booking: any;
   onTriggerCleaning: (bookingId: string) => void;
-  onMarkCleaned: (bookingId: string) => void;
+  onMarkCleaned: (taskId: string) => void;
   isCleaningTriggered?: boolean;
+  cleaningTask?: any;
 }
 
 export const BookingItem: React.FC<BookingItemProps> = ({
@@ -21,6 +23,7 @@ export const BookingItem: React.FC<BookingItemProps> = ({
   onTriggerCleaning,
   onMarkCleaned,
   isCleaningTriggered = false,
+  cleaningTask = null,
 }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const totalGuests = 
@@ -115,28 +118,32 @@ export const BookingItem: React.FC<BookingItemProps> = ({
         )}
 
         <div className="flex flex-wrap gap-2 mt-4">
-          {isCleaningTriggered ? (
+          {cleaningTask ? (
+            <BookingTaskBadge status={cleaningTask.status} />
+          ) : isCleaningTriggered ? (
             <Badge variant="outline" className="bg-muted/20">
               Cleaning Scheduled
             </Badge>
-          ) : (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onTriggerCleaning(booking.id)}
-              >
-                Schedule Cleaning
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onMarkCleaned(booking.id)}
-              >
-                Mark as Cleaned
-              </Button>
-            </>
+          ) : booking.status?.toLowerCase() === "confirmed" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onTriggerCleaning(booking.id)}
+            >
+              Schedule Cleaning
+            </Button>
           )}
+
+          {cleaningTask && cleaningTask.status === "pending" && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onMarkCleaned(cleaningTask.id)}
+            >
+              Mark as Cleaned
+            </Button>
+          )}
+          
           <Button
             size="sm"
             variant="ghost"
