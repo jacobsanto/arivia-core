@@ -8,6 +8,7 @@ import GuestySyncControls from "./components/GuestySyncControls";
 import GuestySyncErrorAlert from "./components/GuestySyncErrorAlert";
 import GuestyLastErrorAlert from "./components/GuestyLastErrorAlert";
 import { useGuestySyncActions } from "./hooks/useGuestySyncActions";
+import GuestyConnectButton from "./components/GuestyConnectButton";
 
 const GuestyIntegration = () => {
   const {
@@ -32,7 +33,6 @@ const GuestyIntegration = () => {
     refetchInterval: 10000
   });
 
-  // Use extracted Guesty sync actions hook
   const {
     isSyncing,
     isSendingTestWebhook,
@@ -43,12 +43,19 @@ const GuestyIntegration = () => {
     handleUnmount,
   } = useGuestySyncActions({ refetchMonitor });
 
-  // Unmount cleanup for retry timer
   React.useEffect(() => handleUnmount, [handleUnmount]);
+
+  // Refetch monitor after successful (re)connect
+  const handleAfterConnect = React.useCallback(() => {
+    refetchMonitor();
+  }, [refetchMonitor]);
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Guesty Integration</h3>
+      <h3 className="text-lg font-medium mb-2">Guesty Integration</h3>
+      {/* Connect Button - full width on mobile */}
+      <GuestyConnectButton afterConnect={handleAfterConnect} />
+
       <GuestyMonitorPanel
         isConnected={monitor?.isConnected ?? false}
         lastListingSync={monitor?.lastListingSync}
