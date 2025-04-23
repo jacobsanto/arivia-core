@@ -77,4 +77,3 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
     </div>
   );
 };
-

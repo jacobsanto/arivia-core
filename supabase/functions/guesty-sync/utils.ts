@@ -31,11 +31,14 @@ export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
     const rate_limit = limitHeader ? parseInt(limitHeader) : 0;
     const remaining = parseInt(headers.get('x-ratelimit-remaining') || '0');
     let resetString = headers.get('x-ratelimit-reset');
+    
     // If reset header is missing, try 'x-ratelimit-expire-after' (in seconds), fallback to 1 hour
     if (!resetString) {
       const expireAfter = parseInt(headers.get('x-ratelimit-expire-after') || '3600');
       resetString = new Date(Date.now() + expireAfter * 1000).toISOString();
     }
+    
+    // If we don't have a valid rate_limit value, return null
     if (rate_limit === 0) return null;
 
     return {
