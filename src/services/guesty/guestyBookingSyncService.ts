@@ -8,6 +8,7 @@ interface SyncBookingsResult {
   message: string;
   bookingsSynced?: number;
   error?: string;
+  listingsCount?: number;
 }
 
 export const guestyBookingSyncService = {
@@ -19,7 +20,8 @@ export const guestyBookingSyncService = {
         return {
           success: true,
           message: `Successfully synced ${result.bookingsSynced} bookings across ${result.listingsCount} listings`,
-          bookingsSynced: result.bookingsSynced
+          bookingsSynced: result.bookingsSynced,
+          listingsCount: result.listingsCount
         };
       } else {
         return {
