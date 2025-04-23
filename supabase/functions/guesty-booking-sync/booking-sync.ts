@@ -1,7 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
-import { delay, extractRateLimitInfo } from './utils.ts';
 import { BookingSyncResult, BookingData } from './types.ts';
+import { extractRateLimitInfo, delay } from './utils.ts';
 
 /**
  * Syncs Guesty reservations for a specific listing using optimized approach
@@ -171,7 +171,6 @@ export async function syncBookingsForListing(
       }
     }
 
-    console.log(`[GuestyBookingSync] [${listingId}] Created: ${created}, Updated: ${updated}, Deleted: ${deleted}`);
     return {
       total: remoteBookings.length,
       created,
@@ -237,3 +236,4 @@ async function cleanObsoleteBookings(
     return 0;
   }
 }
+

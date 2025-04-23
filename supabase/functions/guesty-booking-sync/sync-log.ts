@@ -1,15 +1,10 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { SyncLogData } from './types.ts';
 
 export async function createSyncLog(
   supabase: any, 
-  logData: {
-    service: string;
-    sync_type: string;
-    status: string;
-    start_time: string;
-    message: string;
-  }
+  logData: SyncLogData
 ) {
   try {
     const { data, error } = await supabase
@@ -98,3 +93,4 @@ export async function updateIntegrationHealth(
     console.error('Failed to update integration health', e);
   }
 }
+

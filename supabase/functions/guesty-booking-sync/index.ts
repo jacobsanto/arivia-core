@@ -2,9 +2,7 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
-// The problematic import - importing from another function directory:
-// import { syncBookingsForListing } from '../guesty-sync/bookings/syncBookings.ts';
-import { syncBookingsForListing } from './booking-sync.ts'; // Fix: import from local file
+import { syncBookingsForListing } from './booking-sync.ts';
 import { createSyncLog, updateSyncLog, updateIntegrationHealth } from './sync-log.ts';
 import { delay } from './utils.ts';
 
@@ -53,23 +51,20 @@ serve(async (req) => {
     let listingsToSync: string[] = [];
     
     if (syncAll) {
-      // When syncing all listings, we will process them in batches to avoid timeout
       const { data: listings, error: listingsError } = await supabase
         .from('guesty_listings')
         .select('id')
         .eq('is_deleted', false)
         .eq('sync_status', 'active')
         .order('id', { ascending: true })
-        .range(startIndex, startIndex + 2); // Process max 3 listings per function call
+        .range(startIndex, startIndex + 2);
       
       if (listingsError) {
         throw new Error(`Failed to fetch listings: ${listingsError.message}`);
       }
         
       listingsToSync = listings?.map(listing => listing.id) || [];
-      console.log(`Found ${listingsToSync.length} active listings to sync bookings for (starting at index ${startIndex})`);
       
-      // Record the total count for logging
       const { count: totalListingsCount } = await supabase
         .from('guesty_listings')
         .select('id', { count: 'exact', head: true })
@@ -205,3 +200,4 @@ serve(async (req) => {
     );
   }
 });
+

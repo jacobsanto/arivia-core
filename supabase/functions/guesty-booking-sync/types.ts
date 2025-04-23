@@ -5,6 +5,17 @@ export interface BookingSyncResult {
   updated: number;
   deleted: number;
   endpoint: string;
+  processedCount?: number;
+  moreListingsToProcess?: boolean;
+  executionTime?: number;
+}
+
+export interface SyncLogData {
+  service: string;
+  sync_type: string;
+  status: string;
+  start_time: string;
+  message: string;
 }
 
 export interface BookingData {
@@ -17,3 +28,4 @@ export interface BookingData {
   last_synced: string;
   raw_data: any;
 }
+
