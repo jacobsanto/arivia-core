@@ -1,33 +1,26 @@
-
 import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useBookingsWithTasks } from "./useBookingsWithTasks";
+import { useGuestyBookings } from "./useGuestyBookings";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
 import { ManageBookingsList } from "./ManageBookingsList";
 
 interface ManageBookingsSectionProps {
   listing: any;
-  bookings: any[];
   isLoading: boolean;
 }
 
 const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   listing,
-  bookings,
   isLoading,
 }) => {
-  const [isSyncing] = React.useState(false); // Button is now disabled/not rendered
+  const { bookingsWithTasks, loading, error, refetch } = useGuestyBookings(listing?.id);
 
-  const { bookingsWithTasks, loading, error, refetch } = useBookingsWithTasks(listing?.id);
-
-  const sortedBookingsWithTasks = bookingsWithTasks
-    .slice()
-    .sort((a, b) =>
-      new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
-    );
+  const sortedBookingsWithTasks = bookingsWithTasks.slice().sort((a, b) =>
+    new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
+  );
 
   const handleTriggerCleaning = async (bookingId: string) => {
     try {

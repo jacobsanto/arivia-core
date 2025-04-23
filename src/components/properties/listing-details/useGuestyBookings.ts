@@ -1,0 +1,104 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+// Improved types for Guesty bookings with task and listing context
+export interface GuestyBookingDb {
+  id: string;
+  listing_id: string;
+  guest_name: string | null;
+  check_in: string;
+  check_out: string;
+  status: string | null;
+  raw_data?: Record<string, any>;
+  created_at?: string;
+  updated_at?: string;
+  last_synced?: string;
+}
+
+export interface CleaningTaskDb {
+  id: string;
+  status: string;
+  task_type: string;
+  due_date: string;
+  booking_id: string;
+  listing_id: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BookingWithTask {
+  booking: GuestyBookingDb;
+  cleaningTask: CleaningTaskDb | null;
+}
+
+interface UseGuestyBookingsResult {
+  bookingsWithTasks: BookingWithTask[];
+  loading: boolean;
+  error: Error | null;
+  refetch: () => void;
+}
+
+export function useGuestyBookings(listingId?: string | number): UseGuestyBookingsResult {
+  const [bookingsWithTasks, setBookingsWithTasks] = useState<BookingWithTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (!listingId) {
+        setBookingsWithTasks([]);
+        setLoading(false);
+        return;
+      }
+
+      const listingIdStr = String(listingId);
+
+      // Get bookings for this listing (sorted by check_in)
+      const { data: bookings, error: bookingError } = await supabase
+        .from("guesty_bookings")
+        .select("*")
+        .eq("listing_id", listingIdStr)
+        .order("check_in", { ascending: true });
+
+      if (bookingError) throw bookingError;
+
+      // Get related housekeeping tasks for this listing
+      const { data: tasks, error: taskError } = await supabase
+        .from("housekeeping_tasks")
+        .select("*")
+        .eq("listing_id", listingIdStr);
+      if (taskError) throw taskError;
+
+      // For each booking, attach any task where booking_id matches
+      const result: BookingWithTask[] = (bookings || []).map((booking: GuestyBookingDb) => {
+        const cleaningTask = (tasks || []).find(
+          (task: any) => task.booking_id === booking.id
+        ) as CleaningTaskDb | undefined;
+        return {
+          booking,
+          cleaningTask: cleaningTask || null
+        };
+      });
+
+      setBookingsWithTasks(result);
+    } catch (err: any) {
+      setError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAll();
+    // eslint-disable-next-line
+  }, [listingId]);
+
+  return {
+    bookingsWithTasks,
+    loading,
+    error,
+    refetch: fetchAll
+  };
+}

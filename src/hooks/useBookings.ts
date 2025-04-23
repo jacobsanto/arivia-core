@@ -1,4 +1,5 @@
 
+// Strong hook (for properties), uses proper types
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
@@ -19,7 +20,7 @@ export interface Booking {
 }
 
 // Define the Guesty booking type based on the actual table structure
-interface GuestyBooking {
+interface GuestyBookingDb {
   id: string;
   guest_name: string;
   listing_id: string;
@@ -42,7 +43,7 @@ export const useBookings = (propertyId: string) => {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
@@ -58,8 +59,7 @@ export const useBookings = (propertyId: string) => {
           .select('*')
           .eq('listing_id', propertyId);
         if (error) throw new Error(`Error fetching Guesty bookings: ${error.message}`);
-        // Transform Guesty booking format to match our Booking interface
-        const transformedBookings: Booking[] = (data as GuestyBooking[] || []).map(booking => {
+        const transformedBookings: Booking[] = (data as GuestyBookingDb[] || []).map(booking => {
           const rawData = booking.raw_data || {};
           const guestData = rawData.guest || {};
           return {

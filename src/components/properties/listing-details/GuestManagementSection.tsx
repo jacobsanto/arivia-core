@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { MessageSquare, Loader2 } from "lucide-react";
 import { Guest } from "./GuestCard";
 import GroupedGuestLists from "./GroupedGuestLists";
 import { useGuestGroups } from "./GuestGrouping";
+import { useGuestyBookings } from "./useGuestyBookings";
 
 interface GuestManagementSectionProps {
   listing: any;
@@ -18,13 +18,16 @@ const HANDBOOK_URL = "https://arivia-handbook-public-url.com/arivia_welcome_kit.
 
 const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
   listing,
-  bookings,
+  // bookings,
   isLoading,
 }) => {
   const [sendingGuestId, setSendingGuestId] = useState<string | null>(null);
 
+  // Use unified Guesty bookings hook
+  const { bookingsWithTasks, loading: loadingBookings } = useGuestyBookings(listing?.id);
+
   // Prepare guests array from bookings
-  const guests: Guest[] = bookings.map(booking => {
+  const guests: Guest[] = bookingsWithTasks.map(({ booking }) => {
     const rawData = booking.raw_data || {};
     const guestData = rawData.guest || {};
     return {
@@ -34,14 +37,13 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
       phone: guestData.phone || null,
       check_in: booking.check_in,
       check_out: booking.check_out,
-      isVip: Boolean(booking.is_vip),
-      notes: booking.notes || guestData.comments || undefined,
+      isVip: Boolean(rawData.is_vip || rawData.vip || false),
+      notes: rawData.notes || guestData.comments || undefined,
     };
   });
 
   const { currentGuests, upcomingGuests, pastGuests } = useGuestGroups(guests);
 
-  // Actions
   const handleWelcomeKit = (guest: Guest) => {
     setSendingGuestId(guest.id);
     setTimeout(() => {
@@ -61,7 +63,7 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
     toast("Handbook link opened", { description: `Sent handbook to ${guest.name}` });
   };
 
-  if (isLoading) {
+  if (isLoading || loadingBookings) {
     return (
       <div className="flex justify-center items-center h-32">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
