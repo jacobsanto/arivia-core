@@ -4,6 +4,7 @@ import type { GuestyListing } from './types.ts';
 import { RateLimitInfo, extractRateLimitInfo, delay } from './utils.ts';
 import { processListing } from './processListing.ts';
 import { cleanObsoleteListings } from './cleanObsoleteListings.ts';
+import { storeRateLimitInfo } from './integration-health.ts';
 
 export async function syncGuestyListings(supabase: any, token: string): Promise<{
   listings: GuestyListing[];
@@ -11,7 +12,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
 }> {
   try {
     console.log('Starting Guesty listings sync...');
-    
+
     // Create sync log entry
     const { data: syncLog, error: syncLogError } = await supabase
       .from('sync_logs')
@@ -32,7 +33,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     let created = 0;
     let updated = 0;
     let archived = 0;
-    let rateLimitInfo: RateLimitInfo | null = null;
+    let lastRateLimitInfo: RateLimitInfo | null = null;
 
     // Get all active listings from Guesty
     while (hasMore) {
@@ -46,11 +47,14 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         });
 
         // Extract rate limit info from headers
-        rateLimitInfo = extractRateLimitInfo(response.headers);
+        const rateLimitInfo = extractRateLimitInfo(response.headers);
         if (rateLimitInfo) {
-          console.log(`Rate limit info - Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.rate_limit}`);
+          lastRateLimitInfo = rateLimitInfo;
+          // Always store for endpoint 'listings'
+          await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
+          console.log(`Rate limit info - Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit || rateLimitInfo.rate_limit}`);
         }
-        
+
         if (!response.ok) {
           if (response.status === 429) {
             console.error('Rate limited by Guesty API, waiting before retry...');
@@ -68,7 +72,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         }
 
         const listings: GuestyListing[] = data.results;
-        
+
         if (listings.length === 0) {
           console.log('No more listings found, ending pagination');
           hasMore = false;
@@ -91,7 +95,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         }
 
         page++;
-        
+
         // Add a small delay between pages to reduce risk of rate limiting
         if (rateLimitInfo && rateLimitInfo.remaining < 10) {
           console.log('Low rate limit remaining, adding delay between requests');
@@ -131,7 +135,7 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     }
 
     console.log(`Listings sync completed: ${created} created, ${updated} updated, ${archived} archived`);
-    return { listings: totalListings, rateLimitInfo };
+    return { listings: totalListings, rateLimitInfo: lastRateLimitInfo };
 
   } catch (error) {
     console.error('Error in syncGuestyListings:', error);

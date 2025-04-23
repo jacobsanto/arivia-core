@@ -3,15 +3,15 @@ import { extractRateLimitInfo } from './utils.ts';
 
 export async function getGuestyToken(): Promise<string> {
   console.log('Getting Guesty authentication token');
-  
+
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-  
+
   if (!supabaseUrl || !supabaseServiceKey) {
     console.error('Missing required environment variables for Supabase in getGuestyToken');
     throw new Error('Server configuration error: Missing required environment variables');
   }
-  
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Query existing token
@@ -65,12 +65,12 @@ export async function getGuestyToken(): Promise<string> {
 
     const data = await response.json();
     console.log('Successfully obtained new token, expires in:', data.expires_in, 'seconds');
-    
+
     if (!data.access_token) {
       console.error('Invalid response from Guesty token endpoint:', data);
       throw new Error('Invalid response from Guesty authentication service');
     }
-    
+
     const expiresAt = new Date(Date.now() + data.expires_in * 1000);
 
     // Extract and store rate limit information
@@ -82,6 +82,7 @@ export async function getGuestyToken(): Promise<string> {
           .from('guesty_api_usage')
           .insert({
             endpoint: 'auth',
+            rate_limit: rateLimitInfo.rate_limit,
             limit: rateLimitInfo.limit || rateLimitInfo.rate_limit,
             remaining: rateLimitInfo.remaining,
             reset: rateLimitInfo.reset,

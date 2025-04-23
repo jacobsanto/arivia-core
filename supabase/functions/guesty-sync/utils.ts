@@ -13,22 +13,26 @@ export type SyncStatus = 'in_progress' | 'completed' | 'error';
 export function calculateNextRetryTime(retryCount: number): number {
   // Base cooldown of 15 minutes
   const baseCooldown = 15;
-  
+
   // Calculate exponential backoff with a maximum of 4 hours (240 minutes)
   const backoffTime = Math.min(
     baseCooldown * Math.pow(2, retryCount),
     240
   );
-  
+
   return Math.floor(backoffTime);
 }
 
 // Extract rate limit information from Guesty API response headers
 export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
   try {
+    // Always store both rate_limit and limit if available
     const rate_limit = parseInt(headers.get('x-ratelimit-limit') || '0');
+    // Use both for compatibility, but limit is the actual daily cap on some endpoints
+    const limitHeader = headers.get('x-ratelimit-limit');
+    const limit = limitHeader ? parseInt(limitHeader) : undefined;
     const remaining = parseInt(headers.get('x-ratelimit-remaining') || '0');
-    
+
     // Try to parse reset as timestamp, or fall back to calculating from expire-after
     let reset: string;
     const resetHeader = headers.get('x-ratelimit-reset');
@@ -39,11 +43,12 @@ export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
       const expireAfter = parseInt(headers.get('x-ratelimit-expire-after') || '3600');
       reset = new Date(Date.now() + expireAfter * 1000).toISOString();
     }
-    
-    if (rate_limit === 0) return null;
-    
+
+    if (rate_limit === 0 && (!limit || limit === 0)) return null;
+
     return {
       rate_limit,
+      limit,
       remaining,
       reset
     };
