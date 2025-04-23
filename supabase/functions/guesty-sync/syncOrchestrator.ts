@@ -5,7 +5,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 import { getGuestyToken } from './auth.ts';
 import { syncGuestyListings } from './listings.ts';
-import { syncGuestyBookingsForListing } from './bookings.ts';
 import { RateLimitInfo } from './utils.ts';
 import { updateSyncLogError, updateSyncLogSuccess, createSyncLog } from './sync-log.ts';
 import { updateIntegrationHealth, storeRateLimitInfo } from './integration-health.ts';
@@ -45,7 +44,7 @@ export async function orchestrateFullGuestySync(): Promise<{ response: object, s
       };
     }
 
-    // Optionally: create sync log early (for audit)
+    // Create sync log entry
     syncLog = await createSyncLog(supabase, cooldownResult.retryCount, new Date(Date.now() + cooldownResult.backoffTime * 60000));
     if (syncLog?.error) {
       console.error('Failed to create sync log:', syncLog.error);
@@ -68,14 +67,21 @@ export async function orchestrateFullGuestySync(): Promise<{ response: object, s
       };
     }
 
-    // Fetch/listings sync
+    // Fetch listings with pagination
+    console.log('Starting to sync Guesty listings with pagination...');
     let listings: any[] = [];
     let rateLimitInfo: RateLimitInfo | null = null;
+    
     try {
       const listingsRes = await syncGuestyListings(supabase, token);
       listings = listingsRes.listings || [];
       rateLimitInfo = listingsRes.rateLimitInfo;
-      if (rateLimitInfo) await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
+      
+      if (rateLimitInfo) {
+        await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
+      }
+      
+      console.log(`Successfully synced ${listings.length} listings from Guesty`);
     } catch (err) {
       if (syncLog?.id) {
         await updateSyncLogError(supabase, syncLog.id, 'Failed to sync listings', startTime, cooldownResult.retryCount);
@@ -86,49 +92,27 @@ export async function orchestrateFullGuestySync(): Promise<{ response: object, s
       };
     }
 
-    // Bookings sync for all active listings
-    const bookingSyncPromises = listings.map(listing =>
-      syncGuestyBookingsForListing(supabase, token, listing._id).catch(err => {
-        console.error(`Error syncing bookings for listing ${listing._id}:`, err);
-        return 0;
-      })
-    );
-    let bookingResults;
-    try {
-      bookingResults = await Promise.allSettled(bookingSyncPromises);
-    } catch (err) {
-      if (syncLog?.id) {
-        await updateSyncLogError(supabase, syncLog.id, 'Failed during booking sync', startTime, cooldownResult.retryCount);
-      }
-      return {
-        response: { success: false, message: 'Error occurred during booking synchronization', error: err instanceof Error ? err.message : String(err) },
-        status: 500
-      };
-    }
-    const totalBookingsSynced = bookingResults.filter(res => res.status === 'fulfilled')
-      .reduce((total, res) => total + (res as PromiseFulfilledResult<number>).value, 0);
-    const failedBookings = bookingResults.filter(r => r.status === 'rejected').length;
-
-    // Success log update
+    // Instead of syncing all bookings here, we'll update the success log
+    // and let client-side initiate the booking sync separately
     if (syncLog?.id) {
       await updateSyncLogSuccess(
         supabase,
         syncLog.id,
         startTime,
         listings.length,
-        totalBookingsSynced,
-        failedBookings
+        0, // No bookings synced in this phase
+        0  // No failed bookings
       );
     }
+    
     await updateIntegrationHealth(supabase, 'connected', rateLimitInfo, null);
 
     return {
       response: {
         success: true,
-        message: 'Sync completed successfully',
+        message: 'Listings sync completed successfully',
         listingsCount: listings.length,
-        bookingsSynced: totalBookingsSynced,
-        failedBookings
+        bookingsSynced: 0
       },
       status: 200
     };

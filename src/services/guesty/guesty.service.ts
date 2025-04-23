@@ -99,18 +99,20 @@ export const guestyService = {
   async syncAllBookings(): Promise<GuestySyncResponse> {
     try {
       // First, get the count of active listings to sync
-      const { data: listings } = await supabase
+      const { data: listings, error } = await supabase
         .from('guesty_listings')
         .select('id')
         .eq('is_deleted', false)
         .eq('sync_status', 'active');
+      
+      if (error) throw error;
       
       const totalListings = listings?.length || 0;
       let processedCount = 0;
       let totalBookingsSynced = 0;
       let hasMoreListings = true;
       let attempts = 0;
-      const MAX_ATTEMPTS = 10; // Safety limit for number of sequential calls
+      const MAX_ATTEMPTS = 20; // Safety limit for number of sequential calls
       
       while (hasMoreListings && attempts < MAX_ATTEMPTS) {
         attempts++;
@@ -124,7 +126,10 @@ export const guestyService = {
           }
         });
         
-        if (response.error) throw new Error(response.error.message);
+        if (response.error) {
+          console.error('Error in booking sync batch:', response.error);
+          throw new Error(response.error.message);
+        }
         
         const data = response.data as any;
         processedCount += data.processedCount || 0;
@@ -133,9 +138,10 @@ export const guestyService = {
         // Check if we need to continue syncing
         hasMoreListings = data.moreListingsToProcess && processedCount < totalListings;
         
-        // If we have more to process, wait a bit between calls
+        // If we have more to process, wait a bit between calls to avoid overwhelming the system
         if (hasMoreListings) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.log(`Processed ${processedCount}/${totalListings} listings, continuing...`);
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
       

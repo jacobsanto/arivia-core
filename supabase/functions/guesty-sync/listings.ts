@@ -138,4 +138,3 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
     throw error;
   }
 }
-

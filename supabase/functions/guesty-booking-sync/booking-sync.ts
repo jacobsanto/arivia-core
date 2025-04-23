@@ -156,17 +156,20 @@ export async function syncBookingsForListing(
       }
 
       // Update existing bookings
-      for (const booking of bookingsToUpdate) {
-        const { error: updateError } = await supabase
-          .from('guesty_bookings')
-          .update(booking)
-          .eq('id', booking.id);
-
-        if (updateError) {
-          console.error(`[GuestyBookingSync] Error updating booking ${booking.id}:`, updateError);
-          continue;
+      if (bookingsToUpdate.length > 0) {
+        // Bulk update is not supported, so we do them one by one
+        for (const booking of bookingsToUpdate) {
+          const { error: updateError } = await supabase
+            .from('guesty_bookings')
+            .update(booking)
+            .eq('id', booking.id);
+  
+          if (updateError) {
+            console.error(`[GuestyBookingSync] Error updating booking ${booking.id}:`, updateError);
+            continue;
+          }
+          updated++;
         }
-        updated++;
       }
 
       // Short delay between batches to avoid overwhelming the database

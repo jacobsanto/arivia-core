@@ -110,4 +110,4 @@ export const useBookings = (propertyId: string) => {
     isLoading,
     error
   };
-}
+};

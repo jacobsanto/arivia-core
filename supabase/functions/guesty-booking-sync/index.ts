@@ -32,6 +32,7 @@ serve(async (req) => {
     const requestData = await req.json();
     const listingId = requestData.listingId;
     const syncAll = requestData.syncAll === true;
+    const startIndex = requestData.startIndex || 0;
     
     console.log(`Starting Guesty bookings sync process...`);
     
@@ -55,25 +56,28 @@ serve(async (req) => {
         .from('guesty_listings')
         .select('id')
         .eq('is_deleted', false)
-        .eq('sync_status', 'active');
+        .eq('sync_status', 'active')
+        .order('id', { ascending: true })
+        .range(startIndex, startIndex + 2); // Process max 3 listings per function call
       
       if (listingsError) {
         throw new Error(`Failed to fetch listings: ${listingsError.message}`);
       }
         
       listingsToSync = listings?.map(listing => listing.id) || [];
-      console.log(`Found ${listingsToSync.length} active listings to sync bookings for`);
-      
-      // Handle the first batch in this function call (up to 3 listings)
-      // Additional listings will need to be synced in separate function calls
-      listingsToSync = listingsToSync.slice(0, 3);
+      console.log(`Found ${listingsToSync.length} active listings to sync bookings for (starting at index ${startIndex})`);
       
       // Record the total count for logging
-      const totalListingsCount = listings?.length || 0;
-      const remainingListings = totalListingsCount - listingsToSync.length;
+      const { count: totalListingsCount } = await supabase
+        .from('guesty_listings')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_deleted', false)
+        .eq('sync_status', 'active');
+      
+      const remainingListings = totalListingsCount - (startIndex + listingsToSync.length);
       
       if (remainingListings > 0) {
-        console.log(`Processing first ${listingsToSync.length} listings in this run. ${remainingListings} listings will need additional sync requests.`);
+        console.log(`Processing ${listingsToSync.length} listings in this run. ${remainingListings} listings will need additional sync requests.`);
       }
     } else if (listingId) {
       listingsToSync = [listingId];
@@ -145,7 +149,7 @@ serve(async (req) => {
     });
     
     // Determine if we need to continue with additional batches
-    const moreListingsToProcess = syncAll && results.length < (requestData.totalListings || 0);
+    const moreListingsToProcess = syncAll && startIndex + results.length < (requestData.totalListings || 0);
     
     return new Response(
       JSON.stringify({

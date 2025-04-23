@@ -11,6 +11,7 @@ import GuestySyncControls from "./GuestySyncControls";
 import GuestyPropertyList from "./GuestyPropertyList";
 import GuestyApiMonitor from "./GuestyApiMonitor";
 import { IntegrationHealthData } from "./types";
+import { Progress } from "@/components/ui/progress";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
@@ -91,6 +92,17 @@ const GuestyIntegration = () => {
     });
     
     try {
+      // Get the total count of properties first
+      const { data: listings } = await supabase
+        .from('guesty_listings')
+        .select('id')
+        .eq('is_deleted', false)
+        .eq('sync_status', 'active');
+      
+      if (listings) {
+        setSyncProgress({ current: 0, total: listings.length });
+      }
+      
       const result = await guestyService.syncAllBookings();
       
       if (result.success) {
@@ -116,6 +128,10 @@ const GuestyIntegration = () => {
       refetchHealth();
     }
   }, [refetchHealth]);
+
+  const progressPercent = syncProgress.total > 0 
+    ? Math.min(100, Math.round((syncProgress.current / syncProgress.total) * 100))
+    : 0;
 
   return (
     <div className="space-y-4">
@@ -155,6 +171,19 @@ const GuestyIntegration = () => {
           isConnected={integrationHealth?.status === 'connected'}
         />
       </div>
+      
+      {isSyncingBookings && syncProgress.total > 0 && (
+        <div className="p-4 border rounded-md">
+          <div className="flex justify-between items-center mb-2 text-sm">
+            <span>Syncing bookings...</span>
+            <span>{progressPercent}% complete</span>
+          </div>
+          <Progress value={progressPercent} className="h-2" />
+          <p className="text-xs text-muted-foreground mt-2">
+            This process is running in batches to avoid timeouts. Please be patient.
+          </p>
+        </div>
+      )}
       
       <GuestyApiMonitor />
 
