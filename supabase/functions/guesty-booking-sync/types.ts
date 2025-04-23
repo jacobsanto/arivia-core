@@ -1,4 +1,3 @@
-
 export interface SyncLogData {
   provider: string;
   sync_type: string;
@@ -11,11 +10,17 @@ export interface GuestyBooking {
   id: string;
   listing_id: string;
   guest_name: string | null;
+  guest_email: string | null;
   check_in: string;
   check_out: string;
-  status: string | null;
+  status: string;
+  amount_paid: number | null;
+  currency: string | null;
+  total_guests: number;
+  booking_created: string | null;
+  booking_updated: string | null;
   raw_data?: any;
-  last_synced?: string;
+  last_synced: string;
 }
 
 export interface BookingSyncResult {
