@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,6 @@ import { useGuestyBookings } from "./useGuestyBookings";
 
 interface GuestManagementSectionProps {
   listing: any;
-  bookings: any[];
   isLoading: boolean;
 }
 
@@ -18,7 +18,6 @@ const HANDBOOK_URL = "https://arivia-handbook-public-url.com/arivia_welcome_kit.
 
 const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
   listing,
-  // bookings,
   isLoading,
 }) => {
   const [sendingGuestId, setSendingGuestId] = useState<string | null>(null);
@@ -28,17 +27,33 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
 
   // Prepare guests array from bookings
   const guests: Guest[] = bookingsWithTasks.map(({ booking }) => {
-    const rawData = booking.raw_data || {};
-    const guestData = rawData.guest || {};
+    // Safely access raw_data as an object or empty object if it's not defined
+    const rawData = typeof booking.raw_data === 'object' && booking.raw_data !== null 
+      ? booking.raw_data 
+      : {};
+      
+    // Safely access guest data
+    const guestData = rawData && typeof rawData === 'object' && 'guest' in rawData && typeof rawData.guest === 'object' && rawData.guest !== null
+      ? rawData.guest 
+      : {};
+    
     return {
       id: booking.id,
-      name: booking.guest_name || guestData.fullName || "Guest",
-      email: guestData.email || null,
-      phone: guestData.phone || null,
+      name: booking.guest_name || 
+           (guestData && typeof guestData === 'object' && 'fullName' in guestData ? guestData.fullName : "Guest"),
+      email: guestData && typeof guestData === 'object' && 'email' in guestData ? guestData.email : null,
+      phone: guestData && typeof guestData === 'object' && 'phone' in guestData ? guestData.phone : null,
       check_in: booking.check_in,
       check_out: booking.check_out,
-      isVip: Boolean(rawData.is_vip || rawData.vip || false),
-      notes: rawData.notes || guestData.comments || undefined,
+      isVip: Boolean(
+        (rawData && typeof rawData === 'object' && 'is_vip' in rawData ? rawData.is_vip : false) || 
+        (rawData && typeof rawData === 'object' && 'vip' in rawData ? rawData.vip : false)
+      ),
+      notes: rawData && typeof rawData === 'object' && 'notes' in rawData 
+        ? rawData.notes 
+        : guestData && typeof guestData === 'object' && 'comments' in guestData 
+          ? guestData.comments 
+          : undefined,
     };
   });
 
