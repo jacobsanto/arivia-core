@@ -1,134 +1,206 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
+import { SyncResponse, GuestyBooking } from './types.ts';
 
-function delay(ms: number) {
-  return new Promise((res) => setTimeout(res, ms));
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+const GUESTY_CLIENT_ID = Deno.env.get('GUESTY_CLIENT_ID')!;
+const GUESTY_CLIENT_SECRET = Deno.env.get('GUESTY_CLIENT_SECRET')!;
+
+// Constants
+const MAX_RUNTIME_MS = 50000; // 50 seconds
+const MAX_RETRIES = 3;
+const DELAY_BETWEEN_LISTINGS_MS = 300;
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+async function getGuestyToken(): Promise<string> {
+  const response = await fetch('https://open-api.guesty.com/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'client_credentials',
+      client_id: GUESTY_CLIENT_ID,
+      client_secret: GUESTY_CLIENT_SECRET,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to get token: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return data.access_token;
 }
 
-async function fetchBookingsForListing(token: string, listingId: string) {
-  const allBookings: any[] = [];
+async function fetchGuestyBookings(token: string, listingId: string): Promise<GuestyBooking[]> {
+  const bookings: GuestyBooking[] = [];
   let page = 1;
-  let hasMore = true;
+  const today = new Date().toISOString().split('T')[0];
 
-  while (hasMore) {
-    const res = await fetch(`https://open-api.guesty.com/v1/bookings?listingId=${listingId}&page=${page}`, {
-      headers: { Authorization: `Bearer ${token}` },
+  while (true) {
+    const url = `https://open-api.guesty.com/v1/reservations?listingId=${listingId}&endDate[gte]=${today}&page=${page}`;
+    
+    const response = await fetch(url, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      },
     });
 
-    if (!res.ok) throw new Error(`Failed to fetch bookings for listing ${listingId}`);
-    const data = await res.json();
-    allBookings.push(...data.results);
-    hasMore = data.results.length > 0 && data.results.length === 20;
+    if (!response.ok) {
+      throw new Error(`Failed to fetch bookings: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    const results = data.results || [];
+    
+    for (const booking of results) {
+      const totalGuests = 
+        (booking.guests?.adults || 0) + 
+        (booking.guests?.children || 0) + 
+        (booking.guests?.infants || 0);
+
+      bookings.push({
+        id: booking._id || booking.id,
+        listing_id: listingId,
+        guest_name: booking.guest?.fullName || null,
+        guest_email: booking.guest?.email || null,
+        amount_paid: booking.price?.totalPrice || 0,
+        currency: booking.price?.currency || 'EUR',
+        status: booking.status,
+        total_guests: totalGuests,
+        check_in: booking.startDate || booking.checkIn,
+        check_out: booking.endDate || booking.checkOut,
+        raw_data: booking,
+        last_synced: new Date().toISOString()
+      });
+    }
+
+    // If we got less results than the page size, we're done
+    if (results.length < 20) break;
     page++;
   }
 
-  return allBookings;
+  return bookings;
 }
 
-serve(async () => {
-  const start = Date.now();
-  const CLIENT_ID = Deno.env.get("GUESTY_CLIENT_ID");
-  const CLIENT_SECRET = Deno.env.get("GUESTY_CLIENT_SECRET");
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-  const SUPABASE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+async function syncListingWithRetry(
+  supabase: any,
+  token: string,
+  listingId: string,
+  retryCount = 0
+): Promise<number> {
+  try {
+    const bookings = await fetchGuestyBookings(token, listingId);
+    
+    // Upsert bookings in batches
+    const chunkSize = 20;
+    for (let i = 0; i < bookings.length; i += chunkSize) {
+      const chunk = bookings.slice(i, i + chunkSize);
+      const { error } = await supabase
+        .from('guesty_bookings')
+        .upsert(chunk, {
+          onConflict: 'id'
+        });
 
-  if (!CLIENT_ID || !CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_KEY) {
-    return new Response(JSON.stringify({
-      success: false,
-      message: "Missing environment variables"
-    }), { status: 500 });
-  }
-
-  const tokenRes = await fetch("https://open-api.guesty.com/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      grant_type: "client_credentials",
-    }),
-  });
-
-  if (!tokenRes.ok) {
-    const errorText = await tokenRes.text();
-    return new Response(JSON.stringify({ success: false, message: errorText }), { status: 401 });
-  }
-
-  const { access_token } = await tokenRes.json();
-
-  const listingsRes = await fetch(`${SUPABASE_URL}/rest/v1/guesty_listings?id=not.is.null`, {
-    headers: { Authorization: `Bearer ${SUPABASE_KEY}` },
-  });
-  const listings = await listingsRes.json();
-  const totalListings = listings.length;
-
-  let bookingsSynced = 0;
-  let failedListings: string[] = [];
-
-  for (let i = 0; i < listings.length; i++) {
-    const listing = listings[i];
-    try {
-      const bookings = await fetchBookingsForListing(access_token, listing.id);
-      bookingsSynced += bookings.length;
-
-      const formatted = bookings.map((b: any) => ({
-        id: b.id,
-        listing_id: b.listingId,
-        check_in: b.startDate,
-        check_out: b.endDate,
-        guest_name: b.guest?.fullName || null,
-        guest_email: b.guest?.email || null,
-        amount_paid: b.price?.totalPrice || 0,
-        currency: b.price?.currency || "EUR",
-        status: b.status,
-        total_guests: (b.guests?.adults || 0) + (b.guests?.children || 0) + (b.guests?.infants || 0),
-        last_synced: new Date().toISOString(),
-      }));
-
-      await fetch(`${SUPABASE_URL}/rest/v1/guesty_bookings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          Prefer: "resolution=merge-duplicates",
-        },
-        body: JSON.stringify(formatted),
-      });
-
-    } catch (err) {
-      console.warn(`Failed to sync bookings for listing ${listing.id}`, err);
-      failedListings.push(listing.id);
+      if (error) throw error;
     }
 
-    await delay(300);
+    return bookings.length;
+  } catch (error) {
+    console.error(`Error syncing listing ${listingId}:`, error);
+    if (retryCount < MAX_RETRIES) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+      return syncListingWithRetry(supabase, token, listingId, retryCount + 1);
+    }
+    throw error;
+  }
+}
 
-    // Stop if we're over safe execution time
-    if (Date.now() - start > 50000) break;
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
   }
 
-  // Log the result
-  await fetch(`${SUPABASE_URL}/rest/v1/sync_logs`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-    },
-    body: JSON.stringify({
-      integration: "guesty",
-      type: "bookings",
-      status: failedListings.length ? "partial" : "success",
-      message: `Synced ${bookingsSynced} bookings across ${totalListings} listings`,
-      synced_at: new Date().toISOString(),
-    }),
-  });
+  const startTime = Date.now();
+  const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+  const failedListings: string[] = [];
+  let totalBookings = 0;
+  let processedListings = 0;
 
-  return new Response(JSON.stringify({
-    success: true,
-    bookings_synced: bookingsSynced,
-    listings_attempted: totalListings,
-    failed_listings: failedListings,
-    time_taken: `${Math.round((Date.now() - start) / 1000)}s`
-  }), {
-    headers: { "Content-Type": "application/json" }
-  });
+  try {
+    // Get Guesty access token
+    const token = await getGuestyToken();
+
+    // Fetch all active listings
+    const { data: listings, error } = await supabase
+      .from('guesty_listings')
+      .select('id')
+      .eq('is_deleted', false)
+      .eq('sync_status', 'active');
+
+    if (error) throw error;
+
+    // Process each listing
+    for (const listing of listings) {
+      // Check if we're approaching the runtime limit
+      if (Date.now() - startTime > MAX_RUNTIME_MS) {
+        console.log('Approaching max runtime, stopping');
+        break;
+      }
+
+      try {
+        const bookingsCount = await syncListingWithRetry(supabase, token, listing.id);
+        totalBookings += bookingsCount;
+        processedListings++;
+        
+        // Add a delay between listings
+        if (processedListings < listings.length) {
+          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_LISTINGS_MS));
+        }
+      } catch (error) {
+        console.error(`Failed to sync listing ${listing.id}:`, error);
+        failedListings.push(listing.id);
+      }
+    }
+
+    const timeTaken = Math.round((Date.now() - startTime) / 1000);
+    const minutes = Math.floor(timeTaken / 60);
+    const seconds = timeTaken % 60;
+    const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    const response: SyncResponse = {
+      success: true,
+      listings_processed: processedListings,
+      total_bookings: totalBookings,
+      time_taken: formattedTime,
+      failed_listings: failedListings
+    };
+
+    return new Response(JSON.stringify(response), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error) {
+    console.error('Sync error:', error);
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        listings_processed: processedListings,
+        total_bookings: totalBookings,
+        failed_listings: failedListings
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
 });
