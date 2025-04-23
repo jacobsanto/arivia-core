@@ -25,31 +25,39 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
         .order("start_time", { ascending: false });
 
       if (error) throw error;
+      
+      // Create a properly typed array for the result
+      const result: BookingActivityEntry[] = [];
+      
+      // Process each log entry and push to the result array
+      if (data) {
+        for (const log of data) {
+          let bookingId = log.booking_id;
+          let guest_name = log.guest_name;
+          
+          const msgMatch = typeof log.message === "string" && log.message.match(/booking_id.?["']?:.?["']?([\w-]+)/i);
+          if (!bookingId && msgMatch) bookingId = msgMatch[1];
+          
+          const guestMatch = typeof log.message === "string" && log.message.match(/guest.?["']?:.?["']?([\w\s]+)/i);
+          if (!guest_name && guestMatch) guest_name = guestMatch[1];
+          
+          const { event_type } = parseEventTypeAndGuest(log.message || "");
 
-      return (data || []).map((log: any): BookingActivityEntry => {
-        let bookingId = log.booking_id;
-        let guest_name = log.guest_name;
-        
-        const msgMatch = typeof log.message === "string" && log.message.match(/booking_id.?["']?:.?["']?([\w-]+)/i);
-        if (!bookingId && msgMatch) bookingId = msgMatch[1];
-        
-        const guestMatch = typeof log.message === "string" && log.message.match(/guest.?["']?:.?["']?([\w\s]+)/i);
-        if (!guest_name && guestMatch) guest_name = guestMatch[1];
-        
-        const { event_type } = parseEventTypeAndGuest(log.message || "");
-
-        return {
-          id: log.id,
-          created_at: log.created_at,
-          start_time: log.start_time,
-          booking_id: bookingId || "Unknown",
-          guest_name,
-          event_type,
-          origin: log.sync_type === "webhook" ? "webhook" : "api",
-          message: log.message,
-          synced_at: log.start_time || log.created_at,
-        };
-      });
+          result.push({
+            id: log.id,
+            created_at: log.created_at,
+            start_time: log.start_time,
+            booking_id: bookingId || "Unknown",
+            guest_name,
+            event_type,
+            origin: log.sync_type === "webhook" ? "webhook" : "api",
+            message: log.message,
+            synced_at: log.start_time || log.created_at,
+          });
+        }
+      }
+      
+      return result;
     },
     enabled: !!listingId,
   });
