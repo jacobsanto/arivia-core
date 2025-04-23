@@ -5,6 +5,7 @@ import { CheckCircle2, RefreshCcw, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 interface GuestyConnectButtonProps {
   afterConnect?: () => void; // callback to refetch monitor, etc.
@@ -24,18 +25,15 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
   const handleConnect = async () => {
     setLoading(true);
     setErrorMsg(null);
-    // Save old lastConnect for error fallback
     try {
-      const resp = await fetch(`/functions/v1/guesty-auth-check`, {
+      const { data, error } = await supabase.functions.invoke("guesty-auth-check", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Supabase Edge Functions behind /functions/v1/
         },
       });
-      const data = await resp.json();
 
-      if (resp.ok && data.status === "ok") {
+      if (!error && data?.status === "ok") {
         setStatus("connected");
         setLastConnect(data.connected_at ? new Date(data.connected_at) : new Date());
         toast.success("Guesty connection successful", {
@@ -45,9 +43,10 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
         if (afterConnect) afterConnect();
       } else {
         setStatus("error");
-        setErrorMsg(data.message || "Unknown error");
+        // Prefer error returned from invoke; fall back to data.message, then a default.
+        setErrorMsg(error?.message || data?.message || "Unknown error");
         toast.error("Failed to connect", {
-          description: data.message || "Unknown error",
+          description: error?.message || data?.message || "Unknown error",
         });
       }
     } catch (err: any) {
@@ -61,7 +60,6 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
 
   // Set initial state on mount, try auto-fetch if needed
   React.useEffect(() => {
-    // On mount, show default Disconnected badge (could also fetch initial status here)
     setStatus("disconnected");
     setErrorMsg(null);
     setLastConnect(null);
@@ -153,3 +151,4 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
   );
 };
 export default GuestyConnectButton;
+
