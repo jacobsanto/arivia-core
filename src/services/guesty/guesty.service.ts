@@ -222,10 +222,16 @@ export const guestyService = {
       
       if (healthError && healthError.code !== 'PGRST116') throw healthError;
       
+      // Fix: Convert any string value from the health.status to one of the allowed status types
+      const connectionStatus: 'connected' | 'error' | 'disconnected' = 
+        health?.status === 'connected' ? 'connected' :
+        health?.status === 'error' ? 'error' :
+        'disconnected';
+      
       return {
         lastSync: (lastSync && lastSync.length > 0) ? lastSync[0].start_time : health?.last_synced || null,
         isInProgress: (inProgressSyncs && inProgressSyncs.length > 0),
-        status: health?.status || 'disconnected'
+        status: connectionStatus
       };
     } catch (error) {
       console.error('Error getting sync status:', error);
