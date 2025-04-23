@@ -26,31 +26,23 @@ export function calculateNextRetryTime(retryCount: number): number {
 // Extract rate limit information from Guesty API response headers
 export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
   try {
-    // Always store both rate_limit and limit if available
-    const rate_limit = parseInt(headers.get('x-ratelimit-limit') || '0');
-    // Use both for compatibility, but limit is the actual daily cap on some endpoints
+    // Use 'x-ratelimit-limit' for both legacy and new API
     const limitHeader = headers.get('x-ratelimit-limit');
-    const limit = limitHeader ? parseInt(limitHeader) : undefined;
+    const rate_limit = limitHeader ? parseInt(limitHeader) : 0;
     const remaining = parseInt(headers.get('x-ratelimit-remaining') || '0');
-
-    // Try to parse reset as timestamp, or fall back to calculating from expire-after
-    let reset: string;
-    const resetHeader = headers.get('x-ratelimit-reset');
-    if (resetHeader) {
-      reset = resetHeader;
-    } else {
-      // If no reset header, try to calculate from expire-after (seconds)
+    let resetString = headers.get('x-ratelimit-reset');
+    // If reset header is missing, try 'x-ratelimit-expire-after' (in seconds), fallback to 1 hour
+    if (!resetString) {
       const expireAfter = parseInt(headers.get('x-ratelimit-expire-after') || '3600');
-      reset = new Date(Date.now() + expireAfter * 1000).toISOString();
+      resetString = new Date(Date.now() + expireAfter * 1000).toISOString();
     }
-
-    if (rate_limit === 0 && (!limit || limit === 0)) return null;
+    if (rate_limit === 0) return null;
 
     return {
       rate_limit,
-      limit,
+      limit: rate_limit, // For compatibility; can be extended if API adds daily quotas
       remaining,
-      reset
+      reset: resetString || new Date(Date.now() + 3600000).toISOString()
     };
   } catch (error) {
     console.error('Error extracting rate limit info:', error);

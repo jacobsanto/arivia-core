@@ -37,13 +37,14 @@ export async function syncGuestyBookingsForListing(supabase: any, token: string,
           .from('guesty_api_usage')
           .insert({
             endpoint: 'reservations',
-            limit: rateLimitInfo.rate_limit,
+            rate_limit: rateLimitInfo.rate_limit,
+            limit: rateLimitInfo.limit || rateLimitInfo.rate_limit,
             remaining: rateLimitInfo.remaining,
             reset: rateLimitInfo.reset,
             timestamp: new Date().toISOString()
           });
       } catch (error) {
-        console.error('[GuestySync] Error storing rate limit info:', error);
+        console.error('[GuestySync] Error storing rate limit info: (reservations)', error);
       }
     }
     if (!response.ok) {

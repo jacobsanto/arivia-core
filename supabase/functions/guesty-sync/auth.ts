@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { extractRateLimitInfo } from './utils.ts';
 
@@ -89,8 +90,10 @@ export async function getGuestyToken(): Promise<string> {
             timestamp: new Date().toISOString()
           });
       } catch (error) {
-        console.error('Error storing rate limit info:', error);
+        console.error('Error storing rate limit info: (auth)', error);
       }
+    } else {
+      console.warn('No rate limit info found in token response headers');
     }
 
     // Upsert the new token

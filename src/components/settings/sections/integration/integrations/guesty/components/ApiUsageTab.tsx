@@ -28,6 +28,8 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
     return "bg-green-500";
   };
 
+  const hasAnyUsage = Object.keys(quotaUsage).length > 0;
+
   return (
     <div className="space-y-4">
       {remainingRequests !== null && (
@@ -43,7 +45,7 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
       <div className="space-y-2">
         <h3 className="text-sm font-medium">Endpoint Usage</h3>
         
-        {Object.keys(quotaUsage).length > 0 ? (
+        {hasAnyUsage ? (
           Object.entries(quotaUsage).map(([endpoint, usage]) => {
             const percentage = getProgressValue(usage.remaining, usage.limit);
             const colorClass = getProgressColor(percentage);
@@ -64,10 +66,15 @@ export const ApiUsageTab: React.FC<ApiUsageTabProps> = ({
         ) : (
           <div className="flex items-center justify-center py-3 text-muted-foreground text-xs">
             <Info className="h-3 w-3 mr-1" />
-            <span>No usage data available</span>
+            <span>
+              {remainingRequests === null
+                ? "No API usage data available"
+                : "No recent endpoint usage data recorded"}
+            </span>
           </div>
         )}
       </div>
     </div>
   );
 };
+

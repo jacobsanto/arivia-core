@@ -51,6 +51,20 @@ export async function syncGuestyListings(supabase: any, token: string): Promise<
         if (rateLimitInfo) {
           lastRateLimitInfo = rateLimitInfo;
           // Always store for endpoint 'listings'
+          try {
+            await supabase
+              .from('guesty_api_usage')
+              .insert({
+                endpoint: 'listings',
+                rate_limit: rateLimitInfo.rate_limit,
+                limit: rateLimitInfo.limit || rateLimitInfo.rate_limit,
+                remaining: rateLimitInfo.remaining,
+                reset: rateLimitInfo.reset,
+                timestamp: new Date().toISOString()
+              });
+          } catch (err) {
+            console.error('[GuestySync] Error storing listings rate limit info:', err);
+          }
           await storeRateLimitInfo(supabase, 'listings', rateLimitInfo);
           console.log(`Rate limit info - Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit || rateLimitInfo.rate_limit}`);
         }
