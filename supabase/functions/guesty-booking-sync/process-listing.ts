@@ -1,4 +1,3 @@
-
 import { ListingProcessResult } from './types.ts';
 
 export async function processListing(
@@ -12,6 +11,17 @@ export async function processListing(
     const result = await syncBookingsForListing(supabase, token, listingId);
     
     console.log(`Synced listing ${listingId}: ${result.total} bookings (${result.created} created, ${result.updated} updated, ${result.deleted} deleted)`);
+    
+    // Retrieve any new housekeeping tasks created during sync
+    const { data: newTasks } = await supabase
+      .from('housekeeping_tasks')
+      .select('id, task_type, due_date')
+      .eq('listing_id', listingId)
+      .gt('created_at', new Date(Date.now() - 60000).toISOString()); // Tasks created in last minute
+      
+    if (newTasks?.length > 0) {
+      console.log(`Generated ${newTasks.length} new housekeeping tasks for listing ${listingId}`);
+    }
     
     return {
       listingId,
