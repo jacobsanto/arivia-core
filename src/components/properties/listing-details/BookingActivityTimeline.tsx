@@ -18,8 +18,8 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sync_logs")
-        .select("id, created_at, start_time, message, sync_type, service, booking_id, guest_name")
-        .eq("service", "guesty")
+        .select("id, created_at, start_time, message, sync_type, provider, booking_id, guest_name")
+        .eq("provider", "guesty")
         .or('sync_type.eq.bookings,sync_type.eq.webhook')
         .contains("message", `"listing_id":"${listingId}"`)
         .order("start_time", { ascending: false });

@@ -1,15 +1,15 @@
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
-
 export async function cleanObsoleteBookings(
   supabase: any,
   listingId: string,
-  activeBookings: any[]
+  remoteBookings: any[]
 ): Promise<number> {
   try {
-    const today = new Date().toISOString().split('T')[0];
-    const activeIds = new Set(activeBookings.map(b => b.id || b._id));
+    // Extract IDs from remote bookings
+    const remoteIds = new Set(remoteBookings.map(b => b._id || b.id));
     
+    // Get all local bookings for this listing that aren't marked as cancelled
+    const today = new Date().toISOString().split('T')[0];
     const { data: localBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
@@ -18,34 +18,42 @@ export async function cleanObsoleteBookings(
       .neq('status', 'cancelled');
     
     if (error) {
-      console.error(`[GuestyBookingSync] Error querying local bookings for obsolete cleanup for listing ${listingId}:`, error);
+      console.error('Error fetching local bookings:', error);
       return 0;
     }
     
-    if (!localBookings || localBookings.length === 0) return 0;
+    if (!localBookings || localBookings.length === 0) {
+      return 0;
+    }
     
-    const bookingsToCancel = localBookings.filter(b => !activeIds.has(b.id));
-    if (bookingsToCancel.length === 0) return 0;
-
-    console.log(`[GuestyBookingSync] Marking ${bookingsToCancel.length} bookings as cancelled (obsolete)`);
+    // Filter out bookings that exist remotely
+    const obsoleteIds = localBookings
+      .filter(b => !remoteIds.has(b.id))
+      .map(b => b.id);
     
+    if (obsoleteIds.length === 0) {
+      return 0;
+    }
+    
+    console.log(`Marking ${obsoleteIds.length} obsolete bookings as cancelled`);
+    
+    // Update status to cancelled
     const { error: updateError } = await supabase
       .from('guesty_bookings')
-      .update({
+      .update({ 
         status: 'cancelled',
         last_synced: new Date().toISOString()
       })
-      .in('id', bookingsToCancel.map(b => b.id));
+      .in('id', obsoleteIds);
     
     if (updateError) {
-      console.error(`[GuestyBookingSync] Error cancelling obsolete bookings:`, updateError);
+      console.error('Error updating obsolete bookings:', updateError);
       return 0;
     }
     
-    return bookingsToCancel.length;
+    return obsoleteIds.length;
   } catch (error) {
-    console.error(`[GuestyBookingSync] Error in cleanObsoleteBookings:`, error);
+    console.error('Error in cleanObsoleteBookings:', error);
     return 0;
   }
 }
-

@@ -2,6 +2,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { SyncResponse, GuestyBooking } from './types.ts';
+import { createSyncLog, updateSyncLog } from './sync-log.ts';
+import { handleError } from './error-handlers.ts';
+import { processListings } from './listing-processor.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -37,91 +40,6 @@ async function getGuestyToken(): Promise<string> {
   return data.access_token;
 }
 
-async function fetchGuestyBookings(token: string, listingId: string): Promise<GuestyBooking[]> {
-  const bookings: GuestyBooking[] = [];
-  let page = 1;
-  const today = new Date().toISOString().split('T')[0];
-
-  while (true) {
-    const url = `https://open-api.guesty.com/v1/reservations?listingId=${listingId}&endDate[gte]=${today}&page=${page}`;
-    
-    const response = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch bookings: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const results = data.results || [];
-    
-    for (const booking of results) {
-      const totalGuests = 
-        (booking.guests?.adults || 0) + 
-        (booking.guests?.children || 0) + 
-        (booking.guests?.infants || 0);
-
-      bookings.push({
-        id: booking._id || booking.id,
-        listing_id: listingId,
-        guest_name: booking.guest?.fullName || null,
-        guest_email: booking.guest?.email || null,
-        amount_paid: booking.price?.totalPrice || 0,
-        currency: booking.price?.currency || 'EUR',
-        status: booking.status,
-        total_guests: totalGuests,
-        check_in: booking.startDate || booking.checkIn,
-        check_out: booking.endDate || booking.checkOut,
-        raw_data: booking,
-        last_synced: new Date().toISOString()
-      });
-    }
-
-    // If we got less results than the page size, we're done
-    if (results.length < 20) break;
-    page++;
-  }
-
-  return bookings;
-}
-
-async function syncListingWithRetry(
-  supabase: any,
-  token: string,
-  listingId: string,
-  retryCount = 0
-): Promise<number> {
-  try {
-    const bookings = await fetchGuestyBookings(token, listingId);
-    
-    // Upsert bookings in batches
-    const chunkSize = 20;
-    for (let i = 0; i < bookings.length; i += chunkSize) {
-      const chunk = bookings.slice(i, i + chunkSize);
-      const { error } = await supabase
-        .from('guesty_bookings')
-        .upsert(chunk, {
-          onConflict: 'id'
-        });
-
-      if (error) throw error;
-    }
-
-    return bookings.length;
-  } catch (error) {
-    console.error(`Error syncing listing ${listingId}:`, error);
-    if (retryCount < MAX_RETRIES) {
-      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
-      return syncListingWithRetry(supabase, token, listingId, retryCount + 1);
-    }
-    throw error;
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -132,75 +50,128 @@ serve(async (req) => {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
   const failedListings: string[] = [];
   let totalBookings = 0;
-  let processedListings = 0;
+  let listingsSynced = 0;
+  let listingsAttempted = 0;
+
+  // Create a sync log entry to track this operation
+  let syncLog = null;
+  try {
+    const logData = {
+      provider: 'guesty',
+      sync_type: 'bookings',
+      status: 'in_progress',
+      start_time: new Date().toISOString(),
+      message: 'Starting booking sync process'
+    };
+    syncLog = await createSyncLog(supabase, logData);
+  } catch (error) {
+    console.error('Failed to create sync log entry:', error);
+  }
 
   try {
+    // Parse request body
+    const requestBody = await req.json().catch(() => ({}));
+    const { listingId, syncAll, startIndex = 0, totalListings = 0 } = requestBody;
+
     // Get Guesty access token
     const token = await getGuestyToken();
 
-    // Fetch all active listings
-    const { data: listings, error } = await supabase
-      .from('guesty_listings')
-      .select('id')
-      .eq('is_deleted', false)
-      .eq('sync_status', 'active');
-
-    if (error) throw error;
-
-    // Process each listing
-    for (const listing of listings) {
-      // Check if we're approaching the runtime limit
-      if (Date.now() - startTime > MAX_RUNTIME_MS) {
-        console.log('Approaching max runtime, stopping');
-        break;
-      }
-
+    // Process different sync scenarios
+    if (listingId) {
+      // Process a single listing
+      console.log(`Processing single listing: ${listingId}`);
+      listingsAttempted = 1;
+      
       try {
-        const bookingsCount = await syncListingWithRetry(supabase, token, listing.id);
-        totalBookings += bookingsCount;
-        processedListings++;
+        const { results, totalBookingsSynced } = await processListings(
+          supabase, token, [listingId], startTime, MAX_RUNTIME_MS
+        );
         
-        // Add a delay between listings
-        if (processedListings < listings.length) {
-          await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_LISTINGS_MS));
+        totalBookings = totalBookingsSynced;
+        listingsSynced = results.filter(r => r.success).length;
+        
+        if (results.length > 0 && !results[0].success) {
+          failedListings.push(listingId);
         }
       } catch (error) {
-        console.error(`Failed to sync listing ${listing.id}:`, error);
-        failedListings.push(listing.id);
+        console.error(`Failed to sync listing ${listingId}:`, error);
+        failedListings.push(listingId);
       }
+    } else {
+      // Process all listings or a batch
+      const { data: listings, error } = await supabase
+        .from('guesty_listings')
+        .select('id')
+        .eq('is_deleted', false)
+        .eq('sync_status', 'active')
+        .range(startIndex, startIndex + 19); // Process 20 listings at a time
+      
+      if (error) {
+        throw new Error(`Failed to fetch listings: ${error.message}`);
+      }
+      
+      if (!listings || listings.length === 0) {
+        throw new Error('No active listings found to sync');
+      }
+      
+      const listingsToSync = listings.map(l => l.id);
+      listingsAttempted = listingsToSync.length;
+      
+      console.log(`Processing ${listingsToSync.length} listings`);
+      
+      const { results, totalBookingsSynced, created, updated, deleted } = 
+        await processListings(supabase, token, listingsToSync, startTime, MAX_RUNTIME_MS);
+      
+      totalBookings = totalBookingsSynced;
+      listingsSynced = results.filter(r => r.success).length;
+      
+      // Collect failed listings
+      results
+        .filter(r => !r.success)
+        .forEach(r => failedListings.push(r.listingId));
     }
 
+    // Calculate stats
     const timeTaken = Math.round((Date.now() - startTime) / 1000);
     const minutes = Math.floor(timeTaken / 60);
     const seconds = timeTaken % 60;
     const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
+    // Determine if this was a full or partial success
+    const syncStatus = failedListings.length > 0 ? 'partial' : 'completed';
+    let syncMessage = `Successfully synced ${totalBookings} bookings across ${listingsSynced} listings`;
+    
+    if (failedListings.length > 0) {
+      syncMessage += `, ${failedListings.length} listings failed`;
+    }
+
+    // Update sync log
+    if (syncLog?.id) {
+      await updateSyncLog(supabase, syncLog.id, {
+        status: syncStatus,
+        end_time: new Date().toISOString(),
+        message: syncMessage,
+        entities_synced: totalBookings,
+        sync_duration_ms: Date.now() - startTime,
+        bookings_created: 0, // These would need to come from processListings
+        bookings_updated: 0,
+        bookings_deleted: 0
+      });
+    }
+
     const response: SyncResponse = {
       success: true,
-      listings_processed: processedListings,
-      total_bookings: totalBookings,
-      time_taken: formattedTime,
-      failed_listings: failedListings
+      bookings_synced: totalBookings,
+      listings_attempted: listingsAttempted,
+      listings_synced: listingsSynced,
+      failed_listings: failedListings,
+      time_taken: formattedTime
     };
 
     return new Response(JSON.stringify(response), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
-
   } catch (error) {
-    console.error('Sync error:', error);
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        listings_processed: processedListings,
-        total_bookings: totalBookings,
-        failed_listings: failedListings
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return handleError(error, supabase, syncLog, startTime);
   }
 });
