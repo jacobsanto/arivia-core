@@ -30,6 +30,8 @@ export interface GuestyBookingDB {
   check_out: string;
   status: string;
   raw_data?: Record<string, any>;
+  webhook_updated?: boolean;
+  last_synced?: string;
 }
 
 export interface GuestySyncResponse {
@@ -179,6 +181,58 @@ export const guestyService = {
       return { 
         success: false, 
         error: error instanceof Error ? error.message : `Failed to sync bookings for listing ${listingId}`
+      };
+    }
+  },
+  
+  // Helper to check sync status
+  async getSyncStatus(): Promise<{
+    lastSync: string | null; 
+    isInProgress: boolean; 
+    status: 'connected' | 'error' | 'disconnected'
+  }> {
+    try {
+      // Check for in-progress syncs
+      const { data: inProgressSyncs, error: syncError } = await supabase
+        .from('sync_logs')
+        .select('id')
+        .eq('status', 'in_progress')
+        .eq('service', 'guesty')
+        .limit(1);
+      
+      if (syncError) throw syncError;
+      
+      // Get latest successful sync
+      const { data: lastSync, error: lastSyncError } = await supabase
+        .from('sync_logs')
+        .select('start_time')
+        .eq('status', 'completed')
+        .eq('service', 'guesty')
+        .order('start_time', { ascending: false })
+        .limit(1);
+      
+      if (lastSyncError) throw lastSyncError;
+      
+      // Check integration health
+      const { data: health, error: healthError } = await supabase
+        .from('integration_health')
+        .select('status, last_synced')
+        .eq('provider', 'guesty')
+        .single();
+      
+      if (healthError && healthError.code !== 'PGRST116') throw healthError;
+      
+      return {
+        lastSync: (lastSync && lastSync.length > 0) ? lastSync[0].start_time : health?.last_synced || null,
+        isInProgress: (inProgressSyncs && inProgressSyncs.length > 0),
+        status: health?.status || 'disconnected'
+      };
+    } catch (error) {
+      console.error('Error getting sync status:', error);
+      return {
+        lastSync: null,
+        isInProgress: false,
+        status: 'error'
       };
     }
   }

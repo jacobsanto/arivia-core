@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Json } from "@/integrations/supabase/types";
+import { toast } from "sonner";
+import { guestyService } from "@/services/guesty/guesty.service";
 
 // Improved types for Guesty bookings with task and listing context
 export interface GuestyBookingDb {
@@ -15,6 +17,7 @@ export interface GuestyBookingDb {
   created_at?: string;
   updated_at?: string;
   last_synced?: string;
+  webhook_updated?: boolean;
 }
 
 export interface CleaningTaskDb {
@@ -38,12 +41,16 @@ interface UseGuestyBookingsResult {
   loading: boolean;
   error: Error | null;
   refetch: () => void;
+  syncBookings: () => Promise<void>;
+  lastSynced: string | null;
 }
 
 export function useGuestyBookings(listingId?: string | number): UseGuestyBookingsResult {
   const [bookingsWithTasks, setBookingsWithTasks] = useState<BookingWithTask[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [lastSynced, setLastSynced] = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -73,6 +80,22 @@ export function useGuestyBookings(listingId?: string | number): UseGuestyBooking
         .eq("listing_id", listingIdStr);
       if (taskError) throw taskError;
 
+      // Find last synced timestamp
+      if (bookings && bookings.length > 0) {
+        // Find the most recent last_synced timestamp
+        const latestSync = bookings.reduce((latest, booking) => {
+          if (!booking.last_synced) return latest;
+          if (!latest || new Date(booking.last_synced) > new Date(latest)) {
+            return booking.last_synced;
+          }
+          return latest;
+        }, null as string | null);
+        
+        setLastSynced(latestSync);
+      } else {
+        setLastSynced(null);
+      }
+
       // For each booking, attach any task where booking_id matches
       const result: BookingWithTask[] = (bookings || []).map((booking: any) => {
         const cleaningTask = (tasks || []).find(
@@ -92,6 +115,34 @@ export function useGuestyBookings(listingId?: string | number): UseGuestyBooking
     }
   };
 
+  // Manually trigger a sync for this specific listing
+  const syncBookings = async () => {
+    if (!listingId) return;
+    
+    setIsSyncing(true);
+    try {
+      const result = await guestyService.syncBookingsForListing(String(listingId));
+      
+      if (result.success) {
+        toast.success("Bookings synchronized", {
+          description: `Successfully synchronized ${result.bookingsSynced} bookings`
+        });
+        // Refetch to get the updated data
+        await fetchAll();
+      } else {
+        toast.error("Sync failed", {
+          description: result.error || "Unknown error occurred"
+        });
+      }
+    } catch (err: any) {
+      toast.error("Sync error", { 
+        description: err.message || "Failed to sync bookings" 
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   useEffect(() => {
     fetchAll();
     // eslint-disable-next-line
@@ -99,8 +150,10 @@ export function useGuestyBookings(listingId?: string | number): UseGuestyBooking
 
   return {
     bookingsWithTasks,
-    loading,
+    loading: loading || isSyncing,
     error,
-    refetch: fetchAll
+    refetch: fetchAll,
+    syncBookings,
+    lastSynced
   };
 }

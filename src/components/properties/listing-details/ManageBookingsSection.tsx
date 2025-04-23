@@ -1,12 +1,13 @@
 
 import React from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useGuestyBookings } from "./useGuestyBookings";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
 import { ManageBookingsList } from "./ManageBookingsList";
+import { formatDistanceToNow } from "date-fns";
 
 interface ManageBookingsSectionProps {
   listing: any;
@@ -17,11 +18,16 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   listing,
   isLoading,
 }) => {
-  const { bookingsWithTasks, loading, error, refetch } = useGuestyBookings(listing?.id);
+  const { bookingsWithTasks, loading, error, refetch, syncBookings, lastSynced } = useGuestyBookings(listing?.id);
 
   const sortedBookingsWithTasks = bookingsWithTasks.slice().sort((a, b) =>
     new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
   );
+
+  // Format the last synced time for display
+  const formattedLastSync = lastSynced 
+    ? formatDistanceToNow(new Date(lastSynced), { addSuffix: true })
+    : 'never';
 
   const handleTriggerCleaning = async (bookingId: string) => {
     try {
@@ -87,15 +93,35 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   }
 
   if (sortedBookingsWithTasks.length === 0) {
-    // Remove Sync Bookings button as sync is automatic
     return (
-      <BookingsEmptyState onSync={undefined} isSyncing={false} />
+      <BookingsEmptyState 
+        onSync={syncBookings} 
+        isSyncing={loading} 
+      />
     );
   }
 
   return (
     <div className="space-y-6">
-      <ManageBookingsHeader onSync={undefined} isSyncing={false} />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b pb-4">
+        <div>
+          <h3 className="text-lg font-semibold">Bookings</h3>
+          <p className="text-sm text-muted-foreground">
+            {sortedBookingsWithTasks.length} booking{sortedBookingsWithTasks.length !== 1 ? 's' : ''} found
+            {lastSynced && <span> · Last updated {formattedLastSync}</span>}
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={syncBookings}
+          disabled={loading}
+        >
+          <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Sync Bookings
+        </Button>
+      </div>
+      
       <ManageBookingsList
         bookingsWithTasks={sortedBookingsWithTasks}
         onTriggerCleaning={handleTriggerCleaning}

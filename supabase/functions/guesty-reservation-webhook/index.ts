@@ -82,6 +82,10 @@ serve(async (req) => {
     // Parse the request payload
     const payload = await req.json();
 
+    // Detect webhook event type
+    const eventType = payload.event || "reservation_updated";
+    console.log(`Processing Guesty webhook event: ${eventType}`);
+
     // Extract booking data (handling different payload formats)
     const booking = payload.booking || payload.reservation || payload || {};
 
@@ -104,7 +108,7 @@ serve(async (req) => {
 
     // Upsert booking data with timeout protection
     const upsertResult = await Promise.race([
-      upsertBooking(supabase, bookingData),
+      upsertBooking(supabase, bookingData, eventType),
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error(`Database operation timed out after ${TIMEOUT_MS}ms`)), TIMEOUT_MS)
       )
@@ -115,6 +119,7 @@ serve(async (req) => {
       success: !upsertResult.error,
       message: upsertResult.message,
       listingId: bookingData.listingId,
+      eventType
     });
 
     // Return appropriate response
@@ -129,7 +134,8 @@ serve(async (req) => {
     return createResponse({
       success: true,
       message: upsertResult.message,
-      bookingId: bookingData.id
+      bookingId: bookingData.id,
+      eventType
     });
 
   } catch (err) {
@@ -143,6 +149,7 @@ serve(async (req) => {
         await logWebhookEvent(supabase, {
           success: false,
           message: `Error processing webhook: ${err.message || "Unknown error"}`,
+          eventType: "error"
         });
       }
     } catch (logErr) {
@@ -217,9 +224,12 @@ async function processBookingData(booking: any) {
 /**
  * Upsert booking data into the database
  */
-async function upsertBooking(supabase: any, bookingData: any) {
+async function upsertBooking(supabase: any, bookingData: any, eventType: string) {
   try {
     const { id, listingId, guestName, checkIn, checkOut, status, rawData } = bookingData;
+    
+    // Special handling for cancelled bookings from webhook
+    const finalStatus = eventType === "reservation_cancelled" ? "cancelled" : status;
     
     const { data, error } = await supabase
       .from("guesty_bookings")
@@ -229,8 +239,9 @@ async function upsertBooking(supabase: any, bookingData: any) {
         guest_name: guestName, 
         check_in: checkIn,
         check_out: checkOut,
-        status,
+        status: finalStatus,
         raw_data: rawData,
+        webhook_updated: true,
         last_synced: new Date().toISOString()
       }], 
       { onConflict: "id" }
@@ -244,7 +255,9 @@ async function upsertBooking(supabase: any, bookingData: any) {
     }
     
     // Identify if this was an insert or update
-    const operation = error ? "failed" : "updated";
+    const operation = eventType === "reservation_cancelled" ? "cancelled" : 
+                      eventType === "reservation_created" ? "created" : "updated";
+                      
     return {
       error: null,
       message: `Booking ${operation} for listing ${listingId}`
@@ -260,7 +273,12 @@ async function upsertBooking(supabase: any, bookingData: any) {
 /**
  * Log webhook event to sync_logs table
  */
-async function logWebhookEvent(supabase: any, data: { success: boolean, message: string, listingId?: string }) {
+async function logWebhookEvent(supabase: any, data: { 
+  success: boolean, 
+  message: string, 
+  listingId?: string,
+  eventType?: string 
+}) {
   try {
     const now = new Date().toISOString();
     await supabase
@@ -271,7 +289,7 @@ async function logWebhookEvent(supabase: any, data: { success: boolean, message:
         status: data.success ? "success" : "error",
         start_time: now,
         end_time: now,
-        message: data.message || (data.success ? "Webhook processed successfully" : "Webhook processing failed"),
+        message: `${data.eventType || "webhook"}: ${data.message || (data.success ? "Webhook processed successfully" : "Webhook processing failed")}`,
         items_count: 1,
         // Include listing ID if available
         ...(data.listingId ? { 
