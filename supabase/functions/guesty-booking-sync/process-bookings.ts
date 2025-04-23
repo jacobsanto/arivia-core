@@ -34,6 +34,7 @@ export async function processBookings(
       
       // Insert new bookings
       if (newBookings.length > 0) {
+        console.log(`[GuestySync] Inserting ${newBookings.length} new bookings`);
         const { error: insertError } = await supabase
           .from('guesty_bookings')
           .insert(newBookings);
@@ -42,6 +43,7 @@ export async function processBookings(
           console.error('[GuestySync] Error inserting new bookings:', insertError);
         } else {
           created += newBookings.length;
+          console.log(`[GuestySync] Successfully inserted ${newBookings.length} new bookings`);
         }
       }
       
@@ -56,7 +58,13 @@ export async function processBookings(
           console.error(`[GuestySync] Error updating booking ${booking.id}:`, updateError);
         } else {
           updated++;
+          console.log(`[GuestySync] Successfully updated booking ${booking.id}`);
         }
+      }
+
+      // Small delay between batches to prevent rate limiting
+      if (i + batchSize < bookings.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (error) {
       console.error('[GuestySync] Error processing booking batch:', error);

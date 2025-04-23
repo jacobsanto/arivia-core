@@ -15,7 +15,7 @@ export function prepareBookings(remoteBookings: any[]): any[] {
           return null;
         }
 
-        // Calculate total guests
+        // Calculate total guests with proper fallbacks
         const totalGuests = 
           (parseInt(guests.adults) || 0) + 
           (parseInt(guests.children) || 0) + 
@@ -34,7 +34,7 @@ export function prepareBookings(remoteBookings: any[]): any[] {
           status: normalizedStatus,
           amount_paid: price.totalPrice || null,
           currency: price.currency || 'EUR',
-          total_guests: totalGuests,
+          total_guests: totalGuests || 1,
           booking_created: booking.createdAt || null,
           booking_updated: booking.updatedAt || null,
           last_synced: new Date().toISOString(),
