@@ -2,14 +2,11 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { getGuestyToken } from './auth.ts';
-import { syncBookingsForListing } from './booking-sync.ts';
 import { createSyncLog, updateSyncLog, updateIntegrationHealth } from './sync-log.ts';
-import { delay } from './utils.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { handleError } from './error-handlers.ts';
+import { processListings } from './listing-processor.ts';
+import { createSuccessResponse } from './sync-result-handlers.ts';
+import { corsHeaders } from './utils.ts';
 
 // Maximum execution time to leave some buffer (Edge functions timeout at 60s)
 const MAX_EXECUTION_TIME = 50000; // 50 seconds in ms
@@ -47,7 +44,6 @@ serve(async (req) => {
     });
     
     const token = await getGuestyToken();
-    
     let listingsToSync: string[] = [];
     
     if (syncAll) {
@@ -64,18 +60,6 @@ serve(async (req) => {
       }
         
       listingsToSync = listings?.map(listing => listing.id) || [];
-      
-      const { count: totalListingsCount } = await supabase
-        .from('guesty_listings')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_deleted', false)
-        .eq('sync_status', 'active');
-      
-      const remainingListings = totalListingsCount - (startIndex + listingsToSync.length);
-      
-      if (remainingListings > 0) {
-        console.log(`Processing ${listingsToSync.length} listings in this run. ${remainingListings} listings will need additional sync requests.`);
-      }
     } else if (listingId) {
       listingsToSync = [listingId];
     } else {
@@ -86,54 +70,15 @@ serve(async (req) => {
       throw new Error('No listings found to sync');
     }
     
-    const results = [];
-    let created = 0;
-    let updated = 0;
-    let deleted = 0;
-    
-    for (const id of listingsToSync) {
-      try {
-        if (Date.now() - startTime > MAX_EXECUTION_TIME) {
-          console.log(`[GuestyBookingSync] Approaching maximum execution time, stopping after ${results.length} listings`);
-          break;
-        }
-        
-        console.log(`Processing listing: ${id}`);
-        const syncResult = await syncBookingsForListing(supabase, token, id);
-        totalBookingsSynced += syncResult.total;
-        created += syncResult.created;
-        updated += syncResult.updated;
-        deleted += syncResult.deleted;
-        
-        results.push({ 
-          listingId: id, 
-          bookingsSynced: syncResult.total, 
-          created: syncResult.created,
-          updated: syncResult.updated, 
-          deleted: syncResult.deleted,
-          endpoint: syncResult.endpoint,
-          success: true 
-        });
-        
-        if (listingsToSync.length > 1) {
-          await delay(1000);
-        }
-      } catch (error) {
-        console.error(`Error syncing bookings for listing ${id}:`, error);
-        results.push({ 
-          listingId: id, 
-          error: error instanceof Error ? error.message : 'Unknown error',
-          success: false
-        });
-      }
-    }
+    const { results, totalBookingsSynced: total, created, updated, deleted } = 
+      await processListings(supabase, token, listingsToSync, startTime, MAX_EXECUTION_TIME);
     
     await updateSyncLog(supabase, syncLog.id, {
       status: 'completed',
       end_time: new Date().toISOString(),
-      items_count: totalBookingsSynced,
+      items_count: total,
       sync_duration: Date.now() - startTime,
-      message: `Successfully synced ${totalBookingsSynced} bookings across ${results.length} listings`,
+      message: `Successfully synced ${total} bookings across ${results.length} listings`,
       bookings_created: created,
       bookings_updated: updated,
       bookings_deleted: deleted
@@ -143,61 +88,10 @@ serve(async (req) => {
       last_bookings_synced: new Date().toISOString()
     });
     
-    const moreListingsToProcess = syncAll && startIndex + results.length < (requestData.totalListings || 0);
-    
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Successfully synced ${totalBookingsSynced} bookings`,
-        bookingsSynced: totalBookingsSynced,
-        listings: results.length,
-        created: created,
-        updated: updated,
-        deleted: deleted,
-        results: results,
-        moreListingsToProcess: moreListingsToProcess,
-        processedCount: results.length,
-        executionTime: Date.now() - startTime
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return createSuccessResponse(total, results, created, updated, deleted, startTime);
     
   } catch (error) {
-    console.error('Booking sync error:', error);
-    
-    if (syncLog?.id && supabase) {
-      await updateSyncLog(supabase, syncLog.id, {
-        status: 'error',
-        end_time: new Date().toISOString(),
-        message: error instanceof Error ? error.message : 'Unknown error',
-        sync_duration: Date.now() - startTime
-      });
-    }
-
-    const isRateLimit = error instanceof Error && 
-      (error.message?.includes('429') || error.message?.includes('Too Many Requests'));
-    
-    if (supabase) {
-      await updateIntegrationHealth(supabase, {
-        status: 'error',
-        last_error: error instanceof Error ? error.message : 'Unknown error',
-        is_rate_limited: isRateLimit
-      });
-    }
-    
-    return new Response(
-      JSON.stringify({
-        success: false,
-        message: error instanceof Error ? error.message : 'Unknown error during booking sync',
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }),
-      {
-        status: isRateLimit ? 429 : 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return handleError(error, supabase, syncLog, startTime);
   }
 });
 

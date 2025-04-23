@@ -1,4 +1,3 @@
-
 export interface RateLimitInfo {
   rate_limit: number;
   remaining: number;
@@ -26,7 +25,11 @@ export function extractRateLimitInfo(headers: Headers): RateLimitInfo | null {
   }
 }
 
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 export function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
