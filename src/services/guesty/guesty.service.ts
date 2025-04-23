@@ -4,6 +4,7 @@
 import { guestyListingsService } from './guestyListings.service';
 import { guestyBookingsService } from './guestyBookings.service';
 import { guestySyncService } from './guestySync.service';
+import { guestyBookingSyncService } from './guestyBookingSyncService';
 
 import type {
   GuestyListingDB,
@@ -15,6 +16,7 @@ export const guestyService = {
   ...guestyListingsService,
   ...guestyBookingsService,
   ...guestySyncService,
+  ...guestyBookingSyncService,
 };
 
 export type {

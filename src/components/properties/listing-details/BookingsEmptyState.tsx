@@ -2,12 +2,13 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookingSyncButton } from "./BookingSyncButton";
 
 interface BookingsEmptyStateProps {
   onSync: () => void;
   isSyncing: boolean;
 }
+
 const BookingsEmptyState: React.FC<BookingsEmptyStateProps> = ({ onSync, isSyncing }) => (
   <Card className="border border-dashed">
     <CardContent className="flex flex-col items-center justify-center p-6 text-center">
@@ -16,9 +17,10 @@ const BookingsEmptyState: React.FC<BookingsEmptyStateProps> = ({ onSync, isSynci
       <p className="text-muted-foreground mb-4">
         This property doesn't have any bookings yet.
       </p>
-      <Button onClick={onSync} disabled={isSyncing}>
-        {isSyncing ? "Syncing..." : "Sync with Guesty"}
-      </Button>
+      <BookingSyncButton 
+        variant="default" 
+        onSyncComplete={onSync}
+      />
     </CardContent>
   </Card>
 );

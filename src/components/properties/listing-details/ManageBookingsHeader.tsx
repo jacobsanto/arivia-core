@@ -1,37 +1,23 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Calendar, Loader2 } from "lucide-react";
+import { BookingSyncButton } from "./BookingSyncButton";
 
 interface ManageBookingsHeaderProps {
-  onSync: () => void;
-  isSyncing: boolean;
+  listingId: string;
+  onSyncComplete: () => void;
 }
 
 const ManageBookingsHeader: React.FC<ManageBookingsHeaderProps> = ({
-  onSync,
-  isSyncing,
+  listingId,
+  onSyncComplete,
 }) => (
   <div className="flex items-center justify-between">
     <h2 className="text-xl font-semibold">Bookings</h2>
-    <Button
-      onClick={onSync}
-      disabled={isSyncing}
-      variant="outline"
+    <BookingSyncButton 
+      listingId={listingId} 
+      onSyncComplete={onSyncComplete} 
       size="sm"
-    >
-      {isSyncing ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Syncing...
-        </>
-      ) : (
-        <>
-          <Calendar className="h-4 w-4 mr-2" />
-          Sync Bookings
-        </>
-      )}
-    </Button>
+    />
   </div>
 );
 

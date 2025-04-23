@@ -1,13 +1,14 @@
 
 import React from "react";
-import { Loader2, RefreshCcw } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useGuestyBookings } from "./useGuestyBookings";
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
 import { ManageBookingsList } from "./ManageBookingsList";
-import { formatDistanceToNow } from "date-fns";
+import { BookingSyncStatus } from "./BookingSyncStatus";
+import { useBookingSync } from "@/hooks/useBookingSync";
 
 interface ManageBookingsSectionProps {
   listing: any;
@@ -18,16 +19,15 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   listing,
   isLoading,
 }) => {
-  const { bookingsWithTasks, loading, error, refetch, syncBookings, lastSynced } = useGuestyBookings(listing?.id);
+  const { bookingsWithTasks, loading, error, refetch, lastSynced } = useGuestyBookings(listing?.id);
+  const { isSyncing, syncBookings } = useBookingSync({
+    listingId: listing?.id,
+    onSyncComplete: refetch
+  });
 
   const sortedBookingsWithTasks = bookingsWithTasks.slice().sort((a, b) =>
     new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
   );
-
-  // Format the last synced time for display
-  const formattedLastSync = lastSynced 
-    ? formatDistanceToNow(new Date(lastSynced), { addSuffix: true })
-    : 'never';
 
   const handleTriggerCleaning = async (bookingId: string) => {
     try {
@@ -96,7 +96,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
     return (
       <BookingsEmptyState 
         onSync={syncBookings} 
-        isSyncing={loading} 
+        isSyncing={isSyncing} 
       />
     );
   }
@@ -108,18 +108,13 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
           <h3 className="text-lg font-semibold">Bookings</h3>
           <p className="text-sm text-muted-foreground">
             {sortedBookingsWithTasks.length} booking{sortedBookingsWithTasks.length !== 1 ? 's' : ''} found
-            {lastSynced && <span> · Last updated {formattedLastSync}</span>}
           </p>
+          <BookingSyncStatus lastSynced={lastSynced} />
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={syncBookings}
-          disabled={loading}
-        >
-          <RefreshCcw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Sync Bookings
-        </Button>
+        <ManageBookingsHeader
+          listingId={listing.id}
+          onSyncComplete={refetch}
+        />
       </div>
       
       <ManageBookingsList
