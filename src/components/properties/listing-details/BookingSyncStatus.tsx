@@ -1,46 +1,36 @@
 
-import React from 'react';
-import { Progress } from '@/components/ui/progress';
-import { format, formatDistanceToNow } from 'date-fns';
+import React from "react";
+import { format, formatDistanceToNow, isValid } from "date-fns";
+import { InfoCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BookingSyncStatusProps {
   lastSynced: string | null;
-  progress?: number | null;
 }
 
-export const BookingSyncStatus: React.FC<BookingSyncStatusProps> = ({ 
-  lastSynced, 
-  progress 
-}) => {
-  if (!lastSynced && !progress) return null;
+export const BookingSyncStatus: React.FC<BookingSyncStatusProps> = ({ lastSynced }) => {
+  if (!lastSynced) return null;
+  
+  const syncDate = new Date(lastSynced);
+  
+  if (!isValid(syncDate)) return null;
+  
+  const formattedDate = format(syncDate, "PPp");
+  const timeAgo = formatDistanceToNow(syncDate, { addSuffix: true });
   
   return (
-    <div className="space-y-2 text-sm text-muted-foreground">
-      {progress !== null && progress !== undefined && progress > 0 && progress < 100 && (
-        <div className="space-y-1">
-          <div className="flex justify-between">
-            <span>Sync in progress</span>
-            <span>{progress}%</span>
-          </div>
-          <Progress 
-            value={progress}
-            className="h-2"
-            style={{ "--progress-indicator-color": "var(--primary)" } as React.CSSProperties}
-          />
-        </div>
-      )}
-      
-      {lastSynced && (
-        <div className="flex items-center gap-1">
-          <span>Last synced: </span>
-          <time 
-            dateTime={lastSynced}
-            title={format(new Date(lastSynced), 'PPpp')}
-          >
-            {formatDistanceToNow(new Date(lastSynced), { addSuffix: true })}
-          </time>
-        </div>
-      )}
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="text-xs text-muted-foreground flex items-center">
+            <InfoCircle className="h-3 w-3 mr-1" /> 
+            Last synced {timeAgo}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>Last synced at {formattedDate}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };

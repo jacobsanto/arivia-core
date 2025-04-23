@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, DollarSign, ChevronDown, ChevronUp } from "lucide-react";
+import { Calendar, Users, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDate } from '@/services/dataFormatService';
 import { BookingTaskBadge } from "./BookingTaskBadge";
+import { BookingFinancials } from "./BookingFinancials";
 
 interface BookingItemProps {
   booking: any;
@@ -53,16 +54,6 @@ export const BookingItem: React.FC<BookingItemProps> = ({
     }
   };
 
-  const formatAmount = (rawData: any) => {
-    if (!rawData?.money) return 'N/A';
-    const amount = rawData.money.netAmount;
-    const currency = rawData.money.currency || 'EUR';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
-    }).format(amount);
-  };
-
   return (
     <Card className="mb-4 overflow-hidden">
       <CardContent className="p-4">
@@ -86,10 +77,8 @@ export const BookingItem: React.FC<BookingItemProps> = ({
             <Users className="h-4 w-4 mr-2" />
             <span>{guestDetails || 'No guest info'}</span>
           </div>
-          <div className="flex items-center">
-            <DollarSign className="h-4 w-4 mr-2" />
-            <span>{formatAmount(booking.raw_data)}</span>
-          </div>
+          
+          <BookingFinancials booking={booking} isExpanded={isExpanded} />
         </div>
 
         {isExpanded && (

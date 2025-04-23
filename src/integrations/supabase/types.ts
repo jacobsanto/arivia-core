@@ -335,10 +335,17 @@ export type Database = {
       }
       financial_reports: {
         Row: {
+          amount_paid: number | null
+          booking_id: string | null
           category: string
+          channel_fee: number | null
+          check_in: string | null
+          check_out: string | null
           created_at: string | null
+          currency: string | null
           expenses: number
           id: string
+          listing_id: string | null
           margin: string
           month: string
           profit: number
@@ -347,10 +354,17 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          amount_paid?: number | null
+          booking_id?: string | null
           category?: string
+          channel_fee?: number | null
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string | null
+          currency?: string | null
           expenses: number
           id?: string
+          listing_id?: string | null
           margin: string
           month: string
           profit: number
@@ -359,10 +373,17 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          amount_paid?: number | null
+          booking_id?: string | null
           category?: string
+          channel_fee?: number | null
+          check_in?: string | null
+          check_out?: string | null
           created_at?: string | null
+          currency?: string | null
           expenses?: number
           id?: string
+          listing_id?: string | null
           margin?: string
           month?: string
           profit?: number
@@ -370,7 +391,15 @@ export type Database = {
           revenue?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "financial_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "guesty_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       guesty_api_usage: {
         Row: {
