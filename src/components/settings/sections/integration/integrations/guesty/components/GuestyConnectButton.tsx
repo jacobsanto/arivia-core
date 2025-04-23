@@ -92,16 +92,16 @@ export const GuestyConnectButton: React.FC<GuestyConnectButtonProps> = ({ afterC
       <div className={cn("flex-1 min-w-0 flex items-center gap-2")}>
         <Button
           variant="outline"
-          disabled={isFetching || mutation.isLoading}
+          disabled={isFetching || mutation.isPending}
           onClick={() => mutation.mutate()}
           className={cn(
             "w-full md:w-auto justify-center flex items-center gap-2 px-4 py-2",
             colorClass,
-            mutation.isLoading ? "opacity-70" : ""
+            mutation.isPending ? "opacity-70" : ""
           )}
         >
           <Icon className="h-5 w-5 mr-2" />
-          {mutation.isLoading ? "Connecting..." : buttonLabel}
+          {mutation.isPending ? "Connecting..." : buttonLabel}
         </Button>
         {/* Optional: additional info */}
         <span className={cn(
