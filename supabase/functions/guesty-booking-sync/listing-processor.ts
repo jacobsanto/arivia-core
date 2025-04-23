@@ -23,8 +23,6 @@ export async function processListings(
     }
 
     try {
-      // Import dynamically to avoid circular dependencies
-      // This is a common pattern in Deno edge functions
       const { syncBookingsForListing } = await import('./booking-sync.ts');
       
       const result = await syncBookingsForListing(supabase, token, listingId);
@@ -65,3 +63,4 @@ export async function processListings(
     deleted: totalDeleted
   };
 }
+

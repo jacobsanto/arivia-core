@@ -1,7 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { updateSyncLog } from './sync-log.ts';
-import { corsHeaders } from './cors.ts';
+import { corsHeaders } from './utils.ts';
 
 export async function handleError(error: any, supabase: any, syncLog: any, startTime: number) {
   console.error('Error in booking sync:', error);
@@ -13,6 +13,7 @@ export async function handleError(error: any, supabase: any, syncLog: any, start
         status: 'error',
         end_time: new Date().toISOString(),
         message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        entities_synced: 0,
         sync_duration_ms: Date.now() - startTime
       });
     } else {
@@ -44,3 +45,4 @@ export async function handleError(error: any, supabase: any, syncLog: any, start
     }
   );
 }
+
