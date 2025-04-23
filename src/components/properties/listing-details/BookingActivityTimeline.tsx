@@ -18,10 +18,10 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
     queryFn: async () => {
       const { data, error } = await supabase
         .from("sync_logs")
-        .select("id, created_at, start_time, message, sync_type, provider, booking_id, guest_name")
+        .select("id, created_at, start_time, message, sync_type, provider")
         .eq("provider", "guesty")
         .or('sync_type.eq.bookings,sync_type.eq.webhook')
-        .contains("message", `"listing_id":"${listingId}"`)
+        .contains("message", `${listingId}`)
         .order("start_time", { ascending: false });
 
       if (error) throw error;
@@ -32,14 +32,14 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
       // Process each log entry and push to the result array
       if (data) {
         for (const log of data) {
-          let bookingId = log.booking_id;
-          let guest_name = log.guest_name;
+          let bookingId = "Unknown";
+          let guest_name = undefined;
           
           const msgMatch = typeof log.message === "string" && log.message.match(/booking_id.?["']?:.?["']?([\w-]+)/i);
-          if (!bookingId && msgMatch) bookingId = msgMatch[1];
+          if (msgMatch) bookingId = msgMatch[1];
           
           const guestMatch = typeof log.message === "string" && log.message.match(/guest.?["']?:.?["']?([\w\s]+)/i);
-          if (!guest_name && guestMatch) guest_name = guestMatch[1];
+          if (guestMatch) guest_name = guestMatch[1];
           
           const { event_type } = parseEventTypeAndGuest(log.message || "");
 
@@ -47,7 +47,7 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
             id: log.id,
             created_at: log.created_at,
             start_time: log.start_time,
-            booking_id: bookingId || "Unknown",
+            booking_id: bookingId,
             guest_name,
             event_type,
             origin: log.sync_type === "webhook" ? "webhook" : "api",

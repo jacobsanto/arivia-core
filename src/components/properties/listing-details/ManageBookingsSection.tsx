@@ -20,8 +20,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   isLoading,
 }) => {
   const { bookingsWithTasks, loading, error, refetch, lastSynced } = useGuestyBookings(listing?.id);
-  const { isSyncing, syncBookings } = useBookingSync({
-    listingId: listing?.id,
+  const { isSyncing, syncBookingsForListing } = useBookingSync({
     onSyncComplete: refetch
   });
 
@@ -96,7 +95,7 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   if (sortedBookingsWithTasks.length === 0) {
     return (
       <BookingsEmptyState 
-        onSync={syncBookings} 
+        onSync={() => syncBookingsForListing(listing.id)} 
         isSyncing={isSyncing} 
       />
     );

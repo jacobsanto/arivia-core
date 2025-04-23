@@ -3,6 +3,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+interface UseBookingSyncProps {
+  onSyncComplete?: () => void;
+}
+
 interface SyncProgress {
   currentListing: number;
   totalListings: number;
@@ -21,7 +25,7 @@ interface SyncResult {
   error?: string;
 }
 
-export function useBookingSync({ onSyncComplete }: { onSyncComplete?: () => void } = {}) {
+export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState<SyncProgress | null>(null);
   const [error, setError] = useState<string | null>(null);
