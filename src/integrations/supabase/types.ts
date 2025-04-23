@@ -1113,6 +1113,8 @@ export type Database = {
           status: string | null
           sync_duration: number | null
           sync_type: string | null
+          webhook_data: Json | null
+          webhook_event_type: string | null
         }
         Insert: {
           bookings_created?: number | null
@@ -1134,6 +1136,8 @@ export type Database = {
           status?: string | null
           sync_duration?: number | null
           sync_type?: string | null
+          webhook_data?: Json | null
+          webhook_event_type?: string | null
         }
         Update: {
           bookings_created?: number | null
@@ -1155,6 +1159,8 @@ export type Database = {
           status?: string | null
           sync_duration?: number | null
           sync_type?: string | null
+          webhook_data?: Json | null
+          webhook_event_type?: string | null
         }
         Relationships: []
       }
@@ -1241,6 +1247,42 @@ export type Database = {
           id?: string
           name?: string
           phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      webhook_health: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          last_received: string | null
+          last_successful: string | null
+          provider: string
+          reconnect_attempts: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_received?: string | null
+          last_successful?: string | null
+          provider: string
+          reconnect_attempts?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_received?: string | null
+          last_successful?: string | null
+          provider?: string
+          reconnect_attempts?: number | null
+          status?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,4 +1,3 @@
-
 /**
  * Supabase Edge Function: guesty-reservation-webhook
  * Handles Guesty webhook events for reservations (bookings) in real-time
@@ -51,6 +50,39 @@ function badRequest(message = "Bad Request") {
   return createResponse({ error: message }, 400);
 }
 
+// Helper function to update webhook health
+async function updateWebhookHealth(
+  supabase: any, 
+  status: 'connected' | 'error' | 'received',
+  errorMessage?: string
+) {
+  try {
+    const updateData: any = {
+      provider: 'guesty',
+      last_received: new Date().toISOString(),
+      status: status,
+      reconnect_attempts: status === 'connected' ? 0 : undefined,
+      last_error: status === 'error' ? errorMessage : null
+    };
+
+    if (status === 'connected') {
+      updateData.last_successful = new Date().toISOString();
+    }
+
+    const { error } = await supabase
+      .from('webhook_health')
+      .upsert(updateData, { 
+        onConflict: 'provider'
+      });
+
+    if (error) {
+      console.error('Error updating webhook health:', error);
+    }
+  } catch (err) {
+    console.error('Failed to update webhook health:', err);
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -62,6 +94,17 @@ serve(async (req) => {
     return methodNotAllowed();
   }
 
+  // Initialize Supabase client with env vars
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  const supabase = createClient(supabaseUrl, supabaseKey, { 
+    global: { 
+      headers: { 
+        "X-Client-Info": "guesty-reservation-webhook" 
+      } 
+    } 
+  });
+
   // Authorization check — GUESTY_WEBHOOK_SECRET via Deno.env
   try {
     const envSecret = Deno.env.get("GUESTY_WEBHOOK_SECRET");
@@ -70,12 +113,17 @@ serve(async (req) => {
 
     if (!envSecret || token !== envSecret) {
       console.warn("Unauthorized Guesty webhook access attempted");
+      await updateWebhookHealth(supabase, 'error', 'Unauthorized access');
       return unauthorized();
     }
   } catch (authError) {
     console.error("Authentication error:", authError);
+    await updateWebhookHealth(supabase, 'error', 'Authentication error');
     return unauthorized();
   }
+
+  // Update webhook health as received
+  await updateWebhookHealth(supabase, 'received');
 
   // Process payload...
   try {
@@ -92,19 +140,9 @@ serve(async (req) => {
     // Process booking data
     const bookingData = await processBookingData(booking);
     if (!bookingData.isValid) {
+      await updateWebhookHealth(supabase, 'error', bookingData.errorMessage);
       return badRequest(bookingData.errorMessage);
     }
-
-    // Initialize Supabase client with env vars
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-    const supabase = createClient(supabaseUrl, supabaseKey, { 
-      global: { 
-        headers: { 
-          "X-Client-Info": "guesty-reservation-webhook" 
-        } 
-      } 
-    });
 
     // Upsert booking data with timeout protection
     const upsertResult = await Promise.race([
@@ -125,11 +163,15 @@ serve(async (req) => {
     // Return appropriate response
     if (upsertResult.error) {
       console.error("Booking upsert error:", upsertResult.error);
+      await updateWebhookHealth(supabase, 'error', upsertResult.error);
       return createResponse({ 
         success: false, 
         error: upsertResult.error 
       }, 500);
     }
+
+    // Update webhook health as connected on success
+    await updateWebhookHealth(supabase, 'connected');
 
     return createResponse({
       success: true,
@@ -140,6 +182,9 @@ serve(async (req) => {
 
   } catch (err) {
     console.error("Webhook processing error:", err);
+    // Update webhook health with error
+    await updateWebhookHealth(supabase, 'error', err.message || 'Unknown webhook processing error');
+    
     // Try to log the error if possible using env var config
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
