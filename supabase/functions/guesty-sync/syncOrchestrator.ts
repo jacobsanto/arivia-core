@@ -11,7 +11,7 @@ import { updateIntegrationHealth, storeRateLimitInfo } from './integration-healt
 import { checkSyncCooldown } from './cooldown.ts';
 
 // Centralized sync entry point
-export async function orchestrateFullGuestySync(): Promise<{ response: object, status: number }> {
+export async function orchestrateFullSync(): Promise<{ response: object, status: number }> {
   const startTime = Date.now();
   let supabase;
   let syncLog;

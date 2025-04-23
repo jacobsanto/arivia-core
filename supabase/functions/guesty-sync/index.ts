@@ -1,6 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { orchestrateFullGuestySync } from './syncOrchestrator.ts';
+import { orchestrateFullSync } from './syncOrchestrator.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +13,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Only handle POST requests for triggering full sync (could be changed as needed)
+  // Only handle POST requests for triggering full sync
   if (req.method !== 'POST') {
     return new Response(
       JSON.stringify({ error: 'Method not allowed', success: false }),
@@ -22,7 +22,7 @@ serve(async (req) => {
   }
 
   // Run orchestrator for full Guesty sync
-  const result = await orchestrateFullGuestySync();
+  const result = await orchestrateFullSync();
 
   return new Response(
     JSON.stringify(result.response),

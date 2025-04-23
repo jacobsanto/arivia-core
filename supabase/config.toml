@@ -7,3 +7,5 @@ verify_jwt = false
 [functions.guesty-listing-sync]
 verify_jwt = false
 
+[functions.guesty-sync]
+verify_jwt = false
