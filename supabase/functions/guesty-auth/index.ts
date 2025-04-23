@@ -7,6 +7,15 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface GuestyTokenResponse {
+  access_token: string;
+  expires_in: number;
+}
+
+interface GuestyAuthError {
+  error: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -26,16 +35,17 @@ serve(async (req) => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error('Error fetching token:', fetchError);
+      console.error('Error fetching token:', fetchError.message, fetchError.stack ?? fetchError);
       throw fetchError;
     }
 
     // If token exists and is still valid, return it
     if (existingToken && new Date(existingToken.expires_at) > new Date()) {
+      console.log('Using existing Guesty token (still valid)');
       return new Response(JSON.stringify({
         access_token: existingToken.access_token,
         expires_in: Math.floor((new Date(existingToken.expires_at).getTime() - Date.now()) / 1000)
-      }), {
+      } satisfies GuestyTokenResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
@@ -43,6 +53,7 @@ serve(async (req) => {
     // If no valid token exists, get a new one
     const clientId = Deno.env.get('GUESTY_CLIENT_ID')!;
     const clientSecret = Deno.env.get('GUESTY_CLIENT_SECRET')!;
+    console.log('Requesting new Guesty access token');
 
     const tokenResponse = await fetch('https://open-api.guesty.com/oauth2/token', {
       method: 'POST',
@@ -58,7 +69,9 @@ serve(async (req) => {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`Failed to get Guesty token: ${await tokenResponse.text()}`);
+      const errorText = await tokenResponse.text();
+      console.error('Failed to get Guesty token:', errorText);
+      throw new Error(`Failed to get Guesty token: ${errorText}`);
     }
 
     const tokenData = await tokenResponse.json();
@@ -80,9 +93,8 @@ serve(async (req) => {
             reset: rateLimitReset || new Date(Date.now() + 3600000).toISOString(),
             timestamp: new Date().toISOString()
           });
-      } catch (error) {
-        console.error('Error storing rate limit info:', error);
-        // Continue execution even if storing rate limit info fails
+      } catch (dbError) {
+        console.error('Error storing rate limit info:', dbError?.message, dbError?.stack ?? dbError);
       }
     }
 
@@ -101,9 +113,8 @@ serve(async (req) => {
         }, {
           onConflict: 'provider'
         });
-    } catch (error) {
-      console.error('Error updating integration health:', error);
-      // Continue execution even if updating health fails
+    } catch (healthError) {
+      console.error('Error updating integration health:', healthError?.message, healthError?.stack ?? healthError);
     }
 
     // Upsert token in database
@@ -119,41 +130,49 @@ serve(async (req) => {
       });
 
     if (upsertError) {
-      console.error('Error storing token:', upsertError);
+      console.error('Error storing token:', upsertError.message, upsertError.stack ?? upsertError);
       throw upsertError;
     }
 
+    console.log('Successfully retrieved and stored Guesty token.');
     return new Response(JSON.stringify({
       access_token: tokenData.access_token,
       expires_in: tokenData.expires_in
-    }), {
+    } satisfies GuestyTokenResponse), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-  } catch (error) {
-    console.error('Guesty auth function error:', error);
-    
+  } catch (error: any) {
+    // Enhanced error logging
+    if (typeof error === "object" && error !== null) {
+      console.error('Guesty auth function error:', error.message ?? error, error.stack ?? '');
+    } else {
+      console.error('Guesty auth function error:', error);
+    }
+
     // Update integration health to error state
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      
+
       await supabase
         .from('integration_health')
         .upsert({
           provider: 'guesty',
           status: 'error',
           updated_at: new Date().toISOString(),
-          last_error: error instanceof Error ? error.message : 'Unknown error during authentication'
+          last_error: error instanceof Error ? error.message : String(error)
         }, {
           onConflict: 'provider'
         });
     } catch (healthError) {
-      console.error('Failed to update integration health:', healthError);
+      console.error('Failed to update integration health:', healthError?.message, healthError?.stack ?? healthError);
     }
-    
-    return new Response(JSON.stringify({ error: error.message }), {
+
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : String(error)
+    } satisfies GuestyAuthError), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

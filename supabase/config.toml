@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.guesty-sync]
 verify_jwt = false
+
+[functions.guesty-auth]
+verify_jwt = false
