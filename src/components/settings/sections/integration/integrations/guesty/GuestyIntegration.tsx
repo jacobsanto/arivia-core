@@ -1,5 +1,7 @@
 
 import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useGuestyMonitor } from "./hooks/useGuestyMonitor";
 import GuestyMonitorPanel from "./components/GuestyMonitorPanel";
 import GuestySyncControls from "./components/GuestySyncControls";
