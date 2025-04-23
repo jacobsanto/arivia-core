@@ -26,7 +26,7 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
 
       if (error) throw error;
 
-      return (data || []).map((log: any) => {
+      return (data || []).map((log: any): BookingActivityEntry => {
         let bookingId = log.booking_id;
         let guest_name = log.guest_name;
         
@@ -48,7 +48,7 @@ export default function BookingActivityTimeline({ listingId }: BookingActivityTi
           origin: log.sync_type === "webhook" ? "webhook" : "api",
           message: log.message,
           synced_at: log.start_time || log.created_at,
-        } as BookingActivityEntry;
+        };
       });
     },
     enabled: !!listingId,
