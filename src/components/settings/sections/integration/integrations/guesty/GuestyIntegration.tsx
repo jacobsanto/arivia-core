@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -10,12 +11,13 @@ import GuestyStatusBadge from "./GuestyStatusBadge";
 import GuestyMonitorPanel from "./components/GuestyMonitorPanel";
 import { useGuestyMonitor } from "./hooks/useGuestyMonitor";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { RefreshCcw, AlertTriangle, CalendarIcon, AlertCircle } from "lucide-react";
+import { RefreshCcw, AlertTriangle, CalendarIcon, AlertCircle, X, Log } from "lucide-react";
 
 const GuestyIntegration = () => {
   const [isTestingConnection, setIsTestingConnection] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncErrorType, setSyncErrorType] = useState<string | null>(null);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSendingTestWebhook, setIsSendingTestWebhook] = useState(false);
@@ -27,60 +29,87 @@ const GuestyIntegration = () => {
     refetch: refetchMonitor 
   } = useGuestyMonitor();
 
+  // Fetch last error log from sync_logs
+  const { data: lastSyncErrorLog } = useQuery({
+    queryKey: ["guesty-last-error-log"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("sync_logs")
+        .select("id,sync_type,message,status,start_time")
+        .eq("status", "error")
+        .order("start_time", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) return null;
+      return data;
+    },
+    refetchInterval: 10000 // fresh error log every 10s
+  });
+
   const handleSync = useCallback(async () => {
-    // Clear any existing error state and countdown
     setSyncError(null);
+    setSyncErrorType(null);
     setRetryCountdown(null);
-    
+
     if (retryTimerRef.current) {
       clearInterval(retryTimerRef.current);
       retryTimerRef.current = null;
     }
-    
+
     setIsSyncing(true);
-    
+
     try {
       // Call the Edge Function directly
       const { data, error } = await supabase.functions.invoke('guesty-listing-sync', {
         method: 'POST'
       });
-      
+
+      // Top-level error from Supabase
       if (error) {
         throw new Error(error.message || 'Failed to invoke sync function');
       }
-      
+
+      // API returned unsuccessful status
       if (!data?.success) {
         throw new Error(data?.error || 'Sync operation returned unsuccessful status');
       }
-      
-      // Success case
+
       toast.success('Listings sync completed', {
         description: `Successfully synced ${data.synced || 0} listings${
           data.archived > 0 ? ` and archived ${data.archived} obsolete listings` : ''
         }`
       });
-      
-      // Refetch monitor data to show updated stats
+
       refetchMonitor();
-      
+
     } catch (error) {
       console.error('Error syncing listings:', error);
-      
-      // Determine if it's an auth error
+
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      const isAuthError = errorMessage.toLowerCase().includes('auth') || 
-                         errorMessage.toLowerCase().includes('token') ||
-                         errorMessage.toLowerCase().includes('credentials') ||
-                         errorMessage.toLowerCase().includes('unauthorized');
-      
-      // Set appropriate error message
+
+      // Recognize error type
+      let type: string | null = null;
+      if (/missing.*env|environment variable/i.test(errorMessage)) {
+        type = "Missing Environment Variables";
+      } else if (/auth/i.test(errorMessage) || /token/i.test(errorMessage) || /credential/i.test(errorMessage) || /Unauthorized/i.test(errorMessage)) {
+        type = "Guesty API Auth Failed";
+      } else if (/supabase/i.test(errorMessage)) {
+        type = "Supabase Request Failed";
+      } else if (/no listings|0 listings|empty listing/i.test(errorMessage)) {
+        type = "Listing Response Empty";
+      } else {
+        type = "General Sync Error";
+      }
+      setSyncErrorType(type);
+
       setSyncError(
-        isAuthError 
-          ? 'Authentication failed. Check Guesty API credentials in environment variables.' 
-          : `Failed to sync with Guesty API: ${errorMessage}`
+        type === "Missing Environment Variables" ? "❌ Environment variables are missing. Please check your Supabase project secrets."
+        : type === "Guesty API Auth Failed" ? "❌ Guesty API authentication failed. Check your Guesty client credentials."
+        : type === "Supabase Request Failed" ? "❌ Failed to request/insert into Supabase. Please verify Supabase configuration."
+        : type === "Listing Response Empty" ? "❌ Guesty API returned no listings. Please ensure you have active properties."
+        : `❌ Sync failed: ${errorMessage}`
       );
-      
-      // Set up retry countdown
+
       setRetryCountdown(5);
       retryTimerRef.current = setInterval(() => {
         setRetryCountdown(prev => {
@@ -94,22 +123,18 @@ const GuestyIntegration = () => {
           return prev - 1;
         });
       }, 1000);
-      
-      // Show toast notification
+
       toast.error('Failed to sync listings', {
-        description: isAuthError 
-          ? 'Authentication failed. Check Guesty API credentials.'
-          : errorMessage
+        description: syncErrorType || errorMessage
       });
     } finally {
       setIsSyncing(false);
     }
-  }, [refetchMonitor]);
+  }, [refetchMonitor, syncErrorType]);
 
   // Helper to send mock test webhook
   const handleSendTestWebhook = useCallback(async () => {
     setIsSendingTestWebhook(true);
-    // Sample test payload
     const testPayload = {
       id: "test-reservation-id-123",
       listingId: "test-listing-999",
@@ -125,15 +150,10 @@ const GuestyIntegration = () => {
     };
 
     try {
-      // Call the Edge Function: guesty-reservation-webhook (public endpoint via Supabase Functions)
       const { data, error } = await supabase.functions.invoke('guesty-reservation-webhook', {
         method: 'POST',
         body: testPayload,
-        headers: {
-          // This endpoint requires authorization; in prod set the right secret!
-          // For TEST: send a secret matching GUESTY_WEBHOOK_SECRET (if required)
-          // If you're using auth in local .env, add: authorization: `Bearer ${import.meta.env.VITE_GUESTY_WEBHOOK_SECRET}`
-        }
+        headers: {}
       });
 
       if (error) throw new Error(error.message || "Error sending webhook");
@@ -146,7 +166,6 @@ const GuestyIntegration = () => {
         description: "The mock reservation webhook was sent and logged.",
       });
 
-      // Optionally refetch monitoring panel/logs if you want
       refetchMonitor();
 
     } catch (err) {
@@ -171,7 +190,6 @@ const GuestyIntegration = () => {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-medium">Guesty Integration</h3>
-      
       <GuestyMonitorPanel
         isConnected={monitor?.isConnected ?? false}
         lastListingSync={monitor?.lastListingSync}
@@ -182,27 +200,6 @@ const GuestyIntegration = () => {
         logs={monitor?.logs ?? []}
         isLoading={monitorLoading}
       />
-
-      {/* Error display */}
-      {syncError && (
-        <Alert variant="destructive" className="mt-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Sync Failed</AlertTitle>
-          <AlertDescription className="flex flex-col gap-2">
-            <p>{syncError}</p>
-            {retryCountdown !== null && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full sm:w-auto mt-2" 
-                onClick={handleSync}
-              >
-                Retry Now {retryCountdown > 0 ? `(${retryCountdown}s)` : ''}
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Manual Controls: stacked for mobile/flex-row for desktop */}
       <div className="flex flex-col md:flex-row gap-2 mt-6">
@@ -244,8 +241,44 @@ const GuestyIntegration = () => {
           )}
         </Button>
       </div>
+
+      {/* Inline sync error display: red ❌ + error message below sync controls */}
+      {syncError && (
+        <div
+          className="flex items-center gap-2 mt-2 px-4 py-2 bg-red-50 text-red-800 rounded border border-red-200 text-sm"
+          data-testid="inline-sync-error"
+        >
+          <X className="w-5 h-5 text-red-500" />
+          <span className="font-medium">{syncError}</span>
+          {retryCountdown !== null && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="ml-4"
+              onClick={handleSync}
+            >
+              Retry Now {retryCountdown > 0 ? `(${retryCountdown}s)` : ''}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Show last sync error log if exists */}
+      {lastSyncErrorLog && (
+        <Alert variant="destructive" className="mt-4 border-2 border-red-400 bg-red-50">
+          <Log className="h-4 w-4" />
+          <AlertTitle className="flex gap-2 items-center">
+            Sync Failure: <span className="text-xs font-normal text-muted-foreground">{lastSyncErrorLog.sync_type && lastSyncErrorLog.sync_type.replace("_", " ")}</span>
+            <span className="ml-1 text-xs">{lastSyncErrorLog.start_time ? format(new Date(lastSyncErrorLog.start_time), "PPpp") : null}</span>
+          </AlertTitle>
+          <AlertDescription className="text-red-800 font-mono" data-testid="last-sync-error-log">
+            {lastSyncErrorLog.message}
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   );
 };
 
 export default GuestyIntegration;
+
