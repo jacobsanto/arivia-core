@@ -1,5 +1,7 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Json } from "@/integrations/supabase/types";
 
 // Improved types for Guesty bookings with task and listing context
 export interface GuestyBookingDb {
@@ -9,7 +11,7 @@ export interface GuestyBookingDb {
   check_in: string;
   check_out: string;
   status: string | null;
-  raw_data?: Record<string, any>;
+  raw_data?: Json; // Changed from Record<string, any> to Json
   created_at?: string;
   updated_at?: string;
   last_synced?: string;
@@ -72,12 +74,12 @@ export function useGuestyBookings(listingId?: string | number): UseGuestyBooking
       if (taskError) throw taskError;
 
       // For each booking, attach any task where booking_id matches
-      const result: BookingWithTask[] = (bookings || []).map((booking: GuestyBookingDb) => {
+      const result: BookingWithTask[] = (bookings || []).map((booking: any) => {
         const cleaningTask = (tasks || []).find(
           (task: any) => task.booking_id === booking.id
         ) as CleaningTaskDb | undefined;
         return {
-          booking,
+          booking: booking as GuestyBookingDb,
           cleaningTask: cleaningTask || null
         };
       });

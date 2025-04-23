@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Users } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import PropertyInfoSection from '@/components/properties/listing-details/PropertyInfoSection';
@@ -26,22 +26,6 @@ const ListingDetails = () => {
         .select('*')
         .eq('id', listingId)
         .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!listingId,
-  });
-
-  // Query the bookings for this listing
-  const { data: bookings, isLoading: bookingsLoading } = useQuery({
-    queryKey: ['guesty-bookings', listingId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('guesty_bookings')
-        .select('*')
-        .eq('listing_id', listingId)
-        .order('check_in', { ascending: true });
       
       if (error) throw error;
       return data;
@@ -142,16 +126,14 @@ const ListingDetails = () => {
         <TabsContent value="bookings" className="mt-6">
           <ManageBookingsSection 
             listing={listing} 
-            bookings={bookings || []} 
-            isLoading={bookingsLoading} 
+            isLoading={listingLoading} 
           />
         </TabsContent>
 
         <TabsContent value="guests" className="mt-6">
           <GuestManagementSection 
             listing={listing} 
-            bookings={bookings || []} 
-            isLoading={bookingsLoading} 
+            isLoading={listingLoading} 
           />
         </TabsContent>
       </Tabs>
