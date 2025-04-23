@@ -9,7 +9,7 @@ import GuestySyncErrorAlert from "./components/GuestySyncErrorAlert";
 import GuestyLastErrorAlert from "./components/GuestyLastErrorAlert";
 import { useGuestySyncActions } from "./hooks/useGuestySyncActions";
 import GuestyConnectButton from "./components/GuestyConnectButton";
-import BookingSyncDashboard from "./BookingSyncDashboard";
+import GuestyApiMonitor from "./GuestyApiMonitor";
 
 const GuestyIntegration = () => {
   const {
@@ -68,6 +68,8 @@ const GuestyIntegration = () => {
         isLoading={monitorLoading}
       />
 
+      <GuestyApiMonitor />
+
       <GuestySyncControls
         onSync={handleSync}
         onSendTestWebhook={handleSendTestWebhook}
@@ -82,9 +84,6 @@ const GuestyIntegration = () => {
       />
 
       <GuestyLastErrorAlert lastSyncErrorLog={lastSyncErrorLog} />
-
-      {/* --- Booking Sync History Dashboard --- */}
-      <BookingSyncDashboard />
     </div>
   );
 };
