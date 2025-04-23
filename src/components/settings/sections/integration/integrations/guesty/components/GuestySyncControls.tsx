@@ -8,15 +8,19 @@ import { useGuestySync } from "@/hooks/useGuestySync";
 import { cn } from "@/lib/utils";
 
 interface GuestySyncControlsProps {
+  onSync: () => void;
   onSendTestWebhook: () => void;
+  isSyncing: boolean;
   isSendingTestWebhook: boolean;
 }
 
 const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
+  onSync,
   onSendTestWebhook,
+  isSyncing,
   isSendingTestWebhook,
 }) => {
-  const { isSyncing, syncProgress, error, retryCountdown, sync } = useGuestySync();
+  const { syncProgress, error, retryCountdown } = useGuestySync();
 
   return (
     <div className="space-y-4">
@@ -24,7 +28,7 @@ const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
         <Button
           variant="default"
           className="w-full md:w-auto flex items-center justify-center"
-          onClick={sync}
+          onClick={onSync}
           disabled={isSyncing || (error && retryCountdown && retryCountdown > 0)}
         >
           {isSyncing ? (

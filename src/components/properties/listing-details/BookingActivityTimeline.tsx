@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TimelineGroup } from "./timeline/TimelineGroup";
 import { parseEventTypeAndGuest, groupByDay } from "./timeline/timelineUtils";
-import type { BookingActivityEntry } from "./useGuestyBookings";
+import { BookingActivityEntry } from "./types/bookingActivityTypes";
 
 interface BookingActivityTimelineProps {
   listingId: string;

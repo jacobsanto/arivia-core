@@ -1,5 +1,5 @@
 
-import type { BookingActivityEntry } from "../useGuestyBookings";
+import { BookingActivityEntry } from "../types/bookingActivityTypes";
 import { format } from "date-fns";
 
 export function parseEventTypeAndGuest(message: string): {

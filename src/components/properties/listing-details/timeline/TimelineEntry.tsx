@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EventTypeIcon } from "./EventTypeIcon";
 import { OriginIcon } from "./OriginIcon";
-import type { BookingActivityEntry } from "../useGuestyBookings";
+import { BookingActivityEntry } from "../types/bookingActivityTypes";
 
 interface TimelineEntryProps {
   entry: BookingActivityEntry;

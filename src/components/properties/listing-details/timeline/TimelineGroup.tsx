@@ -2,7 +2,7 @@
 import React from "react";
 import { isToday, isYesterday, format } from "date-fns";
 import { TimelineEntry } from "./TimelineEntry";
-import type { BookingActivityEntry } from "../useGuestyBookings";
+import { BookingActivityEntry } from "../types/bookingActivityTypes";
 
 interface TimelineGroupProps {
   date: string;
