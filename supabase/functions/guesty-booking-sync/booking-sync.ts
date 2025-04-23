@@ -81,4 +81,3 @@ export async function syncBookingsForListing(
     throw error;
   }
 }
-

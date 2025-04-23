@@ -94,4 +94,3 @@ serve(async (req) => {
     return handleError(error, supabase, syncLog, startTime);
   }
 });
-

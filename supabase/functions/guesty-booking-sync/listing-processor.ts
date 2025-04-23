@@ -54,4 +54,3 @@ export const processListings = async (
 
   return { results, totalBookingsSynced, created, updated, deleted };
 };
-

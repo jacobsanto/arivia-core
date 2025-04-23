@@ -4,7 +4,7 @@ export interface SyncLogData {
   sync_type: string;
   status: string;
   start_time: string;
-  message: string;
+  message?: string;
 }
 
 export interface BookingSyncResult {
@@ -13,18 +13,11 @@ export interface BookingSyncResult {
   updated: number;
   deleted: number;
   endpoint: string;
-  processedCount?: number;
-  moreListingsToProcess?: boolean;
-  executionTime?: number;
 }
 
-export interface BookingData {
-  id: string;
-  listing_id: string;
-  guest_name: string;
-  check_in: string;
-  check_out: string;
-  status: string;
-  last_synced: string;
-  raw_data: any;
+export interface RateLimitInfo {
+  limit?: number;
+  remaining: number;
+  reset: number;
+  rate_limit: number;
 }
