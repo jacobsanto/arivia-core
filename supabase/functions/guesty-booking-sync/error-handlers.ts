@@ -6,18 +6,20 @@ import { corsHeaders } from './cors.ts';
 export async function handleError(error: any, supabase: any, syncLog: any, startTime: number) {
   console.error('Error in booking sync:', error);
   
-  // Update sync log with error
-  if (syncLog?.id) {
-    await updateSyncLog(supabase, syncLog.id, {
-      status: 'error',
-      end_time: new Date().toISOString(),
-      message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      sync_duration_ms: Date.now() - startTime
-    });
-  }
-  
-  // Update health status
+  // Update sync log with error - now with null safety
   try {
+    if (syncLog && syncLog.id) {
+      await updateSyncLog(supabase, syncLog.id, {
+        status: 'error',
+        end_time: new Date().toISOString(),
+        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        sync_duration_ms: Date.now() - startTime
+      });
+    } else {
+      console.warn('Could not update sync log: syncLog or syncLog.id is null/undefined');
+    }
+  
+    // Update health status
     await supabase
       .from('integration_health')
       .update({

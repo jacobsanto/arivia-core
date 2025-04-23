@@ -5,6 +5,7 @@ import { SyncResponse, GuestyBooking } from './types.ts';
 import { createSyncLog, updateSyncLog } from './sync-log.ts';
 import { handleError } from './error-handlers.ts';
 import { processListings } from './listing-processor.ts';
+import { corsHeaders } from './cors.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -16,28 +17,28 @@ const MAX_RUNTIME_MS = 50000; // 50 seconds
 const MAX_RETRIES = 3;
 const DELAY_BETWEEN_LISTINGS_MS = 300;
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
 async function getGuestyToken(): Promise<string> {
-  const response = await fetch('https://open-api.guesty.com/oauth2/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: GUESTY_CLIENT_ID,
-      client_secret: GUESTY_CLIENT_SECRET,
-    }),
-  });
+  try {
+    const response = await fetch('https://open-api.guesty.com/oauth2/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type: 'client_credentials',
+        client_id: GUESTY_CLIENT_ID,
+        client_secret: GUESTY_CLIENT_SECRET,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(`Failed to get token: ${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      throw new Error(`Failed to get token: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (err) {
+    console.error('Error getting Guesty token:', err);
+    throw new Error(`Failed to authenticate with Guesty: ${err instanceof Error ? err.message : String(err)}`);
   }
-
-  const data = await response.json();
-  return data.access_token;
 }
 
 serve(async (req) => {
@@ -52,6 +53,7 @@ serve(async (req) => {
   let totalBookings = 0;
   let listingsSynced = 0;
   let listingsAttempted = 0;
+  let hasPartialSuccess = false;
 
   // Create a sync log entry to track this operation
   let syncLog = null;
@@ -70,11 +72,22 @@ serve(async (req) => {
 
   try {
     // Parse request body
-    const requestBody = await req.json().catch(() => ({}));
-    const { listingId, syncAll, startIndex = 0, totalListings = 0 } = requestBody;
+    let requestBody = {};
+    try {
+      requestBody = await req.json();
+    } catch (e) {
+      console.warn('Failed to parse request body, using empty object', e);
+    }
+    
+    const { listingId, syncAll, startIndex = 0, totalListings = 0 } = requestBody as any;
 
     // Get Guesty access token
-    const token = await getGuestyToken();
+    let token;
+    try {
+      token = await getGuestyToken();
+    } catch (tokenError) {
+      return handleError(tokenError, supabase, syncLog, startTime);
+    }
 
     // Process different sync scenarios
     if (listingId) {
@@ -99,36 +112,40 @@ serve(async (req) => {
       }
     } else {
       // Process all listings or a batch
-      const { data: listings, error } = await supabase
-        .from('guesty_listings')
-        .select('id')
-        .eq('is_deleted', false)
-        .eq('sync_status', 'active')
-        .range(startIndex, startIndex + 19); // Process 20 listings at a time
-      
-      if (error) {
-        throw new Error(`Failed to fetch listings: ${error.message}`);
+      try {
+        const { data: listings, error } = await supabase
+          .from('guesty_listings')
+          .select('id')
+          .eq('is_deleted', false)
+          .eq('sync_status', 'active')
+          .range(startIndex, startIndex + 19); // Process 20 listings at a time
+        
+        if (error) {
+          throw new Error(`Failed to fetch listings: ${error.message}`);
+        }
+        
+        if (!listings || listings.length === 0) {
+          throw new Error('No active listings found to sync');
+        }
+        
+        const listingsToSync = listings.map(l => l.id);
+        listingsAttempted = listingsToSync.length;
+        
+        console.log(`Processing ${listingsToSync.length} listings`);
+        
+        const { results, totalBookingsSynced, created, updated, deleted } = 
+          await processListings(supabase, token, listingsToSync, startTime, MAX_RUNTIME_MS);
+        
+        totalBookings = totalBookingsSynced;
+        listingsSynced = results.filter(r => r.success).length;
+        
+        // Collect failed listings
+        results
+          .filter(r => !r.success)
+          .forEach(r => failedListings.push(r.listingId));
+      } catch (error) {
+        return handleError(error, supabase, syncLog, startTime);
       }
-      
-      if (!listings || listings.length === 0) {
-        throw new Error('No active listings found to sync');
-      }
-      
-      const listingsToSync = listings.map(l => l.id);
-      listingsAttempted = listingsToSync.length;
-      
-      console.log(`Processing ${listingsToSync.length} listings`);
-      
-      const { results, totalBookingsSynced, created, updated, deleted } = 
-        await processListings(supabase, token, listingsToSync, startTime, MAX_RUNTIME_MS);
-      
-      totalBookings = totalBookingsSynced;
-      listingsSynced = results.filter(r => r.success).length;
-      
-      // Collect failed listings
-      results
-        .filter(r => !r.success)
-        .forEach(r => failedListings.push(r.listingId));
     }
 
     // Calculate stats
@@ -138,11 +155,16 @@ serve(async (req) => {
     const formattedTime = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
     // Determine if this was a full or partial success
-    const syncStatus = failedListings.length > 0 ? 'partial' : 'completed';
-    let syncMessage = `Successfully synced ${totalBookings} bookings across ${listingsSynced} listings`;
+    hasPartialSuccess = failedListings.length > 0 && listingsSynced > 0;
+    const syncStatus = failedListings.length > 0 ? (hasPartialSuccess ? 'partial' : 'error') : 'completed';
+    let syncMessage = '';
     
-    if (failedListings.length > 0) {
-      syncMessage += `, ${failedListings.length} listings failed`;
+    if (hasPartialSuccess) {
+      syncMessage = `Partially synced ${totalBookings} bookings. ${listingsSynced} listings succeeded, ${failedListings.length} failed`;
+    } else if (failedListings.length === 0) {
+      syncMessage = `Successfully synced ${totalBookings} bookings across ${listingsSynced} listings`;
+    } else {
+      syncMessage = `Failed to sync any bookings. All ${listingsAttempted} listing attempts failed`;
     }
 
     // Update sync log
@@ -160,16 +182,22 @@ serve(async (req) => {
     }
 
     const response: SyncResponse = {
-      success: true,
+      success: failedListings.length === 0,
       bookings_synced: totalBookings,
       listings_attempted: listingsAttempted,
       listings_synced: listingsSynced,
       failed_listings: failedListings,
-      time_taken: formattedTime
+      time_taken: formattedTime,
+      warning: hasPartialSuccess ? "Some listings failed to sync" : undefined,
+      message: syncMessage
     };
 
+    // If all listings failed, return a 500 error
+    const statusCode = hasPartialSuccess ? 200 : (failedListings.length === listingsAttempted && listingsAttempted > 0 ? 500 : 200);
+
     return new Response(JSON.stringify(response), { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode
     });
   } catch (error) {
     return handleError(error, supabase, syncLog, startTime);

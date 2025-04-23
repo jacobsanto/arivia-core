@@ -45,19 +45,27 @@ export async function updateSyncLog(
     bookings_deleted?: number;
   }
 ) {
+  // Skip if logId is invalid
+  if (!logId) {
+    console.warn('Cannot update sync log: Invalid log ID');
+    return;
+  }
+
   try {
+    const updatePayload = {
+      status: updateData.status,
+      end_time: updateData.end_time,
+      message: updateData.message || '',
+      entities_synced: updateData.entities_synced || 0,
+      sync_duration_ms: updateData.sync_duration_ms || 0,
+      bookings_created: updateData.bookings_created || 0,
+      bookings_updated: updateData.bookings_updated || 0,
+      bookings_deleted: updateData.bookings_deleted || 0
+    };
+
     const { error } = await supabase
       .from('sync_logs')
-      .update({
-        status: updateData.status,
-        end_time: updateData.end_time,
-        message: updateData.message,
-        entities_synced: updateData.entities_synced || 0,
-        sync_duration_ms: updateData.sync_duration_ms || 0,
-        bookings_created: updateData.bookings_created || 0,
-        bookings_updated: updateData.bookings_updated || 0,
-        bookings_deleted: updateData.bookings_deleted || 0
-      })
+      .update(updatePayload)
       .eq('id', logId);
     
     if (error) {

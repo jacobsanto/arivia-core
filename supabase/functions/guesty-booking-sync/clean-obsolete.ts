@@ -1,59 +1,44 @@
 
 export async function cleanObsoleteBookings(
-  supabase: any,
-  listingId: string,
+  supabase: any, 
+  listingId: string, 
   remoteBookings: any[]
 ): Promise<number> {
   try {
-    // Extract IDs from remote bookings
-    const remoteIds = new Set(remoteBookings.map(b => b._id || b.id));
+    // Extract IDs of current bookings from remote response
+    const activeBookingIds = new Set(remoteBookings.map(b => b.id));
     
-    // Get all local bookings for this listing that aren't marked as cancelled
-    const today = new Date().toISOString().split('T')[0];
-    const { data: localBookings, error } = await supabase
+    // Find bookings in our database for this listing that are no longer in Guesty
+    const { data: obsoleteBookings, error } = await supabase
       .from('guesty_bookings')
       .select('id')
       .eq('listing_id', listingId)
-      .gt('check_out', today)
-      .neq('status', 'cancelled');
-    
+      .not('id', 'in', `(${Array.from(activeBookingIds).join(',')})`);
+      
     if (error) {
-      console.error('Error fetching local bookings:', error);
+      console.error(`Error finding obsolete bookings for listing ${listingId}:`, error);
       return 0;
     }
     
-    if (!localBookings || localBookings.length === 0) {
+    if (!obsoleteBookings || obsoleteBookings.length === 0) {
       return 0;
     }
     
-    // Filter out bookings that exist remotely
-    const obsoleteIds = localBookings
-      .filter(b => !remoteIds.has(b.id))
-      .map(b => b.id);
-    
-    if (obsoleteIds.length === 0) {
-      return 0;
-    }
-    
-    console.log(`Marking ${obsoleteIds.length} obsolete bookings as cancelled`);
-    
-    // Update status to cancelled
-    const { error: updateError } = await supabase
+    // Delete obsolete bookings
+    const obsoleteIds = obsoleteBookings.map(b => b.id);
+    const { error: deleteError } = await supabase
       .from('guesty_bookings')
-      .update({ 
-        status: 'cancelled',
-        last_synced: new Date().toISOString()
-      })
+      .delete()
       .in('id', obsoleteIds);
-    
-    if (updateError) {
-      console.error('Error updating obsolete bookings:', updateError);
+      
+    if (deleteError) {
+      console.error(`Error deleting obsolete bookings for listing ${listingId}:`, deleteError);
       return 0;
     }
     
-    return obsoleteIds.length;
+    return obsoleteBookings.length;
   } catch (error) {
-    console.error('Error in cleanObsoleteBookings:', error);
+    console.error(`Error cleaning obsolete bookings for listing ${listingId}:`, error);
     return 0;
   }
 }

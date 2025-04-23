@@ -23,6 +23,7 @@ interface SyncResult {
   time_taken?: string;
   message?: string;
   error?: string;
+  warning?: string;
 }
 
 export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
@@ -67,29 +68,36 @@ export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
         body: { syncAll: true }
       });
 
-      if (response.error) throw new Error(response.error.message);
+      // Check for response errors
+      if (response.error) {
+        throw new Error(response.error.message || 'Unknown error during sync');
+      }
 
       const result = response.data as SyncResult;
       
+      // Handle different result scenarios
       if (result.success) {
-        if (result.failed_listings && result.failed_listings.length > 0) {
-          // Partial success
-          setFailedListings(result.failed_listings);
-          const failMessage = `${result.bookings_synced} bookings synced, but ${result.failed_listings.length} of ${result.listings_attempted} listings failed`;
-          toast.warning(failMessage, {
-            description: "Some listings failed to sync. You can retry to sync the failed listings."
-          });
-        } else {
-          // Full success
-          toast.success(`${result.bookings_synced} bookings synced from ${result.listings_synced} listings`);
-        }
+        // Full success
+        toast.success(`${result.bookings_synced} bookings synced from ${result.listings_synced} listings`);
         setSyncProgress(null);
+        setFailedListings([]);
+        
+        if (onSyncComplete) {
+          onSyncComplete();
+        }
+      } else if (result.warning) {
+        // Partial success
+        setFailedListings(result.failed_listings || []);
+        toast.warning(result.message || 'Partial sync - some listings failed', {
+          description: `${result.failed_listings?.length} of ${result.listings_attempted} listings failed`
+        });
         
         if (onSyncComplete) {
           onSyncComplete();
         }
       } else {
-        throw new Error(result.message || 'Unknown error occurred');
+        // Complete failure
+        throw new Error(result.message || result.error || 'All listings failed to sync');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Unknown error occurred';
@@ -115,7 +123,7 @@ export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
         body: { listingId }
       });
 
-      if (response.error) throw new Error(response.error.message);
+      if (response.error) throw new Error(response.error.message || 'Unknown error during sync');
 
       const result = response.data as SyncResult;
       
@@ -126,7 +134,7 @@ export function useBookingSync({ onSyncComplete }: UseBookingSyncProps = {}) {
           onSyncComplete();
         }
       } else {
-        throw new Error(result.message || 'Unknown error occurred');
+        throw new Error(result.message || result.error || 'Failed to sync listing');
       }
     } catch (err: any) {
       const errorMessage = err.message || 'Unknown error occurred';
