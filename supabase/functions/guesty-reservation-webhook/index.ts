@@ -2,12 +2,17 @@
 /**
  * Supabase Edge Function: guesty-reservation-webhook
  * Handles Guesty webhook events for reservations (bookings) in real-time
- * 
+ *
  * This webhook handles:
  * 1. Validating incoming webhook requests via secret token
  * 2. Processing reservation data from Guesty
  * 3. Storing reservation data in the database
  * 4. Tracking sync status
+ * 
+ * Environment variables (validated via Deno.env.get):
+ *  - GUESTY_WEBHOOK_SECRET
+ *  - SUPABASE_URL
+ *  - SUPABASE_SERVICE_ROLE_KEY
  */
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
@@ -36,32 +41,28 @@ function createResponse(body: any, status = 200) {
   );
 }
 
-// Error handling helpers
 function unauthorized() {
   return createResponse({ error: "Unauthorized" }, 401);
 }
-
 function methodNotAllowed() {
   return createResponse({ error: "Method Not Allowed" }, 405);
 }
-
 function badRequest(message = "Bad Request") {
   return createResponse({ error: message }, 400);
 }
 
-// Main handler
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
-  
+
   // Only accept POST requests
   if (req.method !== "POST") {
     return methodNotAllowed();
   }
 
-  // Authorization check
+  // Authorization check — GUESTY_WEBHOOK_SECRET via Deno.env
   try {
     const envSecret = Deno.env.get("GUESTY_WEBHOOK_SECRET");
     const authHeader = req.headers.get("authorization") || "";
@@ -76,11 +77,11 @@ serve(async (req) => {
     return unauthorized();
   }
 
-  // Process payload
+  // Process payload...
   try {
     // Parse the request payload
     const payload = await req.json();
-    
+
     // Extract booking data (handling different payload formats)
     const booking = payload.booking || payload.reservation || payload || {};
 
@@ -90,7 +91,7 @@ serve(async (req) => {
       return badRequest(bookingData.errorMessage);
     }
 
-    // Initialize Supabase client
+    // Initialize Supabase client with env vars
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabase = createClient(supabaseUrl, supabaseKey, { 
@@ -100,7 +101,7 @@ serve(async (req) => {
         } 
       } 
     });
-    
+
     // Upsert booking data with timeout protection
     const upsertResult = await Promise.race([
       upsertBooking(supabase, bookingData),
@@ -108,14 +109,14 @@ serve(async (req) => {
         setTimeout(() => reject(new Error(`Database operation timed out after ${TIMEOUT_MS}ms`)), TIMEOUT_MS)
       )
     ]);
-    
+
     // Log the result
     await logWebhookEvent(supabase, {
       success: !upsertResult.error,
       message: upsertResult.message,
       listingId: bookingData.listingId,
     });
-    
+
     // Return appropriate response
     if (upsertResult.error) {
       console.error("Booking upsert error:", upsertResult.error);
@@ -124,17 +125,16 @@ serve(async (req) => {
         error: upsertResult.error 
       }, 500);
     }
-    
+
     return createResponse({
       success: true,
       message: upsertResult.message,
       bookingId: bookingData.id
     });
-    
+
   } catch (err) {
     console.error("Webhook processing error:", err);
-    
-    // Try to log the error if possible
+    // Try to log the error if possible using env var config
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
       const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -148,7 +148,7 @@ serve(async (req) => {
     } catch (logErr) {
       console.error("Failed to log webhook error:", logErr);
     }
-    
+
     return badRequest("Error processing webhook");
   }
 });
