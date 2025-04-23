@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -130,7 +131,7 @@ const GuestyIntegration = () => {
           className="w-full md:w-auto flex items-center justify-center"
           onClick={() => toast.info("Dev feature: Send Test Webhook not implemented yet")}
         >
-          <Calendar className="h-4 w-4 mr-2" />
+          <CalendarIcon className="h-4 w-4 mr-2" />
           Send Test Webhook
         </Button>
       </div>
