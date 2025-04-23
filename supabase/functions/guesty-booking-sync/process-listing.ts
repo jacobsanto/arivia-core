@@ -1,10 +1,21 @@
+
 import { ListingProcessResult } from './types.ts';
+import { delay } from './utils.ts';
+
+// Delay between processing each listing (in milliseconds)
+const DELAY_BETWEEN_LISTINGS_MS = 500;
 
 export async function processListing(
   supabase: any,
   token: string,
-  listingId: string
+  listingId: string,
+  isNotFirstListing: boolean = false
 ): Promise<ListingProcessResult> {
+  // Add delay between listings to avoid hitting rate limits
+  if (isNotFirstListing) {
+    await delay(DELAY_BETWEEN_LISTINGS_MS);
+  }
+  
   try {
     const { syncBookingsForListing } = await import('./booking-sync.ts');
     

@@ -1,75 +1,113 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-const getGuestyMonitorData = async () => {
-  // Stats queries (parallel)
-  const [
-    listingsRes,
-    bookingsRes,
-    logsRes,
-    lastListingSyncRes,
-    lastWebhookSyncRes
-  ] = await Promise.all([
-    supabase.from("guesty_listings").select("id", { count: "exact", head: true }),
-    supabase.from("guesty_bookings").select("id", { count: "exact", head: true }),
-    supabase.from("sync_logs")
-      .select("id,status,message,sync_type,start_time,end_time,sync_duration", { count: "exact" })
-      .order("start_time", { ascending: false }),
-    supabase.from("sync_logs")
-      .select("id,start_time,status")
-      .eq("sync_type", "listings")
-      .order("start_time", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("sync_logs")
-      .select("id,start_time,status")
-      .eq("sync_type", "webhook")
-      .order("start_time", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-  ]);
-
-  const totalListings = listingsRes.count || 0;
-  const totalBookings = bookingsRes.count || 0;
-
-  // Find avg sync duration from logs of type 'listings'
-  const listingLogsRes = await supabase.from("sync_logs")
-    .select("sync_duration")
-    .eq("sync_type", "listings")
-    .not("sync_duration", "is", null)
-    .order("start_time", { ascending: false })
-    .limit(30);
-  const listingDurations = (listingLogsRes.data || [])
-    .map((r: any) => r.sync_duration)
-    .filter((d: any) => typeof d === "number" && d > 0);
-  const avgSyncDuration = listingDurations.length
-    ? listingDurations.reduce((sum, d) => sum + d, 0) / listingDurations.length
-    : null;
-
-  // Connection status: last successful listing sync within past 12h
-  const lastListingSync = lastListingSyncRes.data;
-  const isConnected = lastListingSync?.status === "completed" &&
-    new Date(lastListingSync.start_time).getTime() >= Date.now() - 12 * 3600 * 1000;
-
-  const logs = logsRes.data || [];
-  const lastBookingsWebhook = lastWebhookSyncRes.data;
-
-  return {
-    isConnected,
-    lastListingSync,
-    lastBookingsWebhook,
-    totalListings,
-    totalBookings,
-    avgSyncDuration,
-    logs,
-  };
-};
+import { formatDistanceToNow } from "date-fns";
 
 export function useGuestyMonitor() {
   return useQuery({
     queryKey: ["guesty-monitor"],
-    queryFn: getGuestyMonitorData,
-    refetchInterval: 30000, // Poll every 30 seconds
+    queryFn: async () => {
+      try {
+        // Get Guesty connection status
+        const { data: integrationHealth } = await supabase
+          .from("integration_health")
+          .select("*")
+          .eq("provider", "guesty")
+          .maybeSingle();
+
+        // Get latest listing sync log
+        const { data: lastListingSync } = await supabase
+          .from("sync_logs")
+          .select("*")
+          .eq("provider", "guesty")
+          .eq("sync_type", "listings")
+          .order("start_time", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Get latest webhook sync
+        const { data: lastBookingsWebhook } = await supabase
+          .from("sync_logs")
+          .select("*")
+          .eq("provider", "guesty")
+          .eq("sync_type", "bookings")
+          .eq("status", "completed")
+          .not("webhook_event_type", "is", null)
+          .order("start_time", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Get total listings
+        const { count: totalListings, error: listingsError } = await supabase
+          .from("guesty_listings")
+          .select("id", { count: "exact" })
+          .eq("is_deleted", false)
+          .eq("sync_status", "active");
+
+        // Get total bookings
+        const { count: totalBookings, error: bookingsError } = await supabase
+          .from("guesty_bookings")
+          .select("id", { count: "exact" })
+          .neq("status", "cancelled");
+
+        // Get recent sync logs for the sync activity timeline
+        const { data: logs, error: logsError } = await supabase
+          .from("sync_logs")
+          .select("*")
+          .eq("provider", "guesty")
+          .order("start_time", { ascending: false })
+          .limit(10);
+
+        // Calculate average sync duration
+        const { data: syncDurations, error: durationsError } = await supabase
+          .from("sync_logs")
+          .select("sync_duration_ms")
+          .eq("provider", "guesty")
+          .eq("status", "completed")
+          .order("start_time", { ascending: false })
+          .limit(20);
+
+        let avgSyncDuration = null;
+        if (syncDurations?.length && syncDurations.length > 0) {
+          const validDurations = syncDurations
+            .map(log => log.sync_duration_ms)
+            .filter(duration => duration && duration > 0);
+          
+          if (validDurations.length > 0) {
+            const total = validDurations.reduce((sum, duration) => sum + duration, 0);
+            avgSyncDuration = total / validDurations.length;
+          }
+        }
+
+        // Check recent rate limit errors
+        const oneDayAgo = new Date();
+        oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+        
+        const { data: rateLimitErrors } = await supabase
+          .from("guesty_api_usage")
+          .select("*")
+          .eq("status", 429)
+          .gte("timestamp", oneDayAgo.toISOString())
+          .order("timestamp", { ascending: false });
+          
+        const hasRecentRateLimits = rateLimitErrors?.length > 0;
+
+        return {
+          isConnected: integrationHealth?.status === "connected",
+          lastListingSync,
+          lastBookingsWebhook,
+          totalListings: totalListings || 0,
+          totalBookings: totalBookings || 0,
+          logs: logs || [],
+          avgSyncDuration,
+          hasRecentRateLimits,
+          rateLimitErrors: rateLimitErrors || []
+        };
+      } catch (error) {
+        console.error("Error fetching Guesty monitor data:", error);
+        throw error;
+      }
+    },
+    refetchInterval: 60000, // 1 minute refresh
   });
 }

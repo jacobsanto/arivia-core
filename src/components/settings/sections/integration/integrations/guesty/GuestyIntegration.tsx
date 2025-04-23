@@ -10,6 +10,7 @@ import GuestyLastErrorAlert from "./components/GuestyLastErrorAlert";
 import { useGuestySyncActions } from "./hooks/useGuestySyncActions";
 import GuestyConnectButton from "./components/GuestyConnectButton";
 import GuestyApiMonitor from "./GuestyApiMonitor";
+import { useRateLimitToasts } from "./components/RateLimitToast";
 
 const GuestyIntegration = () => {
   const {
@@ -50,6 +51,9 @@ const GuestyIntegration = () => {
   const handleAfterConnect = React.useCallback(() => {
     refetchMonitor();
   }, [refetchMonitor]);
+
+  // Use the rate limit toast hook
+  useRateLimitToasts(monitor?.rateLimitErrors);
 
   return (
     <div className="space-y-4">

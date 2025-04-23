@@ -1,11 +1,8 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCcw, CalendarIcon, XCircle, Loader2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useGuestySync } from "@/hooks/useGuestySync";
-import { cn } from "@/lib/utils";
+import { AlertTriangle, RefreshCw, Calendar, BarChart3 } from "lucide-react";
+import { useGuestyApiMonitor } from "../hooks/useGuestyApiMonitor";
 
 interface GuestySyncControlsProps {
   onSync: () => void;
@@ -20,87 +17,53 @@ const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
   isSyncing,
   isSendingTestWebhook,
 }) => {
-  const { syncProgress, error, retryCountdown } = useGuestySync();
-
+  const { hasRecentRateLimitAlert, rateLimitErrors } = useGuestyApiMonitor();
+  
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col md:flex-row gap-2">
-        <Button
-          variant="default"
-          className="w-full md:w-auto flex items-center justify-center"
-          onClick={onSync}
-          disabled={isSyncing || (error && retryCountdown && retryCountdown > 0)}
-        >
-          {isSyncing ? (
-            <>
-              <LoadingSpinner size="small" className="mr-2" />
-              <span>Syncing Bookings...</span>
-            </>
-          ) : (
-            <>
-              <RefreshCcw className="h-4 w-4 mr-2" />
-              Sync Bookings Now
-            </>
-          )}
-        </Button>
+    <div className="flex flex-col md:flex-row gap-2 md:gap-4">
+      <Button
+        onClick={onSync}
+        disabled={isSyncing || (hasRecentRateLimitAlert && rateLimitErrors && rateLimitErrors.length >= 3)}
+        className="flex-1 relative"
+      >
+        {isSyncing ? (
+          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <BarChart3 className="h-4 w-4 mr-2" />
+        )}
+        {isSyncing ? "Syncing..." : "Sync Listings"}
         
-        <Button
-          variant="outline"
-          className="w-full md:w-auto flex items-center justify-center"
-          onClick={onSendTestWebhook}
-          disabled={isSendingTestWebhook}
-        >
-          {isSendingTestWebhook ? (
-            <>
-              <LoadingSpinner size="small" className="mr-2" />
-              <span>Sending Webhook...</span>
-            </>
-          ) : (
-            <>
-              <CalendarIcon className="h-4 w-4 mr-2" />
-              Send Test Webhook
-            </>
-          )}
-        </Button>
-      </div>
+        {/* Warning badge for rate limits */}
+        {hasRecentRateLimitAlert && (
+          <span className="absolute -top-1 -right-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-yellow-500"></span>
+          </span>
+        )}
+      </Button>
+      
+      <Button
+        onClick={onSendTestWebhook}
+        disabled={isSendingTestWebhook || hasRecentRateLimitAlert}
+        variant="outline"
+        className="flex-1"
+      >
+        {isSendingTestWebhook ? (
+          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <Calendar className="h-4 w-4 mr-2" />
+        )}
+        {isSendingTestWebhook ? "Sending..." : "Test Booking Webhook"}
+      </Button>
 
-      {/* Sync Progress */}
-      {syncProgress && (
-        <div className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>
-              Syncing {syncProgress.currentListing} of {syncProgress.totalListings} listings
-            </span>
-            <span className="text-muted-foreground">
-              Est. time left: {syncProgress.estimatedTimeLeft}
-            </span>
-          </div>
-          <Progress 
-            value={(syncProgress.currentListing / syncProgress.totalListings) * 100}
-            className="h-2"
-          />
-          <p className="text-sm flex items-center gap-2">
-            <LoadingSpinner size="xsmall" />
-            {syncProgress.bookingsSynced} bookings synced
-          </p>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className={cn(
-          "flex items-center gap-2 p-3 text-sm rounded-md",
-          "bg-red-50 text-red-700 border border-red-200"
-        )}>
-          <XCircle className="h-4 w-4 shrink-0" />
-          <div className="flex-1">
-            <p className="font-medium">{error}</p>
-            {retryCountdown !== null && retryCountdown > 0 && (
-              <p className="text-sm mt-1">
-                Retry available in {retryCountdown} seconds
-              </p>
-            )}
-          </div>
+      {/* Rate limit warning message */}
+      {hasRecentRateLimitAlert && rateLimitErrors && rateLimitErrors.length >= 3 && (
+        <div className="mt-1 rounded-md bg-yellow-50 p-2 border border-yellow-200 text-yellow-700 text-xs flex items-center gap-1.5">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+          <span>
+            Multiple rate limits detected. Sync disabled for cooldown period.
+            ({rateLimitErrors.length} in last 5 minutes)
+          </span>
         </div>
       )}
     </div>

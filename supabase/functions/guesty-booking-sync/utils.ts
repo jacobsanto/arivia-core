@@ -17,7 +17,10 @@ export function delay(ms: number) {
 export function extractRateLimitInfo(headers: Headers): { 
   rate_limit: number | null, 
   remaining: number | null, 
-  reset: number | null 
+  reset: number | null,
+  endpoint?: string,
+  method?: string,
+  status?: number
 } {
   const rateLimit = headers.get('x-ratelimit-limit');
   const remaining = headers.get('x-ratelimit-remaining');
@@ -50,4 +53,39 @@ export function createResponse(body: any, status = 200) {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     }
   );
+}
+
+/**
+ * Logs API usage to the database
+ */
+export async function logApiUsage(
+  supabase: any,
+  endpoint: string,
+  method: string = 'GET',
+  status: number = 200,
+  rateLimitInfo: any = null,
+  listingId: string | null = null
+) {
+  try {
+    const apiUsageData = {
+      endpoint,
+      method,
+      status,
+      listing_id: listingId,
+      timestamp: new Date().toISOString(),
+      rate_limit: rateLimitInfo?.rate_limit || null,
+      remaining: rateLimitInfo?.remaining || null,
+      reset: rateLimitInfo?.reset ? new Date(rateLimitInfo.reset * 1000).toISOString() : null
+    };
+
+    const { error } = await supabase
+      .from('guesty_api_usage')
+      .insert(apiUsageData);
+      
+    if (error) {
+      console.error('[API Usage] Failed to log API usage:', error);
+    }
+  } catch (err) {
+    console.error('[API Usage] Exception logging API usage:', err);
+  }
 }

@@ -82,6 +82,41 @@ function extractRateLimitInfo(headers: Headers) {
 }
 
 /**
+ * Logs API usage to the database
+ */
+async function logApiUsage(
+  supabase: any,
+  endpoint: string,
+  method: string = 'GET',
+  status: number = 200,
+  rateLimitInfo: any = null,
+  listingId: string | null = null
+) {
+  try {
+    const apiUsageData = {
+      endpoint,
+      method,
+      status,
+      listing_id: listingId,
+      timestamp: new Date().toISOString(),
+      rate_limit: rateLimitInfo?.limit || null,
+      remaining: rateLimitInfo?.remaining || null,
+      reset: rateLimitInfo?.reset || null
+    };
+
+    const { error } = await supabase
+      .from('guesty_api_usage')
+      .insert(apiUsageData);
+      
+    if (error) {
+      console.error('[API Usage] Failed to log API usage:', error);
+    }
+  } catch (err) {
+    console.error('[API Usage] Exception logging API usage:', err);
+  }
+}
+
+/**
  * Fetch listings from Guesty API with pagination and rate limit handling
  */
 async function fetchGuestyListings(token: string, listingId?: string) {
@@ -92,6 +127,11 @@ async function fetchGuestyListings(token: string, listingId?: string) {
       const res = await fetch(`${GUESTY_API_URL}/${listingId}`, {
         headers: { Authorization: `Bearer ${token}`, Accept: "application/json" },
       });
+      
+      // Handle rate limiting for single listing
+      const rateLimitInfo = extractRateLimitInfo(res.headers);
+      const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      await logApiUsage(supabase, `/listings/${listingId}`, 'GET', res.status, rateLimitInfo, listingId);
       
       if (!res.ok) {
         throw new Error(`Failed to fetch listing ${listingId}: ${res.statusText} (${res.status})`);
@@ -108,6 +148,7 @@ async function fetchGuestyListings(token: string, listingId?: string) {
     let page = 1;
     let keepPaging = true;
     let retryCount = 0;
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     
     while (keepPaging && retryCount < MAX_RETRY_ATTEMPTS) {
       try {
@@ -118,14 +159,17 @@ async function fetchGuestyListings(token: string, listingId?: string) {
           headers: { Authorization: `Bearer ${token}`, Accept: "application/json" }
         });
         
+        // Log API usage regardless of outcome
+        const rateLimitInfo = extractRateLimitInfo(res.headers);
+        await logApiUsage(supabase, '/listings', 'GET', res.status, rateLimitInfo);
+        
         // Handle rate limiting
         if (res.status === 429) {
           retryCount++;
           console.warn(`[guesty-listing-sync] Rate limited, retry ${retryCount}/${MAX_RETRY_ATTEMPTS}`);
           
           // Extract rate limit info if available
-          const limitInfo = extractRateLimitInfo(res.headers);
-          console.log(`[guesty-listing-sync] Rate limit info:`, limitInfo);
+          console.log(`[guesty-listing-sync] Rate limit info:`, rateLimitInfo);
           
           // Wait before retrying (exponential backoff)
           const waitTime = Math.min(1000 * Math.pow(2, retryCount), 15000);
@@ -147,14 +191,24 @@ async function fetchGuestyListings(token: string, listingId?: string) {
         }
         
         // Log rate limit info on successful request
-        const limitInfo = extractRateLimitInfo(res.headers);
-        console.log(`[guesty-listing-sync] Rate limits - Remaining: ${limitInfo.remaining}/${limitInfo.limit}`);
+        console.log(`[guesty-listing-sync] Rate limits - Remaining: ${rateLimitInfo.remaining}/${rateLimitInfo.limit}`);
         
         if (body.results.length > 0) {
           console.log(`[guesty-listing-sync] Got ${body.results.length} listings on page ${page}`);
           listings = listings.concat(body.results);
-          keepPaging = body.results.length === BATCH_SIZE;
-          page++;
+          
+          // Don't fetch more than 30 listings per run to avoid rate limits
+          if (listings.length >= 30) {
+            console.log(`[guesty-listing-sync] Reached 30 listings limit, stopping pagination`);
+            keepPaging = false;
+          } else {
+            keepPaging = body.results.length === BATCH_SIZE;
+            if (keepPaging) {
+              // Add delay between page fetches
+              await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            page++;
+          }
         } else {
           console.log("[guesty-listing-sync] No more listings found");
           keepPaging = false;

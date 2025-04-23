@@ -1,7 +1,7 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.7';
 import { BookingSyncResult } from './types.ts';
-import { extractRateLimitInfo, delay, calculateBackoff } from './utils.ts';
+import { extractRateLimitInfo, delay, calculateBackoff, logApiUsage } from './utils.ts';
 import { processBookings } from './process-bookings.ts';
 import { cleanObsoleteBookings } from './clean-obsolete.ts';
 import { prepareBookings } from './prepare-bookings.ts';
@@ -28,33 +28,33 @@ export async function syncBookingsForListing(
       console.log(`[GuestyBookingSync] Fetching bookings URL: ${url} (attempt ${attempt + 1}/${retries + 1})`);
       
       try {
+        const requestStartTime = Date.now();
         const response = await fetch(url, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
           },
+          method: 'GET'
         });
+        const requestDuration = Date.now() - requestStartTime;
 
         // Track API usage for rate limiting monitoring
         rateLimitInfo = extractRateLimitInfo(response.headers);
-        if (rateLimitInfo) {
-          try {
-            await supabase
-              .from('guesty_api_usage')
-              .insert({
-                endpoint,
-                rate_limit: rateLimitInfo.rate_limit,
-                remaining: rateLimitInfo.remaining,
-                reset: rateLimitInfo.reset,
-                timestamp: new Date().toISOString()
-              });
-          } catch (error) {
-            console.error('[GuestyBookingSync] Error storing rate limit info:', error);
-          }
-        }
+        
+        // Log API usage with extended information
+        await logApiUsage(
+          supabase,
+          endpoint,
+          'GET',
+          response.status,
+          rateLimitInfo,
+          listingId
+        );
 
         // Handle rate limiting
         if (response.status === 429) {
+          console.warn(`[GuestyBookingSync] Rate limited on listing ${listingId}. Remaining: ${rateLimitInfo.remaining}, Reset: ${rateLimitInfo.reset}`);
+          
           if (attempt < retries) {
             const retryAfter = response.headers.get('Retry-After');
             const waitTime = retryAfter ? parseInt(retryAfter, 10) * 1000 : calculateBackoff(attempt);
@@ -73,6 +73,7 @@ export async function syncBookingsForListing(
         }
 
         data = await response.json();
+        console.log(`[GuestyBookingSync] Booking data fetched in ${requestDuration}ms. Records: ${data.results?.length || 0}`);
         break; // Success, exit the retry loop
         
       } catch (error) {
