@@ -1,17 +1,5 @@
 
 project_id = "lhhxxnbfdrkvjjbzxdjs"
 
-[functions.guesty-auth]
-verify_jwt = false
-
-[functions.guesty-listing]
-verify_jwt = false
-
-[functions.guesty-sync]
-verify_jwt = false
-
-[functions.guesty-health-check]
-verify_jwt = false
-
-[functions.guesty-booking-sync]
+[functions.guesty-reservation-webhook]
 verify_jwt = false
