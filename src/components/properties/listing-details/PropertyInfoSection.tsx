@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Card, 
@@ -13,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useIsMobile } from '@/hooks/use-mobile';
+import BookingActivityTimeline from "./BookingActivityTimeline";
 
 interface PropertyInfoSectionProps {
   listing: any;
@@ -123,6 +123,11 @@ const PropertyInfoSection: React.FC<PropertyInfoSectionProps> = ({ listing }) =>
           </div>
         </CardContent>
       </Card>
+
+      {/* --- Booking Activity Timeline (NEW) --- */}
+      <div>
+        <BookingActivityTimeline listingId={listing.id} />
+      </div>
     </div>
   );
 };
