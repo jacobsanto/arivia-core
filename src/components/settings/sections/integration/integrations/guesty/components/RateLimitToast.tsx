@@ -1,7 +1,8 @@
 
 import React from "react";
 import { toast } from "sonner";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
+import { RateLimitError } from "../types";
 
 interface RateLimitToastProps {
   endpoint: string;
@@ -42,7 +43,7 @@ export const showRateLimitToast = (
   );
 };
 
-export const useRateLimitToasts = (rateLimitErrors: any[] | undefined) => {
+export const useRateLimitToasts = (rateLimitErrors: RateLimitError[] | undefined) => {
   React.useEffect(() => {
     if (!rateLimitErrors || rateLimitErrors.length === 0) return;
     

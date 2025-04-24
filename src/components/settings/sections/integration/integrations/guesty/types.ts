@@ -6,6 +6,11 @@ export interface ApiUsage {
   remaining: number;
   timestamp: string;
   reset?: string;
+  status?: number;
+}
+
+export interface RateLimitError extends ApiUsage {
+  status: number;
 }
 
 export interface IntegrationHealthData {
@@ -47,4 +52,17 @@ export interface GuestySyncControlsProps {
   isSyncing: boolean;
   isSyncingBookings?: boolean;
   isConnected: boolean;
+}
+
+// Define MonitorData interface to match the data structure returned by useGuestyMonitor
+export interface MonitorData {
+  isConnected: boolean;
+  lastListingSync?: any | null;
+  lastBookingsWebhook?: any | null;
+  totalListings: number;
+  totalBookings: number;
+  logs: any[];
+  avgSyncDuration: number | null;
+  hasRecentRateLimits: boolean;
+  rateLimitErrors: RateLimitError[];
 }

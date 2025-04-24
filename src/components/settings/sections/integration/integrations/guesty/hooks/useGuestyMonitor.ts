@@ -1,7 +1,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDistanceToNow } from "date-fns";
+import { MonitorData, RateLimitError } from "../types";
 
 interface SyncLog {
   id: string;
@@ -13,27 +13,6 @@ interface SyncLog {
   message?: string | null;
   sync_duration_ms?: number | null;
   webhook_event_type?: string | null;
-}
-
-interface RateLimitError {
-  id: string;
-  endpoint: string;
-  status: number;
-  timestamp: string;
-  reset?: string;
-  remaining?: number;
-}
-
-interface MonitorData {
-  isConnected: boolean;
-  lastListingSync?: SyncLog | null;
-  lastBookingsWebhook?: SyncLog | null;
-  totalListings: number;
-  totalBookings: number;
-  logs: SyncLog[];
-  avgSyncDuration: number | null;
-  hasRecentRateLimits: boolean;
-  rateLimitErrors: RateLimitError[];
 }
 
 export function useGuestyMonitor() {
@@ -116,14 +95,20 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        const { data: rateLimitErrors } = await supabase
+        const { data: rateLimitErrorsData } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        const hasRecentRateLimits = rateLimitErrors?.length > 0;
+        // Convert to RateLimitError type
+        const rateLimitErrors = (rateLimitErrorsData || []).map(error => ({
+          ...error,
+          status: error.status || 429, // Ensure status field is always present
+        })) as RateLimitError[];
+          
+        const hasRecentRateLimits = rateLimitErrors.length > 0;
 
         return {
           isConnected: integrationHealth?.status === "connected",
@@ -134,8 +119,8 @@ export function useGuestyMonitor() {
           logs: logs || [],
           avgSyncDuration,
           hasRecentRateLimits,
-          rateLimitErrors: rateLimitErrors || []
-        };
+          rateLimitErrors
+        } as MonitorData;
       } catch (error) {
         console.error("Error fetching Guesty monitor data:", error);
         throw error;

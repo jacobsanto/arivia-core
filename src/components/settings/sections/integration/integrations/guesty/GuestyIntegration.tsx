@@ -11,6 +11,7 @@ import { useGuestySyncActions } from "./hooks/useGuestySyncActions";
 import GuestyConnectButton from "./components/GuestyConnectButton";
 import GuestyApiMonitor from "./GuestyApiMonitor";
 import { useRateLimitToasts } from "./components/RateLimitToast";
+import { MonitorData } from "./types";
 
 const GuestyIntegration = () => {
   const {
@@ -52,7 +53,7 @@ const GuestyIntegration = () => {
     refetchMonitor();
   }, [refetchMonitor]);
 
-  // Use the rate limit toast hook
+  // Use the rate limit toast hook - safely handle undefined monitor data
   useRateLimitToasts(monitor?.rateLimitErrors);
 
   return (
