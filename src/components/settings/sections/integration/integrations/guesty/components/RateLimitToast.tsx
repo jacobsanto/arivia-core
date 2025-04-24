@@ -42,7 +42,7 @@ export const showRateLimitToast = (
   );
 };
 
-export const useRateLimitToasts = (rateLimitErrors) => {
+export const useRateLimitToasts = (rateLimitErrors: any[] | undefined) => {
   React.useEffect(() => {
     if (!rateLimitErrors || rateLimitErrors.length === 0) return;
     

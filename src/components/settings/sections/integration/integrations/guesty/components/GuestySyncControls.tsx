@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, Calendar, BarChart3 } from "lucide-react";
-import { useGuestyApiMonitor } from "../hooks/useGuestyApiMonitor";
+import { useGuestyApiMonitor } from "@/hooks/useGuestyApiMonitor";
 
 interface GuestySyncControlsProps {
   onSync: () => void;
@@ -17,7 +17,18 @@ const GuestySyncControls: React.FC<GuestySyncControlsProps> = ({
   isSyncing,
   isSendingTestWebhook,
 }) => {
-  const { hasRecentRateLimitAlert, rateLimitErrors } = useGuestyApiMonitor();
+  const { metrics, rateLimitErrors } = useGuestyApiMonitor();
+  
+  // Derived state based on rate limit errors
+  const hasRecentRateLimitAlert = React.useMemo(() => {
+    if (!rateLimitErrors || !rateLimitErrors.length) return false;
+    
+    const mostRecent = new Date(rateLimitErrors[0].timestamp);
+    const fiveMinutesAgo = new Date();
+    fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+    
+    return mostRecent > fiveMinutesAgo;
+  }, [rateLimitErrors]);
   
   return (
     <div className="flex flex-col md:flex-row gap-2 md:gap-4">

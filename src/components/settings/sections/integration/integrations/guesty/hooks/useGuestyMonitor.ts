@@ -3,8 +3,41 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 
+interface SyncLog {
+  id: string;
+  provider: string;
+  sync_type: string;
+  status: string;
+  start_time: string;
+  end_time?: string | null;
+  message?: string | null;
+  sync_duration_ms?: number | null;
+  webhook_event_type?: string | null;
+}
+
+interface RateLimitError {
+  id: string;
+  endpoint: string;
+  status: number;
+  timestamp: string;
+  reset?: string;
+  remaining?: number;
+}
+
+interface MonitorData {
+  isConnected: boolean;
+  lastListingSync?: SyncLog | null;
+  lastBookingsWebhook?: SyncLog | null;
+  totalListings: number;
+  totalBookings: number;
+  logs: SyncLog[];
+  avgSyncDuration: number | null;
+  hasRecentRateLimits: boolean;
+  rateLimitErrors: RateLimitError[];
+}
+
 export function useGuestyMonitor() {
-  return useQuery({
+  return useQuery<MonitorData>({
     queryKey: ["guesty-monitor"],
     queryFn: async () => {
       try {
@@ -71,7 +104,7 @@ export function useGuestyMonitor() {
         if (syncDurations?.length && syncDurations.length > 0) {
           const validDurations = syncDurations
             .map(log => log.sync_duration_ms)
-            .filter(duration => duration && duration > 0);
+            .filter((duration): duration is number => duration !== null && duration > 0);
           
           if (validDurations.length > 0) {
             const total = validDurations.reduce((sum, duration) => sum + duration, 0);

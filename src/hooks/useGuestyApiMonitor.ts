@@ -2,14 +2,32 @@
 import { useState } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "sonner";
+import { toast } from "sonner";
+
+export interface ApiUsageData {
+  id: string;
+  endpoint: string;
+  method?: string;
+  status?: number;
+  rate_limit: number;
+  remaining: number;
+  reset: string;
+  timestamp: string;
+  listing_id?: string;
+}
+
+interface UsageMetrics {
+  total24h: number;
+  mostUsed: string | null;
+  mostUsedCount: number;
+  lastRateLimitError: string | null;
+}
 
 export function useGuestyApiMonitor() {
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const { toast } = useToast();
 
   // Get API usage data
-  const { data: apiUsage, isLoading, refetch } = useQuery({
+  const { data: apiUsage, isLoading, refetch } = useQuery<ApiUsageData[]>({
     queryKey: ['guesty-api-usage'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -19,13 +37,13 @@ export function useGuestyApiMonitor() {
         .limit(50);
         
       if (error) throw error;
-      return data;
+      return data as ApiUsageData[];
     },
     refetchInterval: 10 * 60 * 1000, // 10 minutes
   });
 
   // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors } = useQuery({
+  const { data: rateLimitErrors } = useQuery<ApiUsageData[]>({
     queryKey: ['guesty-rate-limit-errors'],
     queryFn: async () => {
       const oneDayAgo = new Date();
@@ -39,13 +57,20 @@ export function useGuestyApiMonitor() {
         .order('timestamp', { ascending: false });
         
       if (error) throw error;
-      return data;
+      return data as ApiUsageData[];
     },
     refetchInterval: 60000, // 1 minute
   });
 
   // Get API health status
-  const { data: healthData } = useQuery({
+  const { data: healthData } = useQuery<{
+    id?: string;
+    provider: string;
+    status: string;
+    last_synced?: string;
+    last_error?: string;
+    updated_at: string;
+  }>({
     queryKey: ['guesty-api-health'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -61,8 +86,8 @@ export function useGuestyApiMonitor() {
   });
 
   // Calculate usage metrics
-  const getUsageMetrics = () => {
-    if (!apiUsage) return { total24h: 0, mostUsed: null, lastRateLimitError: null };
+  const getUsageMetrics = (): UsageMetrics => {
+    if (!apiUsage) return { total24h: 0, mostUsed: null, mostUsedCount: 0, lastRateLimitError: null };
     
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
@@ -70,19 +95,19 @@ export function useGuestyApiMonitor() {
     const recent = apiUsage.filter(u => new Date(u.timestamp) > oneDayAgo);
     
     // Count by endpoint
-    const endpointCounts = {};
+    const endpointCounts: Record<string, number> = {};
     recent.forEach(call => {
       const endpoint = call.endpoint || 'unknown';
       endpointCounts[endpoint] = (endpointCounts[endpoint] || 0) + 1;
     });
     
     // Find most used endpoint
-    let mostUsed = null;
+    let mostUsed: string | null = null;
     let maxCount = 0;
     Object.entries(endpointCounts).forEach(([endpoint, count]) => {
-      if ((count as number) > maxCount) {
+      if (count > maxCount) {
         mostUsed = endpoint;
-        maxCount = count as number;
+        maxCount = count;
       }
     });
     
@@ -97,7 +122,7 @@ export function useGuestyApiMonitor() {
   };
 
   // Check for rate limit alerts
-  const checkRateLimitAlert = () => {
+  const checkRateLimitAlert = (): boolean => {
     if (!rateLimitErrors || !rateLimitErrors.length) return false;
     
     const mostRecent = new Date(rateLimitErrors[0].timestamp);

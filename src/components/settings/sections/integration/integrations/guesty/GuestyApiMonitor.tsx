@@ -9,12 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "sonner";
+import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
 const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
-  const { toast } = useToast();
   
   // Get API usage data - last 50 records
   const { data: apiUsage, isLoading, refetch } = useQuery({
@@ -65,13 +64,13 @@ const GuestyApiMonitor: React.FC = () => {
         });
       }
     }
-  }, [rateLimitErrors, toast]);
+  }, [rateLimitErrors]);
 
   const getLatestUsageByEndpoint = () => {
     if (!apiUsage) return [];
     const endpointMap = new Map();
     
-    apiUsage.forEach((usage) => {
+    apiUsage.forEach((usage: any) => {
       if (!endpointMap.has(usage.endpoint)) {
         endpointMap.set(usage.endpoint, usage);
       }
@@ -87,13 +86,13 @@ const GuestyApiMonitor: React.FC = () => {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     
-    const recentCalls = apiUsage.filter(u => new Date(u.timestamp) > oneDayAgo);
+    const recentCalls = apiUsage.filter((u: any) => new Date(u.timestamp) > oneDayAgo);
     
     // Count by endpoint
-    const endpointCounts = {};
-    const endpointStatuses = {};
+    const endpointCounts: Record<string, number> = {};
+    const endpointStatuses: Record<string, { success: number; error: number; rateLimit: number }> = {};
     
-    recentCalls.forEach(call => {
+    recentCalls.forEach((call: any) => {
       const endpoint = call.endpoint || 'unknown';
       endpointCounts[endpoint] = (endpointCounts[endpoint] || 0) + 1;
       
@@ -129,7 +128,7 @@ const GuestyApiMonitor: React.FC = () => {
   const endpointUsage = getEndpointUsageCounts();
   
   const isRateLimited = latestUsage.some(
-    (usage) => usage.remaining && usage.remaining < 10
+    (usage: any) => usage.remaining && usage.remaining < 10
   );
   
   const formatEndpointName = (endpoint: string) => {
@@ -159,7 +158,7 @@ const GuestyApiMonitor: React.FC = () => {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     
-    return apiUsage.filter(u => new Date(u.timestamp) > oneDayAgo).length;
+    return apiUsage.filter((u: any) => new Date(u.timestamp) > oneDayAgo).length;
   };
 
   const getMostUsedEndpoint = () => {
@@ -244,7 +243,7 @@ const GuestyApiMonitor: React.FC = () => {
         <TabsContent value="usage" className="m-0">
           <CardContent>
             <div className="space-y-3 text-sm">
-              {latestUsage.map((usage) => (
+              {latestUsage.map((usage: any) => (
                 <div key={usage.endpoint} className="space-y-1">
                   <div className="flex justify-between items-center">
                     <div className="font-medium capitalize">
@@ -259,7 +258,7 @@ const GuestyApiMonitor: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <Progress
                       value={
-                        usage.rate_limit 
+                        usage.rate_limit && typeof usage.rate_limit === 'number'
                           ? ((usage.rate_limit - (usage.remaining || 0)) / usage.rate_limit) * 100
                           : 0
                       }
@@ -274,7 +273,7 @@ const GuestyApiMonitor: React.FC = () => {
 
               <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
                 <ArrowDownCircle className="h-3.5 w-3.5" /> 
-                <span>Updated {new Date(latestUsage[0]?.timestamp).toLocaleTimeString()}</span>
+                <span>Updated {latestUsage[0] ? new Date(latestUsage[0].timestamp).toLocaleTimeString() : 'Unknown'}</span>
               </div>
             </div>
           </CardContent>
@@ -301,7 +300,7 @@ const GuestyApiMonitor: React.FC = () => {
               <div>
                 <div className="font-medium text-xs mb-2">Endpoint Usage (last 24h)</div>
                 <div className="space-y-2">
-                  {endpointUsage.map((item) => (
+                  {endpointUsage.map((item: any) => (
                     <div key={item.endpoint}>
                       <div className="flex justify-between mb-1 text-xs">
                         <span className="truncate">{formatEndpointName(item.endpoint)}</span>
@@ -309,24 +308,24 @@ const GuestyApiMonitor: React.FC = () => {
                       </div>
                       <div className="h-2 bg-muted rounded-full overflow-hidden flex">
                         {/* Success bar */}
-                        {item.status.success > 0 && (
+                        {item.status && item.status.success > 0 && (
                           <div 
                             className="bg-emerald-500 h-full" 
-                            style={{ width: `${(item.status.success / item.count) * 100}%` }}
+                            style={{ width: `${(item.status.success / Number(item.count)) * 100}%` }}
                           />
                         )}
                         {/* Error bar */}
-                        {item.status.error > 0 && (
+                        {item.status && item.status.error > 0 && (
                           <div 
                             className="bg-amber-500 h-full" 
-                            style={{ width: `${(item.status.error / item.count) * 100}%` }}
+                            style={{ width: `${(item.status.error / Number(item.count)) * 100}%` }}
                           />
                         )}
                         {/* Rate limit bar */}
-                        {item.status.rateLimit > 0 && (
+                        {item.status && item.status.rateLimit > 0 && (
                           <div 
                             className="bg-red-500 h-full" 
-                            style={{ width: `${(item.status.rateLimit / item.count) * 100}%` }}
+                            style={{ width: `${(item.status.rateLimit / Number(item.count)) * 100}%` }}
                           />
                         )}
                       </div>
