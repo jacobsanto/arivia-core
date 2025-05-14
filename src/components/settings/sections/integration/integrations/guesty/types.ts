@@ -1,4 +1,3 @@
-
 export interface ApiUsage {
   id: string;
   endpoint: string;
@@ -11,6 +10,8 @@ export interface ApiUsage {
 
 export interface RateLimitError extends ApiUsage {
   status: number;
+  method?: string;
+  listing_id?: string;
 }
 
 export interface IntegrationHealthData {

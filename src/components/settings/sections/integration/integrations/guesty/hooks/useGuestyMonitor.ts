@@ -115,7 +115,7 @@ export function useGuestyMonitor() {
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        // Explicitly define the return type and use proper mapping
+        // Create a properly typed array for rate limit errors
         const rateLimitErrors: RateLimitError[] = [];
         
         if (rateLimitErrorsData && Array.isArray(rateLimitErrorsData)) {
@@ -128,8 +128,9 @@ export function useGuestyMonitor() {
               reset: error.reset,
               timestamp: error.timestamp,
               status: error.status || 429,
-              method: error.method,
-              listing_id: error.listing_id
+              // Only include optional properties if they exist in the source data
+              ...(error.method && { method: error.method }),
+              ...(error.listing_id && { listing_id: error.listing_id })
             });
           });
         }
