@@ -115,11 +115,11 @@ export function useGuestyMonitor() {
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        // Create a properly typed array for rate limit errors
+        // Fixed: Simplified approach to avoid deep type instantiation
         const rateLimitErrors: RateLimitError[] = [];
         
         if (rateLimitErrorsData && Array.isArray(rateLimitErrorsData)) {
-          rateLimitErrorsData.forEach((error: RawApiUsageData) => {
+          for (const error of rateLimitErrorsData as RawApiUsageData[]) {
             rateLimitErrors.push({
               id: error.id,
               endpoint: error.endpoint,
@@ -128,11 +128,10 @@ export function useGuestyMonitor() {
               reset: error.reset,
               timestamp: error.timestamp,
               status: error.status || 429,
-              // Only include optional properties if they exist in the source data
-              ...(error.method && { method: error.method }),
-              ...(error.listing_id && { listing_id: error.listing_id })
+              ...(error.method ? { method: error.method } : {}),
+              ...(error.listing_id ? { listing_id: error.listing_id } : {})
             });
-          });
+          }
         }
           
         const hasRecentRateLimits = rateLimitErrors.length > 0;
