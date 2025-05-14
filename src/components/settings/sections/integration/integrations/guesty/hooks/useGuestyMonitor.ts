@@ -3,18 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MonitorData, RateLimitError } from "../types";
 
-interface SyncLog {
-  id: string;
-  provider: string;
-  sync_type: string;
-  status: string;
-  start_time: string;
-  end_time?: string | null;
-  message?: string | null;
-  sync_duration_ms?: number | null;
-  webhook_event_type?: string | null;
-}
-
 // Define a type for the raw API usage data from the database
 interface RawApiUsageData {
   id: string;
@@ -26,6 +14,18 @@ interface RawApiUsageData {
   status?: number;
   method?: string;
   listing_id?: string;
+}
+
+interface SyncLog {
+  id: string;
+  provider: string;
+  sync_type: string;
+  status: string;
+  start_time: string;
+  end_time?: string | null;
+  message?: string | null;
+  sync_duration_ms?: number | null;
+  webhook_event_type?: string | null;
 }
 
 export function useGuestyMonitor() {
@@ -108,29 +108,42 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        const { data: rateLimitErrorsData } = await supabase
+        const { data: rawRateLimitErrors } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
-          
-        // Fixed: Simplified approach to avoid deep type instantiation
+        
+        // Create an empty array with the correct type
         const rateLimitErrors: RateLimitError[] = [];
         
-        if (rateLimitErrorsData && Array.isArray(rateLimitErrorsData)) {
-          for (const error of rateLimitErrorsData as RawApiUsageData[]) {
-            rateLimitErrors.push({
+        // Explicitly cast and process each error individually to avoid deep instantiation
+        if (rawRateLimitErrors && Array.isArray(rawRateLimitErrors)) {
+          for (let i = 0; i < rawRateLimitErrors.length; i++) {
+            const error = rawRateLimitErrors[i] as RawApiUsageData;
+            
+            // Create a new object with only the properties we need
+            const rateLimitError: RateLimitError = {
               id: error.id,
               endpoint: error.endpoint,
               rate_limit: error.rate_limit,
               remaining: error.remaining,
               reset: error.reset,
               timestamp: error.timestamp,
-              status: error.status || 429,
-              ...(error.method ? { method: error.method } : {}),
-              ...(error.listing_id ? { listing_id: error.listing_id } : {})
-            });
+              status: error.status || 429
+            };
+            
+            // Conditionally add optional properties
+            if (error.method) {
+              rateLimitError.method = error.method;
+            }
+            
+            if (error.listing_id) {
+              rateLimitError.listing_id = error.listing_id;
+            }
+            
+            rateLimitErrors.push(rateLimitError);
           }
         }
           
