@@ -15,10 +15,23 @@ interface SyncLog {
   webhook_event_type?: string | null;
 }
 
+// Define a type for the raw API usage data from the database
+interface RawApiUsageData {
+  id: string;
+  endpoint: string;
+  rate_limit: number;
+  remaining: number;
+  reset: string;
+  timestamp: string;
+  status?: number;
+  method?: string;
+  listing_id?: string;
+}
+
 export function useGuestyMonitor() {
   return useQuery<MonitorData>({
     queryKey: ["guesty-monitor"],
-    queryFn: async () => {
+    queryFn: async (): Promise<MonitorData> => {
       try {
         // Get Guesty connection status
         const { data: integrationHealth } = await supabase
@@ -102,11 +115,20 @@ export function useGuestyMonitor() {
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        // Convert to RateLimitError type
-        const rateLimitErrors = (rateLimitErrorsData || []).map(error => ({
-          ...error,
-          status: error.status || 429, // Ensure status field is always present
-        })) as RateLimitError[];
+        // Convert to RateLimitError type with type safety
+        const rateLimitErrors: RateLimitError[] = (rateLimitErrorsData || []).map((error: RawApiUsageData) => {
+          return {
+            id: error.id,
+            endpoint: error.endpoint,
+            rate_limit: error.rate_limit,
+            remaining: error.remaining,
+            reset: error.reset,
+            timestamp: error.timestamp,
+            status: error.status || 429, // Ensure status field is always present
+            method: error.method,
+            listing_id: error.listing_id
+          };
+        });
           
         const hasRecentRateLimits = rateLimitErrors.length > 0;
 
@@ -120,7 +142,7 @@ export function useGuestyMonitor() {
           avgSyncDuration,
           hasRecentRateLimits,
           rateLimitErrors
-        } as MonitorData;
+        };
       } catch (error) {
         console.error("Error fetching Guesty monitor data:", error);
         throw error;
