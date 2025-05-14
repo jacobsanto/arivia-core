@@ -115,20 +115,24 @@ export function useGuestyMonitor() {
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        // Convert to RateLimitError type with type safety
-        const rateLimitErrors: RateLimitError[] = (rateLimitErrorsData || []).map((error: RawApiUsageData) => {
-          return {
-            id: error.id,
-            endpoint: error.endpoint,
-            rate_limit: error.rate_limit,
-            remaining: error.remaining,
-            reset: error.reset,
-            timestamp: error.timestamp,
-            status: error.status || 429, // Ensure status field is always present
-            method: error.method,
-            listing_id: error.listing_id
-          };
-        });
+        // Explicitly define the return type and use proper mapping
+        const rateLimitErrors: RateLimitError[] = [];
+        
+        if (rateLimitErrorsData && Array.isArray(rateLimitErrorsData)) {
+          rateLimitErrorsData.forEach((error: RawApiUsageData) => {
+            rateLimitErrors.push({
+              id: error.id,
+              endpoint: error.endpoint,
+              rate_limit: error.rate_limit,
+              remaining: error.remaining,
+              reset: error.reset,
+              timestamp: error.timestamp,
+              status: error.status || 429,
+              method: error.method,
+              listing_id: error.listing_id
+            });
+          });
+        }
           
         const hasRecentRateLimits = rateLimitErrors.length > 0;
 
