@@ -108,45 +108,44 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Get rate limited API calls with explicit type casting
-        const { data: apiRateLimitData } = await supabase
+        // Fetch the API rate limit data as a plain object
+        const rateResponse = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
+          
+        const apiRateLimitData = rateResponse.data || [];
         
         // Initialize empty array for rate limit errors
         const rateLimitErrors: RateLimitError[] = [];
         
-        // Process rate limit data safely with type assertions
-        if (apiRateLimitData && Array.isArray(apiRateLimitData)) {
-          for (let i = 0; i < apiRateLimitData.length; i++) {
-            // Type assertion to avoid inference issues
-            const item = apiRateLimitData[i] as RawApiUsageData;
+        // Process rate limit data with simple for loop and manual construction
+        for (let i = 0; i < apiRateLimitData.length; i++) {
+          const item = apiRateLimitData[i];
             
-            // Create error object with only required fields first
-            const error: RateLimitError = {
-              id: item.id,
-              endpoint: item.endpoint,
-              rate_limit: item.rate_limit,
-              remaining: item.remaining,
-              reset: item.reset,
-              timestamp: item.timestamp,
-              status: item.status || 429
-            };
+          // Manually create each error object without relying on complex type inference
+          const error: RateLimitError = {
+            id: item.id,
+            endpoint: item.endpoint,
+            rate_limit: item.rate_limit,
+            remaining: item.remaining,
+            reset: item.reset,
+            timestamp: item.timestamp,
+            status: item.status || 429
+          };
             
-            // Add optional fields separately to avoid deep typing
-            if (item.method) {
-              error.method = item.method;
-            }
-            
-            if (item.listing_id) {
-              error.listing_id = item.listing_id;
-            }
-            
-            rateLimitErrors.push(error);
+          // Add optional fields only if they exist
+          if (item.method) {
+            error.method = item.method;
           }
+            
+          if (item.listing_id) {
+            error.listing_id = item.listing_id;
+          }
+            
+          rateLimitErrors.push(error);
         }
           
         const hasRecentRateLimits = rateLimitErrors.length > 0;
