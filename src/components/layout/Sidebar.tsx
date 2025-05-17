@@ -22,9 +22,7 @@ const Sidebar = () => {
   const isAdmin = user.role === "administrator";
   const isPropertyManager = user.role === "property_manager";
   return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
-      <div className="flex items-center justify-center py-6">
-        {/* Logo removed from here - now only in Header */}
-      </div>
+      
       
       <div className="flex items-center justify-center mb-6">
         <div className="flex flex-col items-center">
