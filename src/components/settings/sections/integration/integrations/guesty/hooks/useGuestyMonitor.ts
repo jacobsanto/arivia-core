@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MonitorData, RateLimitError } from "../types";
 
-// Define a type for the raw API usage data from the database
+// Define a simple type for raw data from the database
 interface RawApiUsageData {
   id: string;
   endpoint: string;
@@ -108,42 +108,44 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        const { data: rawRateLimitErrors } = await supabase
+        // Get the raw data but don't try to type it yet
+        const { data } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
         
-        // Create an empty array with the correct type
+        // Now we handle the data manually with type annotations
         const rateLimitErrors: RateLimitError[] = [];
         
-        // Explicitly cast and process each error individually to avoid deep instantiation
-        if (rawRateLimitErrors && Array.isArray(rawRateLimitErrors)) {
-          for (let i = 0; i < rawRateLimitErrors.length; i++) {
-            const error = rawRateLimitErrors[i] as RawApiUsageData;
+        // Only proceed if we have data and it's an array
+        if (data && Array.isArray(data)) {
+          // Process each item individually without deep type inference
+          for (let i = 0; i < data.length; i++) {
+            const item = data[i];
             
-            // Create a new object with only the properties we need
-            const rateLimitError: RateLimitError = {
-              id: error.id,
-              endpoint: error.endpoint,
-              rate_limit: error.rate_limit,
-              remaining: error.remaining,
-              reset: error.reset,
-              timestamp: error.timestamp,
-              status: error.status || 429
+            // Create a fresh RateLimitError object with required properties
+            const error: RateLimitError = {
+              id: item.id,
+              endpoint: item.endpoint,
+              rate_limit: item.rate_limit,
+              remaining: item.remaining,
+              reset: item.reset,
+              timestamp: item.timestamp,
+              status: item.status || 429
             };
             
-            // Conditionally add optional properties
-            if (error.method) {
-              rateLimitError.method = error.method;
+            // Add optional properties if they exist
+            if (typeof item.method === 'string') {
+              error.method = item.method;
             }
             
-            if (error.listing_id) {
-              rateLimitError.listing_id = error.listing_id;
+            if (typeof item.listing_id === 'string') {
+              error.listing_id = item.listing_id;
             }
             
-            rateLimitErrors.push(rateLimitError);
+            rateLimitErrors.push(error);
           }
         }
           
