@@ -108,41 +108,40 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Get the raw data but don't try to type it yet
-        const { data } = await supabase
+        // Explicitly type the data return
+        const { data: rateLimitData } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
         
-        // Now we handle the data manually with type annotations
         const rateLimitErrors: RateLimitError[] = [];
         
-        // Only proceed if we have data and it's an array
-        if (data && Array.isArray(data)) {
-          // Process each item individually without deep type inference
-          for (let i = 0; i < data.length; i++) {
-            const item = data[i];
+        if (rateLimitData && Array.isArray(rateLimitData)) {
+          // Use a simple loop and explicit typing to avoid deep type instantiation
+          for (const item of rateLimitData) {
+            // Cast the raw data to our interface
+            const rawItem = item as RawApiUsageData;
             
-            // Create a fresh RateLimitError object with required properties
+            // Create a new object with required properties
             const error: RateLimitError = {
-              id: item.id,
-              endpoint: item.endpoint,
-              rate_limit: item.rate_limit,
-              remaining: item.remaining,
-              reset: item.reset,
-              timestamp: item.timestamp,
-              status: item.status || 429
+              id: rawItem.id,
+              endpoint: rawItem.endpoint,
+              rate_limit: rawItem.rate_limit,
+              remaining: rawItem.remaining,
+              reset: rawItem.reset,
+              timestamp: rawItem.timestamp,
+              status: rawItem.status || 429
             };
             
-            // Add optional properties if they exist
-            if (typeof item.method === 'string') {
-              error.method = item.method;
+            // Add optional properties only if they exist
+            if (rawItem.method) {
+              error.method = rawItem.method;
             }
             
-            if (typeof item.listing_id === 'string') {
-              error.listing_id = item.listing_id;
+            if (rawItem.listing_id) {
+              error.listing_id = rawItem.listing_id;
             }
             
             rateLimitErrors.push(error);
