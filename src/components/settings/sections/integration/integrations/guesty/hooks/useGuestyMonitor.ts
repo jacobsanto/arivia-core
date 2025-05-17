@@ -108,40 +108,41 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Explicitly type the data return
-        const { data: rateLimitData } = await supabase
+        // Get rate limited API calls with explicit type casting
+        const { data: apiRateLimitData } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
         
+        // Initialize empty array for rate limit errors
         const rateLimitErrors: RateLimitError[] = [];
         
-        if (rateLimitData && Array.isArray(rateLimitData)) {
-          // Use a simple loop and explicit typing to avoid deep type instantiation
-          for (const item of rateLimitData) {
-            // Cast the raw data to our interface
-            const rawItem = item as RawApiUsageData;
+        // Process rate limit data safely with type assertions
+        if (apiRateLimitData && Array.isArray(apiRateLimitData)) {
+          for (let i = 0; i < apiRateLimitData.length; i++) {
+            // Type assertion to avoid inference issues
+            const item = apiRateLimitData[i] as RawApiUsageData;
             
-            // Create a new object with required properties
+            // Create error object with only required fields first
             const error: RateLimitError = {
-              id: rawItem.id,
-              endpoint: rawItem.endpoint,
-              rate_limit: rawItem.rate_limit,
-              remaining: rawItem.remaining,
-              reset: rawItem.reset,
-              timestamp: rawItem.timestamp,
-              status: rawItem.status || 429
+              id: item.id,
+              endpoint: item.endpoint,
+              rate_limit: item.rate_limit,
+              remaining: item.remaining,
+              reset: item.reset,
+              timestamp: item.timestamp,
+              status: item.status || 429
             };
             
-            // Add optional properties only if they exist
-            if (rawItem.method) {
-              error.method = rawItem.method;
+            // Add optional fields separately to avoid deep typing
+            if (item.method) {
+              error.method = item.method;
             }
             
-            if (rawItem.listing_id) {
-              error.listing_id = rawItem.listing_id;
+            if (item.listing_id) {
+              error.listing_id = item.listing_id;
             }
             
             rateLimitErrors.push(error);
