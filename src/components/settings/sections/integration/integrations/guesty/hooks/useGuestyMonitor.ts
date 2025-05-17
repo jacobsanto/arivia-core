@@ -109,23 +109,23 @@ export function useGuestyMonitor() {
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
         // Fetch the API rate limit data
-        const rateResponse = await supabase
+        const { data: rawRateLimitData, error: rateError } = await supabase
           .from("guesty_api_usage")
           .select("*")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        const apiRateLimitData = rateResponse.data as RawApiUsageData[] || [];
+        // Handle the case where data is null or there's an error
+        const apiRateLimitData: RawApiUsageData[] = rawRateLimitData || [];
         
         // Initialize empty array for rate limit errors
         const rateLimitErrors: RateLimitError[] = [];
         
-        // Process rate limit data with a simple for loop
+        // Process rate limit data with a simple for loop to avoid deep type instantiation
         for (let i = 0; i < apiRateLimitData.length; i++) {
           const item = apiRateLimitData[i];
           
-          // Create base error object with required properties
           const error: RateLimitError = {
             id: item.id,
             endpoint: item.endpoint,
@@ -136,7 +136,6 @@ export function useGuestyMonitor() {
             status: item.status || 429
           };
           
-          // Add optional fields only if they exist
           if (item.method) {
             error.method = item.method;
           }
