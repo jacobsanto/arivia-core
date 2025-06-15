@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MonitorData, RateLimitError } from "../types";
@@ -41,7 +40,7 @@ export function useGuestyMonitor() {
           .maybeSingle();
 
         // Get latest listing sync log
-        const { data: lastListingSync } = await supabase
+        const { data: lastListingSyncData } = await supabase
           .from("sync_logs")
           .select("*")
           .eq("provider", "guesty")
@@ -49,9 +48,10 @@ export function useGuestyMonitor() {
           .order("start_time", { ascending: false })
           .limit(1)
           .maybeSingle();
+        const lastListingSync: SyncLog | null = lastListingSyncData ? { ...lastListingSyncData } : null;
 
         // Get latest webhook sync
-        const { data: lastBookingsWebhook } = await supabase
+        const { data: lastBookingsWebhookData } = await supabase
           .from("sync_logs")
           .select("*")
           .eq("provider", "guesty")
@@ -61,6 +61,7 @@ export function useGuestyMonitor() {
           .order("start_time", { ascending: false })
           .limit(1)
           .maybeSingle();
+        const lastBookingsWebhook: SyncLog | null = lastBookingsWebhookData ? { ...lastBookingsWebhookData } : null;
 
         // Get total listings
         const { count: totalListings, error: listingsError } = await supabase
@@ -76,12 +77,13 @@ export function useGuestyMonitor() {
           .neq("status", "cancelled");
 
         // Get recent sync logs for the sync activity timeline
-        const { data: logs, error: logsError } = await supabase
+        const { data: logsData, error: logsError } = await supabase
           .from("sync_logs")
           .select("*")
           .eq("provider", "guesty")
           .order("start_time", { ascending: false })
           .limit(10);
+        const logs: SyncLog[] = logsData ? logsData.map(log => ({ ...log })) : [];
 
         // Calculate average sync duration
         const { data: syncDurations, error: durationsError } = await supabase
@@ -155,7 +157,7 @@ export function useGuestyMonitor() {
           lastBookingsWebhook,
           totalListings: totalListings || 0,
           totalBookings: totalBookings || 0,
-          logs: logs || [],
+          logs: logs,
           avgSyncDuration,
           hasRecentRateLimits,
           rateLimitErrors
