@@ -1,6 +1,4 @@
-
-import { render } from '@testing-library/react';
-import { screen } from '@testing-library/dom';
+import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Form } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';

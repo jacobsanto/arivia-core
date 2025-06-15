@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MonitorData, RateLimitError } from "../types";
@@ -140,43 +141,39 @@ export function useGuestyMonitor() {
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Fetch the API rate limit data
+        // Fetch the API rate limit data with explicit typing
         const { data: rawRateLimitData, error: rateError } = await supabase
           .from("guesty_api_usage")
-          .select("*")
+          .select("id, endpoint, rate_limit, remaining, reset, timestamp, status, method, listing_id")
           .eq("status", 429)
           .gte("timestamp", oneDayAgo.toISOString())
           .order("timestamp", { ascending: false });
           
-        // Handle the case where data is null or there's an error
-        const apiRateLimitData: RawApiUsageData[] = rawRateLimitData || [];
-        
-        // Initialize empty array for rate limit errors
+        // Create rate limit errors array with explicit typing
         const rateLimitErrors: RateLimitError[] = [];
         
-        // Process rate limit data with a simple for loop to avoid deep type instantiation
-        for (let i = 0; i < apiRateLimitData.length; i++) {
-          const item = apiRateLimitData[i];
-          
-          const error: RateLimitError = {
-            id: item.id,
-            endpoint: item.endpoint,
-            rate_limit: item.rate_limit,
-            remaining: item.remaining,
-            reset: item.reset,
-            timestamp: item.timestamp,
-            status: item.status || 429
-          };
-          
-          if (item.method) {
-            error.method = item.method;
+        if (rawRateLimitData && Array.isArray(rawRateLimitData)) {
+          for (const item of rawRateLimitData) {
+            const error: RateLimitError = {
+              id: item.id,
+              endpoint: item.endpoint,
+              rate_limit: item.rate_limit,
+              remaining: item.remaining,
+              reset: item.reset,
+              timestamp: item.timestamp,
+              status: item.status || 429
+            };
+            
+            if (item.method) {
+              error.method = item.method;
+            }
+            
+            if (item.listing_id) {
+              error.listing_id = item.listing_id;
+            }
+            
+            rateLimitErrors.push(error);
           }
-          
-          if (item.listing_id) {
-            error.listing_id = item.listing_id;
-          }
-          
-          rateLimitErrors.push(error);
         }
           
         const hasRecentRateLimits = rateLimitErrors.length > 0;
