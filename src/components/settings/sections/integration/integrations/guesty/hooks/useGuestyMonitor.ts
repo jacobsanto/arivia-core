@@ -48,7 +48,17 @@ export function useGuestyMonitor() {
           .order("start_time", { ascending: false })
           .limit(1)
           .maybeSingle();
-        const lastListingSync: SyncLog | null = lastListingSyncData ? { ...lastListingSyncData } : null;
+        const lastListingSync: SyncLog | null = lastListingSyncData ? {
+            id: lastListingSyncData.id,
+            provider: lastListingSyncData.provider,
+            sync_type: lastListingSyncData.sync_type,
+            status: lastListingSyncData.status,
+            start_time: lastListingSyncData.start_time,
+            end_time: lastListingSyncData.end_time,
+            message: lastListingSyncData.message,
+            sync_duration_ms: lastListingSyncData.sync_duration_ms,
+            webhook_event_type: lastListingSyncData.webhook_event_type
+        } : null;
 
         // Get latest webhook sync
         const { data: lastBookingsWebhookData } = await supabase
@@ -61,7 +71,17 @@ export function useGuestyMonitor() {
           .order("start_time", { ascending: false })
           .limit(1)
           .maybeSingle();
-        const lastBookingsWebhook: SyncLog | null = lastBookingsWebhookData ? { ...lastBookingsWebhookData } : null;
+        const lastBookingsWebhook: SyncLog | null = lastBookingsWebhookData ? {
+            id: lastBookingsWebhookData.id,
+            provider: lastBookingsWebhookData.provider,
+            sync_type: lastBookingsWebhookData.sync_type,
+            status: lastBookingsWebhookData.status,
+            start_time: lastBookingsWebhookData.start_time,
+            end_time: lastBookingsWebhookData.end_time,
+            message: lastBookingsWebhookData.message,
+            sync_duration_ms: lastBookingsWebhookData.sync_duration_ms,
+            webhook_event_type: lastBookingsWebhookData.webhook_event_type
+        } : null;
 
         // Get total listings
         const { count: totalListings, error: listingsError } = await supabase
@@ -83,7 +103,17 @@ export function useGuestyMonitor() {
           .eq("provider", "guesty")
           .order("start_time", { ascending: false })
           .limit(10);
-        const logs: SyncLog[] = logsData ? logsData.map(log => ({ ...log })) : [];
+        const logs: SyncLog[] = logsData ? logsData.map(log => ({
+            id: log.id,
+            provider: log.provider,
+            sync_type: log.sync_type,
+            status: log.status,
+            start_time: log.start_time,
+            end_time: log.end_time,
+            message: log.message,
+            sync_duration_ms: log.sync_duration_ms,
+            webhook_event_type: log.webhook_event_type
+        })) : [];
 
         // Calculate average sync duration
         const { data: syncDurations, error: durationsError } = await supabase
