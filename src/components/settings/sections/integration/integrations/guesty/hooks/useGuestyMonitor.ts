@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { MonitorData, RateLimitError } from "../types";
 
-// Define a simple type for raw data from the database
+// Define a simple type for raw data from the database - only existing columns
 interface RawApiUsageData {
   id: string;
   endpoint: string;
@@ -11,9 +11,6 @@ interface RawApiUsageData {
   remaining: number;
   reset: string;
   timestamp: string;
-  status?: number;
-  method?: string;
-  listing_id?: string;
 }
 
 interface SyncLog {
@@ -137,19 +134,20 @@ export function useGuestyMonitor() {
           }
         }
 
-        // Check recent rate limit errors
+        // Since the guesty_api_usage table doesn't have a status column,
+        // we'll check for rate limits based on remaining being 0 or very low
         const oneDayAgo = new Date();
         oneDayAgo.setDate(oneDayAgo.getDate() - 1);
         
-        // Fetch the API rate limit data with explicit typing
+        // Fetch the API usage data - only existing columns
         const { data: rawRateLimitData, error: rateError } = await supabase
           .from("guesty_api_usage")
-          .select("id, endpoint, rate_limit, remaining, reset, timestamp, status, method, listing_id")
-          .eq("status", 429)
+          .select("id, endpoint, rate_limit, remaining, reset, timestamp")
           .gte("timestamp", oneDayAgo.toISOString())
+          .lte("remaining", 5) // Consider it rate limited if 5 or fewer requests remaining
           .order("timestamp", { ascending: false });
           
-        // Create rate limit errors array with explicit typing
+        // Create rate limit errors array
         const rateLimitErrors: RateLimitError[] = [];
         
         if (rawRateLimitData && Array.isArray(rawRateLimitData)) {
@@ -161,16 +159,8 @@ export function useGuestyMonitor() {
               remaining: item.remaining,
               reset: item.reset,
               timestamp: item.timestamp,
-              status: item.status || 429
+              status: 429 // Assume rate limited status
             };
-            
-            if (item.method) {
-              error.method = item.method;
-            }
-            
-            if (item.listing_id) {
-              error.listing_id = item.listing_id;
-            }
             
             rateLimitErrors.push(error);
           }
