@@ -23,13 +23,22 @@ interface UsageMetrics {
   lastRateLimitError: string | null;
 }
 
+interface HealthData {
+  id?: string;
+  provider: string;
+  status: string;
+  last_synced?: string;
+  last_error?: string;
+  updated_at: string;
+}
+
 export function useGuestyApiMonitor() {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Get API usage data
-  const { data: apiUsage, isLoading, refetch } = useQuery<ApiUsageData[]>({
+  const { data: apiUsage, isLoading, refetch } = useQuery({
     queryKey: ['guesty-api-usage'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ApiUsageData[]> => {
       const { data, error } = await supabase
         .from('guesty_api_usage')
         .select('*')
@@ -37,42 +46,35 @@ export function useGuestyApiMonitor() {
         .limit(50);
         
       if (error) throw error;
-      return data as ApiUsageData[];
+      return (data || []) as ApiUsageData[];
     },
     refetchInterval: 10 * 60 * 1000, // 10 minutes
   });
 
   // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors } = useQuery<ApiUsageData[]>({
+  const { data: rateLimitErrors } = useQuery({
     queryKey: ['guesty-rate-limit-errors'],
-    queryFn: async () => {
+    queryFn: async (): Promise<ApiUsageData[]> => {
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
       const { data, error } = await supabase
         .from('guesty_api_usage')
         .select('*')
-        .eq('status', 429)
+        .lte('remaining', 5) // Consider rate limited if 5 or fewer requests remaining
         .gte('timestamp', oneDayAgo.toISOString())
         .order('timestamp', { ascending: false });
         
       if (error) throw error;
-      return data as ApiUsageData[];
+      return (data || []) as ApiUsageData[];
     },
     refetchInterval: 60000, // 1 minute
   });
 
   // Get API health status
-  const { data: healthData } = useQuery<{
-    id?: string;
-    provider: string;
-    status: string;
-    last_synced?: string;
-    last_error?: string;
-    updated_at: string;
-  }>({
+  const { data: healthData } = useQuery({
     queryKey: ['guesty-api-health'],
-    queryFn: async () => {
+    queryFn: async (): Promise<HealthData | null> => {
       const { data, error } = await supabase
         .from('integration_health')
         .select('*')
@@ -80,7 +82,7 @@ export function useGuestyApiMonitor() {
         .single();
         
       if (error && error.code !== 'PGRST116') throw error; // Ignore not found
-      return data;
+      return data as HealthData | null;
     },
     refetchInterval: 5 * 60 * 1000, // 5 minutes
   });
