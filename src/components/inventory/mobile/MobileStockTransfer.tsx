@@ -12,6 +12,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { ArrowRight, Plus, Minus } from "lucide-react";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MobileStockTransferProps {
   onComplete: () => void;
@@ -19,6 +21,7 @@ interface MobileStockTransferProps {
 
 const MobileStockTransfer = ({ onComplete }: MobileStockTransferProps) => {
   const [items, setItems] = React.useState([{ id: 1, itemId: "", quantity: 1 }]);
+  const { properties, isLoading } = useRealProperties();
 
   const addItem = () => {
     setItems([...items, { id: items.length + 1, itemId: "", quantity: 1 }]);
@@ -30,36 +33,36 @@ const MobileStockTransfer = ({ onComplete }: MobileStockTransferProps) => {
     }
   };
 
+  const LocationSelect = ({ htmlFor, placeholder }: { htmlFor: string; placeholder: string }) => (
+    isLoading ? (
+      <Skeleton className="h-9 w-full" />
+    ) : (
+      <Select>
+        <SelectTrigger id={htmlFor}>
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="main">Main Storage</SelectItem>
+          {properties.map(property => (
+            <SelectItem key={property.id} value={property.id}>
+              {property.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    )
+  );
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="fromLocation">From Location</Label>
-          <Select>
-            <SelectTrigger id="fromLocation">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="main">Main Storage</SelectItem>
-              <SelectItem value="villa1">Villa Caldera</SelectItem>
-              <SelectItem value="villa2">Villa Azure</SelectItem>
-              <SelectItem value="villa3">Villa Sunset</SelectItem>
-            </SelectContent>
-          </Select>
+          <LocationSelect htmlFor="fromLocation" placeholder="Select location" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="toLocation">To Location</Label>
-          <Select>
-            <SelectTrigger id="toLocation">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="main">Main Storage</SelectItem>
-              <SelectItem value="villa1">Villa Caldera</SelectItem>
-              <SelectItem value="villa2">Villa Azure</SelectItem>
-              <SelectItem value="villa3">Villa Sunset</SelectItem>
-            </SelectContent>
-          </Select>
+          <LocationSelect htmlFor="toLocation" placeholder="Select location" />
         </div>
       </div>
 

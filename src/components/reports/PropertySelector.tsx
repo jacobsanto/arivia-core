@@ -7,40 +7,38 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PropertySelectorProps {
-  properties: string[];
+  properties?: any[];
   selectedProperty: string;
   onPropertyChange: (value: string) => void;
 }
 
 export const PropertySelector: React.FC<PropertySelectorProps> = ({
-  properties,
   selectedProperty,
   onPropertyChange
 }) => {
-  // Use provided properties or default to just "all" if empty
-  const propertiesList = properties.length > 0 
-    ? properties
-    : ["all"];
+  const { properties, isLoading } = useRealProperties();
+
+  if (isLoading) {
+    return <Skeleton className="h-9 w-[200px]" />;
+  }
 
   return (
-    <div className="space-y-1.5">
-      <Label htmlFor="property-filter">Property</Label>
-      <Select value={selectedProperty || "all"} onValueChange={onPropertyChange}>
-        <SelectTrigger id="property-filter" className="w-[180px]">
-          <SelectValue placeholder="Select Property" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Properties</SelectItem>
-          {propertiesList.filter(p => p !== 'all').map(property => (
-            <SelectItem key={property} value={property}>
-              {property.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={selectedProperty} onValueChange={onPropertyChange}>
+      <SelectTrigger className="w-[200px]">
+        <SelectValue placeholder="Select Property" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="all">All Properties</SelectItem>
+        {properties.map(property => (
+          <SelectItem key={property.id} value={property.id}>
+            {property.name}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 };

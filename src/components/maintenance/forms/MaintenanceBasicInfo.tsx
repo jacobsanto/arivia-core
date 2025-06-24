@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { MaintenanceFormValues } from "./types";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MaintenanceBasicInfoProps {
   form: UseFormReturn<MaintenanceFormValues>;
 }
 
 const MaintenanceBasicInfo = ({ form }: MaintenanceBasicInfoProps) => {
+  const { properties, isLoading } = useRealProperties();
+
   return (
     <>
       <FormField
@@ -40,20 +44,25 @@ const MaintenanceBasicInfo = ({ form }: MaintenanceBasicInfoProps) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Property</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value || "select-property"}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select property" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="select-property" disabled>Select property</SelectItem>
-                  <SelectItem value="Villa Caldera">Villa Caldera</SelectItem>
-                  <SelectItem value="Villa Azure">Villa Azure</SelectItem>
-                  <SelectItem value="Villa Sunset">Villa Sunset</SelectItem>
-                  <SelectItem value="Villa Oceana">Villa Oceana</SelectItem>
-                </SelectContent>
-              </Select>
+              {isLoading ? (
+                <Skeleton className="h-9 w-full" />
+              ) : (
+                <Select onValueChange={field.onChange} value={field.value || ""}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select property" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="" disabled>Select property</SelectItem>
+                    {properties.map(property => (
+                      <SelectItem key={property.id} value={property.name}>
+                        {property.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}

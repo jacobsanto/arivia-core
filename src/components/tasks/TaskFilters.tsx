@@ -5,6 +5,8 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePermissions } from "@/hooks/usePermissions";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TaskFiltersProps {
   searchQuery: string;
@@ -25,6 +27,7 @@ const TaskFilters = ({
   const isMobile = useIsMobile();
   const { canAccess } = usePermissions();
   const isManager = canAccess('manage_housekeeping');
+  const { properties, isLoading } = useRealProperties();
   
   return (
     <div className="space-y-4">
@@ -36,17 +39,21 @@ const TaskFilters = ({
           className="max-w-sm"
         />
         <div className="flex-1" />
-        <select 
-          onChange={(e) => onPropertyFilter(e.target.value)}
-          className="px-3 py-2 border rounded-md"
-        >
-          <option value="all">All Properties</option>
-          <option value="Villa Caldera">Villa Caldera</option>
-          <option value="Villa Sunset">Villa Sunset</option>
-          <option value="Villa Oceana">Villa Oceana</option>
-          <option value="Villa Paradiso">Villa Paradiso</option>
-          <option value="Villa Azure">Villa Azure</option>
-        </select>
+        {isLoading ? (
+          <Skeleton className="h-9 w-[180px]" />
+        ) : (
+          <select 
+            onChange={(e) => onPropertyFilter(e.target.value)}
+            className="px-3 py-2 border rounded-md"
+          >
+            <option value="all">All Properties</option>
+            {properties.map(property => (
+              <option key={property.id} value={property.name}>
+                {property.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <Tabs

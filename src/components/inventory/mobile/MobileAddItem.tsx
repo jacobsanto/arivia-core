@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Camera, Upload } from "lucide-react";
 import { useInventory } from "@/contexts/InventoryContext";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MobileAddItemProps {
   onComplete: () => void;
@@ -20,6 +21,7 @@ interface MobileAddItemProps {
 
 const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
   const { categories, units } = useInventory();
+  const { properties, isLoading } = useRealProperties();
 
   return (
     <div className="space-y-4">
@@ -72,17 +74,23 @@ const MobileAddItem = ({ onComplete }: MobileAddItemProps) => {
         </div>
         <div className="space-y-2">
           <Label htmlFor="location">Initial Location</Label>
-          <Select>
-            <SelectTrigger id="location">
-              <SelectValue placeholder="Select location" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="main">Main Storage</SelectItem>
-              <SelectItem value="villa1">Villa Caldera</SelectItem>
-              <SelectItem value="villa2">Villa Azure</SelectItem>
-              <SelectItem value="villa3">Villa Sunset</SelectItem>
-            </SelectContent>
-          </Select>
+          {isLoading ? (
+            <Skeleton className="h-9 w-full" />
+          ) : (
+            <Select>
+              <SelectTrigger id="location">
+                <SelectValue placeholder="Select location" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="main">Main Storage</SelectItem>
+                {properties.map(property => (
+                  <SelectItem key={property.id} value={property.id}>
+                    {property.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
 

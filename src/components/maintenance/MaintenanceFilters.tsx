@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useRealProperties } from "@/hooks/useRealProperties";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MaintenanceFiltersProps {
   searchQuery: string;
@@ -29,8 +31,8 @@ const MaintenanceFilters = ({
   onPropertyFilter,
   onPriorityFilter,
 }: MaintenanceFiltersProps) => {
-  const properties = ["Villa Caldera", "Villa Azure", "Villa Sunset", "Villa Oceana"];
   const isMobile = useIsMobile();
+  const { properties, isLoading } = useRealProperties();
   
   return (
     <div className="space-y-4">
@@ -42,19 +44,23 @@ const MaintenanceFilters = ({
           onChange={(e) => onSearchChange(e.target.value)}
         />
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <Select onValueChange={(value) => onPropertyFilter(value)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="All Properties" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Properties</SelectItem>
-              {properties.map((property) => (
-                <SelectItem key={property} value={property}>
-                  {property}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isLoading ? (
+            <Skeleton className="h-9 w-[180px]" />
+          ) : (
+            <Select onValueChange={(value) => onPropertyFilter(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="All Properties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                {properties.map((property) => (
+                  <SelectItem key={property.id} value={property.name}>
+                    {property.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           
           <Select onValueChange={(value) => onPriorityFilter(value)}>
             <SelectTrigger className="w-[180px]">
