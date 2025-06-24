@@ -42,7 +42,7 @@ const PropertyFilter: React.FC<PropertyFilterProps> = ({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All Properties</SelectItem>
-          {properties.map(property => (
+          {Array.isArray(properties) && properties.map(property => (
             <SelectItem key={property.id} value={property.id}>
               {property.name}
             </SelectItem>

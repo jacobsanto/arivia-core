@@ -43,7 +43,7 @@ const MobileStockTransfer = ({ onComplete }: MobileStockTransferProps) => {
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="main">Main Storage</SelectItem>
-          {properties.map(property => (
+          {Array.isArray(properties) && properties.map(property => (
             <SelectItem key={property.id} value={property.id}>
               {property.name}
             </SelectItem>

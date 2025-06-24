@@ -47,7 +47,7 @@ const TaskFilters = ({
             className="px-3 py-2 border rounded-md"
           >
             <option value="all">All Properties</option>
-            {properties.map(property => (
+            {Array.isArray(properties) && properties.map(property => (
               <option key={property.id} value={property.name}>
                 {property.name}
               </option>

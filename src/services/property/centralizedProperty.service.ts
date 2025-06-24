@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { GuestyListingDB } from '@/services/guesty/guesty.types';
 
 export interface PropertyOption {
   id: string;
@@ -8,6 +7,11 @@ export interface PropertyOption {
   title: string;
   status?: string;
   location?: string;
+}
+
+interface GuestyAddress {
+  full?: string;
+  [key: string]: any;
 }
 
 export const centralizedPropertyService = {
@@ -22,15 +26,18 @@ export const centralizedPropertyService = {
 
       if (error) throw error;
 
-      return (data || []).map(listing => ({
-        id: listing.id,
-        name: listing.title,
-        title: listing.title,
-        status: listing.status || 'active',
-        location: typeof listing.address === 'object' && listing.address?.full 
-          ? listing.address.full 
-          : 'Unknown location'
-      }));
+      return (data || []).map(listing => {
+        const address = listing.address as GuestyAddress | null;
+        return {
+          id: listing.id,
+          name: listing.title,
+          title: listing.title,
+          status: listing.status || 'active',
+          location: address && typeof address === 'object' && address.full 
+            ? address.full 
+            : 'Unknown location'
+        };
+      });
     } catch (error) {
       console.error('Error fetching properties:', error);
       return [];
@@ -48,13 +55,14 @@ export const centralizedPropertyService = {
 
       if (error) throw error;
 
+      const address = data.address as GuestyAddress | null;
       return {
         id: data.id,
         name: data.title,
         title: data.title,
         status: data.status || 'active',
-        location: typeof data.address === 'object' && data.address?.full 
-          ? data.address.full 
+        location: address && typeof address === 'object' && address.full 
+          ? address.full 
           : 'Unknown location'
       };
     } catch (error) {
