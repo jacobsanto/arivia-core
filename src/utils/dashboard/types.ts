@@ -1,6 +1,6 @@
-
 /**
  * Define a type for task records to avoid infinite type instantiation
+ * Unified interface for both housekeeping and maintenance tasks
  */
 export interface TaskRecord {
   id: string;
@@ -10,13 +10,18 @@ export interface TaskRecord {
   title: string;
   property_id?: string;
   description?: string;
-  assigned_to?: string;
+  assigned_to?: string | null;
   location?: string;
+  // Housekeeping-specific fields
+  task_type?: string;
+  cleaning_type?: string;
+  booking_id?: string;
+  listing_id?: string;
   [key: string]: any;
 }
 
 /**
- * Define the dashboard data structure
+ * Define the dashboard data structure with consistent property handling
  */
 export interface DashboardData {
   properties: {
@@ -45,5 +50,11 @@ export interface DashboardData {
     avgRating: number;
     revenueToday: number;
     pendingCheckouts: number;
+  };
+  // Property context for data filtering
+  selectedProperty?: string;
+  dateRange?: {
+    from: Date;
+    to: Date;
   };
 }

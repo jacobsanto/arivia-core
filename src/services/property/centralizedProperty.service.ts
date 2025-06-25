@@ -7,6 +7,7 @@ export interface PropertyOption {
   title: string;
   status?: string;
   location?: string;
+  source?: 'guesty' | 'local';
 }
 
 interface GuestyAddress {
@@ -17,16 +18,21 @@ interface GuestyAddress {
 export const centralizedPropertyService = {
   async getAllProperties(): Promise<PropertyOption[]> {
     try {
-      const { data, error } = await supabase
-        .from('guesty_listings')
-        .select('id, title, status, address')
-        .eq('is_deleted', false)
-        .eq('sync_status', 'active')
-        .order('title', { ascending: true });
+      // Fetch both Guesty and local properties
+      const [guestyResult, localResult] = await Promise.all([
+        supabase
+          .from('guesty_listings')
+          .select('id, title, status, address')
+          .eq('is_deleted', false)
+          .eq('sync_status', 'active')
+          .order('title', { ascending: true }),
+        supabase
+          .from('properties')
+          .select('id, name, status, address')
+          .order('name', { ascending: true })
+      ]);
 
-      if (error) throw error;
-
-      return (data || []).map(listing => {
+      const guestyProperties = (guestyResult.data || []).map(listing => {
         const address = listing.address as GuestyAddress | null;
         return {
           id: listing.id,
@@ -35,9 +41,29 @@ export const centralizedPropertyService = {
           status: listing.status || 'active',
           location: address && typeof address === 'object' && address.full 
             ? address.full 
-            : 'Unknown location'
+            : 'Unknown location',
+          source: 'guesty' as const
         };
       });
+
+      const localProperties = (localResult.data || []).map(property => ({
+        id: property.id,
+        name: property.name,
+        title: property.name,
+        status: property.status || 'active',
+        location: property.address || 'Unknown location',
+        source: 'local' as const
+      }));
+
+      // Combine and deduplicate properties
+      const allProperties = [...guestyProperties, ...localProperties];
+      
+      // Remove duplicates based on name (in case a property exists in both systems)
+      const uniqueProperties = allProperties.filter((property, index, self) => 
+        index === self.findIndex(p => p.name.toLowerCase() === property.name.toLowerCase())
+      );
+
+      return uniqueProperties;
     } catch (error) {
       console.error('Error fetching properties:', error);
       return [];
@@ -46,25 +72,47 @@ export const centralizedPropertyService = {
 
   async getPropertyById(id: string): Promise<PropertyOption | null> {
     try {
-      const { data, error } = await supabase
+      // Try Guesty first
+      const { data: guestyData, error: guestyError } = await supabase
         .from('guesty_listings')
         .select('id, title, status, address')
         .eq('id', id)
         .eq('is_deleted', false)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (!guestyError && guestyData) {
+        const address = guestyData.address as GuestyAddress | null;
+        return {
+          id: guestyData.id,
+          name: guestyData.title,
+          title: guestyData.title,
+          status: guestyData.status || 'active',
+          location: address && typeof address === 'object' && address.full 
+            ? address.full 
+            : 'Unknown location',
+          source: 'guesty'
+        };
+      }
 
-      const address = data.address as GuestyAddress | null;
-      return {
-        id: data.id,
-        name: data.title,
-        title: data.title,
-        status: data.status || 'active',
-        location: address && typeof address === 'object' && address.full 
-          ? address.full 
-          : 'Unknown location'
-      };
+      // Try local properties
+      const { data: localData, error: localError } = await supabase
+        .from('properties')
+        .select('id, name, status, address')
+        .eq('id', id)
+        .maybeSingle();
+
+      if (!localError && localData) {
+        return {
+          id: localData.id,
+          name: localData.name,
+          title: localData.name,
+          status: localData.status || 'active',
+          location: localData.address || 'Unknown location',
+          source: 'local'
+        };
+      }
+
+      return null;
     } catch (error) {
       console.error('Error fetching property:', error);
       return null;
