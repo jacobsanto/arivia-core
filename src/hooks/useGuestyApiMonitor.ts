@@ -7,13 +7,10 @@ import { toast } from "sonner";
 export interface ApiUsageData {
   id: string;
   endpoint: string;
-  method?: string;
-  status?: number;
   rate_limit: number;
   remaining: number;
   reset: string;
   timestamp: string;
-  listing_id?: string;
 }
 
 interface UsageMetrics {
@@ -51,7 +48,7 @@ export function useGuestyApiMonitor() {
     refetchInterval: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Get rate limit errors in the last 24 hours
+  // Get rate limit situations in the last 24 hours
   const { data: rateLimitErrors } = useQuery({
     queryKey: ['guesty-rate-limit-errors'],
     queryFn: async (): Promise<ApiUsageData[]> => {

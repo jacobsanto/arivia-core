@@ -26,7 +26,7 @@ export const useApiUsageData = (): UseApiUsageDataReturn => {
     refetchInterval: 10000,
   });
 
-  // Get rate limit errors in the last 24 hours
+  // Get rate limit situations (low remaining requests) in the last 24 hours
   const { data: rateLimitErrors } = useQuery({
     queryKey: ["guesty-rate-limit-errors"],
     queryFn: async () => {
@@ -36,7 +36,7 @@ export const useApiUsageData = (): UseApiUsageDataReturn => {
       const { data, error } = await supabase
         .from("guesty_api_usage")
         .select("*")
-        .eq("status", 429)
+        .lte("remaining", 10) // Consider rate limited if 10 or fewer requests remaining
         .gte("timestamp", oneDayAgo.toISOString())
         .order("timestamp", { ascending: false });
         
