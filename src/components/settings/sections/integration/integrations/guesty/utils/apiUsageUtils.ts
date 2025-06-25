@@ -32,7 +32,7 @@ export const getEndpointUsageCounts = (apiUsage: ApiUsageRecord[]): EndpointUsag
     const endpoint = call.endpoint || 'unknown';
     endpointCounts[endpoint] = (endpointCounts[endpoint] || 0) + 1;
     
-    // Track statuses (for color coding)
+    // Track statuses based on remaining requests
     if (!endpointStatuses[endpoint]) {
       endpointStatuses[endpoint] = {
         success: 0,
@@ -41,11 +41,11 @@ export const getEndpointUsageCounts = (apiUsage: ApiUsageRecord[]): EndpointUsag
       };
     }
     
-    if (call.status === 429) {
+    // Consider rate limited if remaining requests are very low
+    if (call.remaining && call.remaining <= 10) {
       endpointStatuses[endpoint].rateLimit++;
-    } else if (call.status && call.status >= 400) {
-      endpointStatuses[endpoint].error++;
     } else {
+      // Without status codes, we'll assume calls are successful if not rate limited
       endpointStatuses[endpoint].success++;
     }
   });
