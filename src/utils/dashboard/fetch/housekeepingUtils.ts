@@ -50,7 +50,7 @@ export const fetchHousekeepingTasks = async (selectedProperty: string, fromDateS
         property_id: task.listing_id || '', // Map listing_id to property_id for consistency
         priority: 'normal', // Default priority
         assigned_to: task.assigned_to || null,
-        description: task.description || '',
+        description: '', // Description field doesn't exist in database, use empty string
         location: task.listing_id || '',
         task_type: task.task_type || 'Standard Cleaning',
         cleaning_type: task.task_type || 'Standard Cleaning'

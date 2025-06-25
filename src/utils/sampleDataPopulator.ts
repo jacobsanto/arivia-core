@@ -125,7 +125,7 @@ export const populateSampleData = async () => {
       console.log("Bookings added:", bookings?.length);
     }
 
-    // 3. Add sample housekeeping tasks with consistent listing_id references
+    // 3. Add sample housekeeping tasks with consistent listing_id references and required booking_id
     if (listings && listings.length > 0) {
       const sampleHousekeepingTasks = [
         {
@@ -146,6 +146,7 @@ export const populateSampleData = async () => {
         },
         {
           listing_id: listings[2].id,
+          booking_id: "maintenance-booking-003", // Create a maintenance booking ID for consistency
           task_type: "Maintenance Cleaning",
           due_date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           status: "done",
