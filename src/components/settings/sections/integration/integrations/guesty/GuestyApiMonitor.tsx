@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Clock, ArrowDownCircle, RefreshCcw, BarChart3, Activity } from "lucide-react";
@@ -27,9 +28,9 @@ const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
   
   // Get API usage data - last 50 records
-  const { data: apiUsage, isLoading, refetch } = useQuery<ApiUsageRecord[]>({
+  const { data: apiUsage, isLoading, refetch } = useQuery({
     queryKey: ["guesty-api-usage"],
-    queryFn: async (): Promise<ApiUsageRecord[]> => {
+    queryFn: async () => {
       const { data, error } = await supabase
         .from("guesty_api_usage")
         .select("*")
@@ -42,9 +43,9 @@ const GuestyApiMonitor: React.FC = () => {
   });
 
   // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors } = useQuery<ApiUsageRecord[]>({
+  const { data: rateLimitErrors } = useQuery({
     queryKey: ["guesty-rate-limit-errors"],
-    queryFn: async (): Promise<ApiUsageRecord[]> => {
+    queryFn: async () => {
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
@@ -372,7 +373,7 @@ const GuestyApiMonitor: React.FC = () => {
           onClick={handleRefresh} 
           className="text-xs h-7 px-2 w-full flex items-center justify-center gap-1"
         >
-          <RefreshCcw className="h-3 w-3" />
+          <RefreshCw className="h-3 w-3" />
           <span>Refresh Data</span>
         </Button>
       </CardFooter>
