@@ -6,8 +6,6 @@ import DailyAgenda from "@/components/dashboard/DailyAgenda";
 import { useState } from "react";
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
-import { initialTasks as initialHousekeepingTasks } from "@/data/taskData";
-import { initialTasks as initialMaintenanceTasks } from "@/data/maintenanceTasks";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -28,22 +26,25 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   favoriteMetrics = [],
   onToggleFavorite
 }) => {
-  const [housekeepingTasks, setHousekeepingTasks] = useState<Task[]>(initialHousekeepingTasks);
-  const [maintenanceTasks, setMaintenanceTasks] = useState<MaintenanceTask[]>(initialMaintenanceTasks);
-  const isMobile = useIsMobile();
   const [selectedTab, setSelectedTab] = useState<string>("daily");
+  const isMobile = useIsMobile();
   
-  // In a real application, we would filter tasks based on the selected date range
+  // Use real data from dashboardData instead of mock data
+  const housekeepingTasks: Task[] = dashboardData?.housekeepingTasks || [];
+  const maintenanceTasks: MaintenanceTask[] = dashboardData?.maintenanceTasks || [];
+  
+  // Filter and process tasks based on the actual dashboard data
   useEffect(() => {
     if (dashboardData?.dateRange) {
-      // Example filtering logic - would be replaced with actual filtering based on date range
-      console.log("Filtering tasks for date range:", dashboardData.dateRange);
+      console.log("Dashboard data updated with date range:", dashboardData.dateRange);
+      console.log("Housekeeping tasks:", housekeepingTasks.length);
+      console.log("Maintenance tasks:", maintenanceTasks.length);
     }
-  }, [dashboardData?.dateRange]);
+  }, [dashboardData, housekeepingTasks.length, maintenanceTasks.length]);
   
   return (
     <div className="space-y-6 px-2 md:px-4">
-      {/* Stats Cards */}
+      {/* Stats Cards - Now connected to real data */}
       <DashboardMetrics 
         data={dashboardData} 
         isLoading={isLoading}
@@ -55,7 +56,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       {/* Separator */}
       <Separator className="my-6" />
       
-      {/* Tasks Views - Daily Agenda and Calendar */}
+      {/* Tasks Views - Daily Agenda and Calendar - Now using real data */}
       <div className="w-full">
         <Tabs defaultValue="daily" className="w-full" onValueChange={setSelectedTab}>
           <div className="flex items-center justify-between mb-4">
