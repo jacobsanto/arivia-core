@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Clock, ArrowDownCircle, RefreshCcw, BarChart3, Activity } from "lucide-react";
@@ -12,28 +11,40 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { format, formatDistanceToNow } from "date-fns";
 
+interface ApiUsageRecord {
+  id: string;
+  endpoint: string;
+  method?: string;
+  status?: number;
+  rate_limit: number;
+  remaining: number;
+  reset: string;
+  timestamp: string;
+  listing_id?: string;
+}
+
 const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
   
   // Get API usage data - last 50 records
-  const { data: apiUsage, isLoading, refetch } = useQuery({
+  const { data: apiUsage, isLoading, refetch } = useQuery<ApiUsageRecord[]>({
     queryKey: ["guesty-api-usage"],
-    queryFn: async () => {
+    queryFn: async (): Promise<ApiUsageRecord[]> => {
       const { data, error } = await supabase
         .from("guesty_api_usage")
         .select("*")
         .order("timestamp", { ascending: false })
         .limit(50);
       if (error) throw error;
-      return data;
+      return (data || []) as ApiUsageRecord[];
     },
     refetchInterval: 10000,
   });
 
   // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors } = useQuery({
+  const { data: rateLimitErrors } = useQuery<ApiUsageRecord[]>({
     queryKey: ["guesty-rate-limit-errors"],
-    queryFn: async () => {
+    queryFn: async (): Promise<ApiUsageRecord[]> => {
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
@@ -45,7 +56,7 @@ const GuestyApiMonitor: React.FC = () => {
         .order("timestamp", { ascending: false });
         
       if (error) throw error;
-      return data;
+      return (data || []) as ApiUsageRecord[];
     },
     refetchInterval: 60000,  // 1 minute
   });
@@ -66,11 +77,11 @@ const GuestyApiMonitor: React.FC = () => {
     }
   }, [rateLimitErrors]);
 
-  const getLatestUsageByEndpoint = () => {
+  const getLatestUsageByEndpoint = (): ApiUsageRecord[] => {
     if (!apiUsage) return [];
-    const endpointMap = new Map();
+    const endpointMap = new Map<string, ApiUsageRecord>();
     
-    apiUsage.forEach((usage: any) => {
+    apiUsage.forEach((usage) => {
       if (!endpointMap.has(usage.endpoint)) {
         endpointMap.set(usage.endpoint, usage);
       }
@@ -86,13 +97,13 @@ const GuestyApiMonitor: React.FC = () => {
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     
-    const recentCalls = apiUsage.filter((u: any) => new Date(u.timestamp) > oneDayAgo);
+    const recentCalls = apiUsage.filter((u) => new Date(u.timestamp) > oneDayAgo);
     
     // Count by endpoint
     const endpointCounts: Record<string, number> = {};
     const endpointStatuses: Record<string, { success: number; error: number; rateLimit: number }> = {};
     
-    recentCalls.forEach((call: any) => {
+    recentCalls.forEach((call) => {
       const endpoint = call.endpoint || 'unknown';
       endpointCounts[endpoint] = (endpointCounts[endpoint] || 0) + 1;
       
@@ -107,7 +118,7 @@ const GuestyApiMonitor: React.FC = () => {
       
       if (call.status === 429) {
         endpointStatuses[endpoint].rateLimit++;
-      } else if (call.status >= 400) {
+      } else if (call.status && call.status >= 400) {
         endpointStatuses[endpoint].error++;
       } else {
         endpointStatuses[endpoint].success++;
@@ -128,15 +139,15 @@ const GuestyApiMonitor: React.FC = () => {
   const endpointUsage = getEndpointUsageCounts();
   
   const isRateLimited = latestUsage.some(
-    (usage: any) => usage.remaining && usage.remaining < 10
+    (usage) => usage.remaining && usage.remaining < 10
   );
   
-  const formatEndpointName = (endpoint: string) => {
+  const formatEndpointName = (endpoint: string): string => {
     if (!endpoint) return "Unknown";
     return endpoint.replace(/^\/v\d+\//, "").replace(/-/g, " ");
   };
   
-  const calculateTimeToReset = (reset: string | null) => {
+  const calculateTimeToReset = (reset: string | null): string => {
     if (!reset) return "Unknown";
     
     try {
@@ -152,21 +163,21 @@ const GuestyApiMonitor: React.FC = () => {
   };
 
   // Calculate totals for the summary
-  const getTotalCalls24h = () => {
+  const getTotalCalls24h = (): number => {
     if (!apiUsage) return 0;
     
     const oneDayAgo = new Date();
     oneDayAgo.setDate(oneDayAgo.getDate() - 1);
     
-    return apiUsage.filter((u: any) => new Date(u.timestamp) > oneDayAgo).length;
+    return apiUsage.filter((u) => new Date(u.timestamp) > oneDayAgo).length;
   };
 
-  const getMostUsedEndpoint = () => {
+  const getMostUsedEndpoint = (): string => {
     if (!endpointUsage.length) return "None";
     return formatEndpointName(endpointUsage[0].endpoint);
   };
 
-  const getLastRateLimitError = () => {
+  const getLastRateLimitError = (): string => {
     if (!rateLimitErrors || rateLimitErrors.length === 0) return "None";
     return format(new Date(rateLimitErrors[0].timestamp), "yyyy-MM-dd HH:mm:ss");
   };
@@ -243,7 +254,7 @@ const GuestyApiMonitor: React.FC = () => {
         <TabsContent value="usage" className="m-0">
           <CardContent>
             <div className="space-y-3 text-sm">
-              {latestUsage.map((usage: any) => (
+              {latestUsage.map((usage) => (
                 <div key={usage.endpoint} className="space-y-1">
                   <div className="flex justify-between items-center">
                     <div className="font-medium capitalize">
@@ -300,7 +311,7 @@ const GuestyApiMonitor: React.FC = () => {
               <div>
                 <div className="font-medium text-xs mb-2">Endpoint Usage (last 24h)</div>
                 <div className="space-y-2">
-                  {endpointUsage.map((item: any) => (
+                  {endpointUsage.map((item) => (
                     <div key={item.endpoint}>
                       <div className="flex justify-between mb-1 text-xs">
                         <span className="truncate">{formatEndpointName(item.endpoint)}</span>
