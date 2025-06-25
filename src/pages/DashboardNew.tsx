@@ -7,6 +7,9 @@ import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import MobileDashboard from "@/components/dashboard/MobileDashboard";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { populateSampleData } from "@/utils/sampleDataPopulator";
+import { toast } from "sonner";
 
 // Loader component for better UX during loading states
 const DashboardLoader = () => (
@@ -61,6 +64,26 @@ const DashboardInner: React.FC = () => {
   
   const isMobile = useIsMobile();
 
+  const handleAddSampleData = async () => {
+    try {
+      const result = await populateSampleData();
+      if (result.success) {
+        toast.success("Sample data added successfully", {
+          description: "Dashboard will refresh automatically"
+        });
+        await handleRefresh();
+      } else {
+        toast.error("Failed to add sample data", {
+          description: result.message
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to add sample data", {
+        description: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  };
+
   const dashboardContent = () => {
     if (isMobile) {
       return (
@@ -80,6 +103,8 @@ const DashboardInner: React.FC = () => {
         error={error}
         favoriteMetrics={preferences.favoriteMetrics}
         onToggleFavorite={toggleFavoriteMetric}
+        onRefresh={handleRefresh}
+        onAddSampleData={handleAddSampleData}
       />
     );
   };
@@ -98,9 +123,11 @@ const DashboardInner: React.FC = () => {
         isLoading={isLoading}
       />
       
-      <Suspense fallback={<DashboardLoader />}>
-        {dashboardContent()}
-      </Suspense>
+      <ErrorBoundary onReset={handleRefresh}>
+        <Suspense fallback={<DashboardLoader />}>
+          {dashboardContent()}
+        </Suspense>
+      </ErrorBoundary>
     </div>
   );
 };

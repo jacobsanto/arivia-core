@@ -4,9 +4,10 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MetricCard from "./metrics/MetricCard";
 import { MetricCardContainer } from "./metrics/MetricCardContainer";
 import { createMetricCards } from "./metrics/createMetricCards";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Database, RefreshCw } from "lucide-react";
+import { Database, RefreshCw, BarChart3, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DashboardMetricsProps {
@@ -31,6 +32,8 @@ interface DashboardMetricsProps {
   error?: string | null;
   favoriteMetrics?: string[];
   onToggleFavorite?: (metricId: string) => void;
+  onRefresh?: () => void;
+  onAddSampleData?: () => void;
 }
 
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ 
@@ -38,32 +41,43 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   isLoading = false,
   error = null,
   favoriteMetrics = [],
-  onToggleFavorite
+  onToggleFavorite,
+  onRefresh,
+  onAddSampleData
 }) => {
   const isMobile = useIsMobile();
   
-  // Show loading state
+  // Show loading state with proper mobile responsiveness
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {[1, 2, 3, 4, 5, 6].map((i) => (
-          <Skeleton key={i} className="h-32" />
-        ))}
-      </div>
+      <LoadingState 
+        type="card" 
+        count={isMobile ? 2 : 6}
+        text="Loading dashboard metrics..."
+      />
     );
   }
   
-  // Show error state
+  // Show error state with retry functionality
   if (error) {
     return (
-      <div className="grid grid-cols-1 gap-4">
-        <Alert variant="destructive">
-          <Database className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load dashboard metrics: {error}
-          </AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant="destructive">
+        <Database className="h-4 w-4" />
+        <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <span>Failed to load dashboard metrics: {error}</span>
+          {onRefresh && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRefresh}
+              className="self-start sm:self-auto"
+            >
+              <RefreshCw className="h-3 w-3 mr-2" />
+              Retry
+            </Button>
+          )}
+        </AlertDescription>
+      </Alert>
     );
   }
   
@@ -88,33 +102,27 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   // Create metric cards if we have data
   const metricCards = hasData ? createMetricCards(data, favoriteMetrics || []) : [];
   
-  // Show empty state with helpful message
+  // Show empty state with helpful actions
   if (!hasData || metricCards.length === 0) {
     return (
-      <div className="grid grid-cols-1 gap-4">
-        <Alert>
-          <Database className="h-4 w-4" />
-          <AlertDescription className="flex flex-col gap-3">
-            <div>
-              No dashboard data available. This could be because:
-              <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
-                <li>No properties have been added to the system</li>
-                <li>No tasks or maintenance records exist</li>
-                <li>The selected date range contains no data</li>
-              </ul>
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Try adding some properties, tasks, or adjusting your date range to see metrics.
-            </div>
-          </AlertDescription>
-        </Alert>
-      </div>
+      <EmptyState
+        icon={BarChart3}
+        title="No Dashboard Data Available"
+        description="Start by adding properties, tasks, or maintenance records to see your metrics here. You can also populate sample data to explore the dashboard."
+        action={onAddSampleData ? {
+          label: "Add Sample Data",
+          onClick: onAddSampleData,
+          variant: "default"
+        } : undefined}
+        className="mx-auto max-w-md"
+      />
     );
   }
   
   return (
     <MetricCardContainer
       cards={metricCards}
+      onToggleFavorite={onToggleFavorite}
     />
   );
 };
