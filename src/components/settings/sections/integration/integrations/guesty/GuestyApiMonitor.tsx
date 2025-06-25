@@ -1,69 +1,30 @@
 
-import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Clock, ArrowDownCircle, RefreshCcw, BarChart3, Activity } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from "react";
+import { AlertTriangle, RefreshCcw, BarChart3, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { format, formatDistanceToNow } from "date-fns";
-
-interface ApiUsageRecord {
-  id: string;
-  endpoint: string;
-  method?: string;
-  status?: number;
-  rate_limit: number;
-  remaining: number;
-  reset: string;
-  timestamp: string;
-  listing_id?: string;
-}
+import { useApiUsageData } from "./hooks/useApiUsageData";
+import { LiveStatusTab } from "./components/LiveStatusTab";
+import { StatisticsTab } from "./components/StatisticsTab";
+import {
+  getLatestUsageByEndpoint,
+  getEndpointUsageCounts,
+  getTotalCalls24h,
+  getMostUsedEndpoint,
+  getLastRateLimitError,
+  formatEndpointName
+} from "./utils/apiUsageUtils";
 
 const GuestyApiMonitor: React.FC = () => {
   const [activeTab, setActiveTab] = useState("usage");
-  
-  // Get API usage data - last 50 records
-  const { data: apiUsage, isLoading, refetch } = useQuery({
-    queryKey: ["guesty-api-usage"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("guesty_api_usage")
-        .select("*")
-        .order("timestamp", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return (data || []) as ApiUsageRecord[];
-    },
-    refetchInterval: 10000,
-  });
-
-  // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors } = useQuery({
-    queryKey: ["guesty-rate-limit-errors"],
-    queryFn: async () => {
-      const oneDayAgo = new Date();
-      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-      
-      const { data, error } = await supabase
-        .from("guesty_api_usage")
-        .select("*")
-        .eq("status", 429)
-        .gte("timestamp", oneDayAgo.toISOString())
-        .order("timestamp", { ascending: false });
-        
-      if (error) throw error;
-      return (data || []) as ApiUsageRecord[];
-    },
-    refetchInterval: 60000,  // 1 minute
-  });
+  const { apiUsage, rateLimitErrors, isLoading, refetch } = useApiUsageData();
 
   // Show toast for recent rate limit errors
-  React.useEffect(() => {
+  useEffect(() => {
     if (rateLimitErrors && rateLimitErrors.length > 0) {
       const mostRecent = rateLimitErrors[0];
       const timeSinceError = new Date().getTime() - new Date(mostRecent.timestamp).getTime();
@@ -78,110 +39,12 @@ const GuestyApiMonitor: React.FC = () => {
     }
   }, [rateLimitErrors]);
 
-  const getLatestUsageByEndpoint = (): ApiUsageRecord[] => {
-    if (!apiUsage) return [];
-    const endpointMap = new Map<string, ApiUsageRecord>();
-    
-    apiUsage.forEach((usage) => {
-      if (!endpointMap.has(usage.endpoint)) {
-        endpointMap.set(usage.endpoint, usage);
-      }
-    });
-    
-    return Array.from(endpointMap.values());
-  };
-
-  const getEndpointUsageCounts = () => {
-    if (!apiUsage) return [];
-    
-    // Calculate calls in the last 24 hours
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    
-    const recentCalls = apiUsage.filter((u) => new Date(u.timestamp) > oneDayAgo);
-    
-    // Count by endpoint
-    const endpointCounts: Record<string, number> = {};
-    const endpointStatuses: Record<string, { success: number; error: number; rateLimit: number }> = {};
-    
-    recentCalls.forEach((call) => {
-      const endpoint = call.endpoint || 'unknown';
-      endpointCounts[endpoint] = (endpointCounts[endpoint] || 0) + 1;
-      
-      // Track statuses (for color coding)
-      if (!endpointStatuses[endpoint]) {
-        endpointStatuses[endpoint] = {
-          success: 0,
-          error: 0,
-          rateLimit: 0
-        };
-      }
-      
-      if (call.status === 429) {
-        endpointStatuses[endpoint].rateLimit++;
-      } else if (call.status && call.status >= 400) {
-        endpointStatuses[endpoint].error++;
-      } else {
-        endpointStatuses[endpoint].success++;
-      }
-    });
-    
-    // Convert to array and sort by count
-    return Object.entries(endpointCounts)
-      .map(([endpoint, count]) => ({
-        endpoint,
-        count,
-        status: endpointStatuses[endpoint]
-      }))
-      .sort((a, b) => (b.count as number) - (a.count as number));
-  };
-
-  const latestUsage = getLatestUsageByEndpoint();
-  const endpointUsage = getEndpointUsageCounts();
+  const latestUsage = getLatestUsageByEndpoint(apiUsage || []);
+  const endpointUsage = getEndpointUsageCounts(apiUsage || []);
   
   const isRateLimited = latestUsage.some(
     (usage) => usage.remaining && usage.remaining < 10
   );
-  
-  const formatEndpointName = (endpoint: string): string => {
-    if (!endpoint) return "Unknown";
-    return endpoint.replace(/^\/v\d+\//, "").replace(/-/g, " ");
-  };
-  
-  const calculateTimeToReset = (reset: string | null): string => {
-    if (!reset) return "Unknown";
-    
-    try {
-      const resetDate = new Date(reset);
-      const now = new Date();
-      
-      if (resetDate <= now) return "Available now";
-      
-      return formatDistanceToNow(resetDate, { addSuffix: true });
-    } catch (e) {
-      return "Unknown";
-    }
-  };
-
-  // Calculate totals for the summary
-  const getTotalCalls24h = (): number => {
-    if (!apiUsage) return 0;
-    
-    const oneDayAgo = new Date();
-    oneDayAgo.setDate(oneDayAgo.getDate() - 1);
-    
-    return apiUsage.filter((u) => new Date(u.timestamp) > oneDayAgo).length;
-  };
-
-  const getMostUsedEndpoint = (): string => {
-    if (!endpointUsage.length) return "None";
-    return formatEndpointName(endpointUsage[0].endpoint);
-  };
-
-  const getLastRateLimitError = (): string => {
-    if (!rateLimitErrors || rateLimitErrors.length === 0) return "None";
-    return format(new Date(rateLimitErrors[0].timestamp), "yyyy-MM-dd HH:mm:ss");
-  };
 
   const handleRefresh = () => {
     refetch();
@@ -253,116 +116,17 @@ const GuestyApiMonitor: React.FC = () => {
         </div>
 
         <TabsContent value="usage" className="m-0">
-          <CardContent>
-            <div className="space-y-3 text-sm">
-              {latestUsage.map((usage) => (
-                <div key={usage.endpoint} className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <div className="font-medium capitalize">
-                      {formatEndpointName(usage.endpoint)}
-                    </div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>{calculateTimeToReset(usage.reset)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <Progress
-                      value={
-                        usage.rate_limit && typeof usage.rate_limit === 'number'
-                          ? ((usage.rate_limit - (usage.remaining || 0)) / usage.rate_limit) * 100
-                          : 0
-                      }
-                      className="h-2"
-                    />
-                    <span className="text-xs whitespace-nowrap">
-                      {usage.remaining}/{usage.rate_limit} left
-                    </span>
-                  </div>
-                </div>
-              ))}
-
-              <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                <ArrowDownCircle className="h-3.5 w-3.5" /> 
-                <span>Updated {latestUsage[0] ? new Date(latestUsage[0].timestamp).toLocaleTimeString() : 'Unknown'}</span>
-              </div>
-            </div>
-          </CardContent>
+          <LiveStatusTab latestUsage={latestUsage} />
         </TabsContent>
         
         <TabsContent value="stats" className="m-0">
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-                <div className="bg-muted rounded-lg p-2">
-                  <div className="text-muted-foreground mb-1">Calls in last 24h</div>
-                  <div className="font-medium text-base">{getTotalCalls24h()}</div>
-                </div>
-                <div className="bg-muted rounded-lg p-2">
-                  <div className="text-muted-foreground mb-1">Most used endpoint</div>
-                  <div className="font-medium text-base truncate">{getMostUsedEndpoint()}</div>
-                </div>
-                <div className="bg-muted rounded-lg p-2">
-                  <div className="text-muted-foreground mb-1">Last rate limit error</div>
-                  <div className="font-medium text-base truncate">{getLastRateLimitError()}</div>
-                </div>
-              </div>
-              
-              <div>
-                <div className="font-medium text-xs mb-2">Endpoint Usage (last 24h)</div>
-                <div className="space-y-2">
-                  {endpointUsage.map((item) => (
-                    <div key={item.endpoint}>
-                      <div className="flex justify-between mb-1 text-xs">
-                        <span className="truncate">{formatEndpointName(item.endpoint)}</span>
-                        <span>{item.count} calls</span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden flex">
-                        {/* Success bar */}
-                        {item.status && item.status.success > 0 && (
-                          <div 
-                            className="bg-emerald-500 h-full" 
-                            style={{ width: `${(item.status.success / Number(item.count)) * 100}%` }}
-                          />
-                        )}
-                        {/* Error bar */}
-                        {item.status && item.status.error > 0 && (
-                          <div 
-                            className="bg-amber-500 h-full" 
-                            style={{ width: `${(item.status.error / Number(item.count)) * 100}%` }}
-                          />
-                        )}
-                        {/* Rate limit bar */}
-                        {item.status && item.status.rateLimit > 0 && (
-                          <div 
-                            className="bg-red-500 h-full" 
-                            style={{ width: `${(item.status.rateLimit / Number(item.count)) * 100}%` }}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                
-                {/* Color key */}
-                <div className="flex gap-4 text-xs mt-3">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                    <span>Success</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-                    <span>Error</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                    <span>Rate Limited</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
+          <StatisticsTab
+            totalCalls24h={getTotalCalls24h(apiUsage)}
+            mostUsedEndpoint={getMostUsedEndpoint(endpointUsage)}
+            lastRateLimitError={getLastRateLimitError(rateLimitErrors || [])}
+            endpointUsage={endpointUsage}
+            formatEndpointName={formatEndpointName}
+          />
         </TabsContent>
       </Tabs>
       
@@ -373,7 +137,7 @@ const GuestyApiMonitor: React.FC = () => {
           onClick={handleRefresh} 
           className="text-xs h-7 px-2 w-full flex items-center justify-center gap-1"
         >
-          <RefreshCw className="h-3 w-3" />
+          <RefreshCcw className="h-3 w-3" />
           <span>Refresh Data</span>
         </Button>
       </CardFooter>
