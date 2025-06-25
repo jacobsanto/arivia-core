@@ -1,11 +1,12 @@
 
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ApiUsageRecord } from "../components/types";
 
 export const useApiUsageData = () => {
   // Get API usage data - last 50 records
-  const { data: apiUsage, isLoading, refetch }: UseQueryResult<ApiUsageRecord[], Error> = useQuery<ApiUsageRecord[], Error>({
+  const { data: apiUsage, isLoading, refetch } = useQuery<ApiUsageRecord[], Error>({
     queryKey: ["guesty-api-usage"],
     queryFn: async (): Promise<ApiUsageRecord[]> => {
       const { data, error } = await supabase
@@ -20,7 +21,7 @@ export const useApiUsageData = () => {
   });
 
   // Get rate limit errors in the last 24 hours
-  const { data: rateLimitErrors }: UseQueryResult<ApiUsageRecord[], Error> = useQuery<ApiUsageRecord[], Error>({
+  const { data: rateLimitErrors } = useQuery<ApiUsageRecord[], Error>({
     queryKey: ["guesty-rate-limit-errors"],
     queryFn: async (): Promise<ApiUsageRecord[]> => {
       const oneDayAgo = new Date();
@@ -46,3 +47,4 @@ export const useApiUsageData = () => {
     refetch
   };
 };
+
