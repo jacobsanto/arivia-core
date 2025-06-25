@@ -34,7 +34,7 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({
 
   const getTasksForDay = (day: Date) => {
     const dayStr = format(day, 'yyyy-MM-dd');
-    return allTasks.filter(task => task.due_date?.startsWith(dayStr));
+    return allTasks.filter(task => task.dueDate?.startsWith(dayStr));
   };
 
   const hasAnyTasks = allTasks.length > 0;
@@ -129,10 +129,10 @@ const TasksSchedule: React.FC<TasksScheduleProps> = ({
                         className="p-2 bg-background rounded text-xs"
                       >
                         <div className="font-medium truncate mb-1">
-                          {task.title || task.task_type || 'Untitled Task'}
+                          {task.title || 'Untitled Task'}
                         </div>
                         <Badge
-                          variant={task.status === 'completed' || task.status === 'done' ? 'default' : 'secondary'}
+                          variant={task.status === 'completed' || task.status === 'Completed' ? 'default' : 'secondary'}
                           className="text-xs px-1 py-0"
                         >
                           {task.status}

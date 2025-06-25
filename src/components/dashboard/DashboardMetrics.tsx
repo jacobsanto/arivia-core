@@ -7,7 +7,7 @@ import { createMetricCards } from "./metrics/createMetricCards";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Database, RefreshCw, BarChart3, Plus } from "lucide-react";
+import { Database, RefreshCw, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DashboardMetricsProps {
@@ -32,8 +32,6 @@ interface DashboardMetricsProps {
   error?: string | null;
   favoriteMetrics?: string[];
   onToggleFavorite?: (metricId: string) => void;
-  onRefresh?: () => void;
-  onAddSampleData?: () => void;
 }
 
 const DashboardMetrics: React.FC<DashboardMetricsProps> = ({ 
@@ -41,9 +39,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
   isLoading = false,
   error = null,
   favoriteMetrics = [],
-  onToggleFavorite,
-  onRefresh,
-  onAddSampleData
+  onToggleFavorite
 }) => {
   const isMobile = useIsMobile();
   
@@ -65,17 +61,6 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
         <Database className="h-4 w-4" />
         <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <span>Failed to load dashboard metrics: {error}</span>
-          {onRefresh && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRefresh}
-              className="self-start sm:self-auto"
-            >
-              <RefreshCw className="h-3 w-3 mr-2" />
-              Retry
-            </Button>
-          )}
         </AlertDescription>
       </Alert>
     );
@@ -108,12 +93,7 @@ const DashboardMetrics: React.FC<DashboardMetricsProps> = ({
       <EmptyState
         icon={BarChart3}
         title="No Dashboard Data Available"
-        description="Start by adding properties, tasks, or maintenance records to see your metrics here. You can also populate sample data to explore the dashboard."
-        action={onAddSampleData ? {
-          label: "Add Sample Data",
-          onClick: onAddSampleData,
-          variant: "default"
-        } : undefined}
+        description="Start by adding properties, tasks, or maintenance records to see your metrics here."
         className="mx-auto max-w-md"
       />
     );

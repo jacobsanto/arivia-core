@@ -57,8 +57,6 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
           error={error}
           favoriteMetrics={favoriteMetrics}
           onToggleFavorite={onToggleFavorite}
-          onRefresh={onRefresh}
-          onAddSampleData={onAddSampleData}
         />
         
         {/* Separator */}
