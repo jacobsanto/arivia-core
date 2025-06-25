@@ -5,6 +5,11 @@ export const populateSampleData = async () => {
   try {
     console.log("Starting sample data population...");
 
+    // Define date variables that will be used throughout the function
+    const today = new Date();
+    const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+
     // 1. Add sample properties
     const sampleProperties = [
       {
@@ -49,10 +54,6 @@ export const populateSampleData = async () => {
 
     // 2. Add sample bookings
     if (properties && properties.length > 0) {
-      const today = new Date();
-      const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const nextMonth = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-
       const sampleBookings = [
         {
           property_id: properties[0].id,
