@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskTemplate, TaskComment } from '@/types/task-management';
 import { ChecklistItem } from '@/types/checklistTypes';
@@ -51,6 +50,8 @@ const safeJsonParse = (data: any, fallback: any = {}) => {
 
 // Helper function to map Supabase task to internal Task type
 const mapSupabaseTask = (supabaseTask: any): Task => {
+  const metadata = safeJsonParse(supabaseTask.metadata, {});
+  
   return {
     id: supabaseTask.id,
     title: supabaseTask.title,
@@ -66,12 +67,16 @@ const mapSupabaseTask = (supabaseTask: any): Task => {
     updatedAt: new Date(supabaseTask.updated_at),
     completedAt: supabaseTask.completed_at ? new Date(supabaseTask.completed_at) : undefined,
     createdBy: supabaseTask.created_by,
-    metadata: safeJsonParse(supabaseTask.metadata, {}),
+    metadata: metadata,
     type: "Other", // Default type since it's not in Supabase schema
-    checklist: safeJsonParse(supabaseTask.metadata, {}).checklist || [],
-    notes: safeJsonParse(supabaseTask.metadata, {}).notes || '',
-    attachments: safeJsonParse(supabaseTask.metadata, {}).attachments || [],
-    tags: safeJsonParse(supabaseTask.metadata, {}).tags || []
+    checklist: metadata.checklist || [],
+    notes: metadata.notes || '',
+    attachments: metadata.attachments || [],
+    tags: metadata.tags || [],
+    approvalStatus: metadata.approvalStatus,
+    photos: metadata.photos || [],
+    cleaningDetails: metadata.cleaningDetails,
+    rejectionReason: metadata.rejectionReason
   };
 };
 

@@ -1,113 +1,125 @@
 
-import React, { useMemo } from "react";
+import React, { useState } from "react";
+import { format, isToday, isTomorrow } from "date-fns";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Clock, MapPin } from "lucide-react";
 import { Task } from "@/types/taskTypes";
-import { MaintenanceTask } from "@/types/maintenanceTypes";
-import { AgendaContent } from "./agenda/AgendaContent";
-import { AgendaHeader } from "./agenda/AgendaHeader";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Calendar } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DailyAgendaProps {
-  housekeepingTasks: Task[];
-  maintenanceTasks: MaintenanceTask[];
-  onRefresh?: () => void;
-  onCreateTask?: () => void;
+  tasks: Task[];
+  onTaskClick?: (task: Task) => void;
 }
 
-const DailyAgenda: React.FC<DailyAgendaProps> = ({ 
-  housekeepingTasks = [], 
-  maintenanceTasks = [],
-  onRefresh,
-  onCreateTask
-}) => {
-  const isMobile = useIsMobile();
-  
-  // Filter tasks for today
-  const today = new Date().toISOString().split('T')[0];
-  
-  const todaysTasks = useMemo(() => {
-    const housekeepingToday = housekeepingTasks.filter(task => 
-      task.dueDate?.startsWith(today)
-    );
-    const maintenanceToday = maintenanceTasks.filter(task => 
-      task.dueDate?.startsWith(today)
-    );
-    
-    return [...housekeepingToday, ...maintenanceToday];
-  }, [housekeepingTasks, maintenanceTasks, today]);
+const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const hasTasks = todaysTasks.length > 0;
+  // Convert task date to string for comparison
+  const getTaskDateString = (task: Task): string => {
+    if (task.dueDate instanceof Date) {
+      return task.dueDate.toISOString().split('T')[0];
+    }
+    return typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : '';
+  };
+
+  const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
+
+  // Filter tasks for the selected date
+  const dayTasks = tasks.filter(task => {
+    const taskDateString = getTaskDateString(task);
+    return taskDateString === selectedDateString;
+  });
+
+  // Sort tasks by priority and time
+  const sortedTasks = dayTasks.sort((a, b) => {
+    const priorityOrder = { "Urgent": 0, "High": 1, "Medium": 2, "Low": 3 };
+    const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] ?? 4;
+    const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] ?? 4;
+    
+    if (aPriority !== bPriority) {
+      return aPriority - bPriority;
+    }
+    
+    // If same priority, sort by due date
+    const aDate = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
+    const bDate = b.dueDate instanceof Date ? b.dueDate : new Date(b.dueDate || 0);
+    return aDate.getTime() - bDate.getTime();
+  });
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case "Urgent": return "bg-red-500";
+      case "High": return "bg-orange-500";
+      case "Medium": return "bg-yellow-500";
+      case "Low": return "bg-green-500";
+      default: return "bg-gray-500";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Completed": return "bg-green-100 text-green-800 border-green-200";
+      case "In Progress": return "bg-blue-100 text-blue-800 border-blue-200";
+      case "Pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default: return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Today's Agenda</h2>
-        <span className="text-sm text-muted-foreground">
-          {todaysTasks.length} {todaysTasks.length === 1 ? 'task' : 'tasks'}
-        </span>
-      </div>
-      
-      {hasTasks ? (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>Daily Agenda</span>
+          <Badge variant="outline">
+            {format(selectedDate, 'MMM dd, yyyy')}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
         <div className="space-y-3">
-          {housekeepingTasks
-            .filter(task => task.dueDate?.startsWith(today))
-            .map(task => (
-              <div key={task.id} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">{task.title}</h3>
-                    <p className="text-sm text-muted-foreground">{task.property}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      task.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                      task.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+          {sortedTasks.length === 0 ? (
+            <div className="text-center text-muted-foreground py-8">
+              No tasks scheduled for this day
+            </div>
+          ) : (
+            sortedTasks.map((task) => (
+              <div
+                key={task.id}
+                className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => onTaskClick?.(task)}
+              >
+                <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`} />
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium truncate">{task.title}</h4>
+                    <Badge className={`text-xs ${getStatusColor(task.status)}`}>
                       {task.status}
-                    </span>
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center text-xs text-muted-foreground mt-1 space-x-4">
+                    {task.dueDate && (
+                      <span className="flex items-center">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {format(task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate), 'HH:mm')}
+                      </span>
+                    )}
+                    
+                    {(task.propertyId || task.property) && (
+                      <span className="flex items-center">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {task.property || task.propertyId}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
-            ))}
-          
-          {maintenanceTasks
-            .filter(task => task.dueDate?.startsWith(today))
-            .map(task => (
-              <div key={task.id} className="p-3 border rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium">{task.title}</h3>
-                    <p className="text-sm text-muted-foreground">{task.property}</p>
-                  </div>
-                  <div className="text-right">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      task.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {task.status}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ))}
+            ))
+          )}
         </div>
-      ) : (
-        <EmptyState
-          icon={Calendar}
-          title="No Tasks Scheduled for Today"
-          description="You're all caught up! No housekeeping or maintenance tasks are scheduled for today."
-          action={onCreateTask ? {
-            label: "Create New Task",
-            onClick: onCreateTask,
-            variant: "outline"
-          } : undefined}
-          compact={isMobile}
-        />
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

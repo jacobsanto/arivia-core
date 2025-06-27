@@ -46,7 +46,8 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
     }
   };
 
-  const handleFileChange = (file: File) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (file) {
       uploadAvatar(file);
     }

@@ -7,9 +7,18 @@ export type TaskType = "Cleaning" | "Maintenance" | "Inspection" | "Check-in" | 
 
 export interface ChecklistItem {
   id: string;
+  title: string;
   text: string;
+  description?: string;
   completed: boolean;
   required?: boolean;
+}
+
+export interface CleaningDetails {
+  roomsCleaned: number;
+  cleaningType: string;
+  notes?: string;
+  scheduledCleanings?: Date[];
 }
 
 export interface Task {
@@ -22,6 +31,7 @@ export interface Task {
   assignedTo?: string;
   assignedRole?: string;
   propertyId?: string;
+  property?: string; // Keep for backward compatibility
   roomNumber?: string;
   dueDate?: Date;
   createdAt: Date;
@@ -33,6 +43,10 @@ export interface Task {
   attachments?: string[];
   createdBy: string;
   tags?: string[];
+  approvalStatus?: 'Approved' | 'Rejected' | 'Pending';
+  photos?: string[];
+  cleaningDetails?: CleaningDetails;
+  rejectionReason?: string;
 }
 
 export interface TaskComment {
@@ -54,3 +68,25 @@ export interface TaskFilter {
     end: Date;
   };
 }
+
+// Add missing form types
+export interface CleaningTaskFormValues {
+  title: string;
+  property: string;
+  roomType: string;
+  dueDate?: Date;
+  assignedTo: string;
+  priority: TaskPriority;
+  description: string;
+  checklist?: string[];
+}
+
+// Simple schema for now - can be enhanced with zod later
+export const cleaningTaskFormSchema = {
+  title: { required: true, minLength: 3 },
+  property: { required: true },
+  roomType: { required: true },
+  assignedTo: { required: true },
+  priority: { required: true },
+  description: { required: false }
+};
