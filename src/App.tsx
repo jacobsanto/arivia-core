@@ -17,6 +17,8 @@ import BookingManagement from "@/pages/admin/BookingManagement";
 import ManagerDashboard from "@/pages/manager/ManagerDashboard";
 import CleanerDashboard from "@/pages/cleaner/CleanerDashboard";
 import MaintenanceDashboard from "@/pages/maintenance/MaintenanceDashboard";
+import TaskManagement from "@/pages/tasks/TaskManagement";
+import StaffTasks from "@/pages/staff/StaffTasks";
 
 // Error pages
 import Unauthorized from "@/pages/Unauthorized";
@@ -65,6 +67,16 @@ function App() {
                   }
                 />
                 <Route
+                  path="/admin/tasks"
+                  element={
+                    <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin', 'property_manager']}>
+                      <TenantLayout>
+                        <TaskManagement />
+                      </TenantLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/manager"
                   element={
                     <ProtectedRoute allowedRoles={['property_manager', 'tenant_admin']}>
@@ -90,6 +102,16 @@ function App() {
                     <ProtectedRoute allowedRoles={['maintenance_staff']}>
                       <TenantLayout>
                         <MaintenanceDashboard />
+                      </TenantLayout>
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/staff/tasks"
+                  element={
+                    <ProtectedRoute allowedRoles={['housekeeping_staff', 'maintenance_staff', 'concierge']}>
+                      <TenantLayout>
+                        <StaffTasks />
                       </TenantLayout>
                     </ProtectedRoute>
                   }
