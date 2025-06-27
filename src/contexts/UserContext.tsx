@@ -95,53 +95,38 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
   
   const handleDeleteUser = async (userId: string) => {
-    return await removeUser(currentUser, users, setUsers, userId);
+    return await removeUser(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId);
   };
 
-  const handleSyncUserProfile = async () => {
-    if (currentUser) {
-      return await syncUserWithProfile(currentUser.id, setUser as StateSetter<User | null>, currentUser);
-    }
-    return false;
+  const value: UserContextType = {
+    user: currentUser,
+    session: currentSession,
+    users,
+    isLoading: currentIsLoading,
+    isOffline,
+    lastAuthTime,
+    login: handleLogin,
+    signup: handleSignup,
+    logout: handleLogout,
+    refreshProfile: handleRefreshProfile,
+    syncUserWithProfile: () => syncUserWithProfile(currentUser, setUser),
+    updateProfile: updateUserProfile,
+    updateAvatar: handleUpdateUserAvatar,
+    deleteUser: handleDeleteUser,
+    updateUserPermissions: handleUpdateUserPermissions,
+    hasPermission: handleHasPermission,
+    hasFeatureAccess: handleHasFeatureAccess,
+    getOfflineLoginStatus: handleGetOfflineLoginStatus
   };
 
-  const handleUpdateProfile = async (
-    userId: string,
-    profileData: Partial<{
-      name: string;
-      email: string;
-      role: UserRole;
-      secondaryRoles?: UserRole[];
-      customPermissions?: Record<string, boolean>;
-    }>
-  ) => {
-    return await updateUserProfile(userId, profileData, setUser as StateSetter<User | null>, currentUser);
-  };
-  
   return (
-    <UserContext.Provider value={{ 
-      user: currentUser,
-      session: currentSession,
-      isLoading: currentIsLoading, 
-      login: handleLogin,
-      signup: handleSignup,
-      logout: handleLogout, 
-      hasPermission: handleHasPermission, 
-      hasFeatureAccess: handleHasFeatureAccess,
-      getOfflineLoginStatus: handleGetOfflineLoginStatus,
-      updateUserPermissions: handleUpdateUserPermissions,
-      updateUserAvatar: handleUpdateUserAvatar,
-      deleteUser: handleDeleteUser,
-      syncUserProfile: handleSyncUserProfile,
-      updateProfile: handleUpdateProfile,
-      refreshProfile: handleRefreshProfile
-    }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
 };
 
-export const useUser = () => {
+export const useUser = (): UserContextType => {
   const context = useContext(UserContext);
   if (context === undefined) {
     throw new Error("useUser must be used within a UserProvider");
