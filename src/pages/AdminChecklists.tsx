@@ -43,19 +43,28 @@ const AdminChecklists = () => {
     setIsCreateDialogOpen(true);
   };
 
-  const handleEdit = (template: ChecklistTemplate) => {
-    setSelectedTemplate(template);
-    setIsEditDialogOpen(true);
+  const handleEdit = (templateId: string) => {
+    const template = getTemplateById(templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setIsEditDialogOpen(true);
+    }
   };
 
-  const handleDelete = (template: ChecklistTemplate) => {
-    setSelectedTemplate(template);
-    setIsDeleteDialogOpen(true);
+  const handleDelete = (templateId: string) => {
+    const template = getTemplateById(templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setIsDeleteDialogOpen(true);
+    }
   };
 
-  const handleUseTemplate = (template: ChecklistTemplate) => {
-    setSelectedTemplate(template);
-    setIsUseDialogOpen(true);
+  const handleUseTemplate = (templateId: string) => {
+    const template = getTemplateById(templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setIsUseDialogOpen(true);
+    }
   };
 
   const handleFormSubmit = async (formData: any) => {
@@ -143,10 +152,12 @@ const AdminChecklists = () => {
 
       <TemplateFormDialog
         isOpen={isCreateDialogOpen || isEditDialogOpen}
-        onClose={() => {
-          setIsCreateDialogOpen(false);
-          setIsEditDialogOpen(false);
-          setSelectedTemplate(null);
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreateDialogOpen(false);
+            setIsEditDialogOpen(false);
+            setSelectedTemplate(null);
+          }
         }}
         onSubmit={handleFormSubmit}
         template={selectedTemplate}
@@ -154,9 +165,11 @@ const AdminChecklists = () => {
 
       <DeleteTemplateDialog
         isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedTemplate(null);
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsDeleteDialogOpen(false);
+            setSelectedTemplate(null);
+          }
         }}
         onConfirm={handleDeleteConfirm}
         templateName={selectedTemplate?.name || ''}
@@ -164,9 +177,11 @@ const AdminChecklists = () => {
 
       <UseTemplateDialog
         isOpen={isUseDialogOpen}
-        onClose={() => {
-          setIsUseDialogOpen(false);
-          setSelectedTemplate(null);
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsUseDialogOpen(false);
+            setSelectedTemplate(null);
+          }
         }}
         template={selectedTemplate}
       />

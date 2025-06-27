@@ -1,101 +1,112 @@
 
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { DamageReport as LocalDamageReport } from '@/types/damage';
+import { supabase } from "@/integrations/supabase/client";
+import { DamageReport, DamageReportStatus } from "@/types/damage";
 
-export interface DamageReport {
-  id: string;
-  title: string;
-  description: string;
-  property_id: string;
-  reported_by: string;
-  assigned_to?: string;
-  status: 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed' | 'disputed';
-  damage_date: string;
-  created_at: string;
-  updated_at: string;
-  estimated_cost?: number;
-  final_cost?: number;
-  compensation_amount?: number;
-  compensation_notes?: string;
-  conclusion?: string;
-  resolution_date?: string;
-}
+export class DamageService {
+  static async getDamageReports(): Promise<DamageReport[]> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-export interface DamageReportMedia {
-  id: string;
-  report_id: string;
-  media_type: 'photo' | 'video';
-  url: string;
-  created_at: string;
-  uploaded_by: string;
-}
-
-export const damageService = {
-  async getDamageReports(): Promise<DamageReport[]> {
-    try {
-      const { data, error } = await supabase
-        .from('damage_reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data || [];
-    } catch (error: any) {
+    if (error) {
       console.error('Error fetching damage reports:', error);
-      toast.error('Failed to load damage reports');
-      return [];
+      throw new Error('Failed to fetch damage reports');
     }
-  },
 
-  async createDamageReport(report: Omit<DamageReport, 'id' | 'created_at' | 'updated_at'>): Promise<DamageReport | null> {
-    try {
-      const { data, error } = await supabase
-        .from('damage_reports')
-        .insert(report)
-        .select()
-        .single();
+    return data || [];
+  }
 
-      if (error) throw error;
-      toast.success('Damage report created successfully');
-      return data;
-    } catch (error: any) {
+  static async getDamageReportById(id: string): Promise<DamageReport | null> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching damage report:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  static async createDamageReport(
+    report: Omit<DamageReport, 'id' | 'created_at' | 'updated_at'>
+  ): Promise<DamageReport> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .insert([report])
+      .select()
+      .single();
+
+    if (error) {
       console.error('Error creating damage report:', error);
-      toast.error('Failed to create damage report');
-      return null;
+      throw new Error('Failed to create damage report');
     }
-  },
 
-  async uploadMedia(file: File, reportId: string, type: 'photo' | 'video'): Promise<string | null> {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${reportId}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('damage-reports')
-        .upload(fileName, file);
+    return data;
+  }
 
-      if (uploadError) throw uploadError;
+  static async updateDamageReport(
+    id: string,
+    updates: Partial<DamageReport>
+  ): Promise<DamageReport> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('damage-reports')
-        .getPublicUrl(fileName);
+    if (error) {
+      console.error('Error updating damage report:', error);
+      throw new Error('Failed to update damage report');
+    }
 
-      const { error: dbError } = await supabase
-        .from('damage_report_media')
-        .insert({
-          report_id: reportId,
-          media_type: type,
-          url: publicUrl,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id
-        });
+    return data;
+  }
 
-      if (dbError) throw dbError;
-      return publicUrl;
-    } catch (error: any) {
-      console.error('Error uploading media:', error);
-      toast.error('Failed to upload media');
-      return null;
+  static async deleteDamageReport(id: string): Promise<void> {
+    const { error } = await supabase
+      .from('damage_reports')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error('Error deleting damage report:', error);
+      throw new Error('Failed to delete damage report');
     }
   }
-};
+
+  static async getDamageReportsByStatus(status: DamageReportStatus): Promise<DamageReport[]> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .select('*')
+      .eq('status', status)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching damage reports by status:', error);
+      throw new Error('Failed to fetch damage reports');
+    }
+
+    return data || [];
+  }
+
+  static async getDamageReportsByProperty(propertyId: string): Promise<DamageReport[]> {
+    const { data, error } = await supabase
+      .from('damage_reports')
+      .select('*')
+      .eq('property_id', propertyId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching damage reports by property:', error);
+      throw new Error('Failed to fetch damage reports');
+    }
+
+    return data || [];
+  }
+}

@@ -1,85 +1,53 @@
 
 import React from 'react';
-import { format } from 'date-fns';
-import { motion } from "framer-motion";
+import { format, startOfDay, isSameDay } from 'date-fns';
 import { CombinedTask } from './agendaUtils';
-import TaskGroup from './TaskGroup';
+import { TaskGroup } from './TaskGroup';
 
 interface AgendaContentProps {
-  selectedDate: Date;
-  sortedTasks: CombinedTask[];
-  morningTasks: CombinedTask[];
-  afternoonTasks: CombinedTask[];
-  eveningTasks: CombinedTask[];
-  onTaskClick: (task: CombinedTask) => void;
-  swipeDirection: number;
+  tasks: CombinedTask[];
+  onTaskClick?: (task: CombinedTask) => void;
 }
 
-// Animation variants for day transitions
-const variants = {
-  enter: (direction: number) => ({
-    x: direction > 0 ? 300 : -300,
-    opacity: 0
-  }),
-  center: {
-    x: 0,
-    opacity: 1
-  },
-  exit: (direction: number) => ({
-    x: direction < 0 ? 300 : -300,
-    opacity: 0
-  })
-};
-
-export const AgendaContent: React.FC<AgendaContentProps> = ({
-  selectedDate,
-  sortedTasks,
-  morningTasks,
-  afternoonTasks,
-  eveningTasks,
-  onTaskClick,
-  swipeDirection
+export const AgendaContent: React.FC<AgendaContentProps> = ({ 
+  tasks, 
+  onTaskClick 
 }) => {
+  // Group tasks by date
+  const groupedTasks = React.useMemo(() => {
+    const groups: { [key: string]: CombinedTask[] } = {};
+    
+    tasks.forEach(task => {
+      const dateKey = format(startOfDay(new Date(task.date)), 'yyyy-MM-dd');
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(task);
+    });
+    
+    return groups;
+  }, [tasks]);
+
+  const sortedDates = Object.keys(groupedTasks).sort();
+
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>No tasks scheduled for the selected period.</p>
+      </div>
+    );
+  }
+
   return (
-    <motion.div
-      key={selectedDate.toISOString()}
-      custom={swipeDirection}
-      variants={variants}
-      initial="enter"
-      animate="center"
-      exit="exit"
-      transition={{
-        type: "tween",
-        duration: 0.3
-      }}
-    >
-      {sortedTasks.length === 0 ? (
-        <div className="text-center py-6 text-muted-foreground">
-          No tasks scheduled for {format(selectedDate, 'MMMM d')}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          <TaskGroup
-            title="Morning"
-            tasks={morningTasks}
-            onTaskClick={onTaskClick}
-          />
-          
-          <TaskGroup
-            title="Afternoon"
-            tasks={afternoonTasks}
-            onTaskClick={onTaskClick}
-          />
-          
-          <TaskGroup
-            title="Evening"
-            tasks={eveningTasks}
-            onTaskClick={onTaskClick}
-          />
-        </div>
-      )}
-    </motion.div>
+    <div className="space-y-6">
+      {sortedDates.map(dateKey => (
+        <TaskGroup
+          key={dateKey}
+          date={new Date(dateKey)}
+          tasks={groupedTasks[dateKey]}
+          onTaskClick={onTaskClick}
+        />
+      ))}
+    </div>
   );
 };
-
-export default AgendaContent;

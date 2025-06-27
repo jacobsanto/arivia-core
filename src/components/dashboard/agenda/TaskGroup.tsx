@@ -2,7 +2,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { CombinedTask } from './agendaUtils';
-import { AgendaTask } from './AgendaTask';
+import AgendaTask from './AgendaTask';
 
 interface TaskGroupProps {
   date: Date;

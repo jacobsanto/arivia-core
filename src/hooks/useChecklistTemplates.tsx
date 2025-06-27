@@ -1,27 +1,28 @@
 
 import { useState, useEffect } from 'react';
 import { ChecklistTemplate } from '@/types/checklistTypes';
+import { defaultChecklistTemplates } from '@/data/checklistTemplateData';
 
 export const useChecklistTemplates = () => {
-  const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [templates, setTemplates] = useState<ChecklistTemplate[]>(defaultChecklistTemplates);
+  const [isLoading, setIsLoading] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    // Simulate loading templates
-    setTimeout(() => {
-      setTemplates([]);
-      setIsLoading(false);
-    }, 1000);
-  }, []);
+  const filteredTemplates = templates.filter(template => {
+    const matchesCategory = categoryFilter === 'all' || template.category === categoryFilter;
+    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   const handleCreateTemplate = async (templateData: Omit<ChecklistTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
     const newTemplate: ChecklistTemplate = {
       ...templateData,
-      id: `template-${Date.now()}`,
+      id: Date.now().toString(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      isDefault: false
     };
     setTemplates(prev => [...prev, newTemplate]);
   };
@@ -43,7 +44,7 @@ export const useChecklistTemplates = () => {
   };
 
   return {
-    templates,
+    templates: filteredTemplates,
     isLoading,
     categoryFilter,
     setCategoryFilter,

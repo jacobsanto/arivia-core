@@ -1,645 +1,248 @@
-import React, { useState } from "react";
-import { Helmet } from "react-helmet-async";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import { CalendarIcon } from "@radix-ui/react-icons";
-import { toast } from "sonner";
-import {
-  DamageReport,
-  DamageReportStatus,
-  DamageReportFormValues,
-} from "@/types/damage";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { 
+  FileText, 
+  Filter, 
+  Plus, 
+  Search, 
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  User,
+  Calendar,
+  DollarSign,
+  Eye
+} from 'lucide-react';
+import { DamageReport, DamageReportStatus } from '@/types/damage';
 
 const DamageReports = () => {
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
-  const [reports, setReports] = useState<DamageReport[]>([
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedReport, setSelectedReport] = useState<DamageReport | null>(null);
+
+  // Mock data for demonstration
+  const mockReports: DamageReport[] = [
     {
-      id: "1",
-      title: "Broken Window",
-      description: "A window was broken during a storm.",
-      damage_date: "2024-01-20",
-      estimated_cost: 500,
-      property_id: "A123",
-      assigned_to: "John Doe",
-      status: "pending",
+      id: '1',
+      title: 'Broken bathroom mirror',
+      description: 'Guest accidentally broke the bathroom mirror in Villa Santorini',
+      damage_date: '2024-01-15T10:30:00Z',
+      estimated_cost: 150,
+      property_id: 'prop-1',
+      assigned_to: 'user-1',
+      status: 'pending' as DamageReportStatus,
+      priority: 'medium',
+      reported_by: 'user-2',
+      created_at: '2024-01-15T10:35:00Z',
+      updated_at: '2024-01-15T10:35:00Z'
     },
     {
-      id: "2",
-      title: "Leaky Faucet",
-      description: "A faucet is leaking in the bathroom.",
-      damage_date: "2024-01-22",
-      estimated_cost: 50,
-      property_id: "B456",
-      assigned_to: "Jane Smith",
-      status: "investigating",
-    },
-    {
-      id: "3",
-      title: "Cracked Tiles",
-      description: "Some tiles are cracked in the kitchen.",
-      damage_date: "2024-01-25",
+      id: '2',
+      title: 'Stained carpet in living room',
+      description: 'Red wine stain on the white carpet that requires professional cleaning',
+      damage_date: '2024-01-14T20:15:00Z',
       estimated_cost: 200,
-      property_id: "C789",
-      assigned_to: "John Doe",
-      status: "resolved",
+      property_id: 'prop-2',
+      assigned_to: 'user-3',
+      status: 'investigating' as DamageReportStatus,
+      priority: 'low',
+      reported_by: 'user-4',
+      created_at: '2024-01-14T20:20:00Z',
+      updated_at: '2024-01-15T09:00:00Z'
     },
-  ]);
-  const [selectedReport, setSelectedReport] = useState<DamageReport | null>(
-    null
-  );
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    {
+      id: '3',
+      title: 'Damaged outdoor furniture',
+      description: 'Patio chair leg broken during guest stay',
+      damage_date: '2024-01-13T16:45:00Z',
+      estimated_cost: 300,
+      property_id: 'prop-3',
+      assigned_to: 'user-5',
+      status: 'resolved' as DamageReportStatus,
+      priority: 'high',
+      reported_by: 'user-6',
+      created_at: '2024-01-13T17:00:00Z',
+      updated_at: '2024-01-14T14:30:00Z'
+    }
+  ];
 
-  const handleCreateNew = () => {
-    setSelectedReport(null);
-    setIsCreateDialogOpen(true);
-  };
+  const [reports] = useState<DamageReport[]>(mockReports);
 
-  const handleEditReport = (report: DamageReport) => {
-    setSelectedReport(report);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDeleteReport = (report: DamageReport) => {
-    setSelectedReport(report);
-    setIsDeleteDialogOpen(true);
-  };
-
-  const handleStatusChange = (reportId: string, status: DamageReportStatus) => {
-    setReports((prevReports) =>
-      prevReports.map((report) =>
-        report.id === reportId ? { ...report, status } : report
-      )
-    );
-  };
-
-  const handleFormSubmit = async (formData: DamageReportFormValues) => {
-    try {
-      const reportData = {
-        ...formData,
-        damage_date: formData.damage_date,
-        estimated_cost: formData.estimated_cost || 0,
-      };
-
-      if (selectedReport) {
-        setReports((prevReports) =>
-          prevReports.map((report) =>
-            report.id === selectedReport.id ? { ...report, ...reportData } : report
-          )
-        );
-        toast.success("Report updated successfully");
-      } else {
-        const newReport: DamageReport = {
-          id: Date.now().toString(),
-          ...reportData,
-          status: "pending",
-        };
-        setReports((prevReports) => [...prevReports, newReport]);
-        toast.success("Report created successfully");
-      }
-
-      setIsCreateDialogOpen(false);
-      setIsEditDialogOpen(false);
-      setSelectedReport(null);
-    } catch (error) {
-      toast.error("Failed to save report");
+  const getStatusColor = (status: DamageReportStatus) => {
+    switch (status) {
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'investigating':
+        return 'bg-blue-100 text-blue-800';
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'compensation_required':
+        return 'bg-orange-100 text-orange-800';
+      case 'compensation_paid':
+        return 'bg-purple-100 text-purple-800';
+      case 'closed':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    if (selectedReport) {
-      try {
-        setReports((prevReports) =>
-          prevReports.filter((report) => report.id !== selectedReport.id)
-        );
-        toast.success("Report deleted successfully");
-        setIsDeleteDialogOpen(false);
-        setSelectedReport(null);
-      } catch (error) {
-        toast.error("Failed to delete report");
-      }
+  const getStatusIcon = (status: DamageReportStatus) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="h-4 w-4" />;
+      case 'investigating':
+        return <AlertTriangle className="h-4 w-4" />;
+      case 'resolved':
+        return <CheckCircle className="h-4 w-4" />;
+      default:
+        return <FileText className="h-4 w-4" />;
     }
+  };
+
+  const filteredReports = reports.filter(report => {
+    const matchesSearch = report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         report.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || report.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleCreateReport = () => {
+    const newReport: DamageReport = {
+      id: Date.now().toString(),
+      title: 'New Damage Report',
+      description: 'Description of the damage',
+      damage_date: new Date().toISOString(),
+      estimated_cost: 0,
+      property_id: 'prop-1',
+      assigned_to: undefined,
+      status: 'pending' as DamageReportStatus,
+      priority: 'medium',
+      reported_by: 'current-user',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    // In a real app, this would save to the database
+    console.log('Creating new report:', newReport);
   };
 
   return (
-    <div className="space-y-6">
-      <Helmet>
-        <title>Damage Reports - Arivia Villa Sync</title>
-      </Helmet>
-
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          {isMobile && (
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <div>
-            <h1 className="md:text-3xl font-bold tracking-tight flex items-center text-xl px-0 mx-0 text-left">
-              Damage Reports
-            </h1>
-            <p className="text-sm text-muted-foreground tracking-tight py-0 px-0 mx-0">
-              View and manage damage reports
-            </p>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Damage Reports</h1>
+          <p className="text-muted-foreground">
+            Track and manage property damage incidents
+          </p>
         </div>
-        <Button onClick={handleCreateNew} className="flex items-center gap-2">
+        <Button onClick={handleCreateReport} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Create Report
+          New Report
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <DamageReportList
-            reports={reports}
-            onSelectReport={setSelectedReport}
-            onEditReport={handleEditReport}
-            onDeleteReport={handleDeleteReport}
-            onStatusChange={handleStatusChange}
-          />
-        </div>
-
-        {selectedReport && (
-          <div className="lg:col-span-1">
-            <DamageReportDetails report={selectedReport} />
-          </div>
-        )}
-      </div>
-
-      <ReportFormDialog
-        isOpen={isCreateDialogOpen || isEditDialogOpen}
-        onClose={() => {
-          setIsCreateDialogOpen(false);
-          setIsEditDialogOpen(false);
-          setSelectedReport(null);
-        }}
-        onSubmit={handleFormSubmit}
-        report={selectedReport}
-      />
-
-      <DeleteReportDialog
-        isOpen={isDeleteDialogOpen}
-        onClose={() => {
-          setIsDeleteDialogOpen(false);
-          setSelectedReport(null);
-        }}
-        onConfirm={handleDeleteConfirm}
-        reportName={selectedReport?.title || ""}
-      />
-    </div>
-  );
-};
-
-interface DamageReportListProps {
-  reports: DamageReport[];
-  onSelectReport: (report: DamageReport) => void;
-  onEditReport: (report: DamageReport) => void;
-  onDeleteReport: (report: DamageReport) => void;
-  onStatusChange: (reportId: string, status: DamageReportStatus) => void;
-}
-
-const DamageReportList: React.FC<DamageReportListProps> = ({
-  reports,
-  onSelectReport,
-  onEditReport,
-  onDeleteReport,
-  onStatusChange,
-}) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Damage Reports</CardTitle>
-        <CardDescription>List of all damage reports</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {reports.length > 0 ? (
-          reports.map((report) => (
-            <DamageReportItem
-              key={report.id}
-              report={report}
-              onSelect={onSelectReport}
-              onEdit={onEditReport}
-              onDelete={onDeleteReport}
-              onStatusChange={onStatusChange}
-            />
-          ))
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            No damage reports found.
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-};
-
-interface DamageReportItemProps {
-  report: DamageReport;
-  onSelect: (report: DamageReport) => void;
-  onEdit: (report: DamageReport) => void;
-  onDelete: (report: DamageReport) => void;
-  onStatusChange: (reportId: string, status: DamageReportStatus) => void;
-}
-
-const DamageReportItem: React.FC<DamageReportItemProps> = ({
-  report,
-  onSelect,
-  onEdit,
-  onDelete,
-  onStatusChange,
-}) => {
-  return (
-    <div className="border rounded-md p-4 hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer">
-      <div className="flex justify-between items-center">
-        <div onClick={() => onSelect(report)}>
-          <h3 className="font-semibold">{report.title}</h3>
-          <p className="text-sm text-muted-foreground">{report.description}</p>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => onEdit(report)}>
-              <Pencil className="mr-2 h-4 w-4" /> Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDelete(report)}>
-              <Trash2 className="mr-2 h-4 w-4" /> Delete
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <StatusDropdown
-                reportId={report.id}
-                currentStatus={report.status}
-                onStatusChange={onStatusChange}
+      {/* Filters */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search reports..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
               />
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="mt-2 flex items-center space-x-2">
-        <Badge variant="secondary">{report.property_id}</Badge>
-        <Badge>{report.assigned_to}</Badge>
-      </div>
-    </div>
-  );
-};
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="investigating">Investigating</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+                <SelectItem value="compensation_required">Compensation Required</SelectItem>
+                <SelectItem value="compensation_paid">Compensation Paid</SelectItem>
+                <SelectItem value="closed">Closed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
-interface StatusDropdownProps {
-  reportId: string;
-  currentStatus: DamageReportStatus;
-  onStatusChange: (reportId: string, status: DamageReportStatus) => void;
-}
-
-const StatusDropdown: React.FC<StatusDropdownProps> = ({
-  reportId,
-  currentStatus,
-  onStatusChange,
-}) => {
-  const statuses: DamageReportStatus[] = [
-    "pending",
-    "investigating",
-    "resolved",
-    "compensation_required",
-    "compensation_paid",
-    "closed",
-    "disputed",
-  ];
-
-  return (
-    <Select onValueChange={(value) => onStatusChange(reportId, value as DamageReportStatus)} defaultValue={currentStatus}>
-      <SelectTrigger>
-        <SelectValue placeholder="Update Status" />
-      </SelectTrigger>
-      <SelectContent>
-        {statuses.map((status) => (
-          <SelectItem key={status} value={status}>
-            {status}
-          </SelectItem>
+      {/* Reports Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {filteredReports.map((report) => (
+          <Card key={report.id} className="hover:shadow-md cursor-pointer transition-shadow">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <CardTitle className="text-lg line-clamp-1">{report.title}</CardTitle>
+                <Badge className={`${getStatusColor(report.status)} flex items-center gap-1`}>
+                  {getStatusIcon(report.status)}
+                  {report.status}
+                </Badge>
+              </div>
+              <CardDescription className="line-clamp-2">
+                {report.description}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {new Date(report.damage_date).toLocaleDateString()}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <DollarSign className="h-4 w-4" />
+                  Estimated: ${report.estimated_cost}
+                </div>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <User className="h-4 w-4" />
+                  Assigned: {report.assigned_to || 'Unassigned'}
+                </div>
+              </div>
+              <div className="flex justify-end mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setSelectedReport(report)}
+                  className="flex items-center gap-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  View Details
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </SelectContent>
-    </Select>
-  );
-};
+      </div>
 
-interface DamageReportDetailsProps {
-  report: DamageReport;
-}
-
-const DamageReportDetails: React.FC<DamageReportDetailsProps> = ({
-  report,
-}) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Report Details</CardTitle>
-        <CardDescription>Details of the selected damage report</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Title</h4>
-          <p>{report.title}</p>
+      {filteredReports.length === 0 && (
+        <div className="text-center py-8">
+          <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No damage reports found</h3>
+          <p className="text-gray-600 mb-4">
+            {searchQuery || statusFilter !== 'all' 
+              ? 'Try adjusting your search criteria'
+              : 'Get started by creating your first damage report'
+            }
+          </p>
+          {(!searchQuery && statusFilter === 'all') && (
+            <Button onClick={handleCreateReport} className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Create First Report
+            </Button>
+          )}
         </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Description</h4>
-          <p>{report.description}</p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Damage Date</h4>
-          <p>{report.damage_date}</p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Estimated Cost</h4>
-          <p>${report.estimated_cost}</p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Property ID</h4>
-          <p>{report.property_id}</p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Assigned To</h4>
-          <p>{report.assigned_to}</p>
-        </div>
-        <div className="space-y-2">
-          <h4 className="text-sm font-bold">Status</h4>
-          <Badge>{report.status}</Badge>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-interface ReportFormDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (formData: DamageReportFormValues) => void;
-  report: DamageReport | null;
-}
-
-const ReportFormDialog: React.FC<ReportFormDialogProps> = ({
-  isOpen,
-  onClose,
-  onSubmit,
-  report,
-}) => {
-  const [formData, setFormData] = useState<DamageReportFormValues>({
-    title: report?.title || "",
-    description: report?.description || "",
-    damage_date: report?.damage_date || format(new Date(), "yyyy-MM-dd"),
-    estimated_cost: report?.estimated_cost || 0,
-    property_id: report?.property_id || "",
-    assigned_to: report?.assigned_to || "",
-  });
-  const [date, setDate] = React.useState<Date | undefined>(new Date());
-
-  React.useEffect(() => {
-    if (report) {
-      setFormData({
-        title: report.title || "",
-        description: report.description || "",
-        damage_date: report.damage_date || format(new Date(), "yyyy-MM-dd"),
-        estimated_cost: report.estimated_cost || 0,
-        property_id: report.property_id || "",
-        assigned_to: report.assigned_to || "",
-      });
-    }
-  }, [report]);
-
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onClose();
-  };
-
-  return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {report ? "Edit Report" : "Create New Report"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {report
-              ? "Update the details of the damage report."
-              : "Enter the details for the new damage report."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
-                Title
-              </Label>
-              <Input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="damage_date" className="text-right">
-                Damage Date
-              </Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-[240px] pl-3 text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
-                  >
-                    {date ? (
-                      format(date, "yyyy-MM-dd")
-                    ) : (
-                      <span>Pick a date</span>
-                    )}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={(date) => {
-                      setDate(date);
-                      setFormData((prevData) => ({
-                        ...prevData,
-                        damage_date: format(date as Date, "yyyy-MM-dd"),
-                      }));
-                    }}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="estimated_cost" className="text-right">
-                Estimated Cost
-              </Label>
-              <Input
-                type="number"
-                id="estimated_cost"
-                name="estimated_cost"
-                value={formData.estimated_cost}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="property_id" className="text-right">
-                Property ID
-              </Label>
-              <Input
-                type="text"
-                id="property_id"
-                name="property_id"
-                value={formData.property_id}
-                onChange={handleChange}
-                className="col-span-3"
-                required
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="assigned_to" className="text-right">
-                Assigned To
-              </Label>
-              <Input
-                type="text"
-                id="assigned_to"
-                name="assigned_to"
-                value={formData.assigned_to}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <Button type="submit">{report ? "Update" : "Create"}</Button>
-          </AlertDialogFooter>
-        </form>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-};
-
-interface DeleteReportDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  reportName: string;
-}
-
-const DeleteReportDialog: React.FC<DeleteReportDialogProps> = ({
-  isOpen,
-  onClose,
-  onConfirm,
-  reportName,
-}) => {
-  return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-          <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the{" "}
-            {reportName} report from our servers.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm}>Delete</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      )}
+    </div>
   );
 };
 

@@ -1,22 +1,23 @@
 
-// Base auth types
-export type { User, Session, StateSetter } from './base';
-export type { Permission, PermissionCategory } from './permissions';
+// Re-export all auth types and utilities
+export type { User, UserRole, Session, StateSetter } from './auth';
+export type { FeaturePermission } from './permissions';
+export { USER_ROLES, FEATURE_PERMISSIONS, getDefaultPermissionsForRole, hasPermissionWithAllRoles } from './permissions';
 
-// Role types - single export to avoid conflicts
-export type UserRole = 
-  | "superadmin" 
-  | "tenant_admin" 
-  | "property_manager" 
-  | "inventory_manager" 
-  | "housekeeper" 
-  | "maintenance_staff" 
-  | "guest";
+// Additional utilities
+export const isValidUserRole = (role: string): role is UserRole => {
+  return ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge'].includes(role);
+};
 
-// Additional auth types
-export interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  isLoading: boolean;
-  refreshAuthState: () => Promise<void>;
-}
+export const getUserRoleDisplayName = (role: UserRole): string => {
+  const roleNames: Record<UserRole, string> = {
+    superadmin: 'Super Admin',
+    tenant_admin: 'Admin',
+    property_manager: 'Property Manager',
+    housekeeping_staff: 'Housekeeping Staff',
+    maintenance_staff: 'Maintenance Staff',
+    inventory_manager: 'Inventory Manager',
+    concierge: 'Concierge'
+  };
+  return roleNames[role] || role;
+};
