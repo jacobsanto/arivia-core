@@ -3,7 +3,7 @@ export interface DamageReport {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'resolved' | 'cancelled';
+  status: 'pending' | 'investigating' | 'in_progress' | 'resolved' | 'cancelled' | 'disputed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   propertyId: string;
   reportedBy: string;

@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Card,
@@ -26,7 +27,7 @@ interface TaskDetailProps {
   onComplete: () => void;
   onApprove?: () => void;
   onReject?: () => void;
-  onToggleChecklistItem: (itemId: number) => void;
+  onToggleChecklistItem: (itemId: string) => void;
   onPhotoUpload?: (file: File) => void;
 }
 

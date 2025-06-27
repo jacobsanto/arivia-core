@@ -16,10 +16,11 @@ const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
 
   // Convert task date to string for comparison
   const getTaskDateString = (task: Task): string => {
+    if (!task.dueDate) return '';
     if (task.dueDate instanceof Date) {
       return task.dueDate.toISOString().split('T')[0];
     }
-    return typeof task.dueDate === 'string' ? task.dueDate.split('T')[0] : '';
+    return task.dueDate.split('T')[0];
   };
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');

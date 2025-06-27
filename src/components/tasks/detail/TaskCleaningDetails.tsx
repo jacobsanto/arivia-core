@@ -70,9 +70,9 @@ const TaskCleaningDetails = ({ cleaningDetails }: TaskCleaningDetailsProps) => {
           <div className="border rounded-md p-2 bg-background/50 max-h-40 overflow-y-auto">
             {cleaningDetails.scheduledCleanings.map((cleaning, index) => (
               <div key={index} className="flex justify-between items-center py-1 text-sm border-b last:border-b-0">
-                <span>{formatDate(cleaning)}</span>
+                <span>{format(cleaning, "PPP")}</span>
                 <span className="text-xs">
-                  {index === 0 || index === cleaningDetails.scheduledCleanings.length - 1
+                  {index === 0 || index === cleaningDetails.scheduledCleanings!.length - 1
                     ? "Standard" : index % 2 === 0 ? "Full" : "Linen & Towel"}
                 </span>
               </div>

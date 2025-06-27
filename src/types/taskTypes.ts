@@ -5,6 +5,8 @@ export type TaskPriority = "Low" | "Medium" | "High" | "Urgent";
 
 export type TaskType = "Cleaning" | "Maintenance" | "Inspection" | "Check-in" | "Check-out" | "Other";
 
+export type ApprovalStatus = 'Approved' | 'Rejected' | 'Pending';
+
 export interface ChecklistItem {
   id: string;
   title: string;
@@ -19,6 +21,9 @@ export interface CleaningDetails {
   cleaningType: string;
   notes?: string;
   scheduledCleanings?: Date[];
+  stayDuration?: number;
+  guestCheckIn?: string;
+  guestCheckOut?: string;
 }
 
 export interface Task {
@@ -33,18 +38,18 @@ export interface Task {
   propertyId?: string;
   property?: string; // Keep for backward compatibility
   roomNumber?: string;
-  dueDate?: Date;
+  dueDate?: Date | string;
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
   estimatedDuration?: number;
-  checklist?: ChecklistItem[];
+  checklist: ChecklistItem[];
   notes?: string;
   attachments?: string[];
   createdBy: string;
   tags?: string[];
-  approvalStatus?: 'Approved' | 'Rejected' | 'Pending';
-  photos?: string[];
+  approvalStatus?: ApprovalStatus;
+  photos: string[];
   cleaningDetails?: CleaningDetails;
   rejectionReason?: string;
 }
@@ -78,7 +83,17 @@ export interface CleaningTaskFormValues {
   assignedTo: string;
   priority: TaskPriority;
   description: string;
-  checklist?: string[];
+  checklist: string[];
+}
+
+export interface CleaningDetails {
+  roomsCleaned: number;
+  cleaningType: string;
+  notes?: string;
+  scheduledCleanings?: Date[];
+  stayDuration?: number;
+  guestCheckIn?: string;
+  guestCheckOut?: string;
 }
 
 // Simple schema for now - can be enhanced with zod later

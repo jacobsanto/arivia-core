@@ -1,3 +1,4 @@
+
 import { ChecklistTemplate } from "@/types/checklistTypes";
 
 export const defaultChecklistTemplates: ChecklistTemplate[] = [
