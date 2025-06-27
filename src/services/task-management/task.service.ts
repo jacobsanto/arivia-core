@@ -1,6 +1,32 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskStatus, TaskPriority } from "@/types/task-management";
+import { supabase } from '@/integrations/supabase/client';
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  property_id?: string;
+  assigned_to?: string;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+}
+
+export interface CreateTaskData {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  property_id?: string;
+  assigned_to?: string;
+}
+
+export interface UpdateTaskData extends Partial<CreateTaskData> {
+  status?: 'open' | 'in_progress' | 'completed' | 'cancelled';
+}
 
 export class TaskService {
   static async getTasks(): Promise<Task[]> {
@@ -9,11 +35,7 @@ export class TaskService {
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching tasks:', error);
-      throw new Error('Failed to fetch tasks');
-    }
-
+    if (error) throw error;
     return data || [];
   }
 
@@ -22,32 +44,28 @@ export class TaskService {
       .from('tasks')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (error) {
-      console.error('Error fetching task:', error);
-      return null;
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  static async createTask(task: Omit<Task, 'id' | 'created_at' | 'updated_at'>): Promise<Task> {
+  static async createTask(taskData: CreateTaskData): Promise<Task> {
     const { data, error } = await supabase
       .from('tasks')
-      .insert([task])
+      .insert([{
+        ...taskData,
+        created_by: (await supabase.auth.getUser()).data.user?.id || '',
+        tenant_id: 'default-tenant-id' // You'll need to get this from context
+      }])
       .select()
       .single();
 
-    if (error) {
-      console.error('Error creating task:', error);
-      throw new Error('Failed to create task');
-    }
-
+    if (error) throw error;
     return data;
   }
 
-  static async updateTask(id: string, updates: Partial<Task>): Promise<Task> {
+  static async updateTask(id: string, updates: UpdateTaskData): Promise<Task> {
     const { data, error } = await supabase
       .from('tasks')
       .update(updates)
@@ -55,11 +73,7 @@ export class TaskService {
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating task:', error);
-      throw new Error('Failed to update task');
-    }
-
+    if (error) throw error;
     return data;
   }
 
@@ -69,40 +83,7 @@ export class TaskService {
       .delete()
       .eq('id', id);
 
-    if (error) {
-      console.error('Error deleting task:', error);
-      throw new Error('Failed to delete task');
-    }
-  }
-
-  static async getTasksByStatus(status: TaskStatus[]): Promise<Task[]> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .in('status', status as string[])
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching tasks by status:', error);
-      throw new Error('Failed to fetch tasks');
-    }
-
-    return data || [];
-  }
-
-  static async getTasksByPriority(priority: TaskPriority[]): Promise<Task[]> {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .in('priority', priority as string[])
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching tasks by priority:', error);
-      throw new Error('Failed to fetch tasks');
-    }
-
-    return data || [];
+    if (error) throw error;
   }
 
   static async getTasksByProperty(propertyId: string): Promise<Task[]> {
@@ -112,11 +93,7 @@ export class TaskService {
       .eq('property_id', propertyId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching tasks by property:', error);
-      throw new Error('Failed to fetch tasks');
-    }
-
+    if (error) throw error;
     return data || [];
   }
 
@@ -127,11 +104,7 @@ export class TaskService {
       .eq('assigned_to', assigneeId)
       .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error fetching tasks by assignee:', error);
-      throw new Error('Failed to fetch tasks');
-    }
-
+    if (error) throw error;
     return data || [];
   }
 }

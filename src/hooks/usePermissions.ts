@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Permission, CreatePermissionData, UpdatePermissionData } from '@/types/role-permission';
 import { PermissionService } from '@/services/role-permission/permission.service';
+import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 
 export const usePermissions = () => {
@@ -9,6 +10,7 @@ export const usePermissions = () => {
   const [permissionsByCategory, setPermissionsByCategory] = useState<Record<string, Permission[]>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
   const fetchPermissions = async () => {
     setIsLoading(true);
@@ -67,6 +69,51 @@ export const usePermissions = () => {
     }
   };
 
+  // Permission checking function
+  const canAccess = (permissionName: string): boolean => {
+    if (!user) return false;
+    
+    // Super admin has all permissions
+    if (user.role === 'superadmin') return true;
+    
+    // Check custom permissions first
+    if (user.customPermissions && user.customPermissions[permissionName] !== undefined) {
+      return user.customPermissions[permissionName];
+    }
+    
+    // Default role-based permissions
+    const rolePermissions: Record<string, string[]> = {
+      'tenant_admin': ['viewProperties', 'manageProperties', 'viewAllTasks', 'assignTasks', 'viewUsers', 'manageUsers', 'viewReports', 'view_damage_reports'],
+      'property_manager': ['viewProperties', 'viewAllTasks', 'assignTasks', 'viewInventory', 'viewReports'],
+      'maintenance_staff': ['viewAssignedTasks', 'viewProperties'],
+      'housekeeping_staff': ['viewAssignedTasks', 'viewProperties'],
+      'inventory_manager': ['viewInventory', 'manageInventory', 'approveTransfers']
+    };
+    
+    return rolePermissions[user.role]?.includes(permissionName) || false;
+  };
+
+  const getOfflineCapabilities = (): string[] => {
+    if (!user) return [];
+    
+    const capabilities = [
+      'View assigned tasks',
+      'Mark tasks as completed',
+      'Take photos for tasks',
+      'View property information'
+    ];
+    
+    if (canAccess('viewInventory')) {
+      capabilities.push('View inventory levels', 'Record inventory usage');
+    }
+    
+    return capabilities;
+  };
+
+  const getAllPermissionsList = (): string[] => {
+    return permissions.map(p => p.name);
+  };
+
   useEffect(() => {
     fetchPermissions();
   }, []);
@@ -79,6 +126,9 @@ export const usePermissions = () => {
     createPermission,
     updatePermission,
     deletePermission,
+    canAccess,
+    getOfflineCapabilities,
+    getAllPermissionsList,
     refetch: fetchPermissions
   };
 };

@@ -13,50 +13,39 @@ export const getTimeDisplay = (date: Date) => {
 };
 
 export const createMockHousekeepingTask = (task: CombinedTask): Task => {
-  // Convert the task.dueDate to string if it's not already
-  const dueDateString = typeof task.dueDate === 'object' 
-    ? task.dueDate.toISOString()
-    : task.dueDate;
-
   return {
     id: task.id || `task-${Math.random().toString(36).substr(2, 9)}`,
     title: task.title,
-    property: task.property,
+    property: task.property_id || 'Unknown',
     status: (task.status as TaskStatus) || "Pending",
     priority: (task.priority as "Low" | "Medium" | "High") || "Medium",
-    dueDate: dueDateString,
-    assignedTo: task.assignedTo || "Unassigned",
+    dueDate: task.due_date,
+    assignedTo: task.assigned_to || "Unassigned",
     description: task.description || "",
     approvalStatus: "Pending",
     photos: [],
     checklist: [],
     type: "Cleaning",
-    createdAt: new Date().toISOString(),
+    createdAt: task.created_at || new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     createdBy: "system"
   };
 };
 
 export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask => {
-  // Convert the task.dueDate to string if it's not already
-  const dueDateString = typeof task.dueDate === 'object' 
-    ? task.dueDate.toISOString()
-    : task.dueDate;
-  
-  // Current date for createdAt field
   const now = new Date().toISOString();
 
   return {
     id: parseInt(task.id) || Math.floor(Math.random() * 10000),
     title: task.title,
-    property: task.property,
+    property: task.property_id || 'Unknown',
     type: "Maintenance",
     status: (task.status as TaskStatus) || "Pending",
     priority: (task.priority as "Low" | "Medium" | "High") || "Medium",
-    dueDate: dueDateString,
-    assignee: task.assignedTo || "Unassigned",
+    dueDate: task.due_date,
+    assignee: task.assigned_to || "Unassigned",
     description: task.description || "",
-    location: task.property,
+    location: task.property_id || 'Unknown',
     specialInstructions: "",
     requiredTools: [],
     instructions: [],
@@ -64,6 +53,6 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     afterPhotos: [],
     beforeVideos: [],
     afterVideos: [],
-    createdAt: now,
+    createdAt: task.created_at || now,
   };
 };

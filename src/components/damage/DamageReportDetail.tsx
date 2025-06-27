@@ -66,24 +66,24 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
             <div className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                Damage Date: {format(new Date(report.damageDate), 'PPP')}
+                Damage Date: {format(new Date(report.damage_date), 'PPP')}
               </span>
             </div>
             
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Property: {report.propertyId}</span>
+              <span className="text-sm">Property: {report.property_id}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Reported by: {report.reportedBy}</span>
+              <span className="text-sm">Reported by: {report.reported_by}</span>
             </div>
 
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm">
-                Created: {format(new Date(report.createdAt), 'PPp')}
+                Created: {format(new Date(report.created_at), 'PPp')}
               </span>
             </div>
           </CardContent>
@@ -97,29 +97,29 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {report.estimatedCost && (
+            {report.estimated_cost && (
               <div>
                 <span className="text-sm font-medium">Estimated Cost:</span>
                 <p className="text-lg font-bold text-orange-600">
-                  ${report.estimatedCost.toFixed(2)}
+                  ${report.estimated_cost.toFixed(2)}
                 </p>
               </div>
             )}
 
-            {report.finalCost && (
+            {report.final_cost && (
               <div>
                 <span className="text-sm font-medium">Final Cost:</span>
                 <p className="text-lg font-bold text-red-600">
-                  ${report.finalCost.toFixed(2)}
+                  ${report.final_cost.toFixed(2)}
                 </p>
               </div>
             )}
 
-            {report.compensationAmount && (
+            {report.compensation_amount && (
               <div>
                 <span className="text-sm font-medium">Compensation:</span>
                 <p className="text-lg font-bold text-green-600">
-                  ${report.compensationAmount.toFixed(2)}
+                  ${report.compensation_amount.toFixed(2)}
                 </p>
               </div>
             )}

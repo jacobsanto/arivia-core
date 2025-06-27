@@ -48,7 +48,7 @@ export const PermissionForm: React.FC<PermissionFormProps> = ({ permission, onBa
     name: '',
     description: '',
     category: '',
-    tenant_id: 'default-tenant-id', // You'll need to get this from context
+    tenant_id: 'default-tenant-id',
     is_active: true
   });
   
@@ -83,9 +83,21 @@ export const PermissionForm: React.FC<PermissionFormProps> = ({ permission, onBa
       const validatedData = permissionSchema.parse(formData);
       
       if (permission) {
-        await updatePermission(permission.id, validatedData);
+        await updatePermission(permission.id, {
+          name: validatedData.name,
+          description: validatedData.description,
+          category: validatedData.category,
+          tenant_id: validatedData.tenant_id,
+          is_active: validatedData.is_active
+        });
       } else {
-        await createPermission(validatedData);
+        await createPermission({
+          name: validatedData.name,
+          description: validatedData.description,
+          category: validatedData.category,
+          tenant_id: validatedData.tenant_id,
+          is_active: validatedData.is_active
+        });
       }
       
       toast.success(permission ? 'Permission updated successfully' : 'Permission created successfully');

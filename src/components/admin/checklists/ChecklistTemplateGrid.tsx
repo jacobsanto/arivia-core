@@ -9,13 +9,15 @@ interface ChecklistTemplateGridProps {
   onEdit: (templateId: string) => void;
   onDelete: (templateId: string) => void;
   onUse: (templateId: string) => void;
+  onDuplicate?: (templateId: string) => void;
 }
 
 const ChecklistTemplateGrid: React.FC<ChecklistTemplateGridProps> = ({
   templates,
   onEdit,
   onDelete,
-  onUse
+  onUse,
+  onDuplicate = () => {}
 }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -26,6 +28,7 @@ const ChecklistTemplateGrid: React.FC<ChecklistTemplateGridProps> = ({
           onEdit={() => onEdit(template.id)}
           onDelete={() => onDelete(template.id)}
           onUse={() => onUse(template.id)}
+          onDuplicate={() => onDuplicate(template.id)}
         />
       ))}
     </div>
