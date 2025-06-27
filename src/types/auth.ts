@@ -1,35 +1,43 @@
 
-// This file is deprecated and should be imported from the auth directory instead
-// Import from @/types/auth instead of directly from this file
+export interface TenantUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  tenantId: string;
+  avatar?: string;
+  permissions: Record<string, boolean>;
+}
 
-// Re-export all types from the new structure for backwards compatibility
-import {
-  User,
-  Session,
-  UserRole,
-  StateSetter,
-  UserStateSetter,
-  FEATURE_PERMISSIONS,
-  ROLE_DETAILS,
-  OFFLINE_CAPABILITIES,
-  hasPermissionWithAllRoles,
-  getAllPermissionKeys,
-  getDefaultPermissionsForRole
-} from '@/types/auth/index';
+export type UserRole = 
+  | "superadmin"
+  | "tenant_admin" 
+  | "property_manager" 
+  | "concierge" 
+  | "housekeeping_staff" 
+  | "maintenance_staff" 
+  | "inventory_manager"
+  | "guest";
 
-export type {
-  User,
-  Session,
-  UserRole,
-  StateSetter,
-  UserStateSetter
-};
+export interface Tenant {
+  id: string;
+  name: string;
+  subdomain: string;
+  settings: TenantSettings;
+  createdAt: Date;
+  isActive: boolean;
+}
 
-export {
-  FEATURE_PERMISSIONS,
-  ROLE_DETAILS,
-  OFFLINE_CAPABILITIES,
-  hasPermissionWithAllRoles,
-  getAllPermissionKeys,
-  getDefaultPermissionsForRole
-};
+export interface TenantSettings {
+  branding: {
+    logo?: string;
+    primaryColor: string;
+    secondaryColor: string;
+  };
+  features: {
+    housekeeping: boolean;
+    maintenance: boolean;
+    inventory: boolean;
+    analytics: boolean;
+  };
+}
