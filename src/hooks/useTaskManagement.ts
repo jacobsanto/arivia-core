@@ -1,120 +1,105 @@
 
 import { useState, useEffect } from 'react';
-import { Task, TaskFilters, CreateTaskData, UpdateTaskData } from '@/types/task-management';
-import { TaskService } from '@/services/task-management/task.service';
-import { useTenant } from '@/lib/context/TenantContext';
+import { Task, TaskService } from '@/services/task-management/task.service';
+import { toast } from 'sonner';
 
 export const useTaskManagement = () => {
-  const { tenantId } = useTenant();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState<TaskFilters>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const refreshTasks = async () => {
-    if (!tenantId) return;
-    
-    setLoading(true);
-    const fetchedTasks = await TaskService.getTasks(filters);
-    setTasks(fetchedTasks);
-    setLoading(false);
-  };
-
-  const createTask = async (taskData: CreateTaskData) => {
-    if (!tenantId) return null;
-    
-    const newTask = await TaskService.createTask(tenantId, taskData);
-    if (newTask) {
-      await refreshTasks();
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await TaskService.getTasks();
+      setTasks(data);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch tasks';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-    return newTask;
   };
 
-  const updateTask = async (taskId: string, updates: UpdateTaskData) => {
-    const success = await TaskService.updateTask(taskId, updates);
-    if (success) {
-      await refreshTasks();
+  const createTask = async (taskData: Omit<Task, 'id' | 'created_at' | 'updated_at'>) => {
+    try {
+      const newTask = await TaskService.createTask(taskData);
+      setTasks(prev => [...prev, newTask]);
+      toast.success('Task created successfully');
+      return newTask;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create task';
+      toast.error(errorMessage);
+      throw err;
     }
-    return success;
   };
 
-  const completeTask = async (taskId: string) => {
-    const success = await TaskService.completeTask(taskId);
-    if (success) {
-      await refreshTasks();
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    try {
+      const updatedTask = await TaskService.updateTask(id, updates);
+      setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
+      toast.success('Task updated successfully');
+      return updatedTask;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update task';
+      toast.error(errorMessage);
+      throw err;
     }
-    return success;
   };
 
-  const deleteTask = async (taskId: string) => {
-    const success = await TaskService.deleteTask(taskId);
-    if (success) {
-      await refreshTasks();
+  const deleteTask = async (id: string) => {
+    try {
+      await TaskService.deleteTask(id);
+      setTasks(prev => prev.filter(task => task.id !== id));
+      toast.success('Task deleted successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete task';
+      toast.error(errorMessage);
+      throw err;
     }
-    return success;
   };
 
-  const applyFilters = (newFilters: TaskFilters) => {
-    setFilters(newFilters);
+  const getMyTasks = async () => {
+    try {
+      return await TaskService.getTasks();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch my tasks';
+      toast.error(errorMessage);
+      return [];
+    }
+  };
+
+  const completeTask = async (id: string) => {
+    try {
+      const updatedTask = await TaskService.updateTask(id, { 
+        status: 'completed',
+        completed_at: new Date().toISOString()
+      });
+      setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
+      toast.success('Task completed successfully');
+      return updatedTask;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to complete task';
+      toast.error(errorMessage);
+      throw err;
+    }
   };
 
   useEffect(() => {
-    refreshTasks();
-  }, [tenantId, filters]);
-
-  return {
-    tasks,
-    loading,
-    filters,
-    createTask,
-    updateTask,
-    completeTask,
-    deleteTask,
-    refreshTasks,
-    applyFilters
-  };
-};
-
-export const useMyTasks = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refreshTasks = async () => {
-    setLoading(true);
-    const fetchedTasks = await TaskService.getMyTasks();
-    setTasks(fetchedTasks);
-    setLoading(false);
-  };
-
-  const completeTask = async (taskId: string) => {
-    const success = await TaskService.completeTask(taskId);
-    if (success) {
-      await refreshTasks();
-    }
-    return success;
-  };
-
-  const updateTaskStatus = async (taskId: string, status: 'in_progress' | 'completed') => {
-    const updates: UpdateTaskData = { status };
-    if (status === 'completed') {
-      updates.completed_at = new Date().toISOString();
-    }
-    
-    const success = await TaskService.updateTask(taskId, updates);
-    if (success) {
-      await refreshTasks();
-    }
-    return success;
-  };
-
-  useEffect(() => {
-    refreshTasks();
+    fetchTasks();
   }, []);
 
   return {
     tasks,
-    loading,
+    isLoading,
+    error,
+    createTask,
+    updateTask,
+    deleteTask,
+    getMyTasks,
     completeTask,
-    updateTaskStatus,
-    refreshTasks
+    refetch: fetchTasks
   };
 };

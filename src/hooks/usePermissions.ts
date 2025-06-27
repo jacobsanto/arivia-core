@@ -1,88 +1,84 @@
 
-import { useUser } from "@/contexts/UserContext";
-import { UserRole } from "@/types/auth";
-import { hasPermission } from "@/lib/auth/permissions";
+import { useState, useEffect } from 'react';
+import { Permission, CreatePermissionData, UpdatePermissionData } from '@/types/role-permission';
+import { PermissionService } from '@/services/role-permission/permission.service';
+import { toast } from 'sonner';
 
 export const usePermissions = () => {
-  const { user } = useUser();
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [permissionsByCategory, setPermissionsByCategory] = useState<Record<string, Permission[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const canAccess = (feature: string): boolean => {
-    if (!user) return false;
-    
-    // Use the permission system
-    return hasPermission(user.role, feature);
-  };
-
-  const getOfflineCapabilities = (): string[] => {
-    if (!user) return [];
-    
-    const capabilities: string[] = [];
-    
-    switch (user.role) {
-      case 'superadmin':
-      case 'tenant_admin':
-        capabilities.push(
-          'View all data',
-          'Create tasks offline',
-          'Update task status',
-          'Access reports'
-        );
-        break;
-      case 'property_manager':
-        capabilities.push(
-          'View properties',
-          'Create tasks',
-          'Update task status',
-          'View reports'
-        );
-        break;
-      case 'housekeeping_staff':
-      case 'maintenance_staff':
-        capabilities.push(
-          'View assigned tasks',
-          'Update task status',
-          'Add task comments'
-        );
-        break;
-      case 'concierge':
-        capabilities.push(
-          'View guest requests',
-          'Update task status',
-          'View property info'
-        );
-        break;
-      case 'inventory_manager':
-        capabilities.push(
-          'View inventory',
-          'Update stock levels',
-          'Create orders'
-        );
-        break;
+  const fetchPermissions = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [data, categorized] = await Promise.all([
+        PermissionService.getPermissions(),
+        PermissionService.getPermissionsByCategory()
+      ]);
+      setPermissions(data);
+      setPermissionsByCategory(categorized);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch permissions';
+      setError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-    
-    return capabilities;
   };
 
-  const getAllPermissionsList = (): string[] => {
-    return [
-      'viewProperties',
-      'manageProperties',
-      'viewAllTasks',
-      'viewAssignedTasks',
-      'assignTasks',
-      'viewInventory',
-      'manageInventory',
-      'approveTransfers',
-      'viewUsers',
-      'manageUsers',
-      'manageSettings',
-      'viewReports'
-    ];
+  const createPermission = async (permissionData: CreatePermissionData) => {
+    try {
+      const newPermission = await PermissionService.createPermission(permissionData);
+      setPermissions(prev => [...prev, newPermission]);
+      toast.success('Permission created successfully');
+      return newPermission;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create permission';
+      toast.error(errorMessage);
+      throw err;
+    }
   };
 
-  return { 
-    canAccess, 
-    getOfflineCapabilities,
-    getAllPermissionsList
+  const updatePermission = async (id: string, updates: UpdatePermissionData) => {
+    try {
+      const updatedPermission = await PermissionService.updatePermission(id, updates);
+      setPermissions(prev => prev.map(permission => permission.id === id ? updatedPermission : permission));
+      toast.success('Permission updated successfully');
+      return updatedPermission;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update permission';
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  const deletePermission = async (id: string) => {
+    try {
+      await PermissionService.deletePermission(id);
+      setPermissions(prev => prev.filter(permission => permission.id !== id));
+      toast.success('Permission deleted successfully');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete permission';
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  useEffect(() => {
+    fetchPermissions();
+  }, []);
+
+  return {
+    permissions,
+    permissionsByCategory,
+    isLoading,
+    error,
+    createPermission,
+    updatePermission,
+    deletePermission,
+    refetch: fetchPermissions
   };
 };

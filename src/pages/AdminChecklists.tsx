@@ -143,7 +143,6 @@ const AdminChecklists = () => {
 
         <ChecklistTemplateGrid
           templates={templates}
-          isLoading={isLoading}
           onEdit={handleEdit}
           onDelete={handleDelete}
           onUse={handleUseTemplate}
@@ -161,6 +160,7 @@ const AdminChecklists = () => {
         }}
         onSubmit={handleFormSubmit}
         template={selectedTemplate}
+        title={selectedTemplate ? 'Edit Template' : 'Create New Template'}
       />
 
       <DeleteTemplateDialog
@@ -172,7 +172,7 @@ const AdminChecklists = () => {
           }
         }}
         onConfirm={handleDeleteConfirm}
-        templateName={selectedTemplate?.name || ''}
+        templateName={selectedTemplate?.name}
       />
 
       <UseTemplateDialog

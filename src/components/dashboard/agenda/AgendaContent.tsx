@@ -18,7 +18,7 @@ export const AgendaContent: React.FC<AgendaContentProps> = ({
     const groups: { [key: string]: CombinedTask[] } = {};
     
     tasks.forEach(task => {
-      const dateKey = format(startOfDay(new Date(task.date)), 'yyyy-MM-dd');
+      const dateKey = format(startOfDay(new Date(task.due_date)), 'yyyy-MM-dd');
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }

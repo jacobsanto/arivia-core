@@ -1,62 +1,61 @@
 
-import React from "react";
-import { useNavigate } from "react-router-dom";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { ChecklistTemplate } from "@/types/checklistTypes";
+import React from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ChecklistTemplate } from '@/types/checklistTypes';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface UseTemplateDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedTemplate: ChecklistTemplate | null;
+  template?: ChecklistTemplate | null;
 }
 
-const UseTemplateDialog = ({
+const UseTemplateDialog: React.FC<UseTemplateDialogProps> = ({
   isOpen,
   onOpenChange,
-  selectedTemplate,
-}: UseTemplateDialogProps) => {
-  const navigate = useNavigate();
+  template
+}) => {
+  if (!template) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Use Template</DialogTitle>
+          <DialogTitle>Use Template: {template.name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <p>
-            Choose which task type to create using the "{selectedTemplate?.name}" template:
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Button 
-              variant="outline" 
-              className="h-auto flex flex-col items-center justify-center p-4"
-              onClick={() => {
-                navigate('/housekeeping');
-                onOpenChange(false);
-                toast.success("Template selected. Create a new housekeeping task to use it.");
-              }}
-            >
-              <span className="text-lg mb-2">Housekeeping Task</span>
-              <span className="text-xs text-muted-foreground text-center">
-                Create a housekeeping task with this checklist
-              </span>
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">Description:</p>
+            <p>{template.description}</p>
+          </div>
+          
+          <div className="flex gap-2">
+            <Badge variant="outline">{template.category}</Badge>
+            <Badge variant="outline">{template.items.length} items</Badge>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Checklist Items:</p>
+            <ul className="space-y-1">
+              {template.items.map((item, index) => (
+                <li key={index} className="text-sm text-muted-foreground">
+                  • {item.title}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
             </Button>
-            <Button 
-              variant="outline" 
-              className="h-auto flex flex-col items-center justify-center p-4"
-              onClick={() => {
-                navigate('/maintenance');
-                onOpenChange(false);
-                toast.success("Template selected. Create a new maintenance task to use it.");
-              }}
-            >
-              <span className="text-lg mb-2">Maintenance Task</span>
-              <span className="text-xs text-muted-foreground text-center">
-                Create a maintenance task with this checklist
-              </span>
+            <Button onClick={() => {
+              // Here you would implement the logic to use the template
+              console.log('Using template:', template);
+              onOpenChange(false);
+            }}>
+              Use Template
             </Button>
           </div>
         </div>

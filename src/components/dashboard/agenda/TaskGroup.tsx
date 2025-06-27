@@ -27,7 +27,7 @@ export const TaskGroup: React.FC<TaskGroupProps> = ({ date, tasks, onTaskClick }
           <AgendaTask 
             key={task.id} 
             task={task} 
-            onClick={onTaskClick}
+            onClick={() => onTaskClick?.(task)}
           />
         ))}
       </div>

@@ -9,34 +9,22 @@ export type DamageReportStatus =
 
 export interface DamageReport {
   id: string;
+  property_id: string;
   title: string;
   description: string;
   status: DamageReportStatus;
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  propertyId?: string;
-  property_id: string; // For Supabase compatibility
-  reportedBy?: string;
-  reported_by: string; // For Supabase compatibility
-  assignedTo?: string;
-  assigned_to?: string; // For Supabase compatibility
-  damageDate?: string;
-  damage_date: string; // For Supabase compatibility
-  estimatedCost?: number;
-  estimated_cost?: number; // For Supabase compatibility
-  finalCost?: number;
-  final_cost?: number; // For Supabase compatibility
-  photos?: string[];
-  createdAt?: string;
-  created_at: string; // For Supabase compatibility
-  updatedAt?: string;
-  updated_at: string; // For Supabase compatibility
-  resolutionDate?: string;
-  resolution_date?: string; // For Supabase compatibility
+  damage_date: string;
+  reported_by: string;
+  assigned_to?: string;
+  estimated_cost?: number;
+  final_cost?: number;
+  compensation_amount?: number;
+  compensation_notes?: string;
   conclusion?: string;
-  compensationAmount?: number;
-  compensation_amount?: number; // For Supabase compatibility
-  compensationNotes?: string;
-  compensation_notes?: string; // For Supabase compatibility
+  resolution_date?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DamageReportFormValues {
