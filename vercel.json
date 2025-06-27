@@ -1,0 +1,14 @@
+
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "functions": {
+    "app/api/hello.js": {
+      "runtime": "@vercel/node"
+    }
+  }
+}
