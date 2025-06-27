@@ -1,45 +1,70 @@
 
 import { useState, useEffect } from "react";
 import { DamageReport, DamageReportFilters } from "@/types/damage";
-
-// Mock data for now - replace with actual API calls
-const mockReports: DamageReport[] = [
-  {
-    id: "1",
-    title: "Broken Window",
-    description: "Guest accidentally broke living room window",
-    status: "pending",
-    priority: "high",
-    propertyId: "prop-1",
-    reportedBy: "manager-1",
-    damageDate: new Date("2024-01-15"),
-    estimatedCost: 150,
-    createdAt: new Date("2024-01-15"),
-    updatedAt: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    title: "Stained Carpet",
-    description: "Red wine stain on bedroom carpet",
-    status: "investigating",
-    priority: "medium",
-    propertyId: "prop-2",
-    reportedBy: "cleaner-1",
-    assignedTo: "manager-1",
-    damageDate: new Date("2024-01-14"),
-    estimatedCost: 200,
-    createdAt: new Date("2024-01-14"),
-    updatedAt: new Date("2024-01-16"),
-  },
-];
+import { damageService } from "@/services/damage/damage.service";
 
 export const useDamageReports = () => {
-  const [reports, setReports] = useState<DamageReport[]>(mockReports);
+  const [reports, setReports] = useState<DamageReport[]>([]);
   const [filters, setFilters] = useState<DamageReportFilters>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  const loadReports = async () => {
+    setIsLoading(true);
+    try {
+      const data = await damageService.getDamageReports();
+      // Convert the service format to local format
+      const convertedReports: DamageReport[] = data.map(report => ({
+        id: report.id,
+        title: report.title,
+        description: report.description,
+        status: report.status,
+        priority: 'medium', // Default priority since it's not in service
+        propertyId: report.property_id,
+        property_id: report.property_id,
+        reportedBy: report.reported_by,
+        reported_by: report.reported_by,
+        assignedTo: report.assigned_to,
+        assigned_to: report.assigned_to,
+        damageDate: report.damage_date,
+        damage_date: report.damage_date,
+        estimatedCost: report.estimated_cost,
+        estimated_cost: report.estimated_cost,
+        finalCost: report.final_cost,
+        final_cost: report.final_cost,
+        photos: [],
+        createdAt: report.created_at,
+        created_at: report.created_at,
+        updatedAt: report.updated_at,
+        updated_at: report.updated_at,
+        resolutionDate: report.resolution_date,
+        resolution_date: report.resolution_date,
+        conclusion: report.conclusion,
+        compensationAmount: report.compensation_amount,
+        compensation_amount: report.compensation_amount,
+        compensationNotes: report.compensation_notes,
+        compensation_notes: report.compensation_notes,
+      }));
+      setReports(convertedReports);
+    } catch (error) {
+      console.error('Error loading damage reports:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Apply filters to reports
   const filteredReports = reports.filter(report => {
+    const matchesSearch = searchQuery === "" || 
+      report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      report.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
     if (filters.status?.length && !filters.status.includes(report.status)) {
       return false;
     }
@@ -62,7 +87,7 @@ export const useDamageReports = () => {
   const updateReportStatus = async (reportId: string, status: DamageReport['status']) => {
     setReports(prev => prev.map(report => 
       report.id === reportId 
-        ? { ...report, status, updatedAt: new Date() }
+        ? { ...report, status, updatedAt: new Date().toISOString() }
         : report
     ));
   };
@@ -71,8 +96,10 @@ export const useDamageReports = () => {
     const newReport: DamageReport = {
       ...reportData,
       id: `report-${Date.now()}`,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
     setReports(prev => [newReport, ...prev]);
   };
@@ -80,7 +107,7 @@ export const useDamageReports = () => {
   const updateReport = async (reportId: string, updates: Partial<DamageReport>) => {
     setReports(prev => prev.map(report => 
       report.id === reportId 
-        ? { ...report, ...updates, updatedAt: new Date() }
+        ? { ...report, ...updates, updatedAt: new Date().toISOString() }
         : report
     ));
   };
@@ -89,15 +116,32 @@ export const useDamageReports = () => {
     setReports(prev => prev.filter(report => report.id !== reportId));
   };
 
+  const handleMediaUpload = async (file: File, reportId: string) => {
+    try {
+      const url = await damageService.uploadMedia(file, reportId, 'photo');
+      if (url) {
+        updateReport(reportId, { 
+          photos: [...(reports.find(r => r.id === reportId)?.photos || []), url] 
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading media:', error);
+    }
+  };
+
   return {
     reports,
     filteredReports,
     filters,
     isLoading,
+    searchQuery,
+    setSearchQuery,
     updateFilters,
     updateReportStatus,
     addReport,
     updateReport,
     deleteReport,
+    handleMediaUpload,
+    refreshReports: loadReports
   };
 };

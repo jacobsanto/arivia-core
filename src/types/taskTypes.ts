@@ -39,9 +39,9 @@ export interface Task {
   property?: string; // Keep for backward compatibility
   roomNumber?: string;
   dueDate?: string; // Always string for consistency
-  createdAt: Date;
-  updatedAt: Date;
-  completedAt?: Date;
+  createdAt: string; // Changed to string
+  updatedAt: string; // Changed to string
+  completedAt?: string;
   estimatedDuration?: number;
   checklist: ChecklistItem[];
   notes?: string;
@@ -59,7 +59,7 @@ export interface TaskComment {
   taskId: string;
   userId: string;
   content: string;
-  createdAt: Date;
+  createdAt: string; // Changed to string
 }
 
 export interface TaskFilter {

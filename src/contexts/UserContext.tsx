@@ -64,11 +64,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    return await login(email, password, setUser, setLastAuthTime);
+    return await login(email, password, setUser, setLastAuthTime, setIsLoading);
   };
 
   const handleSignup = async (email: string, password: string, fullName: string, role: UserRole = "property_manager") => {
-    await signup(email, password, fullName, role, setUser, setLastAuthTime);
+    await signup(email, password, fullName, role, setUser, setLastAuthTime, setIsLoading);
   };
 
   const handleLogout = async () => {

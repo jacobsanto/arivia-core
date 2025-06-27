@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { DamageReport as LocalDamageReport } from '@/types/damage';
 
 export interface DamageReport {
   id: string;
@@ -9,7 +10,7 @@ export interface DamageReport {
   property_id: string;
   reported_by: string;
   assigned_to?: string;
-  status: 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed';
+  status: 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed' | 'disputed';
   damage_date: string;
   created_at: string;
   updated_at: string;

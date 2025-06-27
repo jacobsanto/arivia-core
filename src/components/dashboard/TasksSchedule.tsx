@@ -23,13 +23,12 @@ const TasksSchedule = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = 
   // Filter and sort tasks for today
   const todayTasks = allTasks.filter(task => {
     if (!task.dueDate) return false;
-    const taskDateString = typeof task.dueDate === 'string' 
-      ? task.dueDate.split('T')[0]
-      : task.dueDate.split('T')[0];
-    return taskDateString === today;
+    // Ensure we have a string to work with
+    const taskDateString = typeof task.dueDate === 'string' ? task.dueDate : task.dueDate;
+    return taskDateString.split('T')[0] === today;
   }).sort((a, b) => {
-    const aDate = typeof a.dueDate === 'string' ? new Date(a.dueDate) : new Date();
-    const bDate = typeof b.dueDate === 'string' ? new Date(b.dueDate) : new Date();
+    const aDate = new Date(a.dueDate || '');
+    const bDate = new Date(b.dueDate || '');
     return aDate.getTime() - bDate.getTime();
   });
 
@@ -65,7 +64,7 @@ const TasksSchedule = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = 
                     {task.dueDate && (
                       <span className="flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(), 'HH:mm')}
+                        {format(new Date(task.dueDate), 'HH:mm')}
                       </span>
                     )}
                     {(task.assignedTo) && (

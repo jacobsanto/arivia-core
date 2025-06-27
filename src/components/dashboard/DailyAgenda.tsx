@@ -24,10 +24,9 @@ const DailyAgenda = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = []
   // Convert task date to string for comparison
   const getTaskDateString = (task: Task): string => {
     if (!task.dueDate) return '';
-    if (typeof task.dueDate === 'string') {
-      return task.dueDate.split('T')[0];
-    }
-    return task.dueDate.split('T')[0];
+    // Ensure we have a string to work with
+    const dateString = typeof task.dueDate === 'string' ? task.dueDate : task.dueDate;
+    return dateString.split('T')[0];
   };
 
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
@@ -49,8 +48,8 @@ const DailyAgenda = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = []
     }
     
     // If same priority, sort by due date
-    const aDate = typeof a.dueDate === 'string' ? new Date(a.dueDate) : new Date();
-    const bDate = typeof b.dueDate === 'string' ? new Date(b.dueDate) : new Date();
+    const aDate = new Date(a.dueDate || '');
+    const bDate = new Date(b.dueDate || '');
     return aDate.getTime() - bDate.getTime();
   });
 
@@ -110,7 +109,7 @@ const DailyAgenda = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = []
                     {task.dueDate && (
                       <span className="flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(), 'HH:mm')}
+                        {format(new Date(task.dueDate), 'HH:mm')}
                       </span>
                     )}
                     

@@ -13,10 +13,10 @@ export const getTimeDisplay = (date: Date) => {
 };
 
 export const createMockHousekeepingTask = (task: CombinedTask): Task => {
-  // Convert the task.dueDate to Date if it's not already
-  const dueDate = typeof task.dueDate === 'object' 
-    ? task.dueDate as Date
-    : new Date(task.dueDate);
+  // Convert the task.dueDate to string if it's not already
+  const dueDateString = typeof task.dueDate === 'object' 
+    ? task.dueDate.toISOString()
+    : task.dueDate;
 
   return {
     id: task.id || `task-${Math.random().toString(36).substr(2, 9)}`,
@@ -24,27 +24,27 @@ export const createMockHousekeepingTask = (task: CombinedTask): Task => {
     property: task.property,
     status: (task.status as TaskStatus) || "Pending",
     priority: (task.priority as "Low" | "Medium" | "High") || "Medium",
-    dueDate: dueDate,
+    dueDate: dueDateString,
     assignedTo: task.assignedTo || "Unassigned",
     description: task.description || "",
     approvalStatus: "Pending",
     photos: [],
     checklist: [],
     type: "Cleaning",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
     createdBy: "system"
   };
 };
 
 export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask => {
-  // Convert the task.dueDate to Date if it's not already
-  const dueDate = typeof task.dueDate === 'object' 
-    ? task.dueDate as Date
-    : new Date(task.dueDate);
+  // Convert the task.dueDate to string if it's not already
+  const dueDateString = typeof task.dueDate === 'object' 
+    ? task.dueDate.toISOString()
+    : task.dueDate;
   
   // Current date for createdAt field
-  const now = new Date();
+  const now = new Date().toISOString();
 
   return {
     id: parseInt(task.id) || Math.floor(Math.random() * 10000),
@@ -53,7 +53,7 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     type: "Maintenance",
     status: (task.status as TaskStatus) || "Pending",
     priority: (task.priority as "Low" | "Medium" | "High") || "Medium",
-    dueDate: dueDate.toISOString(),
+    dueDate: dueDateString,
     assignee: task.assignedTo || "Unassigned",
     description: task.description || "",
     location: task.property,
@@ -64,6 +64,6 @@ export const createMockMaintenanceTask = (task: CombinedTask): MaintenanceTask =
     afterPhotos: [],
     beforeVideos: [],
     afterVideos: [],
-    createdAt: now.toISOString(),
+    createdAt: now,
   };
 };

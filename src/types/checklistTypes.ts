@@ -48,3 +48,6 @@ export const checklistTemplateSchema = z.object({
     })
   ).min(1, "Add at least one checklist item")
 });
+
+// Export ChecklistItem from taskTypes for consistency
+export { ChecklistItem } from "./taskTypes";
