@@ -19,7 +19,7 @@ const Sidebar = () => {
   };
   if (!user) return null;
   const isSuperAdmin = user.role === "superadmin";
-  const isAdmin = user.role === "administrator";
+  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin";
   const isPropertyManager = user.role === "property_manager";
   return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       

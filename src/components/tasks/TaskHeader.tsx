@@ -1,38 +1,84 @@
 import React from "react";
+import { toast } from "sonner";
+import { MoreVertical, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Plus, BedDouble, BarChart } from "lucide-react";
+import { Task } from "@/types/taskTypes";
 import { useUser } from "@/contexts/UserContext";
+
 interface TaskHeaderProps {
-  onCreateTask: () => void;
-  onViewReports?: () => void;
+  task: Task;
+  onStatusUpdate: (newStatus: Task['status']) => void;
 }
-const TaskHeader = ({
-  onCreateTask,
-  onViewReports
-}: TaskHeaderProps) => {
-  const {
-    user
-  } = useUser();
-  const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
-  return <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <div>
-        <h1 className="md:text-3xl font-bold tracking-tight flex items-center px-0 py-[19px] mx-0 text-xl">
-          <BedDouble className="mr-2 h-7 w-7" /> Housekeeping Tasks
-        </h1>
-        <p className="text-muted-foreground tracking-tight text-xs">
-          Manage room cleaning, laundry, and guest turnover tasks efficiently.
-        </p>
+
+const TaskHeader: React.FC<TaskHeaderProps> = ({ task, onStatusUpdate }) => {
+  const { user } = useUser();
+  const [isUpdating, setIsUpdating] = React.useState(false);
+
+  const isManager = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "property_manager";
+
+  const handleStatusChange = async (newStatus: Task['status']) => {
+    setIsUpdating(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      onStatusUpdate(newStatus);
+      toast.success(`Task status updated to ${newStatus}`);
+    } catch (error) {
+      toast.error("Failed to update task status");
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  return (
+    <div className="flex justify-between items-center">
+      <h2 className="text-xl font-semibold">{task.title}</h2>
+      <div className="flex items-center space-x-2">
+        {isManager && task.status !== "Completed" && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {task.status !== "Approved" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("Approved")}>
+                  Approve
+                </DropdownMenuItem>
+              )}
+              {task.status !== "Rejected" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("Rejected")}>
+                  Reject
+                </DropdownMenuItem>
+              )}
+              {task.status !== "Completed" && (
+                <DropdownMenuItem onClick={() => handleStatusChange("Completed")}>
+                  Mark as Completed
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        {task.status === "Completed" && (
+          <div className="flex items-center text-green-500">
+            <CheckCircle2 className="h-4 w-4 mr-1" />
+            Completed
+          </div>
+        )}
+        {isUpdating && (
+          <Loader2 className="h-5 w-5 animate-spin" />
+        )}
       </div>
-      <div className="flex gap-2">
-        {isManager && onViewReports && <Button variant="outline" onClick={onViewReports}>
-            <BarChart className="mr-2 h-4 w-4" />
-            <span className="font-medium">Reports</span>
-          </Button>}
-        <Button onClick={onCreateTask}>
-          <Plus className="mr-2 h-4 w-4" />
-          <span className="font-medium">Create Task</span>
-        </Button>
-      </div>
-    </div>;
+    </div>
+  );
 };
+
 export default TaskHeader;

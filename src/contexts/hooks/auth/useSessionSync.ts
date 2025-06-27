@@ -25,7 +25,12 @@ export const useSessionSync = (
         console.log("Using central auth data for session initialization");
         // Update the user state with the central auth state
         setUser(centralAuth.user);
-        setSession(centralAuth.session as Session);
+        // Bridge the session type
+        const bridgedSession = {
+          ...centralAuth.session,
+          user: centralAuth.session.user as any
+        } as Session;
+        setSession(bridgedSession);
         setLastAuthTime(Date.now());
         
         // Fetch additional profile data with delay to prevent auth deadlock

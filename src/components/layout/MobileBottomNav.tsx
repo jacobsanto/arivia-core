@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Home, Menu, BedDouble, Package, Wrench, FileWarning } from "lucide-react";
 import NavItem from "./NavItem";
@@ -15,7 +14,7 @@ const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
 
   if (!user) return null;
 
-  const isAdminOrManager = user.role === "administrator" || user.role === "property_manager";
+  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin";
 
   return (
     <div className="fixed bottom-0 left-0 right-0 h-16 bg-primary text-primary-foreground flex items-center justify-around z-50 lg:hidden shadow-md">

@@ -17,7 +17,7 @@ const MobileRoleInfo: React.FC<MobileRoleInfoProps> = ({ user }) => {
     switch (role) {
       case "superadmin":
         return "destructive";
-      case "administrator":
+      case "tenant_admin":
         return "default";
       case "property_manager":
         return "secondary";
@@ -32,7 +32,7 @@ const MobileRoleInfo: React.FC<MobileRoleInfoProps> = ({ user }) => {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg">Role</CardTitle>
           <Badge variant={getRoleBadgeVariant(user.role)} className="flex items-center gap-1">
-            {user.role === "superadmin" || user.role === "administrator" ? (
+            {user.role === "superadmin" || user.role === "tenant_admin" ? (
               <Shield className="h-3 w-3" />
             ) : (
               <UserIcon className="h-3 w-3" />
@@ -60,7 +60,7 @@ const MobileAccessLevelIndicator: React.FC<{ role: string }> = ({ role }) => {
     { roles: ["housekeeping_staff", "maintenance_staff"], level: "Basic" },
     { roles: ["concierge", "inventory_manager"], level: "Standard" },
     { roles: ["property_manager"], level: "Advanced" },
-    { roles: ["administrator"], level: "Full" },
+    { roles: ["tenant_admin"], level: "Full" },
     { roles: ["superadmin"], level: "Unlimited" }
   ];
 

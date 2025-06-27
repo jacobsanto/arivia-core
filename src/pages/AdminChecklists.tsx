@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
@@ -59,8 +58,8 @@ const AdminChecklists = () => {
     }
   });
 
-  // Check for superadmin/admin access
-  if (user?.role !== "superadmin" && user?.role !== "administrator") {
+  // Check for admin access
+  if (user?.role !== "superadmin" && user?.role !== "tenant_admin") {
     // Redirect non-admins away
     React.useEffect(() => {
       navigate("/");

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import DamageReportHeader from "@/components/damage/DamageReportHeader";
@@ -33,6 +32,10 @@ const DamageReports = () => {
 
   const [viewMode, setViewMode] = useState<"list" | "stats">("list");
   const { user } = useUser();
+
+  const canCreateReport = user?.role === "superadmin" || 
+                         user?.role === "tenant_admin" || 
+                         user?.role === "property_manager";
 
   return (
     <div className="space-y-6">

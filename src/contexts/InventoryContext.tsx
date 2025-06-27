@@ -10,7 +10,11 @@ interface InventoryContextType {
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
-export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface InventoryProviderProps {
+  children: React.ReactNode;
+}
+
+export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }) => {
   const [categories, setCategories] = useState<string[]>([
     'Housekeeping',
     'Maintenance', 

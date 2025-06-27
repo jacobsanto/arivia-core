@@ -26,7 +26,11 @@ import { updatePermissions } from "./auth/operations/permissionOperations";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface UserProviderProps {
+  children: React.ReactNode;
+}
+
+export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { user: authUser, session, isLoading: authLoading, refreshAuthState } = useAuth();
   
   const { 
@@ -44,7 +48,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Use auth state as source of truth
   const currentUser = authUser || user;
-  const currentSession = session;
+  const currentSession = session ? {
+    ...session,
+    user: session.user as any // Bridge the type gap
+  } as Session : null;
   const currentIsLoading = authLoading || isLoading;
 
   const handleRefreshProfile = async () => {
@@ -57,11 +64,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    return await login(email, password, setUser, setLastAuthTime, setIsLoading);
+    return await login(email, password, setUser, setLastAuthTime);
   };
 
   const handleSignup = async (email: string, password: string, fullName: string, role: UserRole = "property_manager") => {
-    await signup(email, password, fullName, role, setUser, setLastAuthTime, setIsLoading);
+    await signup(email, password, fullName, role, setUser, setLastAuthTime);
   };
 
   const handleLogout = async () => {
@@ -83,7 +90,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleGetOfflineLoginStatus = () => {
-    const status = getOfflineLoginStatus(currentUser, lastAuthTime, isOffline);
+    const status = getOfflineLoginStatus(currentUser, lastAuthTime);
     return {
       isOfflineLoggedIn: status,
       timeRemaining: 0  // Since the original function doesn't calculate time remaining, we'll default to 0
@@ -115,7 +122,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: UserContextType = {
     user: currentUser,
-    session: currentSession as Session | null,
+    session: currentSession,
     users,
     isLoading: currentIsLoading,
     isOffline,

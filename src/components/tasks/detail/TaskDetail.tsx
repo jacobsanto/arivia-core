@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Card,
@@ -42,7 +41,7 @@ const TaskDetail = ({
 }: TaskDetailProps) => {
   const { user } = useUser();
   const isMobile = useIsMobile();
-  const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
+  const isManager = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "property_manager";
   
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

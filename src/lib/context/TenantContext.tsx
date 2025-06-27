@@ -1,39 +1,25 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { User } from '@/types/auth';
+import React, { createContext, useContext, useState } from 'react';
 
 interface TenantContextType {
   tenantId: string | null;
-  user: User | null;
-  isLoading: boolean;
+  setTenantId: (id: string | null) => void;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
-export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, isLoading: authLoading } = useAuth();
+interface TenantProviderProps {
+  children: React.ReactNode;
+}
+
+export const TenantProvider: React.FC<TenantProviderProps> = ({ children }) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      // For now, use a default tenant ID. In a real app, this would come from user data
-      setTenantId('default-tenant');
-      setIsLoading(false);
-    } else if (!authLoading && !user) {
-      setTenantId(null);
-      setIsLoading(false);
-    }
-  }, [user, authLoading]);
-
-  const value = {
-    tenantId,
-    user,
-    isLoading: isLoading || authLoading
-  };
-
-  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
+  return (
+    <TenantContext.Provider value={{ tenantId, setTenantId }}>
+      {children}
+    </TenantContext.Provider>
+  );
 };
 
 export const useTenant = () => {

@@ -108,6 +108,10 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
     );
   };
 
+  const canResolve = user?.role === "superadmin" || 
+                    user?.role === "tenant_admin" || 
+                    user?.role === "property_manager";
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px]">

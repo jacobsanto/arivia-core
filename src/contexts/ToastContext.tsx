@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { toast } from 'sonner';
 
 interface ToastContextType {
@@ -7,11 +7,22 @@ interface ToastContextType {
   error: (title: string, options?: { description?: string }) => void;
   info: (title: string, options?: { description?: string }) => void;
   warning: (title: string, options?: { description?: string }) => void;
+  show: (title: string, options?: { description?: string }) => void;
+  loading: (title: string, options?: { description?: string }) => string;
+  dismiss: (id?: string) => void;
+  implementation: string;
+  setImplementation: (impl: string) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface ToastProviderProps {
+  children: React.ReactNode;
+}
+
+export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
+  const [implementation, setImplementation] = useState<string>('sonner');
+
   const success = (title: string, options?: { description?: string }) => {
     toast.success(title, options);
   };
@@ -28,8 +39,34 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     toast.warning(title, options);
   };
 
+  const show = (title: string, options?: { description?: string }) => {
+    toast(title, options);
+  };
+
+  const loading = (title: string, options?: { description?: string }) => {
+    return toast.loading(title, options);
+  };
+
+  const dismiss = (id?: string) => {
+    if (id) {
+      toast.dismiss(id);
+    } else {
+      toast.dismiss();
+    }
+  };
+
   return (
-    <ToastContext.Provider value={{ success, error, info, warning }}>
+    <ToastContext.Provider value={{ 
+      success, 
+      error, 
+      info, 
+      warning, 
+      show,
+      loading,
+      dismiss,
+      implementation,
+      setImplementation
+    }}>
       {children}
     </ToastContext.Provider>
   );

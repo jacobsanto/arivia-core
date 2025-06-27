@@ -1,189 +1,167 @@
-
-import React, { useState, useEffect } from "react";
-import { useForm, FormProvider } from "react-hook-form";
+import React, { useState } from 'react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Form } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
-import { useOrders } from "@/contexts/OrderContext";
-import StockFormNotes from "../forms/StockFormNotes";
-import StockFormSubmitButton from "../forms/StockFormSubmitButton";
-import OrderItemList from "./OrderItemList";
-import OrderFormVendor from "./OrderFormVendor";
-import { OrderStatus } from "./OrderUtils";
-import { Checkbox } from "@/components/ui/checkbox";
-import { getItemsByVendor } from "@/data/inventoryData";
 
-const formSchema = z.object({
-  vendorId: z.string().min(1, { message: "Please select a vendor." }),
-  date: z.string().min(1, { message: "Please enter a date." }),
-  requestor: z.string().min(1, { message: "Please enter your name." }),
-  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
-  department: z.enum(["housekeeping", "maintenance", "general"]).default("general"),
-  items: z.array(
-    z.object({
-      itemId: z.string().min(1, { message: "Please select an item." }),
-      quantity: z.coerce.number().min(1, { message: "Quantity must be at least 1." }),
-    })
-  ).min(1, { message: "Please add at least one item to the order." }),
+interface OrderFormProps {
+  onSubmit: (values: any) => void;
+  onCancel: () => void;
+  initialOrder?: any;
+}
+
+const orderSchema = z.object({
+  item: z.string().min(2, {
+    message: "Item must be at least 2 characters.",
+  }),
+  quantity: z.number().min(1, {
+    message: "Quantity must be at least 1.",
+  }),
+  unitPrice: z.number().min(0, {
+    message: "Unit price must be non-negative.",
+  }),
+  supplier: z.string().optional(),
   notes: z.string().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type OrderFormValues = z.infer<typeof orderSchema>;
 
-const OrderForm = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { canAccess } = usePermissions();
+const OrderForm: React.FC<OrderFormProps> = ({ onSubmit, onCancel, initialOrder }) => {
   const { user } = useUser();
-  const { addOrder } = useOrders();
-  const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
-  
-  // Check if user can create orders
-  const canInitiateOrders = ["housekeeping_staff", "maintenance_staff"].includes(user?.role || "");
-  const canCreateOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(user?.role || "");
-  const canApproveOrders = ["superadmin", "administrator", "property_manager"].includes(user?.role || "");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const methods = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<OrderFormValues>({
+    resolver: zodResolver(orderSchema),
     defaultValues: {
-      vendorId: "",
-      date: new Date().toISOString().split("T")[0], // Today's date in YYYY-MM-DD format
-      requestor: user?.name || "",
-      priority: "medium",
-      department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
-      items: [{ itemId: "", quantity: 1 }],
-      notes: "",
+      item: initialOrder?.item || "",
+      quantity: initialOrder?.quantity || 1,
+      unitPrice: initialOrder?.unitPrice || 0,
+      supplier: initialOrder?.supplier || "",
+      notes: initialOrder?.notes || "",
     },
   });
 
-  // Watch for vendor changes
-  useEffect(() => {
-    const subscription = methods.watch((value, { name }) => {
-      if (name === 'vendorId' && value.vendorId) {
-        setSelectedVendorId(value.vendorId);
-        
-        // Reset the items when vendor changes
-        methods.setValue("items", [{ itemId: "", quantity: 1 }]);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, [methods]);
+  const canApprove = user?.role === "superadmin" || 
+                    user?.role === "tenant_admin" || 
+                    user?.role === "property_manager";
 
-  function onSubmit(values: FormValues) {
-    if (!canCreateOrders) {
-      toast({
-        title: "Permission Denied",
-        description: "You don't have permission to create orders.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleSubmit = async (values: OrderFormValues) => {
     setIsSubmitting(true);
-    
-    // Get item names for display
-    const itemsWithNames = values.items.map(item => {
-      const vendorItems = getItemsByVendor(values.vendorId);
-      const foundItem = vendorItems.find(vendorItem => vendorItem.id === item.itemId);
-      return {
-        ...item,
-        name: foundItem?.name || "Unknown Item"
-      };
-    });
-    
-    // Create order object
-    const orderData = {
-      ...values,
-      items: itemsWithNames,
-      requesterRole: user?.role || "",
-    };
-    
-    // Add the order to the context
-    const orderId = addOrder(orderData);
-    
-    // Determine the initial status based on user role
-    let status: OrderStatus = "pending";
-    let nextAction = "";
-    
-    if (user?.role === "superadmin" || user?.role === "administrator") {
-      status = "approved";
-      nextAction = "The order will be sent to vendors.";
-    } else if (user?.role === "property_manager") {
-      status = "manager_approved";
-      nextAction = "The order has been approved and sent to admin for final approval.";
-    } else {
-      status = "pending";
-      nextAction = "The order has been submitted to your manager for approval.";
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      onSubmit(values);
+      toast.success("Order submitted successfully!");
+    } catch (error) {
+      toast.error("Failed to submit order.");
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    // Show success message
-    toast({
-      title: "Order Submitted",
-      description: `Order ${orderId} created. ${nextAction}`,
-    });
-    
-    // Reset form
-    methods.reset({
-      vendorId: "",
-      date: new Date().toISOString().split("T")[0],
-      requestor: user?.name || "",
-      priority: "medium",
-      department: user?.role === "housekeeping_staff" ? "housekeeping" : user?.role === "maintenance_staff" ? "maintenance" : "general",
-      items: [{ itemId: "", quantity: 1 }],
-      notes: "",
-    });
-    
-    setSelectedVendorId(null);
-    setIsSubmitting(false);
-  }
-
-  if (!canCreateOrders) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Order Creation</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <p className="text-muted-foreground">You don't have permission to create orders.</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Create Purchase Order</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <FormProvider {...methods}>
-          <Form {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto">
-              <OrderFormVendor />
-              
-              <div className="space-y-4">
-                <OrderItemList 
-                  title="Order Items" 
-                  selectedVendorId={selectedVendorId} 
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+        <FormField
+          control={form.control}
+          name="item"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Item</FormLabel>
+              <FormControl>
+                <Input placeholder="Item name" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="quantity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quantity</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Quantity"
+                  {...field}
+                  onChange={(e) =>
+                    field.onChange(Number(e.target.value))
+                  }
                 />
-              </div>
-              
-              <StockFormNotes />
-              
-              <StockFormSubmitButton 
-                label="Submit Order Request" 
-                isLoading={isSubmitting} 
-              />
-            </form>
-          </Form>
-        </FormProvider>
-      </CardContent>
-    </Card>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="unitPrice"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Unit Price</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  placeholder="Unit Price"
+                  {...field}
+                  onChange={(e) =>
+                    field.onChange(Number(e.target.value))
+                  }
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="supplier"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Supplier (optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Supplier" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="notes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notes (optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Notes" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex justify-end space-x-2">
+          <Button variant="ghost" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Submitting..." : "Submit Order"}
+          </Button>
+        </div>
+      </form>
+    </Form>
   );
 };
 

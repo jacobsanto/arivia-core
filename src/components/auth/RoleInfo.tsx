@@ -1,3 +1,4 @@
+
 import React from "react";
 import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +15,7 @@ const getRoleBadgeVariant = (role: UserRole) => {
   switch (role) {
     case "superadmin":
       return "destructive";
-    case "administrator":
+    case "tenant_admin":
       return "default";
     case "property_manager":
       return "secondary";
@@ -24,7 +25,7 @@ const getRoleBadgeVariant = (role: UserRole) => {
 };
 
 const getRoleIcon = (role: UserRole) => {
-  if (role === "superadmin" || role === "administrator") {
+  if (role === "superadmin" || role === "tenant_admin") {
     return <Shield className="h-5 w-5" />;
   }
   return <UserIcon className="h-5 w-5" />;
@@ -72,7 +73,7 @@ const AccessLevelIndicator: React.FC<{ role: UserRole }> = ({ role }) => {
     { roles: ["housekeeping_staff", "maintenance_staff"], level: "Basic" },
     { roles: ["concierge", "inventory_manager"], level: "Standard" },
     { roles: ["property_manager"], level: "Advanced" },
-    { roles: ["administrator"], level: "Full" },
+    { roles: ["tenant_admin"], level: "Full" },
     { roles: ["superadmin"], level: "Unlimited" }
   ];
 

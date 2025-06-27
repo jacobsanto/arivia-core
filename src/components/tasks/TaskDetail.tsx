@@ -1,4 +1,3 @@
-
 import React from "react";
 import {
   Card,
@@ -30,7 +29,7 @@ interface TaskDetailProps {
   onPhotoUpload?: (file: File) => void;
 }
 
-const TaskDetail = ({
+const TaskDetail: React.FC<TaskDetailProps> = ({
   task,
   onClose,
   onComplete,
@@ -41,7 +40,7 @@ const TaskDetail = ({
 }: TaskDetailProps) => {
   const { user } = useUser();
   const isMobile = useIsMobile();
-  const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
+  const isManager = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "property_manager";
   
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
