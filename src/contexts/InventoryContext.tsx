@@ -3,7 +3,9 @@ import React, { createContext, useContext, useState } from 'react';
 
 interface InventoryContextType {
   categories: string[];
+  units: string[];
   addCategory: (category: string) => void;
+  addUnit: (unit: string) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
@@ -18,14 +20,30 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     'Living Room'
   ]);
 
+  const [units, setUnits] = useState<string[]>([
+    'pieces',
+    'bottles',
+    'boxes',
+    'rolls',
+    'packs',
+    'liters',
+    'kilograms'
+  ]);
+
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
     }
   };
 
+  const addUnit = (unit: string) => {
+    if (!units.includes(unit)) {
+      setUnits(prev => [...prev, unit]);
+    }
+  };
+
   return (
-    <InventoryContext.Provider value={{ categories, addCategory }}>
+    <InventoryContext.Provider value={{ categories, units, addCategory, addUnit }}>
       {children}
     </InventoryContext.Provider>
   );

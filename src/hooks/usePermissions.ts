@@ -1,6 +1,7 @@
 
 import { useUser } from "@/contexts/UserContext";
 import { UserRole } from "@/types/auth";
+import { hasPermission } from "@/lib/auth/permissions";
 
 export const usePermissions = () => {
   const { user } = useUser();
@@ -8,25 +9,8 @@ export const usePermissions = () => {
   const canAccess = (feature: string): boolean => {
     if (!user) return false;
     
-    // Basic role-based access control
-    switch (user.role) {
-      case 'superadmin':
-        return true;
-      case 'tenant_admin':
-        return !feature.includes('manage_tenants');
-      case 'property_manager':
-        return ['manage_properties', 'assign_tasks', 'view_reports', 'viewProperties', 'manageProperties', 'viewAllTasks', 'assignTasks'].includes(feature);
-      case 'housekeeping_staff':
-        return ['viewAssignedTasks', 'viewInventory'].includes(feature);
-      case 'maintenance_staff':
-        return ['viewAssignedTasks', 'viewInventory'].includes(feature);
-      case 'concierge':
-        return ['viewAssignedTasks', 'viewProperties'].includes(feature);
-      case 'inventory_manager':
-        return ['viewInventory', 'manageInventory', 'approveTransfers'].includes(feature);
-      default:
-        return false;
-    }
+    // Use the permission system
+    return hasPermission(user.role, feature);
   };
 
   const getOfflineCapabilities = (): string[] => {

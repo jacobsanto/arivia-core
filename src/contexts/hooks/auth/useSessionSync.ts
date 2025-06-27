@@ -1,9 +1,11 @@
 
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Session, User, UserRole, UserStateSetter, StateSetter } from "@/types/auth";
+import { Session, User, UserRole, StateSetter } from "@/types/auth";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
 import { useAuth } from "@/contexts/AuthContext";
+
+type UserStateSetter = (user: User | null) => void;
 
 export const useSessionSync = (
   setUser: UserStateSetter,
@@ -23,7 +25,7 @@ export const useSessionSync = (
         console.log("Using central auth data for session initialization");
         // Update the user state with the central auth state
         setUser(centralAuth.user);
-        setSession(centralAuth.session);
+        setSession(centralAuth.session as Session);
         setLastAuthTime(Date.now());
         
         // Fetch additional profile data with delay to prevent auth deadlock

@@ -42,3 +42,7 @@ export const useToast = () => {
   }
   return context;
 };
+
+// Alias exports for compatibility
+export const useToastContext = useToast;
+export const useToastService = useToast;

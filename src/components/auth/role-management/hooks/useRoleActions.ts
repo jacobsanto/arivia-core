@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useRoleActions = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("tenant_admin");
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   

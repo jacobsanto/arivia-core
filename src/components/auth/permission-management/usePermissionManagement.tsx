@@ -72,10 +72,7 @@ export const usePermissionManagement = ({
           }
           
           // Start with default role-based permissions
-          const defaultPermissions = getDefaultPermissionsForRole(
-            selectedUser.role, 
-            selectedUser.secondaryRoles
-          );
+          const defaultPermissions = getDefaultPermissionsForRole(selectedUser.role);
           
           // Use database custom permissions if available (preferred source of truth)
           const dbCustomPermissions = profile?.custom_permissions as Record<string, boolean> || {};
@@ -118,10 +115,7 @@ export const usePermissionManagement = ({
         if (payload.new && (payload.new as any).custom_permissions) {
           // Reload permissions when profile is updated
           const updatedCustomPermissions = (payload.new as any).custom_permissions as Record<string, boolean>;
-          const defaultPermissions = getDefaultPermissionsForRole(
-            selectedUser.role, 
-            selectedUser.secondaryRoles
-          );
+          const defaultPermissions = getDefaultPermissionsForRole(selectedUser.role);
           
           const updatedPermissions = {
             ...defaultPermissions,
@@ -203,10 +197,7 @@ export const usePermissionManagement = ({
     if (!selectedUser) return;
     
     if (confirm("Are you sure you want to reset to default permissions based on role?")) {
-      const defaultPermissions = getDefaultPermissionsForRole(
-        selectedUser.role, 
-        selectedUser.secondaryRoles
-      );
+      const defaultPermissions = getDefaultPermissionsForRole(selectedUser.role);
       setPermissions(defaultPermissions);
       toast.info("Permissions reset to role defaults", {
         description: "Changes won't be saved until you click Save"

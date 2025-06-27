@@ -98,9 +98,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await removeUser(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId);
   };
 
+  const handleUpdateProfile = async (userId: string, profileData: Partial<{
+    name: string;
+    email: string;
+    phone?: string;
+    role: UserRole;
+    secondaryRoles?: UserRole[];
+    customPermissions?: Record<string, boolean>;
+  }>) => {
+    return await updateUserProfile(userId, profileData, setUser, currentUser);
+  };
+
+  const handleSyncUserProfile = async () => {
+    return await syncUserWithProfile(currentUser, setUser);
+  };
+
   const value: UserContextType = {
     user: currentUser,
-    session: currentSession,
+    session: currentSession as Session | null,
     users,
     isLoading: currentIsLoading,
     isOffline,
@@ -109,8 +124,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup: handleSignup,
     logout: handleLogout,
     refreshProfile: handleRefreshProfile,
-    syncUserWithProfile: () => syncUserWithProfile(currentUser, setUser),
-    updateProfile: updateUserProfile,
+    syncUserWithProfile: handleSyncUserProfile,
+    updateProfile: handleUpdateProfile,
     updateAvatar: handleUpdateUserAvatar,
     deleteUser: handleDeleteUser,
     updateUserPermissions: handleUpdateUserPermissions,
