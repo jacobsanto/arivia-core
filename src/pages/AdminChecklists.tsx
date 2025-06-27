@@ -8,7 +8,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import ChecklistPageHeader from "@/components/admin/checklists/ChecklistPageHeader";
 import ChecklistTemplateGrid from "@/components/admin/checklists/ChecklistTemplateGrid";
 import ChecklistTemplateFilters from "@/components/admin/checklists/ChecklistTemplateFilters";
-// Fix imports - use default imports
 import TemplateFormDialog from "@/components/admin/checklists/dialogs/TemplateFormDialog";
 import DeleteTemplateDialog from "@/components/admin/checklists/dialogs/DeleteTemplateDialog";
 import UseTemplateDialog from "@/components/admin/checklists/dialogs/UseTemplateDialog";
@@ -61,7 +60,6 @@ const AdminChecklists = () => {
 
   const handleFormSubmit = async (formData: any) => {
     try {
-      // Convert form items to proper ChecklistItem format
       const items: ChecklistItem[] = formData.items.map((item: { title: string }, index: number) => ({
         id: `item-${index}`,
         title: item.title,
@@ -119,7 +117,7 @@ const AdminChecklists = () => {
             </Button>
           )}
           <div className="flex-1">
-            <ChecklistPageHeader />
+            <ChecklistPageHeader onCreateTemplate={handleCreateNew} />
           </div>
           <Button onClick={handleCreateNew} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
@@ -129,9 +127,9 @@ const AdminChecklists = () => {
 
         <ChecklistTemplateFilters
           categoryFilter={categoryFilter}
-          setCategoryFilter={setCategoryFilter}
+          onCategoryFilterChange={setCategoryFilter}
           searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
+          onSearchQueryChange={setSearchQuery}
         />
 
         <ChecklistTemplateGrid
