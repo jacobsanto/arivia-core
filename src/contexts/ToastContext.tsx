@@ -1,79 +1,44 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { IToastService } from '@/services/toast/toast.types';
-import { toastService as defaultToastService } from '@/services/toast';
-import { SonnerToastService } from '@/services/toast/sonner-toast.service';
-import { ShadcnToastService } from '@/services/toast/shadcn-toast.service';
-import { Toaster as ShadcnToaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from 'sonner';
-
-type ToastImplementation = 'sonner' | 'shadcn';
+import React, { createContext, useContext } from 'react';
+import { toast } from 'sonner';
 
 interface ToastContextType {
-  implementation: ToastImplementation;
-  setImplementation: (impl: ToastImplementation) => void;
-  service: IToastService;
+  success: (title: string, options?: { description?: string }) => void;
+  error: (title: string, options?: { description?: string }) => void;
+  info: (title: string, options?: { description?: string }) => void;
+  warning: (title: string, options?: { description?: string }) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [implementation, setImplementationState] = useState<ToastImplementation>('sonner');
-  const [service, setService] = useState<IToastService>(defaultToastService);
-
-  const setImplementation = (impl: ToastImplementation) => {
-    setImplementationState(impl);
-    const newService = impl === 'sonner' 
-      ? new SonnerToastService()
-      : new ShadcnToastService();
-    setService(newService);
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const success = (title: string, options?: { description?: string }) => {
+    toast.success(title, options);
   };
 
-  // Initialize with user preference or default
-  useEffect(() => {
-    const savedImpl = localStorage.getItem('toast-implementation') as ToastImplementation | null;
-    if (savedImpl) {
-      setImplementation(savedImpl);
-    }
-  }, []);
+  const error = (title: string, options?: { description?: string }) => {
+    toast.error(title, options);
+  };
 
-  // Save preference when it changes
-  useEffect(() => {
-    localStorage.setItem('toast-implementation', implementation);
-  }, [implementation]);
+  const info = (title: string, options?: { description?: string }) => {
+    toast.info(title, options);
+  };
 
-  const value = {
-    implementation,
-    setImplementation,
-    service
+  const warning = (title: string, options?: { description?: string }) => {
+    toast.warning(title, options);
   };
 
   return (
-    <ToastContext.Provider value={value}>
+    <ToastContext.Provider value={{ success, error, info, warning }}>
       {children}
-      
-      {/* Render the appropriate toaster based on implementation */}
-      {implementation === 'sonner' ? (
-        <SonnerToaster richColors position="top-right" />
-      ) : (
-        <ShadcnToaster />
-      )}
     </ToastContext.Provider>
   );
-}
+};
 
-export function useToastContext() {
+export const useToast = () => {
   const context = useContext(ToastContext);
-  
   if (context === undefined) {
-    throw new Error('useToastContext must be used within a ToastProvider');
+    throw new Error('useToast must be used within a ToastProvider');
   }
-  
   return context;
-}
-
-// Helper hook to directly access the toast service
-export function useToastService() {
-  const { service } = useToastContext();
-  return service;
-}
+};

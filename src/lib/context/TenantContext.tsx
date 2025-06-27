@@ -1,74 +1,39 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { TenantUser } from '@/types/auth';
-import { AuthService } from '@/lib/auth/authService';
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@/types/auth';
 
 interface TenantContextType {
-  user: TenantUser | null;
   tenantId: string | null;
+  user: User | null;
   isLoading: boolean;
-  switchTenant: (tenantId: string) => Promise<void>;
-  signOut: () => Promise<void>;
 }
 
 const TenantContext = createContext<TenantContextType | undefined>(undefined);
 
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<TenantUser | null>(null);
+  const { user, isLoading: authLoading } = useAuth();
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Initialize tenant context
-    const initializeTenant = async () => {
-      try {
-        const currentUser = await AuthService.getCurrentUser();
-        if (currentUser) {
-          setUser(currentUser);
-          setTenantId(currentUser.tenantId);
-        }
-      } catch (error) {
-        console.error('Failed to initialize tenant context:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    initializeTenant();
-  }, []);
-
-  const switchTenant = async (newTenantId: string) => {
-    setIsLoading(true);
-    try {
-      // Implementation for tenant switching
-      setTenantId(newTenantId);
-      // Refresh user data for new tenant
-      const updatedUser = await AuthService.getCurrentUser();
-      setUser(updatedUser);
-    } catch (error) {
-      console.error('Failed to switch tenant:', error);
-    } finally {
+    if (!authLoading && user) {
+      // For now, use a default tenant ID. In a real app, this would come from user data
+      setTenantId('default-tenant');
+      setIsLoading(false);
+    } else if (!authLoading && !user) {
+      setTenantId(null);
       setIsLoading(false);
     }
+  }, [user, authLoading]);
+
+  const value = {
+    tenantId,
+    user,
+    isLoading: isLoading || authLoading
   };
 
-  const signOut = async () => {
-    await AuthService.signOut();
-    setUser(null);
-    setTenantId(null);
-  };
-
-  return (
-    <TenantContext.Provider value={{
-      user,
-      tenantId,
-      isLoading,
-      switchTenant,
-      signOut
-    }}>
-      {children}
-    </TenantContext.Provider>
-  );
+  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
 };
 
 export const useTenant = () => {

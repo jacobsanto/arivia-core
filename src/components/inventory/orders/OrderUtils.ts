@@ -48,6 +48,7 @@ export interface Vendor {
   address?: string;
   status: VendorStatus;
   category: string;
+  categories: string[];
   contactPerson?: string;
   paymentTerms?: string;
   notes?: string;

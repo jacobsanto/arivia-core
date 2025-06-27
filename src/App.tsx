@@ -7,6 +7,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { TenantProvider } from "@/lib/context/TenantContext";
+import { InventoryProvider } from "@/contexts/InventoryContext";
+import { ToastProvider } from "@/contexts/ToastContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import TenantLayout from "@/components/layout/TenantLayout";
 
@@ -39,93 +41,97 @@ function App() {
       <AuthProvider>
         <UserProvider>
           <TenantProvider>
-            <Router>
-              <Routes>
-                {/* Internal login */}
-                <Route path="/internal/login" element={<Login />} />
-                <Route path="/login" element={<Navigate to="/internal/login" replace />} />
-                
-                {/* Protected internal routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
-                      <TenantLayout>
-                        <AdminDashboard />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/bookings"
-                  element={
-                    <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
-                      <TenantLayout>
-                        <BookingManagement />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/tasks"
-                  element={
-                    <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin', 'property_manager']}>
-                      <TenantLayout>
-                        <TaskManagement />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/manager"
-                  element={
-                    <ProtectedRoute allowedRoles={['property_manager', 'tenant_admin']}>
-                      <TenantLayout>
-                        <ManagerDashboard />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/cleaner"
-                  element={
-                    <ProtectedRoute allowedRoles={['housekeeping_staff']}>
-                      <TenantLayout>
-                        <CleanerDashboard />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/maintenance"
-                  element={
-                    <ProtectedRoute allowedRoles={['maintenance_staff']}>
-                      <TenantLayout>
-                        <MaintenanceDashboard />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/staff/tasks"
-                  element={
-                    <ProtectedRoute allowedRoles={['housekeeping_staff', 'maintenance_staff', 'concierge']}>
-                      <TenantLayout>
-                        <StaffTasks />
-                      </TenantLayout>
-                    </ProtectedRoute>
-                  }
-                />
+            <InventoryProvider>
+              <ToastProvider>
+                <Router>
+                  <Routes>
+                    {/* Internal login */}
+                    <Route path="/internal/login" element={<Login />} />
+                    <Route path="/login" element={<Navigate to="/internal/login" replace />} />
+                    
+                    {/* Protected internal routes */}
+                    <Route
+                      path="/admin"
+                      element={
+                        <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                          <TenantLayout>
+                            <AdminDashboard />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/bookings"
+                      element={
+                        <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                          <TenantLayout>
+                            <BookingManagement />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/admin/tasks"
+                      element={
+                        <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin', 'property_manager']}>
+                          <TenantLayout>
+                            <TaskManagement />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/manager"
+                      element={
+                        <ProtectedRoute allowedRoles={['property_manager', 'tenant_admin']}>
+                          <TenantLayout>
+                            <ManagerDashboard />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/cleaner"
+                      element={
+                        <ProtectedRoute allowedRoles={['housekeeping_staff']}>
+                          <TenantLayout>
+                            <CleanerDashboard />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/maintenance"
+                      element={
+                        <ProtectedRoute allowedRoles={['maintenance_staff']}>
+                          <TenantLayout>
+                            <MaintenanceDashboard />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/staff/tasks"
+                      element={
+                        <ProtectedRoute allowedRoles={['housekeeping_staff', 'maintenance_staff', 'concierge']}>
+                          <TenantLayout>
+                            <StaffTasks />
+                          </TenantLayout>
+                        </ProtectedRoute>
+                      }
+                    />
 
-                {/* Error routes */}
-                <Route path="/unauthorized" element={<Unauthorized />} />
-                <Route path="/404" element={<NotFound />} />
-                
-                {/* Default redirects */}
-                <Route path="/" element={<Navigate to="/internal/login" replace />} />
-                <Route path="*" element={<Navigate to="/404" replace />} />
-              </Routes>
-            </Router>
+                    {/* Error routes */}
+                    <Route path="/unauthorized" element={<Unauthorized />} />
+                    <Route path="/404" element={<NotFound />} />
+                    
+                    {/* Default redirects */}
+                    <Route path="/" element={<Navigate to="/internal/login" replace />} />
+                    <Route path="*" element={<Navigate to="/404" replace />} />
+                  </Routes>
+                </Router>
+              </ToastProvider>
+            </InventoryProvider>
           </TenantProvider>
         </UserProvider>
       </AuthProvider>

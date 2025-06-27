@@ -1,115 +1,62 @@
 
-import { UserRole } from './base';
+// User roles for role-based access control
+export type UserRole = 
+  | 'superadmin'
+  | 'tenant_admin'
+  | 'property_manager'
+  | 'housekeeping_staff'
+  | 'maintenance_staff'
+  | 'inventory_manager'
+  | 'concierge';
 
-export const ROLE_DETAILS: Record<UserRole, {
-  title: string;
-  description: string;
-  color: string;
-  capabilities: string[];
-}> = {
+// Role details with titles and descriptions
+export const ROLE_DETAILS: Record<UserRole, { title: string; description: string; permissions: string[] }> = {
   superadmin: {
-    title: "Super Administrator",
-    description: "Full system access and control",
-    color: "text-red-600",
-    capabilities: ["All system functions", "User management", "Tenant management"]
+    title: 'Super Administrator',
+    description: 'Full system access across all tenants',
+    permissions: ['*']
   },
   tenant_admin: {
-    title: "Tenant Administrator", 
-    description: "Full tenant management access",
-    color: "text-purple-600",
-    capabilities: ["Tenant settings", "User management", "All operations"]
+    title: 'Administrator', 
+    description: 'Full access within tenant organization',
+    permissions: ['manage_all', 'view_all', 'assign_tasks', 'manage_users']
   },
   property_manager: {
-    title: "Property Manager",
-    description: "Manages properties and operations",
-    color: "text-blue-600", 
-    capabilities: ["Property management", "Task assignment", "Reports"]
-  },
-  concierge: {
-    title: "Concierge",
-    description: "Customer service and support",
-    color: "text-green-600",
-    capabilities: ["Customer support", "Booking assistance", "Communications"]
+    title: 'Property Manager',
+    description: 'Manage properties, tasks, and team coordination',
+    permissions: ['manage_properties', 'assign_tasks', 'view_reports', 'manage_bookings']
   },
   housekeeping_staff: {
-    title: "Housekeeping Staff",
-    description: "Cleaning and maintenance tasks",
-    color: "text-yellow-600",
-    capabilities: ["Cleaning tasks", "Inventory updates", "Status reporting"]
+    title: 'Housekeeping Staff',
+    description: 'Handle cleaning and housekeeping tasks',
+    permissions: ['view_assigned_tasks', 'update_task_status', 'view_inventory']
   },
   maintenance_staff: {
-    title: "Maintenance Staff", 
-    description: "Property maintenance and repairs",
-    color: "text-orange-600",
-    capabilities: ["Maintenance tasks", "Repair requests", "Equipment management"]
+    title: 'Maintenance Staff', 
+    description: 'Handle maintenance and repair tasks',
+    permissions: ['view_assigned_tasks', 'update_task_status', 'view_inventory']
   },
   inventory_manager: {
-    title: "Inventory Manager",
-    description: "Stock and supply management", 
-    color: "text-indigo-600",
-    capabilities: ["Inventory tracking", "Supply ordering", "Stock reports"]
+    title: 'Inventory Manager',
+    description: 'Manage inventory, supplies, and orders',
+    permissions: ['manage_inventory', 'view_reports', 'approve_orders']
+  },
+  concierge: {
+    title: 'Concierge',
+    description: 'Guest services and coordination',
+    permissions: ['view_assigned_tasks', 'view_bookings', 'update_task_status']
   }
 };
 
 export const getDefaultPermissionsForRole = (role: UserRole): Record<string, boolean> => {
-  const basePermissions: Record<string, boolean> = {
-    'view_dashboard': true,
-    'view_profile': true
-  };
-
-  switch (role) {
-    case 'superadmin':
-      return {
-        ...basePermissions,
-        'manage_users': true,
-        'manage_tenants': true,
-        'view_all_data': true,
-        'system_settings': true
-      };
-    case 'tenant_admin':
-      return {
-        ...basePermissions,
-        'manage_tenant_users': true,
-        'manage_properties': true,
-        'view_reports': true,
-        'tenant_settings': true
-      };
-    case 'property_manager':
-      return {
-        ...basePermissions,
-        'manage_properties': true,
-        'assign_tasks': true,
-        'view_reports': true
-      };
-    case 'concierge':
-      return {
-        ...basePermissions,
-        'customer_support': true,
-        'manage_bookings': true,
-        'send_communications': true
-      };
-    case 'housekeeping_staff':
-      return {
-        ...basePermissions,
-        'view_cleaning_tasks': true,
-        'update_task_status': true,
-        'manage_inventory': true
-      };
-    case 'maintenance_staff':
-      return {
-        ...basePermissions,
-        'view_maintenance_tasks': true,
-        'update_task_status': true,
-        'manage_equipment': true
-      };
-    case 'inventory_manager':
-      return {
-        ...basePermissions,
-        'manage_inventory': true,
-        'create_orders': true,
-        'view_inventory_reports': true
-      };
-    default:
-      return basePermissions;
+  const rolePermissions = ROLE_DETAILS[role]?.permissions || [];
+  
+  if (rolePermissions.includes('*')) {
+    return {}; // Superadmin gets all permissions by default
   }
+  
+  return rolePermissions.reduce((acc, permission) => {
+    acc[permission] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
 };
