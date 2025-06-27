@@ -5,20 +5,27 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin } from "lucide-react";
 import { Task } from "@/types/taskTypes";
+import { MaintenanceTask } from "@/types/maintenanceTypes";
 
 interface DailyAgendaProps {
-  tasks: Task[];
+  housekeepingTasks?: Task[];
+  maintenanceTasks?: MaintenanceTask[];
+  tasks?: Task[];
   onTaskClick?: (task: Task) => void;
+  onRefresh?: () => void;
 }
 
-const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
+const DailyAgenda = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = [], onTaskClick, onRefresh }: DailyAgendaProps) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // Combine all tasks
+  const allTasks = [...(housekeepingTasks || []), ...(tasks || [])];
 
   // Convert task date to string for comparison
   const getTaskDateString = (task: Task): string => {
     if (!task.dueDate) return '';
-    if (task.dueDate instanceof Date) {
-      return task.dueDate.toISOString().split('T')[0];
+    if (typeof task.dueDate === 'string') {
+      return task.dueDate.split('T')[0];
     }
     return task.dueDate.split('T')[0];
   };
@@ -26,7 +33,7 @@ const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
   const selectedDateString = format(selectedDate, 'yyyy-MM-dd');
 
   // Filter tasks for the selected date
-  const dayTasks = tasks.filter(task => {
+  const dayTasks = allTasks.filter(task => {
     const taskDateString = getTaskDateString(task);
     return taskDateString === selectedDateString;
   });
@@ -42,8 +49,8 @@ const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
     }
     
     // If same priority, sort by due date
-    const aDate = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-    const bDate = b.dueDate instanceof Date ? b.dueDate : new Date(b.dueDate || 0);
+    const aDate = typeof a.dueDate === 'string' ? new Date(a.dueDate) : new Date();
+    const bDate = typeof b.dueDate === 'string' ? new Date(b.dueDate) : new Date();
     return aDate.getTime() - bDate.getTime();
   });
 
@@ -103,7 +110,7 @@ const DailyAgenda = ({ tasks, onTaskClick }: DailyAgendaProps) => {
                     {task.dueDate && (
                       <span className="flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        {format(task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate), 'HH:mm')}
+                        {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(), 'HH:mm')}
                       </span>
                     )}
                     

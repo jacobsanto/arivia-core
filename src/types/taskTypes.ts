@@ -38,7 +38,7 @@ export interface Task {
   propertyId?: string;
   property?: string; // Keep for backward compatibility
   roomNumber?: string;
-  dueDate?: Date | string;
+  dueDate?: string; // Always string for consistency
   createdAt: Date;
   updatedAt: Date;
   completedAt?: Date;
@@ -74,7 +74,7 @@ export interface TaskFilter {
   };
 }
 
-// Add missing form types
+// Form types
 export interface CleaningTaskFormValues {
   title: string;
   property: string;
@@ -86,22 +86,16 @@ export interface CleaningTaskFormValues {
   checklist: string[];
 }
 
-export interface CleaningDetails {
-  roomsCleaned: number;
-  cleaningType: string;
-  notes?: string;
-  scheduledCleanings?: Date[];
-  stayDuration?: number;
-  guestCheckIn?: string;
-  guestCheckOut?: string;
-}
+// Import zod for schema validation
+import { z } from "zod";
 
-// Simple schema for now - can be enhanced with zod later
-export const cleaningTaskFormSchema = {
-  title: { required: true, minLength: 3 },
-  property: { required: true },
-  roomType: { required: true },
-  assignedTo: { required: true },
-  priority: { required: true },
-  description: { required: false }
-};
+// Zod schema for cleaning task form
+export const cleaningTaskFormSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters"),
+  property: z.string().min(1, "Property is required"),
+  roomType: z.string().min(1, "Room type is required"),
+  assignedTo: z.string().min(1, "Assignee is required"),
+  priority: z.enum(["Low", "Medium", "High", "Urgent"]),
+  description: z.string().optional(),
+  checklist: z.array(z.string()).optional()
+});

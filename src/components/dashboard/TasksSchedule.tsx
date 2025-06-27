@@ -1,28 +1,35 @@
+
 import React from "react";
 import { format } from "date-fns";
 import { Calendar, Clock, User } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Task } from "@/types/taskTypes";
+import { MaintenanceTask } from "@/types/maintenanceTypes";
 
 interface TasksScheduleProps {
-  tasks: Task[];
+  housekeepingTasks?: Task[];
+  maintenanceTasks?: MaintenanceTask[];
+  tasks?: Task[];
   onTaskClick?: (task: Task) => void;
 }
 
-const TasksSchedule = ({ tasks, onTaskClick }: TasksScheduleProps) => {
+const TasksSchedule = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = [], onTaskClick }: TasksScheduleProps) => {
   const today = format(new Date(), 'yyyy-MM-dd');
   
+  // Combine all tasks
+  const allTasks = [...(housekeepingTasks || []), ...(tasks || [])];
+  
   // Filter and sort tasks for today
-  const todayTasks = tasks.filter(task => {
+  const todayTasks = allTasks.filter(task => {
     if (!task.dueDate) return false;
-    const taskDateString = task.dueDate instanceof Date 
-      ? task.dueDate.toISOString().split('T')[0]
+    const taskDateString = typeof task.dueDate === 'string' 
+      ? task.dueDate.split('T')[0]
       : task.dueDate.split('T')[0];
     return taskDateString === today;
   }).sort((a, b) => {
-    const aDate = a.dueDate instanceof Date ? a.dueDate : new Date(a.dueDate || 0);
-    const bDate = b.dueDate instanceof Date ? b.dueDate : new Date(b.dueDate || 0);
+    const aDate = typeof a.dueDate === 'string' ? new Date(a.dueDate) : new Date();
+    const bDate = typeof b.dueDate === 'string' ? new Date(b.dueDate) : new Date();
     return aDate.getTime() - bDate.getTime();
   });
 
@@ -58,7 +65,7 @@ const TasksSchedule = ({ tasks, onTaskClick }: TasksScheduleProps) => {
                     {task.dueDate && (
                       <span className="flex items-center">
                         <Clock className="h-3 w-3 mr-1" />
-                        {format(task.dueDate instanceof Date ? task.dueDate : new Date(task.dueDate), 'HH:mm')}
+                        {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(), 'HH:mm')}
                       </span>
                     )}
                     {(task.assignedTo) && (
