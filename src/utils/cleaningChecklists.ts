@@ -40,3 +40,30 @@ export const getCleaningChecklist = (cleaningType: string): ChecklistItem[] => {
       return baseChecklist;
   }
 };
+
+export const generateCleaningSchedule = (
+  checkIn: Date,
+  checkOut: Date,
+  stayDuration: number
+): Date[] => {
+  const schedule: Date[] = [];
+  
+  if (stayDuration <= 2) {
+    // Short stays: only checkout cleaning
+    schedule.push(checkOut);
+  } else if (stayDuration <= 5) {
+    // Medium stays: mid-stay and checkout
+    const midPoint = new Date(checkIn.getTime() + (stayDuration / 2) * 24 * 60 * 60 * 1000);
+    schedule.push(midPoint, checkOut);
+  } else {
+    // Long stays: multiple cleanings
+    const interval = Math.floor(stayDuration / 3);
+    for (let i = interval; i < stayDuration; i += interval) {
+      const cleaningDate = new Date(checkIn.getTime() + i * 24 * 60 * 60 * 1000);
+      schedule.push(cleaningDate);
+    }
+    schedule.push(checkOut);
+  }
+  
+  return schedule;
+};

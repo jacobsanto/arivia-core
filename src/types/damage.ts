@@ -2,13 +2,11 @@
 export type DamageReportStatus = 
   | 'pending' 
   | 'investigating' 
-  | 'in_progress' 
   | 'resolved' 
-  | 'cancelled' 
-  | 'disputed'
   | 'compensation_required'
   | 'compensation_paid'
-  | 'closed';
+  | 'closed'
+  | 'disputed';
 
 export interface DamageReport {
   id: string;

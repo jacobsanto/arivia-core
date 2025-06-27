@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Task, TaskTemplate, TaskComment } from '@/types/task-management';
 import { ChecklistItem } from '@/types/checklistTypes';
@@ -27,8 +28,8 @@ interface UpdateTaskData {
 }
 
 interface TaskFilters {
-  status?: string[];
-  priority?: string[];
+  status?: ('open' | 'in_progress' | 'completed' | 'cancelled')[];
+  priority?: ('low' | 'medium' | 'high' | 'urgent')[];
   assigned_role?: string[];
   property_id?: string;
   assigned_to?: string;
@@ -58,14 +59,14 @@ const mapSupabaseTask = (supabaseTask: any): Task => {
     description: supabaseTask.description || '',
     status: supabaseTask.status,
     priority: supabaseTask.priority,
-    assignedTo: supabaseTask.assigned_to,
-    assignedRole: supabaseTask.assigned_role,
+    assigned_to: supabaseTask.assigned_to, // Use snake_case for Supabase compatibility
+    assigned_role: supabaseTask.assigned_role, // Use snake_case for Supabase compatibility
     propertyId: supabaseTask.property_id,
     bookingId: supabaseTask.booking_id,
-    dueDate: supabaseTask.due_date ? new Date(supabaseTask.due_date) : undefined,
-    createdAt: new Date(supabaseTask.created_at),
-    updatedAt: new Date(supabaseTask.updated_at),
-    completedAt: supabaseTask.completed_at ? new Date(supabaseTask.completed_at) : undefined,
+    dueDate: supabaseTask.due_date ? new Date(supabaseTask.due_date).toISOString() : undefined,
+    createdAt: new Date(supabaseTask.created_at).toISOString(),
+    updatedAt: new Date(supabaseTask.updated_at).toISOString(),
+    completedAt: supabaseTask.completed_at ? new Date(supabaseTask.completed_at).toISOString() : undefined,
     createdBy: supabaseTask.created_by,
     metadata: metadata,
     type: "Other", // Default type since it's not in Supabase schema
@@ -86,14 +87,14 @@ const mapSupabaseTaskTemplate = (supabaseTemplate: any): TaskTemplate => {
     id: supabaseTemplate.id,
     name: supabaseTemplate.name,
     description: supabaseTemplate.description || '',
-    assignedRole: supabaseTemplate.assigned_role,
+    assigned_role: supabaseTemplate.assigned_role, // Use snake_case for Supabase compatibility
     priority: supabaseTemplate.priority,
     estimatedDuration: supabaseTemplate.estimated_duration,
     checklist: safeJsonParse(supabaseTemplate.checklist, []) as ChecklistItem[],
     isActive: supabaseTemplate.is_active,
     createdBy: supabaseTemplate.created_by,
-    createdAt: new Date(supabaseTemplate.created_at),
-    updatedAt: new Date(supabaseTemplate.updated_at)
+    createdAt: new Date(supabaseTemplate.created_at).toISOString(),
+    updatedAt: new Date(supabaseTemplate.updated_at).toISOString()
   };
 };
 
@@ -108,11 +109,11 @@ export class TaskService {
         .order('created_at', { ascending: false });
 
       if (filters?.status?.length) {
-        query = query.in('status', filters.status);
+        query = query.in('status', filters.status as readonly string[]);
       }
 
       if (filters?.priority?.length) {
-        query = query.in('priority', filters.priority);
+        query = query.in('priority', filters.priority as readonly string[]);
       }
 
       if (filters?.assigned_role?.length) {
@@ -320,10 +321,11 @@ export class TaskService {
       if (error) throw error;
       return (data || []).map(comment => ({
         id: comment.id,
-        taskId: comment.task_id,
-        userId: comment.user_id,
-        content: comment.comment,
-        createdAt: new Date(comment.created_at)
+        tenant_id: comment.tenant_id,
+        task_id: comment.task_id,
+        user_id: comment.user_id,
+        comment: comment.comment,
+        created_at: new Date(comment.created_at).toISOString()
       }));
     } catch (error: any) {
       console.error('Error fetching task comments:', error);

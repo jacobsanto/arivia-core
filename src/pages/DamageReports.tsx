@@ -7,7 +7,6 @@ import { useUser } from "@/contexts/UserContext";
 import DamageReportList from "@/components/damage/DamageReportList";
 import DamageReportDetail from "@/components/damage/DamageReportDetail";
 import DamageReportForm from "@/components/damage/DamageReportForm";
-import DamageReportFilters from "@/components/damage/DamageReportFilters";
 import DamageReportStats from "@/components/damage/stats/DamageReportStats";
 import { useDamageReports } from "@/hooks/useDamageReports";
 import type { DamageReport } from "@/types/damage";
@@ -21,9 +20,7 @@ const DamageReports: React.FC = () => {
   const {
     reports,
     filteredReports,
-    filters,
     isLoading,
-    updateFilters,
     updateReportStatus,
     addReport,
     updateReport,
@@ -43,11 +40,20 @@ const DamageReports: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  const handleFormSubmit = async (reportData: Partial<DamageReport>) => {
+  const handleFormSubmit = async (reportData: any) => {
+    // Convert form data to match DamageReport interface
+    const damageReportData = {
+      ...reportData,
+      damage_date: typeof reportData.damage_date === 'string' ? reportData.damage_date : new Date(reportData.damage_date).toISOString(),
+      reported_by: user?.id || '',
+      priority: 'medium' as const,
+      status: 'pending' as const
+    };
+
     if (editingReport) {
-      await updateReport(editingReport.id, reportData);
+      await updateReport(editingReport.id, damageReportData);
     } else {
-      await addReport(reportData as Omit<DamageReport, 'id' | 'createdAt' | 'updatedAt'>);
+      await addReport(damageReportData as Omit<DamageReport, 'id' | 'createdAt' | 'updatedAt'>);
     }
     setIsFormOpen(false);
     setEditingReport(null);
@@ -77,7 +83,6 @@ const DamageReports: React.FC = () => {
     return (
       <div className="container mx-auto p-6">
         <DamageReportForm
-          report={editingReport}
           onSubmit={handleFormSubmit}
           onCancel={() => {
             setIsFormOpen(false);
@@ -105,18 +110,6 @@ const DamageReports: React.FC = () => {
       </div>
 
       <DamageReportStats reports={reports} />
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Filters</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <DamageReportFilters
-            filters={filters}
-            onFiltersChange={updateFilters}
-          />
-        </CardContent>
-      </Card>
 
       <DamageReportList
         reports={filteredReports}

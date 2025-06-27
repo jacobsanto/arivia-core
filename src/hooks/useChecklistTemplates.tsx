@@ -7,8 +7,8 @@ import { toast } from "sonner";
 export const useChecklistTemplates = () => {
   const [templates, setTemplates] = useState<ChecklistTemplate[]>(defaultChecklistTemplates);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("All");
 
   const createTemplate = async (templateData: Omit<ChecklistTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
     setIsLoading(true);
@@ -86,24 +86,45 @@ export const useChecklistTemplates = () => {
     }
   };
 
+  const getTemplateById = (templateId: string) => {
+    return templates.find(template => template.id === templateId);
+  };
+
   const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || template.category === selectedCategory;
+    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         template.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = categoryFilter === "All" || template.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  // Handler functions to match AdminChecklists usage
+  const handleCreateTemplate = async (templateData: Omit<ChecklistTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
+    return await createTemplate(templateData);
+  };
+
+  const handleEditTemplate = async (templateId: string, updates: Partial<ChecklistTemplate>) => {
+    return await updateTemplate(templateId, updates);
+  };
+
+  const handleDeleteTemplate = async (templateId: string) => {
+    return await deleteTemplate(templateId);
+  };
 
   return {
     templates,
     setTemplates,
     filteredTemplates,
     isLoading,
-    searchTerm,
-    setSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
+    searchQuery,
+    setSearchQuery,
+    categoryFilter,
+    setCategoryFilter,
     createTemplate,
     updateTemplate,
-    deleteTemplate
+    deleteTemplate,
+    getTemplateById,
+    handleCreateTemplate,
+    handleEditTemplate,
+    handleDeleteTemplate
   };
 };

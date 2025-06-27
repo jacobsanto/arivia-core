@@ -85,6 +85,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return checkFeatureAccess(currentUser, featureKey);
   };
 
+  // Fix argument count - remove extra parameter
   const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
     return await updatePermissions(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId, permissions);
   };
@@ -101,6 +102,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as StateSetter<User | null>, currentUser);
   };
   
+  // Fix argument count - remove extra parameter  
   const handleDeleteUser = async (userId: string) => {
     return await removeUser(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId);
   };
