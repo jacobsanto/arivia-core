@@ -1,63 +1,56 @@
 
-import { z } from "zod";
+export type TaskStatus = "Pending" | "In Progress" | "Completed" | "Cancelled" | "Approved" | "Rejected";
 
-export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
-export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected' | null;
+export type TaskPriority = "Low" | "Medium" | "High" | "Urgent";
+
+export type TaskType = "Cleaning" | "Maintenance" | "Inspection" | "Check-in" | "Check-out" | "Other";
 
 export interface ChecklistItem {
-  id: number;
-  title: string;
+  id: string;
+  text: string;
   completed: boolean;
-}
-
-export interface CleaningDetails {
-  roomType: string;
-  bedCount: number;
-  bathCount: number;
-  estimatedTime: number;
-  cleaningType?: string;
-  stayDuration?: number;
-  guestCheckIn?: string;
-  guestCheckOut?: string;
-  scheduledCleanings?: string[];
+  required?: boolean;
 }
 
 export interface Task {
   id: string;
   title: string;
-  property: string;
-  assignedTo: string;
-  dueDate: string; // Date stored as string format
+  description: string;
   status: TaskStatus;
-  priority: 'Low' | 'Medium' | 'High';
-  description: string;
-  checklist: ChecklistItem[];
-  photos?: string[];
-  location?: string;
-  approvalStatus: ApprovalStatus;
-  rejectionReason?: string | null;
-  cleaningDetails?: CleaningDetails;
-  type?: string; // Added type field as it's used in many places
+  priority: TaskPriority;
+  type: TaskType;
+  assignedTo?: string;
+  assignedRole?: string;
+  propertyId?: string;
+  roomNumber?: string;
+  dueDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  completedAt?: Date;
+  estimatedDuration?: number;
+  checklist?: ChecklistItem[];
+  notes?: string;
+  attachments?: string[];
+  createdBy: string;
+  tags?: string[];
 }
 
-export interface CleaningTaskFormValues {
-  title: string;
-  property: string;
-  roomType: string;
-  dueDate: Date | undefined;
-  assignedTo: string;
-  priority: string;
-  description: string;
-  checklistTemplate?: string;
+export interface TaskComment {
+  id: string;
+  taskId: string;
+  userId: string;
+  content: string;
+  createdAt: Date;
 }
 
-export const cleaningTaskFormSchema = z.object({
-  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
-  property: z.string().min(1, { message: "Property is required" }),
-  roomType: z.string().min(1, { message: "Room type is required" }),
-  dueDate: z.date().optional(),
-  assignedTo: z.string().min(1, { message: "Assignee is required" }),
-  priority: z.string().min(1, { message: "Priority is required" }),
-  description: z.string().optional(),
-  checklistTemplate: z.string().optional()
-});
+export interface TaskFilter {
+  status?: TaskStatus[];
+  priority?: TaskPriority[];
+  type?: TaskType[];
+  assignedTo?: string;
+  propertyId?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+}

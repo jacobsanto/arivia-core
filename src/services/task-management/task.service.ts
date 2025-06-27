@@ -1,7 +1,96 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Task, TaskTemplate, TaskComment, CreateTaskData, UpdateTaskData, TaskFilters } from '@/types/task-management';
+import { Task, TaskTemplate, TaskComment } from '@/types/task-management';
+import { ChecklistItem } from '@/types/checklistTypes';
 import { toast } from 'sonner';
+
+interface CreateTaskData {
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  assigned_role?: string;
+  assigned_to?: string;
+  property_id?: string;
+  booking_id?: string;
+  due_date?: string;
+  metadata?: Record<string, any>;
+}
+
+interface UpdateTaskData {
+  title?: string;
+  description?: string;
+  status?: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  priority?: 'low' | 'medium' | 'high' | 'urgent';
+  assigned_to?: string;
+  assigned_role?: string;
+  completed_at?: string;
+  metadata?: Record<string, any>;
+}
+
+interface TaskFilters {
+  status?: string[];
+  priority?: string[];
+  assigned_role?: string[];
+  property_id?: string;
+  assigned_to?: string;
+  due_date_from?: string;
+  due_date_to?: string;
+}
+
+// Helper function to safely parse JSON data
+const safeJsonParse = (data: any, fallback: any = {}) => {
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return fallback;
+    }
+  }
+  return data || fallback;
+};
+
+// Helper function to map Supabase task to internal Task type
+const mapSupabaseTask = (supabaseTask: any): Task => {
+  return {
+    id: supabaseTask.id,
+    title: supabaseTask.title,
+    description: supabaseTask.description || '',
+    status: supabaseTask.status,
+    priority: supabaseTask.priority,
+    assignedTo: supabaseTask.assigned_to,
+    assignedRole: supabaseTask.assigned_role,
+    propertyId: supabaseTask.property_id,
+    bookingId: supabaseTask.booking_id,
+    dueDate: supabaseTask.due_date ? new Date(supabaseTask.due_date) : undefined,
+    createdAt: new Date(supabaseTask.created_at),
+    updatedAt: new Date(supabaseTask.updated_at),
+    completedAt: supabaseTask.completed_at ? new Date(supabaseTask.completed_at) : undefined,
+    createdBy: supabaseTask.created_by,
+    metadata: safeJsonParse(supabaseTask.metadata, {}),
+    type: "Other", // Default type since it's not in Supabase schema
+    checklist: safeJsonParse(supabaseTask.metadata, {}).checklist || [],
+    notes: safeJsonParse(supabaseTask.metadata, {}).notes || '',
+    attachments: safeJsonParse(supabaseTask.metadata, {}).attachments || [],
+    tags: safeJsonParse(supabaseTask.metadata, {}).tags || []
+  };
+};
+
+// Helper function to map Supabase task template to internal TaskTemplate type
+const mapSupabaseTaskTemplate = (supabaseTemplate: any): TaskTemplate => {
+  return {
+    id: supabaseTemplate.id,
+    name: supabaseTemplate.name,
+    description: supabaseTemplate.description || '',
+    assignedRole: supabaseTemplate.assigned_role,
+    priority: supabaseTemplate.priority,
+    estimatedDuration: supabaseTemplate.estimated_duration,
+    checklist: safeJsonParse(supabaseTemplate.checklist, []) as ChecklistItem[],
+    isActive: supabaseTemplate.is_active,
+    createdBy: supabaseTemplate.created_by,
+    createdAt: new Date(supabaseTemplate.created_at),
+    updatedAt: new Date(supabaseTemplate.updated_at)
+  };
+};
 
 export class TaskService {
   
@@ -44,7 +133,7 @@ export class TaskService {
       const { data, error } = await query;
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapSupabaseTask);
     } catch (error: any) {
       console.error('Error fetching tasks:', error);
       toast.error('Failed to load tasks', {
@@ -67,7 +156,7 @@ export class TaskService {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapSupabaseTask);
     } catch (error: any) {
       console.error('Error fetching my tasks:', error);
       toast.error('Failed to load your tasks', {
@@ -96,7 +185,7 @@ export class TaskService {
       if (error) throw error;
       
       toast.success('Task created successfully');
-      return data;
+      return mapSupabaseTask(data);
     } catch (error: any) {
       console.error('Error creating task:', error);
       toast.error('Failed to create task', {
@@ -166,7 +255,7 @@ export class TaskService {
         .order('name');
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(mapSupabaseTaskTemplate);
     } catch (error: any) {
       console.error('Error fetching task templates:', error);
       toast.error('Failed to load task templates', {
@@ -198,7 +287,7 @@ export class TaskService {
         assigned_role: template.assigned_role,
         metadata: {
           template_id: templateId,
-          checklist: template.checklist,
+          checklist: safeJsonParse(template.checklist, []),
           estimated_duration: template.estimated_duration
         },
         ...overrides
@@ -224,7 +313,13 @@ export class TaskService {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []).map(comment => ({
+        id: comment.id,
+        taskId: comment.task_id,
+        userId: comment.user_id,
+        content: comment.comment,
+        createdAt: new Date(comment.created_at)
+      }));
     } catch (error: any) {
       console.error('Error fetching task comments:', error);
       return [];

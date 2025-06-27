@@ -1,100 +1,179 @@
 
 import React, { useState } from "react";
-import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Package, TrendingUp, ShoppingCart, Truck } from "lucide-react";
+import { useUser } from "@/contexts/UserContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+
+// Import components
 import InventoryOverview from "@/components/inventory/InventoryOverview";
 import StockLevels from "@/components/inventory/StockLevels";
 import AddItem from "@/components/inventory/AddItem";
 import StockReceipt from "@/components/inventory/StockReceipt";
 import StockTransfer from "@/components/inventory/StockTransfer";
 import InventoryUsage from "@/components/inventory/InventoryUsage";
-import VendorsList from "@/components/inventory/vendors/VendorsList";
-import OrderForm from "@/components/inventory/orders/OrderForm";
 import OrderList from "@/components/inventory/orders/OrderList";
-import { InventoryProvider } from "@/contexts/InventoryContext";
-import { OrderProvider } from "@/contexts/OrderContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+import OrderForm from "@/components/inventory/orders/OrderForm";
+import VendorsList from "@/components/inventory/vendors/VendorsList";
+
+// Mobile components
 import MobileInventory from "@/components/inventory/MobileInventory";
 
-const Inventory = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+const Inventory: React.FC = () => {
+  const { user } = useUser();
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("overview");
+  const [showOrderForm, setShowOrderForm] = useState(false);
 
-  // Render mobile-specific UI
+  const canManageInventory = user?.role === "inventory_manager" || 
+                           user?.role === "tenant_admin" || 
+                           user?.role === "property_manager";
+
+  const handleOrderSubmit = (orderData: any) => {
+    console.log("Order submitted:", orderData);
+    setShowOrderForm(false);
+    // Here you would typically submit to your API
+  };
+
+  const handleOrderCancel = () => {
+    setShowOrderForm(false);
+  };
+
   if (isMobile) {
     return <MobileInventory />;
   }
 
-  // Desktop UI
-  return (
-    <InventoryProvider>
-      <OrderProvider>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
-            <p className="text-muted-foreground">
-              Manage supplies across main storage and property locations
-            </p>
-          </div>
+  if (showOrderForm) {
+    return (
+      <div className="container mx-auto p-6">
+        <OrderForm 
+          onSubmit={handleOrderSubmit}
+          onCancel={handleOrderCancel}
+        />
+      </div>
+    );
+  }
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b">
-              <TabsList className="bg-transparent -mb-px">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
-                <TabsTrigger value="add-item">Add Item</TabsTrigger>
-                <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
-                <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
-                <TabsTrigger value="usage">Usage Reports</TabsTrigger>
-                <TabsTrigger value="vendors">Vendors</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-                <TabsTrigger value="create-order">Create Order</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <Card className="mt-6 border-t-0 rounded-t-none">
-              <CardContent className="pt-6">
-                <TabsContent value="overview" className="mt-0">
-                  <InventoryOverview />
-                </TabsContent>
-                
-                <TabsContent value="stock-levels" className="mt-0">
-                  <StockLevels />
-                </TabsContent>
-                
-                <TabsContent value="add-item" className="mt-0">
-                  <AddItem />
-                </TabsContent>
-                
-                <TabsContent value="receipts" className="mt-0">
-                  <StockReceipt />
-                </TabsContent>
-                
-                <TabsContent value="transfers" className="mt-0">
-                  <StockTransfer />
-                </TabsContent>
-                
-                <TabsContent value="usage" className="mt-0">
-                  <InventoryUsage />
-                </TabsContent>
-                
-                <TabsContent value="vendors" className="mt-0">
-                  <VendorsList />
-                </TabsContent>
-                
-                <TabsContent value="orders" className="mt-0">
-                  <OrderList />
-                </TabsContent>
-                
-                <TabsContent value="create-order" className="mt-0">
-                  <OrderForm />
-                </TabsContent>
+  return (
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Inventory Management</h1>
+          <p className="text-muted-foreground">
+            Track stock levels, manage orders, and monitor usage
+          </p>
+        </div>
+        
+        {canManageInventory && (
+          <Button 
+            onClick={() => setShowOrderForm(true)} 
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Order
+          </Button>
+        )}
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="stock" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Stock Levels
+          </TabsTrigger>
+          <TabsTrigger value="add-item" className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Add Item
+          </TabsTrigger>
+          <TabsTrigger value="receipt" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" />
+            Receipt
+          </TabsTrigger>
+          <TabsTrigger value="transfer" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Transfer
+          </TabsTrigger>
+          <TabsTrigger value="usage" className="flex items-center gap-2">
+            <TrendingUp className="h-4 w-4" />
+            Usage
+          </TabsTrigger>
+          <TabsTrigger value="orders" className="flex items-center gap-2">
+            <ShoppingCart className="h-4 w-4" />
+            Orders
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <InventoryOverview />
+        </TabsContent>
+
+        <TabsContent value="stock" className="space-y-4">
+          <StockLevels />
+        </TabsContent>
+
+        <TabsContent value="add-item" className="space-y-4">
+          {canManageInventory ? (
+            <AddItem />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Restricted</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>You don't have permission to add inventory items.</p>
               </CardContent>
             </Card>
-          </Tabs>
-        </div>
-      </OrderProvider>
-    </InventoryProvider>
+          )}
+        </TabsContent>
+
+        <TabsContent value="receipt" className="space-y-4">
+          {canManageInventory ? (
+            <StockReceipt />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Restricted</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>You don't have permission to manage stock receipts.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="transfer" className="space-y-4">
+          {canManageInventory ? (
+            <StockTransfer />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Access Restricted</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p>You don't have permission to manage stock transfers.</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="usage" className="space-y-4">
+          <InventoryUsage />
+        </TabsContent>
+
+        <TabsContent value="orders" className="space-y-4">
+          <div className="space-y-4">
+            <OrderList />
+            <VendorsList />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

@@ -85,8 +85,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return checkFeatureAccess(currentUser, featureKey);
   };
 
-  const handleUpdateUserPermissions = (userId: string, permissions: Record<string, boolean>) => {
-    return updatePermissions(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId, permissions);
+  const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
+    return await updatePermissions(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId, permissions);
   };
 
   const handleGetOfflineLoginStatus = () => {

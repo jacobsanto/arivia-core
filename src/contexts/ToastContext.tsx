@@ -43,8 +43,9 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
     toast(title, options);
   };
 
-  const loading = (title: string, options?: { description?: string }) => {
-    return toast.loading(title, options);
+  const loading = (title: string, options?: { description?: string }): string => {
+    const id = toast.loading(title, options);
+    return String(id);
   };
 
   const dismiss = (id?: string) => {

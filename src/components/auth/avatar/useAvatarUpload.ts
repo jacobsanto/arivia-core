@@ -2,10 +2,18 @@
 import { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+import { User } from "@/types/auth";
 
-export const useAvatarUpload = () => {
+interface UseAvatarUploadProps {
+  user: User;
+  onAvatarChange?: (url: string) => void;
+}
+
+export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
-  const { user, updateAvatar } = useUser();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "/placeholder.svg");
+  const { updateAvatar } = useUser();
 
   const uploadAvatar = async (file: File) => {
     if (!user) {
@@ -20,7 +28,10 @@ export const useAvatarUpload = () => {
       const success = await updateAvatar(user.id, mockUrl);
       
       if (success) {
+        setAvatarUrl(mockUrl);
+        onAvatarChange?.(mockUrl);
         toast.success("Avatar updated successfully");
+        setIsDialogOpen(false);
         return true;
       } else {
         toast.error("Failed to update avatar");
@@ -35,8 +46,18 @@ export const useAvatarUpload = () => {
     }
   };
 
+  const handleFileChange = (file: File) => {
+    if (file) {
+      uploadAvatar(file);
+    }
+  };
+
   return {
     uploadAvatar,
-    isUploading
+    isUploading,
+    avatarUrl,
+    isDialogOpen,
+    setIsDialogOpen,
+    handleFileChange
   };
 };

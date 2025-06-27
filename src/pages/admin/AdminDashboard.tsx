@@ -1,110 +1,128 @@
 
-import React from 'react';
-import { useTenant } from '@/lib/context/TenantContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
-import { Users, Calendar, Settings, BarChart3, ClipboardList, Home } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useUser } from "@/contexts/UserContext";
+import { BarChart3, Users, Settings, Activity } from "lucide-react";
 
 const AdminDashboard: React.FC = () => {
-  const { user, tenantId } = useTenant();
-  const navigate = useNavigate();
-
-  if (user?.role !== 'tenant_admin' && user?.role !== 'superadmin') {
-    return <div>Access denied</div>;
-  }
+  const { user } = useUser();
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              User Management
-            </CardTitle>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {user?.name}
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">Manage staff accounts and permissions</p>
-            <Button variant="outline" className="w-full">
-              Manage Users
-            </Button>
+            <div className="text-2xl font-bold">23</div>
+            <p className="text-xs text-muted-foreground">
+              +2 from last month
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/admin/bookings')}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Booking Records
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Properties</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">View and manage all guest bookings</p>
-            <Button variant="outline" className="w-full">
-              View Bookings
-            </Button>
+            <div className="text-2xl font-bold">12</div>
+            <p className="text-xs text-muted-foreground">
+              All properties operational
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Home className="h-5 w-5" />
-              Property Management
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">System Status</CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">Manage properties and assignments</p>
-            <Button variant="outline" className="w-full">
-              Manage Properties
-            </Button>
+            <div className="text-2xl font-bold text-green-600">Healthy</div>
+            <p className="text-xs text-muted-foreground">
+              All systems operational
+            </p>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ClipboardList className="h-5 w-5" />
-              Task Assignment
-            </CardTitle>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Configurations</CardTitle>
+            <Settings className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">Assign and track staff tasks</p>
-            <Button variant="outline" className="w-full">
-              Manage Tasks
-            </Button>
+            <div className="text-2xl font-bold">8</div>
+            <p className="text-xs text-muted-foreground">
+              Settings configured
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">New user registered</p>
+                  <p className="text-xs text-muted-foreground">2 minutes ago</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">System backup completed</p>
+                  <p className="text-xs text-muted-foreground">1 hour ago</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">Configuration updated</p>
+                  <p className="text-xs text-muted-foreground">3 hours ago</p>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+        <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Reports & Analytics
-            </CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-muted-foreground mb-4">View performance and financial reports</p>
-            <Button variant="outline" className="w-full">
-              View Reports
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card className="hover:shadow-md transition-shadow cursor-pointer">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              System Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">Configure system-wide settings</p>
-            <Button variant="outline" className="w-full">
-              Settings
-            </Button>
+            <div className="space-y-2">
+              <button className="w-full text-left p-2 hover:bg-gray-100 rounded">
+                Manage Users
+              </button>
+              <button className="w-full text-left p-2 hover:bg-gray-100 rounded">
+                System Settings
+              </button>
+              <button className="w-full text-left p-2 hover:bg-gray-100 rounded">
+                View Reports
+              </button>
+              <button className="w-full text-left p-2 hover:bg-gray-100 rounded">
+                Backup Data
+              </button>
+            </div>
           </CardContent>
         </Card>
       </div>

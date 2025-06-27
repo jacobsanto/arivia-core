@@ -1,85 +1,50 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useUser } from "@/contexts/UserContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-// Import task components
-import TaskHeader from "@/components/tasks/TaskHeader";
-import TaskList from "@/components/tasks/TaskList";
-import TaskDetail from "@/components/tasks/TaskDetail";
-import TaskCreationForm from "@/components/tasks/TaskCreationForm";
-import TaskFilters from "@/components/tasks/TaskFilters";
-import { useTasks } from "@/hooks/useTasks";
+const Tasks: React.FC = () => {
+  const { user } = useUser();
 
-const Tasks = () => {
-  const {
-    filteredTasks,
-    searchQuery,
-    setSearchQuery,
-    activeTab,
-    setActiveTab,
-    selectedTask,
-    isCreateTaskOpen,
-    setIsCreateTaskOpen,
-    propertyFilter,
-    setPropertyFilter,
-    typeFilter,
-    setTypeFilter,
-    handleOpenTask,
-    handleCloseTask,
-    handleCompleteTask,
-    handleToggleChecklistItem,
-    handleCreateTask,
-    handlePhotoUpload,
-  } = useTasks();
+  if (!user) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>You must be logged in to access tasks.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
-
-      <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6">
-        <p className="text-amber-800 text-sm">
-          <strong>Note:</strong> This module is for housekeeping tasks only. For maintenance and repair tasks, please use the 
-          <a href="/maintenance" className="text-blue-600 font-medium underline mx-1">Maintenance module</a>.
-        </p>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Tasks</h1>
+          <p className="text-muted-foreground">
+            Manage and track your assigned tasks
+          </p>
+        </div>
       </div>
 
-      <TaskFilters 
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onPropertyFilter={setPropertyFilter}
-        onTypeFilter={setTypeFilter}
-      />
-
-      <TaskList
-        tasks={filteredTasks}
-        onOpenTask={handleOpenTask}
-      />
-
-      {/* Task Detail Modal */}
-      {selectedTask && (
-        <TaskDetail
-          task={selectedTask}
-          onClose={handleCloseTask}
-          onComplete={handleCompleteTask}
-          onToggleChecklistItem={handleToggleChecklistItem}
-          onPhotoUpload={handlePhotoUpload}
-        />
-      )}
-
-      {/* Create Task Dialog */}
-      <Dialog open={isCreateTaskOpen} onOpenChange={setIsCreateTaskOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Create New Housekeeping Task</DialogTitle>
-          </DialogHeader>
-          <TaskCreationForm 
-            onSubmit={handleCreateTask} 
-            onCancel={() => setIsCreateTaskOpen(false)} 
-          />
-        </DialogContent>
-      </Dialog>
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Task Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground">
+              Task management functionality will be implemented here.
+              Current user: {user.name} ({user.role})
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

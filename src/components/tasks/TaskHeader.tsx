@@ -1,3 +1,4 @@
+
 import React from "react";
 import { toast } from "sonner";
 import { MoreVertical, CheckCircle2, Loader2 } from "lucide-react";
@@ -8,12 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Task } from "@/types/taskTypes";
+import { Task, TaskStatus } from "@/types/taskTypes";
 import { useUser } from "@/contexts/UserContext";
 
 interface TaskHeaderProps {
   task: Task;
-  onStatusUpdate: (newStatus: Task['status']) => void;
+  onStatusUpdate: (newStatus: TaskStatus) => void;
 }
 
 const TaskHeader: React.FC<TaskHeaderProps> = ({ task, onStatusUpdate }) => {
@@ -22,7 +23,7 @@ const TaskHeader: React.FC<TaskHeaderProps> = ({ task, onStatusUpdate }) => {
 
   const isManager = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "property_manager";
 
-  const handleStatusChange = async (newStatus: Task['status']) => {
+  const handleStatusChange = async (newStatus: TaskStatus) => {
     setIsUpdating(true);
     try {
       // Simulate API call

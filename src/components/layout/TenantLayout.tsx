@@ -5,21 +5,21 @@ import { useTenant } from '@/lib/context/TenantContext';
 import TenantBranding from '@/components/common/TenantBranding';
 import { LoadingState } from '@/components/ui/loading-state';
 
-const TenantLayout: React.FC = () => {
-  const { isLoading, user, tenantId } = useTenant();
+interface TenantLayoutProps {
+  children: React.ReactNode;
+}
 
-  if (isLoading) {
-    return <LoadingState text="Loading tenant information..." />;
-  }
+const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
+  const { tenantId } = useTenant();
 
-  if (!user || !tenantId) {
+  if (!tenantId) {
     return <div>Access denied or tenant not found</div>;
   }
 
   return (
     <TenantBranding>
       <div className="min-h-screen bg-background">
-        <Outlet />
+        {children}
       </div>
     </TenantBranding>
   );
