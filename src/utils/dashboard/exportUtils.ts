@@ -1,101 +1,101 @@
 
-import { toastService } from '@/services/toast';
-import { formatMetricsForExport, prepareDashboardExportData } from '@/utils/dashboard/dataPreparationUtils';
-import { saveAs } from 'file-saver';
+import { toast } from "sonner";
 import * as XLSX from 'xlsx';
-import { ExportFormat, ExportSection } from '@/components/dashboard/ExportConfigDialog';
 
-/**
- * Exports dashboard data in the specified format
- */
-export const exportDashboardData = async (
-  dashboardData: any,
-  propertyFilter: string = 'all',
-  format: ExportFormat = 'csv',
-  sections: ExportSection[] = ['properties', 'tasks', 'maintenance', 'bookings']
-): Promise<boolean> => {
-  if (!dashboardData) {
-    toastService.error('Export failed', {
-      description: 'No data available to export'
-    });
-    return false;
-  }
+interface ExportDataItem {
+  [key: string]: any;
+}
 
-  let filename = `Arivia_Dashboard_${propertyFilter === 'all' ? 'All_Properties' : propertyFilter}`;
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  filename = `${filename}_${timestamp}`;
+export const exportToExcel = async (data: ExportDataItem[], filename: string, sheetName: string = 'Sheet1') => {
+  const toastId = toast.info('Preparing export...', { 
+    description: 'Processing data for export'
+  });
   
   try {
-    // Prepare the data for export
-    const exportData = prepareDashboardExportData(dashboardData, sections);
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(data);
     
-    // Convert object to array for export
-    const dataArray = Object.entries(exportData).flatMap(([section, items]) => {
-      return [{ section }].concat(items as { section: string }[]);
+    // Add worksheet to workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    
+    // Generate file and download
+    XLSX.writeFile(workbook, `${filename}.xlsx`);
+    
+    toast.success('Export completed successfully', {
+      description: `${filename}.xlsx has been downloaded`
     });
-
-    let loadingToastId: string | number | undefined;
-    
-    switch (format) {
-      case 'csv':
-        loadingToastId = toastService.loading('Preparing CSV export');
-        await exportToCSV(dataArray, filename);
-        toastService.dismiss(loadingToastId);
-        toastService.success('Export complete', {
-          description: 'CSV file has been downloaded'
-        });
-        break;
-        
-      case 'excel':
-        loadingToastId = toastService.loading('Preparing Excel export');
-        await exportToExcel(dataArray, filename);
-        toastService.dismiss(loadingToastId);
-        toastService.success('Export complete', {
-          description: 'Excel file has been downloaded'
-        });
-        break;
-        
-      case 'pdf':
-        loadingToastId = toastService.loading('Preparing PDF export');
-        await exportToPDF(dataArray, filename);
-        toastService.dismiss(loadingToastId);
-        toastService.success('Export complete', {
-          description: 'PDF file has been downloaded'
-        });
-        break;
-    }
-    
-    return true;
   } catch (error) {
-    console.error('Export error:', error);
-    toastService.error('Export failed', {
-      description: 'There was a problem preparing your export'
+    console.error('Export failed:', error);
+    toast.error('Export failed', {
+      description: 'There was an error exporting the data'
     });
-    return false;
   }
 };
 
-// Helper function to export data to CSV
-const exportToCSV = async (data: any[], filename: string): Promise<void> => {
-  // Implementation details would go here
-  // This is a placeholder that simulates a successful export
-  await new Promise(resolve => setTimeout(resolve, 500));
-  console.log('Exporting to CSV:', data, filename);
-  return Promise.resolve();
+export const exportToCSV = async (data: ExportDataItem[], filename: string) => {
+  const toastId = toast.info('Preparing CSV export...', {
+    description: 'Converting data to CSV format'
+  });
+  
+  try {
+    // Convert data to CSV format
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const csv = XLSX.utils.sheet_to_csv(worksheet);
+    
+    // Create download link
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('CSV export completed', {
+      description: `${filename}.csv has been downloaded`
+    });
+  } catch (error) {
+    console.error('CSV export failed:', error);
+    toast.error('CSV export failed', {
+      description: 'There was an error exporting the data'
+    });
+  }
 };
 
-// Helper function to export data to Excel
-const exportToExcel = async (data: any[], filename: string): Promise<void> => {
-  // Implementation details would go here
-  await new Promise(resolve => setTimeout(resolve, 700));
-  console.log('Exporting to Excel:', data, filename);
-  return Promise.resolve();
-};
-
-// Helper function to export data to PDF
-const exportToPDF = async (data: any[], filename: string): Promise<void> => {
-  // Implementation details would go here
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  console.log('Exporting to PDF:', data, filename);
-  return Promise.resolve();
+export const exportToPDF = async (data: ExportDataItem[], filename: string, title: string = 'Report') => {
+  const toastId = toast.info('Preparing PDF export...', {
+    description: 'Generating PDF document'
+  });
+  
+  try {
+    // For now, we'll convert to a simple text format
+    // In a real implementation, you'd use a PDF library like jsPDF
+    const content = `${title}\n\n${JSON.stringify(data, null, 2)}`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8;' });
+    
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${filename}.txt`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success('Export completed', {
+      description: `${filename}.txt has been downloaded`
+    });
+  } catch (error) {
+    console.error('PDF export failed:', error);
+    toast.error('Export failed', {
+      description: 'There was an error exporting the data'
+    });
+  }
 };

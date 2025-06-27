@@ -3,57 +3,60 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, User, MapPin, Calendar } from 'lucide-react';
+import { Calendar, MapPin, User, Clock } from 'lucide-react';
 import { Task } from '@/types/task-management';
 import { format } from 'date-fns';
 
 interface TaskCardProps {
   task: Task;
-  onComplete?: (taskId: string) => void;
   onEdit?: (task: Task) => void;
-  onView?: (task: Task) => void;
-  showActions?: boolean;
-  isStaffView?: boolean;
+  onComplete?: (taskId: string) => void;
+  onDelete?: (taskId: string) => void;
 }
 
-const getPriorityColor = (priority: string) => {
-  switch (priority) {
-    case 'urgent': return 'bg-red-500';
-    case 'high': return 'bg-orange-500';
-    case 'medium': return 'bg-yellow-500';
-    case 'low': return 'bg-green-500';
-    default: return 'bg-gray-500';
-  }
-};
+const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onComplete, onDelete }) => {
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed': return 'bg-green-100 text-green-800';
-    case 'in_progress': return 'bg-blue-100 text-blue-800';
-    case 'open': return 'bg-gray-100 text-gray-800';
-    case 'cancelled': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
-};
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'open': return 'bg-gray-100 text-gray-800';
+      case 'cancelled': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-const TaskCard: React.FC<TaskCardProps> = ({
-  task,
-  onComplete,
-  onEdit,
-  onView,
-  showActions = true,
-  isStaffView = false
-}) => {
-  const canComplete = task.status !== 'completed' && task.status !== 'cancelled';
-  const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status !== 'completed';
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'No due date';
+    try {
+      return format(new Date(dateString), 'MMM dd, yyyy');
+    } catch {
+      return 'Invalid date';
+    }
+  };
+
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'completed';
 
   return (
-    <Card className={`${isOverdue ? 'border-red-300 bg-red-50' : ''}`}>
+    <Card className="w-full hover:shadow-md transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <CardTitle className="text-lg">{task.title}</CardTitle>
+          <CardTitle className="text-lg font-semibold line-clamp-2">
+            {task.title}
+          </CardTitle>
           <div className="flex gap-2">
-            <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)}`} title={`Priority: ${task.priority}`} />
+            <Badge className={getPriorityColor(task.priority)}>
+              {task.priority}
+            </Badge>
             <Badge className={getStatusColor(task.status)}>
               {task.status.replace('_', ' ')}
             </Badge>
@@ -61,64 +64,60 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         {task.description && (
-          <p className="text-sm text-muted-foreground">{task.description}</p>
+          <p className="text-sm text-muted-foreground line-clamp-3">
+            {task.description}
+          </p>
         )}
         
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          {task.assigned_role && (
-            <div className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              <span>{task.assigned_role}</span>
+        <div className="space-y-2">
+          {task.dueDate && (
+            <div className={`flex items-center gap-2 text-sm ${isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}>
+              <Clock className="h-4 w-4" />
+              <span>Due: {formatDate(task.dueDate)}</span>
+              {isOverdue && <Badge variant="destructive" className="ml-auto">Overdue</Badge>}
             </div>
           )}
           
-          {task.due_date && (
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-                {format(new Date(task.due_date), 'MMM dd, yyyy')}
-              </span>
-            </div>
-          )}
-          
-          {task.property_id && (
-            <div className="flex items-center gap-1">
+          {task.propertyId && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <MapPin className="h-4 w-4" />
-              <span>Property {task.property_id}</span>
+              <span>Property: {task.propertyId}</span>
+            </div>
+          )}
+          
+          {task.assigned_to && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4" />
+              <span>Assigned to: {task.assigned_to}</span>
             </div>
           )}
         </div>
 
-        {task.metadata?.estimated_duration && (
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{task.metadata.estimated_duration} minutes</span>
+        {task.checklist && task.checklist.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            <span>Checklist: {task.checklist.filter(item => item.completed).length}/{task.checklist.length} completed</span>
           </div>
         )}
 
-        {showActions && (
-          <div className="flex gap-2 pt-2">
-            {onView && (
-              <Button variant="outline" size="sm" onClick={() => onView(task)}>
-                View
-              </Button>
-            )}
-            
-            {!isStaffView && onEdit && (
-              <Button variant="outline" size="sm" onClick={() => onEdit(task)}>
-                Edit
-              </Button>
-            )}
-            
-            {canComplete && onComplete && (
-              <Button size="sm" onClick={() => onComplete(task.id)}>
-                {task.status === 'open' ? 'Start' : 'Complete'}
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="flex gap-2 pt-2">
+          {onEdit && (
+            <Button variant="outline" size="sm" onClick={() => onEdit(task)}>
+              Edit
+            </Button>
+          )}
+          {onComplete && task.status !== 'completed' && (
+            <Button variant="default" size="sm" onClick={() => onComplete(task.id)}>
+              Complete
+            </Button>
+          )}
+          {onDelete && (
+            <Button variant="destructive" size="sm" onClick={() => onDelete(task.id)}>
+              Delete
+            </Button>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

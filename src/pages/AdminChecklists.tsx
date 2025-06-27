@@ -1,133 +1,115 @@
-import React from "react";
-import { Helmet } from "react-helmet-async";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useSwipe } from "@/hooks/use-swipe";
-import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
-import { useTemplateDialogs } from "@/hooks/useTemplateDialogs";
 
-// Import the components
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import ChecklistPageHeader from "@/components/admin/checklists/ChecklistPageHeader";
-import ChecklistTemplateGrid from "@/components/admin/checklists/ChecklistTemplateGrid";
 import ChecklistTemplateFilters from "@/components/admin/checklists/ChecklistTemplateFilters";
-import DeleteTemplateDialog from "@/components/admin/checklists/dialogs/DeleteTemplateDialog";
-import UseTemplateDialog from "@/components/admin/checklists/dialogs/UseTemplateDialog";
-import TemplateFormDialog from "@/components/admin/checklists/dialogs/TemplateFormDialog";
+import ChecklistTemplateGrid from "@/components/admin/checklists/ChecklistTemplateGrid";
+import { TemplateFormDialog } from "@/components/admin/checklists/dialogs/TemplateFormDialog";
+import { DeleteTemplateDialog } from "@/components/admin/checklists/dialogs/DeleteTemplateDialog";
+import { UseTemplateDialog } from "@/components/admin/checklists/dialogs/UseTemplateDialog";
+import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
+import { ChecklistTemplate, ChecklistTemplateFormValues } from "@/types/checklistTypes";
+import { useUser } from "@/contexts/UserContext";
 
-const AdminChecklists = () => {
+const AdminChecklists: React.FC = () => {
   const { user } = useUser();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
+  const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [useDialogOpen, setUseDialogOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<ChecklistTemplate | null>(null);
 
   const {
     filteredTemplates,
+    isLoading,
     categoryFilter,
     setCategoryFilter,
     searchQuery,
     setSearchQuery,
     handleCreateTemplate,
     handleEditTemplate,
-    handleDeleteTemplate,
-    getTemplateById
+    handleDeleteTemplate
   } = useChecklistTemplates();
 
-  // Use the new custom hook for dialog management
-  const {
-    isCreateTemplateOpen,
-    setIsCreateTemplateOpen,
-    isEditTemplateOpen,
-    setIsEditTemplateOpen,
-    isDeleteDialogOpen,
-    setIsDeleteDialogOpen,
-    isUseTemplateOpen,
-    setIsUseTemplateOpen,
-    selectedTemplate,
-    templateToDelete,
-    setTemplateToDelete,
-    selectedTemplateForUse,
-    setSelectedTemplateForUse
-  } = useTemplateDialogs();
+  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin";
 
-  // Add swipe gesture to navigate back
-  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
-    onSwipeRight: () => {
-      if (isMobile) {
-        navigate(-1);
-      }
-    }
-  });
-
-  // Check for admin access
-  if (user?.role !== "superadmin" && user?.role !== "tenant_admin") {
-    // Redirect non-admins away
-    React.useEffect(() => {
-      navigate("/");
-      return undefined;
-    }, [navigate]);
-    return null;
-  }
-  
-  const handleDeleteClick = (templateId: string) => {
-    setTemplateToDelete(templateId);
-    setIsDeleteDialogOpen(true);
+  const handleCreateNew = () => {
+    setEditingTemplate(null);
+    setFormDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (templateToDelete !== null) {
-      handleDeleteTemplate(templateToDelete);
-      setTemplateToDelete(null);
-      setIsDeleteDialogOpen(false);
-    }
+  const handleEdit = (template: ChecklistTemplate) => {
+    setEditingTemplate(template);
+    setFormDialogOpen(true);
   };
 
-  const handleDuplicateTemplate = (templateId: string) => {
-    const template = getTemplateById(templateId);
-    if (template) {
-      const duplicatedData = {
-        name: `${template.name} (Copy)`,
-        description: template.description,
-        category: template.category,
-        items: template.items.map(item => ({ title: item.title }))
+  const handleDelete = (template: ChecklistTemplate) => {
+    setSelectedTemplate(template);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleUse = (template: ChecklistTemplate) => {
+    setSelectedTemplate(template);
+    setUseDialogOpen(true);
+  };
+
+  const handleFormSubmit = async (data: ChecklistTemplateFormValues) => {
+    try {
+      const templateData = {
+        ...data,
+        createdBy: user?.id || '',
+        isActive: true
       };
-      handleCreateTemplate(duplicatedData);
-    }
-  };
 
-  const handleUseTemplate = (templateId: string) => {
-    const template = getTemplateById(templateId);
-    if (template) {
-      setSelectedTemplateForUse(template);
-      setIsUseTemplateOpen(true);
-    }
-  };
-
-  const handleEditClick = (templateId: string) => {
-    const template = getTemplateById(templateId);
-    if (template) {
-      setIsEditTemplateOpen(true);
-    }
-  };
-
-  // Add swipe gesture props
-  const gestureProps = isMobile ? {
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd
-  } : {};
-  
-  return (
-    <div {...gestureProps}>
-      <Helmet>
-        <title>Checklist Management - Arivia Villa Sync</title>
-      </Helmet>
+      if (editingTemplate) {
+        await handleEditTemplate(editingTemplate.id, templateData);
+      } else {
+        await handleCreateTemplate(templateData);
+      }
       
-      <div className="space-y-6">
-        {/* Page header */}
-        <ChecklistPageHeader onCreateTemplate={() => setIsCreateTemplateOpen(true)} />
-        
-        <div className="space-y-6">
-          {/* Filters */}
+      setFormDialogOpen(false);
+      setEditingTemplate(null);
+    } catch (error) {
+      console.error('Error saving template:', error);
+    }
+  };
+
+  const handleEditFormSubmit = async (data: ChecklistTemplateFormValues) => {
+    if (!editingTemplate) return;
+    
+    try {
+      await handleEditTemplate(editingTemplate.id, {
+        ...data,
+        createdBy: editingTemplate.createdBy,
+        isActive: editingTemplate.isActive
+      });
+      setFormDialogOpen(false);
+      setEditingTemplate(null);
+    } catch (error) {
+      console.error('Error updating template:', error);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (selectedTemplate) {
+      await handleDeleteTemplate(selectedTemplate.id);
+      setDeleteDialogOpen(false);
+      setSelectedTemplate(null);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Checklist Templates</CardTitle>
+          <CardDescription>
+            Manage checklist templates for various tasks and operations
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <ChecklistPageHeader onCreateNew={isAdmin ? handleCreateNew : undefined} />
+          
           <ChecklistTemplateFilters
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -135,46 +117,34 @@ const AdminChecklists = () => {
             onCategoryChange={setCategoryFilter}
           />
           
-          {/* Grid of templates */}
           <ChecklistTemplateGrid
             templates={filteredTemplates}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onDuplicate={handleDuplicateTemplate}
-            onUse={handleUseTemplate}
+            isLoading={isLoading}
+            onEdit={isAdmin ? handleEdit : undefined}
+            onDelete={isAdmin ? handleDelete : undefined}
+            onUse={handleUse}
           />
-        </div>
-      </div>
-      
-      {/* Create Template Dialog */}
-      <TemplateFormDialog 
-        isOpen={isCreateTemplateOpen} 
-        onOpenChange={setIsCreateTemplateOpen}
-        title="Create Checklist Template"
-        onSubmit={handleCreateTemplate}
+        </CardContent>
+      </Card>
+
+      <TemplateFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        template={editingTemplate}
+        onSubmit={editingTemplate ? handleEditFormSubmit : handleFormSubmit}
       />
-      
-      {/* Edit Template Dialog */}
-      <TemplateFormDialog 
-        isOpen={isEditTemplateOpen} 
-        onOpenChange={setIsEditTemplateOpen}
-        title="Edit Checklist Template"
-        template={selectedTemplate!}
-        onSubmit={handleEditTemplate}
+
+      <DeleteTemplateDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        template={selectedTemplate}
+        onConfirm={handleConfirmDelete}
       />
-      
-      {/* Delete Confirmation Dialog */}
-      <DeleteTemplateDialog 
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onConfirm={handleDeleteConfirm}
-      />
-      
-      {/* Use Template Dialog */}
-      <UseTemplateDialog 
-        isOpen={isUseTemplateOpen}
-        onOpenChange={setIsUseTemplateOpen}
-        selectedTemplate={selectedTemplateForUse}
+
+      <UseTemplateDialog
+        open={useDialogOpen}
+        onOpenChange={setUseDialogOpen}
+        template={selectedTemplate}
       />
     </div>
   );

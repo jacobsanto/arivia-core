@@ -1363,6 +1363,66 @@ export type Database = {
         }
         Relationships: []
       }
+      tenant_branding: {
+        Row: {
+          accent_color: string | null
+          background_color: string | null
+          brand_name: string
+          created_at: string
+          custom_css: string | null
+          custom_properties: Json | null
+          favicon_url: string | null
+          font_family: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          tenant_id: string
+          text_color: string | null
+          theme_mode: string | null
+          updated_at: string
+        }
+        Insert: {
+          accent_color?: string | null
+          background_color?: string | null
+          brand_name: string
+          created_at?: string
+          custom_css?: string | null
+          custom_properties?: Json | null
+          favicon_url?: string | null
+          font_family?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          tenant_id: string
+          text_color?: string | null
+          theme_mode?: string | null
+          updated_at?: string
+        }
+        Update: {
+          accent_color?: string | null
+          background_color?: string | null
+          brand_name?: string
+          created_at?: string
+          custom_css?: string | null
+          custom_properties?: Json | null
+          favicon_url?: string | null
+          font_family?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          tenant_id?: string
+          text_color?: string | null
+          theme_mode?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

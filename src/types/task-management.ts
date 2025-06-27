@@ -1,4 +1,3 @@
-
 import { ChecklistItem } from './checklistTypes';
 
 export interface TaskComment {
@@ -49,4 +48,40 @@ export interface Task {
   photos: string[];
   cleaningDetails?: any;
   rejectionReason?: string;
+}
+
+export interface TaskFilters {
+  status?: ('open' | 'in_progress' | 'completed' | 'cancelled')[];
+  priority?: ('low' | 'medium' | 'high' | 'urgent')[];
+  assigned_role?: string[];
+  property_id?: string;
+  assigned_to?: string;
+  due_date_from?: string;
+  due_date_to?: string;
+}
+
+export type TaskStatus = 'open' | 'in_progress' | 'completed' | 'cancelled';
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface CreateTaskData {
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  assigned_role?: string;
+  assigned_to?: string;
+  property_id?: string;
+  booking_id?: string;
+  due_date?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface UpdateTaskData {
+  title?: string;
+  description?: string;
+  status?: TaskStatus;
+  priority?: TaskPriority;
+  assigned_to?: string;
+  assigned_role?: string;
+  completed_at?: string;
+  metadata?: Record<string, any>;
 }

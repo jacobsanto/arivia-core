@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { useTenant } from '@/lib/context/TenantContext';
-import TenantBranding from '@/components/common/TenantBranding';
+import { useTenant } from '@/lib/tenant/TenantContext';
+import TenantBranding from '@/lib/tenant/components/TenantBranding';
 import { LoadingState } from '@/components/ui/loading-state';
 
 interface TenantLayoutProps {
@@ -10,7 +10,11 @@ interface TenantLayoutProps {
 }
 
 const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
-  const { tenantId } = useTenant();
+  const { tenantId, isLoading } = useTenant();
+
+  if (isLoading) {
+    return <LoadingState />;
+  }
 
   if (!tenantId) {
     return <div>Access denied or tenant not found</div>;
