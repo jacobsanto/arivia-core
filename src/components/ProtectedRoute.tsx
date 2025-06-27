@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { isAuthorizedRole } from "@/lib/utils/routing";
 import { Loader2 } from "lucide-react";
@@ -15,7 +15,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   allowedRoles 
 }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
-  const location = useLocation();
 
   // Show loading state while authentication is being determined
   if (isLoading) {

@@ -1,12 +1,9 @@
-// This file serves as a placeholder until fully integrated with the database
-// All mock data has been removed in preparation for real data
 
-export const inventoryData = [];
-export const inventoryUsageData = [];
-export const vendorsData = [];
-export const categoriesData = [];
-
-// Helper function to get items by vendor ID (will be replaced by actual DB query)
-export const getItemsByVendor = (vendorId: string | null) => {
-  return [];
+export const getItemsByVendor = (vendorId: string) => {
+  // Mock data - replace with actual data fetching
+  return [
+    { id: "1", name: "Cleaning Supplies", category: "housekeeping" },
+    { id: "2", name: "Toilet Paper", category: "housekeeping" },
+    { id: "3", name: "Towels", category: "housekeeping" },
+  ];
 };

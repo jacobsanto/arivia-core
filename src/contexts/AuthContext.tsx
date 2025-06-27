@@ -1,13 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, Session, UserRole } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
 import { isAuthorizedRole } from "@/lib/utils/routing";
+import type { Session as SupabaseSession } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
+  session: SupabaseSession | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   error: string | null;
@@ -18,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<SupabaseSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
