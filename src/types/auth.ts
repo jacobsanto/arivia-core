@@ -16,8 +16,7 @@ export type UserRole =
   | "concierge" 
   | "housekeeping_staff" 
   | "maintenance_staff" 
-  | "inventory_manager"
-  | "guest";
+  | "inventory_manager";
 
 export interface Tenant {
   id: string;

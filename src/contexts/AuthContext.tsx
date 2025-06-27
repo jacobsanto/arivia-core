@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
+import { isAuthorizedRole } from "@/lib/utils/routing";
 
 interface AuthContextType {
   user: User | null;
@@ -46,6 +47,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
             customPermissions: profile.custom_permissions as Record<string, boolean> || {}
           };
+
+          // Check if user has authorized role for internal access
+          if (!isAuthorizedRole(newUser.role)) {
+            await supabase.auth.signOut();
+            setUser(null);
+            setSession(null);
+            setError("Access denied: Unauthorized role");
+            return;
+          }
+
           setUser(newUser);
         }
       } else {
@@ -90,6 +101,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
                     customPermissions: profile.custom_permissions as Record<string, boolean> || {}
                   };
+
+                  // Check if user has authorized role for internal access
+                  if (!isAuthorizedRole(newUser.role)) {
+                    supabase.auth.signOut();
+                    setUser(null);
+                    setError("Access denied: Unauthorized role");
+                    return;
+                  }
+
                   setUser(newUser);
                 }
               });
@@ -112,7 +132,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     isLoading,
-    isAuthenticated: !!user && !!session,
+    isAuthenticated: !!user && !!session && user.role !== undefined && isAuthorizedRole(user.role),
     error,
     refreshAuthState
   };

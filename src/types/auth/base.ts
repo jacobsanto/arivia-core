@@ -1,42 +1,62 @@
 
-/**
- * Core user and session type definitions
- */
-import { Session as SupabaseSession, User as SupabaseUser } from "@supabase/supabase-js";
-
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  secondaryRoles?: UserRole[];
   avatar?: string;
   phone?: string;
-  customPermissions?: {
-    [key: string]: boolean;  // Permission key to boolean (granted/denied)
-  };
+  secondaryRoles?: UserRole[];
+  customPermissions?: Record<string, boolean>;
 }
 
-// Updated Session interface to correctly match Supabase's Session type
+export interface TenantUser {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  tenantId: string;
+  avatar?: string;
+  permissions: Record<string, boolean>;
+}
+
 export interface Session {
   access_token: string;
-  token_type: string;
-  expires_in: number;
   refresh_token: string;
-  user: SupabaseUser; // Use the full Supabase User type to ensure compatibility
+  expires_at?: number;
+  user: User;
 }
 
 export type UserRole = 
   | "superadmin"
-  | "administrator" 
+  | "tenant_admin" 
   | "property_manager" 
   | "concierge" 
   | "housekeeping_staff" 
   | "maintenance_staff" 
   | "inventory_manager";
 
-// Type for React state setter functions that can accept a value or update function
-export type StateSetter<T> = (value: T | ((prev: T) => T)) => void;
+export interface Tenant {
+  id: string;
+  name: string;
+  subdomain: string;
+  settings: TenantSettings;
+  createdAt: Date;
+  isActive: boolean;
+}
 
-// Specific type for the user state setter to ensure consistency
-export type UserStateSetter = StateSetter<User | null>;
+export interface TenantSettings {
+  branding: {
+    logo?: string;
+    primaryColor: string;
+    secondaryColor: string;
+  };
+  features: {
+    housekeeping: boolean;
+    maintenance: boolean;
+    inventory: boolean;
+    analytics: boolean;
+  };
+}
+
+export type StateSetter<T> = (value: T) => void;

@@ -3,27 +3,31 @@ import React from 'react';
 import { useTenant } from '@/lib/context/TenantContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const GuestPortal: React.FC = () => {
+const MaintenanceDashboard: React.FC = () => {
   const { user, tenantId } = useTenant();
+
+  if (user?.role !== 'maintenance_staff') {
+    return <div>Access denied</div>;
+  }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Guest Portal</h1>
+      <h1 className="text-3xl font-bold">Maintenance Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>My Bookings</CardTitle>
+            <CardTitle>Maintenance Tasks</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>View your current and past bookings</p>
+            <p>View your assigned maintenance tasks</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Support</CardTitle>
+            <CardTitle>Equipment Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Get help and contact support</p>
+            <p>Check equipment and maintenance schedules</p>
           </CardContent>
         </Card>
       </div>
@@ -31,4 +35,4 @@ const GuestPortal: React.FC = () => {
   );
 };
 
-export default GuestPortal;
+export default MaintenanceDashboard;

@@ -2,14 +2,19 @@
 import React from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { isAuthorizedRole } from "@/lib/utils/routing";
 import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  allowedRoles?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+  children, 
+  allowedRoles 
+}) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
   const location = useLocation();
 
   // Show loading state while authentication is being determined
@@ -24,12 +29,22 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // If not authenticated, redirect to login page
+  // If not authenticated, redirect to unauthorized page
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  // If authenticated, render the children
+  // Check if user role is authorized for internal access
+  if (user && !isAuthorizedRole(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // Check specific role requirements if provided  
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  // If authenticated and authorized, render the children
   return <>{children}</>;
 };
 

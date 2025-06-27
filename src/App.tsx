@@ -11,15 +11,16 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Auth Pages
 import Login from "@/pages/Login";
+import Unauthorized from "@/pages/Unauthorized";
 
-// Dashboard Pages (existing)
+// Dashboard Pages
 import Dashboard from "@/pages/Dashboard";
 
 // Role-based Pages
 import AdminDashboard from "@/pages/admin/AdminDashboard";
 import ManagerDashboard from "@/pages/manager/ManagerDashboard";
 import CleanerDashboard from "@/pages/cleaner/CleanerDashboard";
-import GuestPortal from "@/pages/guest/GuestPortal";
+import MaintenanceDashboard from "@/pages/maintenance/MaintenanceDashboard";
 
 // Existing Pages
 import UserProfile from "@/pages/UserProfile";
@@ -46,8 +47,11 @@ function App() {
         <TenantProvider>
           <Router>
             <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
+              {/* Internal login route - protected by server config */}
+              <Route path="/internal/login" element={<Login />} />
+              
+              {/* Unauthorized access page */}
+              <Route path="/unauthorized" element={<Unauthorized />} />
               
               {/* Protected tenant routes */}
               <Route element={
@@ -56,10 +60,26 @@ function App() {
                 </ProtectedRoute>
               }>
                 {/* Role-based dashboards */}
-                <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/manager" element={<ManagerDashboard />} />
-                <Route path="/cleaner" element={<CleanerDashboard />} />
-                <Route path="/guest" element={<GuestPortal />} />
+                <Route path="/admin" element={
+                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/manager" element={
+                  <ProtectedRoute allowedRoles={['property_manager']}>
+                    <ManagerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/cleaner" element={
+                  <ProtectedRoute allowedRoles={['housekeeping_staff']}>
+                    <CleanerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/maintenance" element={
+                  <ProtectedRoute allowedRoles={['maintenance_staff']}>
+                    <MaintenanceDashboard />
+                  </ProtectedRoute>
+                } />
               </Route>
 
               {/* Existing protected routes with unified layout */}
@@ -82,14 +102,30 @@ function App() {
                 <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
                 
                 {/* Admin routes */}
-                <Route path="/admin/users" element={<AdminUsers />} />
-                <Route path="/admin/permissions" element={<AdminPermissions />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/admin/checklists" element={<AdminChecklists />} />
+                <Route path="/admin/users" element={
+                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                    <AdminUsers />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/permissions" element={
+                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                    <AdminPermissions />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                    <AdminSettings />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/checklists" element={
+                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
+                    <AdminChecklists />
+                  </ProtectedRoute>
+                } />
               </Route>
               
               {/* Catch all route */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<Navigate to="/unauthorized" replace />} />
             </Routes>
           </Router>
         </TenantProvider>
