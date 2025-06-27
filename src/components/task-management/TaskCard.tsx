@@ -1,124 +1,100 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, User, Clock } from 'lucide-react';
-import { Task } from '@/types/task-management';
+import { Task } from "@/types/task-management";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { CheckCheck, Edit, Eye, MoreHorizontal, User } from "lucide-react";
 import { format } from 'date-fns';
+import { PriorityBadge } from '../ui/priority-badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface TaskCardProps {
   task: Task;
-  onEdit?: (task: Task) => void;
-  onComplete?: (taskId: string) => void;
-  onDelete?: (taskId: string) => void;
+  onComplete: (taskId: string) => void;
+  onEdit: (task: Task) => void;
+  onView?: (task: Task) => void; // Add optional onView prop
+  showActions?: boolean;
+  isStaffView?: boolean;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onEdit, onComplete, onDelete }) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'high': return 'bg-orange-100 text-orange-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'open': return 'bg-gray-100 text-gray-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return 'No due date';
-    try {
-      return format(new Date(dateString), 'MMM dd, yyyy');
-    } catch {
-      return 'Invalid date';
-    }
-  };
-
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'completed';
+const TaskCard: React.FC<TaskCardProps> = ({ 
+  task, 
+  onComplete, 
+  onEdit, 
+  onView,
+  showActions = true, 
+  isStaffView = false 
+}) => {
+  const formattedDate = task.dueDate ? format(new Date(task.dueDate), 'MMM dd, yyyy') : 'No Due Date';
 
   return (
-    <Card className="w-full hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-lg font-semibold line-clamp-2">
-            {task.title}
-          </CardTitle>
-          <div className="flex gap-2">
-            <Badge className={getPriorityColor(task.priority)}>
-              {task.priority}
-            </Badge>
-            <Badge className={getStatusColor(task.status)}>
-              {task.status.replace('_', ' ')}
-            </Badge>
-          </div>
+    <Card className="w-full">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>{task.title}</CardTitle>
+          {task.priority && <PriorityBadge priority={task.priority} />}
         </div>
+        <CardDescription>{task.description}</CardDescription>
       </CardHeader>
-      
-      <CardContent className="space-y-4">
-        {task.description && (
-          <p className="text-sm text-muted-foreground line-clamp-3">
-            {task.description}
-          </p>
-        )}
-        
-        <div className="space-y-2">
-          {task.dueDate && (
-            <div className={`flex items-center gap-2 text-sm ${isOverdue ? 'text-red-600' : 'text-muted-foreground'}`}>
-              <Clock className="h-4 w-4" />
-              <span>Due: {formatDate(task.dueDate)}</span>
-              {isOverdue && <Badge variant="destructive" className="ml-auto">Overdue</Badge>}
-            </div>
-          )}
-          
-          {task.propertyId && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4" />
-              <span>Property: {task.propertyId}</span>
-            </div>
-          )}
-          
-          {task.assigned_to && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <User className="h-4 w-4" />
-              <span>Assigned to: {task.assigned_to}</span>
-            </div>
-          )}
-        </div>
-
-        {task.checklist && task.checklist.length > 0 && (
-          <div className="text-sm text-muted-foreground">
-            <span>Checklist: {task.checklist.filter(item => item.completed).length}/{task.checklist.length} completed</span>
+      <CardContent>
+        <div className="flex items-center space-x-4">
+          <Avatar>
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback><User className="h-4 w-4" /></AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="text-sm font-medium">Assigned to</div>
+            <div className="text-xs text-muted-foreground">{task.assigned_to || 'Unassigned'}</div>
           </div>
-        )}
-
-        <div className="flex gap-2 pt-2">
-          {onEdit && (
-            <Button variant="outline" size="sm" onClick={() => onEdit(task)}>
-              Edit
-            </Button>
-          )}
-          {onComplete && task.status !== 'completed' && (
-            <Button variant="default" size="sm" onClick={() => onComplete(task.id)}>
-              Complete
-            </Button>
-          )}
-          {onDelete && (
-            <Button variant="destructive" size="sm" onClick={() => onDelete(task.id)}>
-              Delete
-            </Button>
-          )}
+        </div>
+        <div className="mt-4">
+          <Badge variant="secondary">Due Date: {formattedDate}</Badge>
         </div>
       </CardContent>
+      <CardFooter className="flex justify-between items-center">
+        {!isStaffView && showActions ? (
+          <>
+            <Button variant="outline" size="sm" onClick={() => onComplete(task.id)}>
+              <CheckCheck className="mr-2 h-4 w-4" />
+              Complete
+            </Button>
+            <Button size="sm" onClick={() => onEdit(task)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Task
+            </Button>
+          </>
+        ) : (
+          <div className="text-sm text-muted-foreground">Staff View</div>
+        )}
+        {onView && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem onClick={() => onView(task)}>
+                <Eye className="mr-2 h-4 w-4" /> View
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onEdit(task)}>
+                <Edit className="mr-2 h-4 w-4" /> Edit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </CardFooter>
     </Card>
   );
 };

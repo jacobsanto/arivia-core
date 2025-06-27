@@ -85,7 +85,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return checkFeatureAccess(currentUser, featureKey);
   };
 
-  // Fix argument count - correct function signature
+  // Fix argument count - match the expected signature
   const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
     return await updatePermissions(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId, permissions);
   };
@@ -94,7 +94,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     const status = getOfflineLoginStatus(currentUser, lastAuthTime, isOffline);
     return {
       isOfflineLoggedIn: status,
-      timeRemaining: 0  // Since the original function doesn't calculate time remaining, we'll default to 0
+      timeRemaining: 0
     };
   };
   
@@ -102,7 +102,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as StateSetter<User | null>, currentUser);
   };
   
-  // Fix argument count - correct function signature
+  // Fix argument count - remove extra argument
   const handleDeleteUser = async (userId: string) => {
     return await removeUser(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId);
   };

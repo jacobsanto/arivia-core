@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import * as XLSX from 'xlsx';
 
@@ -97,5 +96,30 @@ export const exportToPDF = async (data: ExportDataItem[], filename: string, titl
     toast.error('Export failed', {
       description: 'There was an error exporting the data'
     });
+  }
+};
+
+export const exportDashboardData = async (
+  data: any,
+  format: 'csv' | 'excel' | 'pdf' = 'csv',
+  filename: string = 'dashboard-export'
+) => {
+  try {
+    switch (format) {
+      case 'csv':
+        await exportToCSV(data, filename);
+        break;
+      case 'excel':
+        await exportToExcel(data, filename);
+        break;
+      case 'pdf':
+        await exportToPDF(data, filename);
+        break;
+      default:
+        await exportToCSV(data, filename);
+    }
+  } catch (error) {
+    console.error('Export failed:', error);
+    throw error;
   }
 };

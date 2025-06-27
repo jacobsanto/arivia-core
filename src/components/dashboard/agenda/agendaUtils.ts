@@ -1,5 +1,5 @@
 
-import { Task } from "@/types/taskTypes";
+import { Task } from "@/types/task-management";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
 
 export interface CombinedTask {
@@ -10,9 +10,9 @@ export interface CombinedTask {
   priority: string;
   dueDate: string | Date;
   assignedTo: string;
-  description?: string;
-  type: string; // Add missing type field
-  taskType?: string; // Add missing taskType field
+  description: string; // Make required to match Task
+  type: string;
+  taskType?: string;
   createdAt: string;
   updatedAt: string;
   checklist: any[];
@@ -28,12 +28,12 @@ export const combineTasks = (housekeepingTasks: Task[], maintenanceTasks: Mainte
     combined.push({
       id: task.id,
       title: task.title,
-      property: task.property || task.propertyId || 'Unknown',
+      property: task.propertyId || 'Unknown',
       status: task.status,
       priority: task.priority,
       dueDate: task.dueDate || new Date().toISOString(),
-      assignedTo: task.assignedTo || 'Unassigned',
-      description: task.description,
+      assignedTo: task.assigned_to || 'Unassigned',
+      description: task.description || '', // Provide default if missing
       type: task.type || 'housekeeping',
       taskType: task.type || 'housekeeping',
       createdAt: task.createdAt,
@@ -54,7 +54,7 @@ export const combineTasks = (housekeepingTasks: Task[], maintenanceTasks: Mainte
       priority: task.priority,
       dueDate: task.dueDate,
       assignedTo: task.assignee || 'Unassigned',
-      description: task.description,
+      description: task.description || '', // Provide default if missing
       type: 'maintenance',
       taskType: 'maintenance',
       createdAt: task.createdAt || new Date().toISOString(),

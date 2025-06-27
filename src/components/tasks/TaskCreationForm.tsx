@@ -84,6 +84,7 @@ const TaskCreationForm = ({
   const [cleaningType, setCleaningType] = useState<string>("Standard");
   const [scheduledCleanings, setScheduledCleanings] = useState<string[]>([]);
   const [cleaningTypes, setCleaningTypes] = useState<string[]>([]);
+  const [selectedProperty, setSelectedProperty] = useState<string>("");
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -134,6 +135,19 @@ const TaskCreationForm = ({
     };
 
     onSubmit(taskData);
+  };
+
+  const handlePropertyChange = (value: string) => {
+    setSelectedProperty(value);
+    if (value) {
+      // Fix: Call generateCleaningSchedule with proper arguments
+      const schedule = generateCleaningSchedule(
+        new Date(),
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        'standard' // default cleaning type
+      );
+      console.log('Generated schedule:', schedule);
+    }
   };
 
   return (

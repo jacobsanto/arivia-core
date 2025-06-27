@@ -1,12 +1,11 @@
-
 export type DamageReportStatus = 
-  | 'pending' 
-  | 'investigating' 
-  | 'resolved' 
-  | 'compensation_required'
-  | 'compensation_paid'
-  | 'closed'
-  | 'disputed';
+  | "pending" 
+  | "investigating" 
+  | "resolved" 
+  | "compensation_required" 
+  | "compensation_paid" 
+  | "closed" 
+  | "disputed";
 
 export interface DamageReport {
   id: string;
@@ -38,6 +37,15 @@ export interface DamageReport {
   compensation_amount?: number; // For Supabase compatibility
   compensationNotes?: string;
   compensation_notes?: string; // For Supabase compatibility
+}
+
+export interface DamageReportFormValues {
+  title: string;
+  description: string;
+  damage_date: string; // Change to string for form compatibility
+  estimated_cost?: number;
+  property_id: string;
+  assigned_to?: string;
 }
 
 export interface DamageReportFilters {

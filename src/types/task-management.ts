@@ -1,3 +1,4 @@
+
 import { ChecklistItem } from './checklistTypes';
 
 export interface TaskComment {
@@ -26,7 +27,7 @@ export interface TaskTemplate {
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  description: string; // Required field
   status: 'open' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   assigned_to?: string;
