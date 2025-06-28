@@ -1,6 +1,5 @@
 
 import { useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Session, User, UserRole, UserStateSetter, StateSetter } from "@/types/auth";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,24 +14,19 @@ export const useSessionSync = (
   // Get the central auth state
   const centralAuth = useAuth();
 
-  // Initialize auth state - now we only need to fetch profile data since auth is handled by AuthContext
+  // Initialize auth state - now we only need minimal initialization since auth is handled by AuthContext
   const initializeSession = useCallback(async () => {
     try {
       // Use central auth state if available
       if (centralAuth.user && centralAuth.session) {
         console.log("Using central auth data for session initialization");
-        // Update the user state with the central auth state
+        // Sync with central auth state
         setUser(centralAuth.user);
         setSession(centralAuth.session);
         setLastAuthTime(Date.now());
-        
-        // Fetch additional profile data with delay to prevent auth deadlock
-        setTimeout(() => {
-          fetchProfileData(centralAuth.user.id).catch(console.error);
-        }, 100);
-      } else {
-        console.log("No central auth data available, using local storage");
-        // If central auth is not available, use local storage as fallback
+      } else if (!centralAuth.isLoading) {
+        console.log("No central auth data available, checking local storage");
+        // If central auth is not loading and has no data, use local storage as fallback
         const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
         if (storedUser) {
           setUser(storedUser);
@@ -42,19 +36,20 @@ export const useSessionSync = (
     } catch (error) {
       console.error("Error during session initialization:", error);
     } finally {
-      // Mark loading as complete regardless of outcome
-      setIsLoading(false);
+      // Only mark loading as complete if central auth is also not loading
+      if (!centralAuth.isLoading) {
+        setIsLoading(false);
+      }
     }
-  }, [centralAuth.user, centralAuth.session, setUser, setSession, setLastAuthTime, setIsLoading, fetchProfileData]);
+  }, [centralAuth.user, centralAuth.session, centralAuth.isLoading, setUser, setSession, setLastAuthTime, setIsLoading]);
 
   useEffect(() => {
-    // Set loading state first
-    setIsLoading(true);
-    
     // Initialize the session
     initializeSession();
-    
-    // No need to set up auth state listener as it's handled by AuthContext
-    
-  }, [initializeSession, setIsLoading]);
+  }, [initializeSession]);
+
+  // Update loading state based on central auth
+  useEffect(() => {
+    setIsLoading(centralAuth.isLoading);
+  }, [centralAuth.isLoading, setIsLoading]);
 };

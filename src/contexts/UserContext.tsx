@@ -30,9 +30,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user: authUser, session, isLoading: authLoading, refreshAuthState } = useAuth();
   
   const { 
-    user, 
+    user: localUser, 
     setUser, 
-    isLoading, 
+    isLoading: localLoading, 
     setIsLoading, 
     isOffline, 
     lastAuthTime, 
@@ -42,10 +42,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshUserProfile
   } = useUserState();
 
-  // Use auth state as source of truth
-  const currentUser = authUser || user;
+  // Use auth state as source of truth when available
+  const currentUser = authUser || localUser;
   const currentSession = session;
-  const currentIsLoading = authLoading || isLoading;
+  const currentIsLoading = authLoading || localLoading;
 
   const handleRefreshProfile = async () => {
     const success = await refreshUserProfile();
@@ -86,7 +86,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const status = getOfflineLoginStatus(currentUser, lastAuthTime, isOffline);
     return {
       isOfflineLoggedIn: status,
-      timeRemaining: 0  // Since the original function doesn't calculate time remaining, we'll default to 0
+      timeRemaining: 0
     };
   };
   

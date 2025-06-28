@@ -3,6 +3,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { UserProvider } from "@/contexts/UserContext";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
@@ -27,50 +29,47 @@ import AdminUsers from "@/pages/AdminUsers";
 import AdminPermissions from "@/pages/AdminPermissions";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminChecklists from "@/pages/AdminChecklists";
-// Removed import for AdminSyncHistory
 
 function App() {
   return (
     <HelmetProvider>
       <ToastProvider>
-        <Router>
-          <Routes>
-            {/* Login route - doesn't use the unified layout */}
-            <Route path="/login" element={<Login />} />
-            
-            {/* Protected routes with UnifiedLayout */}
-            <Route element={
-              <ProtectedRoute>
-                <UnifiedLayout />
-              </ProtectedRoute>
-            }>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<UserProfile />} />
-              <Route path="/housekeeping" element={<Housekeeping />} />
-              <Route path="/maintenance" element={<Maintenance />} />
-              <Route path="/properties" element={<Properties />} />
-              <Route path="/inventory" element={<Inventory />} />
-              <Route path="/team-chat" element={<TeamChat />} />
-              <Route path="/analytics" element={<Analytics />} />
-              <Route path="/reports" element={<Reports />} />
-              <Route path="/damage-reports" element={<DamageReports />} />
-              
-              {/* Add the new listing details route */}
-              <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
-              
-              {/* Admin routes */}
-              <Route path="/admin/users" element={<AdminUsers />} />
-              <Route path="/admin/permissions" element={<AdminPermissions />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
-              <Route path="/admin/checklists" element={<AdminChecklists />} />
-              {/* Removed /admin/sync-history route */}
-            </Route>
-            
-            {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </Router>
+        <AuthProvider>
+          <UserProvider>
+            <Router>
+              <Routes>
+                {/* Login route - doesn't use the unified layout */}
+                <Route path="/login" element={<Login />} />
+                
+                {/* Protected routes with UnifiedLayout */}
+                <Route element={
+                  <ProtectedRoute>
+                    <UnifiedLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<UserProfile />} />
+                  <Route path="/housekeeping" element={<Housekeeping />} />
+                  <Route path="/maintenance" element={<Maintenance />} />
+                  <Route path="/properties" element={<Properties />} />
+                  <Route path="/inventory" element={<Inventory />} />
+                  <Route path="/team-chat" element={<TeamChat />} />
+                  <Route path="/analytics" element={<Analytics />} />
+                  <Route path="/reports" element={<Reports />} />
+                  <Route path="/damage-reports" element={<DamageReports />} />
+                  <Route path="/listing/:id" element={<ListingDetails />} />
+                  
+                  {/* Admin routes */}
+                  <Route path="/admin/users" element={<AdminUsers />} />
+                  <Route path="/admin/permissions" element={<AdminPermissions />} />
+                  <Route path="/admin/settings" element={<AdminSettings />} />
+                  <Route path="/admin/checklists" element={<AdminChecklists />} />
+                </Route>
+              </Routes>
+            </Router>
+          </UserProvider>
+        </AuthProvider>
       </ToastProvider>
     </HelmetProvider>
   );
