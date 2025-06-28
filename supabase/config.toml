@@ -56,7 +56,13 @@ jwt_expiry = 3600
 # Allow/disallow new user signups to your project.
 enable_signup = true
 # If disabled, the user will need to confirm their email address before signing in.
-enable_confirmations = false
+enable_confirmations = true
+# Enable password leak detection
+enable_anonymous_sign_ins = false
+# Minimum password length
+password_min_length = 8
+# Enable multi-factor authentication
+enable_manual_linking = false
 
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin`, `notion`, `twitch`,
