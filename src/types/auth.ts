@@ -5,6 +5,7 @@ export * from './auth/roles';
 export * from './auth/capabilities';
 
 // Export the main types that components expect
-export type { User, TenantUser, Session, UserRole, Tenant, TenantSettings } from './auth/base';
+export type { User, TenantUser, Session, UserRole, Tenant, TenantSettings, FeaturePermission } from './auth/base';
 export { ROLE_DETAILS, getDefaultPermissionsForRole } from './auth/roles';
 export { OFFLINE_CAPABILITIES } from './auth/capabilities';
+export { FEATURE_PERMISSIONS } from './auth/base';

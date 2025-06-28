@@ -1,176 +1,86 @@
+import React, { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Plus } from 'lucide-react';
+import { InventoryOverview } from '@/components/inventory/InventoryOverview';
+import { InventoryItems } from '@/components/inventory/InventoryItems';
+import { InventoryCategories } from '@/components/inventory/InventoryCategories';
+import { InventoryVendors } from '@/components/inventory/InventoryVendors';
+import OrderList from '@/components/inventory/orders/OrderList';
+import { InventoryUsage } from '@/components/inventory/InventoryUsage';
 
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Package, TrendingUp, ShoppingCart, Truck } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+const Inventory = () => {
+  const [activeTab, setActiveTab] = useState('overview');
 
-// Import components
-import InventoryOverview from "@/components/inventory/InventoryOverview";
-import StockLevels from "@/components/inventory/StockLevels";
-import AddItem from "@/components/inventory/AddItem";
-import StockReceipt from "@/components/inventory/StockReceipt";
-import StockTransfer from "@/components/inventory/StockTransfer";
-import InventoryUsage from "@/components/inventory/InventoryUsage";
-import OrderList from "@/components/inventory/orders/OrderList";
-import OrderForm from "@/components/inventory/orders/OrderForm";
-import VendorsList from "@/components/inventory/vendors/VendorsList";
-
-// Mobile components
-import MobileInventory from "@/components/inventory/MobileInventory";
-
-const Inventory: React.FC = () => {
-  const { user } = useUser();
-  const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState("overview");
-  const [showOrderForm, setShowOrderForm] = useState(false);
-
-  const canManageInventory = user?.role === "inventory_manager" || 
-                           user?.role === "tenant_admin" || 
-                           user?.role === "property_manager";
-
-  const handleOrderSubmit = (orderData: any) => {
-    console.log("Order submitted:", orderData);
-    setShowOrderForm(false);
-    // Here you would typically submit to your API
-  };
-
-  const handleOrderCancel = () => {
-    setShowOrderForm(false);
-  };
-
-  if (isMobile) {
-    return <MobileInventory />;
-  }
-
-  if (showOrderForm) {
-    return (
-      <div className="container mx-auto p-6">
-        <OrderForm 
-          onSubmit={handleOrderSubmit}
-          onCancel={handleOrderCancel}
-        />
-      </div>
-    );
-  }
+  // Mock orders data for OrderList component
+  const mockOrders = [];
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-6">
+      <Helmet>
+        <title>Inventory Management - Arivia Villa Sync</title>
+      </Helmet>
+
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Inventory Management</h1>
           <p className="text-muted-foreground">
-            Track stock levels, manage orders, and monitor usage
+            Manage your property's inventory, track stock levels, and create purchase orders.
           </p>
         </div>
-        
-        {canManageInventory && (
-          <Button 
-            onClick={() => setShowOrderForm(true)} 
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            New Order
-          </Button>
-        )}
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Add Item
+        </Button>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Overview
-          </TabsTrigger>
-          <TabsTrigger value="stock" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Stock Levels
-          </TabsTrigger>
-          <TabsTrigger value="add-item" className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            Add Item
-          </TabsTrigger>
-          <TabsTrigger value="receipt" className="flex items-center gap-2">
-            <Truck className="h-4 w-4" />
-            Receipt
-          </TabsTrigger>
-          <TabsTrigger value="transfer" className="flex items-center gap-2">
-            <Package className="h-4 w-4" />
-            Transfer
-          </TabsTrigger>
-          <TabsTrigger value="usage" className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            Usage
-          </TabsTrigger>
-          <TabsTrigger value="orders" className="flex items-center gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            Orders
-          </TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="items">Items</TabsTrigger>
+          <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="vendors">Vendors</TabsTrigger>
+          <TabsTrigger value="orders">Orders</TabsTrigger>
+          <TabsTrigger value="usage">Usage</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
+        <TabsContent value="overview">
           <InventoryOverview />
         </TabsContent>
 
-        <TabsContent value="stock" className="space-y-4">
-          <StockLevels />
+        <TabsContent value="items">
+          <InventoryItems />
         </TabsContent>
 
-        <TabsContent value="add-item" className="space-y-4">
-          {canManageInventory ? (
-            <AddItem />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Access Restricted</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>You don't have permission to add inventory items.</p>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="categories">
+          <InventoryCategories />
         </TabsContent>
 
-        <TabsContent value="receipt" className="space-y-4">
-          {canManageInventory ? (
-            <StockReceipt />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Access Restricted</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>You don't have permission to manage stock receipts.</p>
-              </CardContent>
-            </Card>
-          )}
+        <TabsContent value="vendors">
+          <InventoryVendors />
         </TabsContent>
 
-        <TabsContent value="transfer" className="space-y-4">
-          {canManageInventory ? (
-            <StockTransfer />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle>Access Restricted</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p>You don't have permission to manage stock transfers.</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        <TabsContent value="usage" className="space-y-4">
-          <InventoryUsage />
-        </TabsContent>
-
-        <TabsContent value="orders" className="space-y-4">
+        <TabsContent value="orders">
           <div className="space-y-4">
-            <OrderList />
-            <VendorsList />
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-semibold">Purchase Orders</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage inventory purchase orders
+                </p>
+              </div>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                New Order
+              </Button>
+            </div>
+            <OrderList orders={mockOrders} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="usage">
+          <InventoryUsage />
         </TabsContent>
       </Tabs>
     </div>

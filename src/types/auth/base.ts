@@ -1,5 +1,4 @@
 
-// Base auth types for the application
 export type UserRole = 
   | 'superadmin'
   | 'tenant_admin'
@@ -9,108 +8,146 @@ export type UserRole =
   | 'inventory_manager'
   | 'concierge';
 
-export interface Session {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  user: {
-    id: string;
-    email: string;
-  };
-}
-
-// Unified User interface that works with both auth systems
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: UserRole | string; // Allow both enum and string for flexibility
-  avatar?: string;
+  role: UserRole;
   phone?: string;
-  secondaryRoles?: (UserRole | string)[];
+  avatar?: string;
+  secondaryRoles?: UserRole[];
   customPermissions?: Record<string, boolean>;
-  custom_permissions?: Record<string, boolean>; // Database field name
 }
 
-// Add missing interfaces for tenant system
+export interface TenantUser extends User {
+  tenantId: string;
+}
+
+export interface Session {
+  user: User;
+  token: string;
+  expiresAt: Date;
+}
+
 export interface Tenant {
   id: string;
   name: string;
-  settings?: TenantSettings;
-  created_at: string;
-  updated_at: string;
+  domain: string;
+  settings: TenantSettings;
 }
 
 export interface TenantSettings {
-  theme?: string;
-  features?: string[];
-  branding?: {
+  allowRegistration: boolean;
+  defaultRole: UserRole;
+  customBranding?: {
     logo?: string;
     primaryColor?: string;
     secondaryColor?: string;
   };
 }
 
-export interface TenantUser extends User {
-  tenant_id: string;
-  tenant?: Tenant;
+// Permission system
+export interface FeaturePermission {
+  title: string;
+  description: string;
+  category: string;
+  allowedRoles: UserRole[];
 }
 
-// Role details for UI display
-export const ROLE_DETAILS: Record<UserRole, { title: string; description: string }> = {
-  superadmin: {
-    title: 'Super Administrator',
-    description: 'Full system access with all permissions'
+export const FEATURE_PERMISSIONS: Record<string, FeaturePermission> = {
+  viewDashboard: {
+    title: 'View Dashboard',
+    description: 'Access to main dashboard',
+    category: 'Dashboard',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge']
   },
-  tenant_admin: {
-    title: 'Tenant Administrator', 
-    description: 'Full tenant access and user management'
+  viewProperties: {
+    title: 'View Properties',
+    description: 'View property listings',
+    category: 'Properties',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'concierge']
   },
-  property_manager: {
-    title: 'Property Manager',
-    description: 'Manage properties, bookings, and staff tasks'
+  manageProperties: {
+    title: 'Manage Properties',
+    description: 'Create, edit, and delete properties',
+    category: 'Properties',
+    allowedRoles: ['superadmin', 'tenant_admin']
   },
-  housekeeping_staff: {
-    title: 'Housekeeping Staff',
-    description: 'Handle cleaning tasks and property maintenance'
+  viewAllTasks: {
+    title: 'View All Tasks',
+    description: 'View all system tasks',
+    category: 'Tasks',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
   },
-  maintenance_staff: {
-    title: 'Maintenance Staff',
-    description: 'Handle property repairs and maintenance tasks'
+  viewAssignedTasks: {
+    title: 'View Assigned Tasks',
+    description: 'View tasks assigned to user',
+    category: 'Tasks',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'concierge']
   },
-  inventory_manager: {
-    title: 'Inventory Manager',
-    description: 'Manage supplies, orders, and inventory tracking'
+  assignTasks: {
+    title: 'Assign Tasks',
+    description: 'Assign tasks to team members',
+    category: 'Tasks',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
   },
-  concierge: {
-    title: 'Concierge',
-    description: 'Guest services and property assistance'
+  viewInventory: {
+    title: 'View Inventory',
+    description: 'View inventory levels and items',
+    category: 'Inventory',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'inventory_manager', 'housekeeping_staff', 'maintenance_staff']
+  },
+  manageInventory: {
+    title: 'Manage Inventory',
+    description: 'Add, edit, and manage inventory items',
+    category: 'Inventory',
+    allowedRoles: ['superadmin', 'tenant_admin', 'inventory_manager']
+  },
+  approveTransfers: {
+    title: 'Approve Transfers',
+    description: 'Approve inventory transfers',
+    category: 'Inventory',
+    allowedRoles: ['superadmin', 'tenant_admin', 'inventory_manager']
+  },
+  viewUsers: {
+    title: 'View Users',
+    description: 'View user profiles',
+    category: 'Users',
+    allowedRoles: ['superadmin', 'tenant_admin']
+  },
+  manageUsers: {
+    title: 'Manage Users',
+    description: 'Create, edit, and manage user accounts',
+    category: 'Users',
+    allowedRoles: ['superadmin', 'tenant_admin']
+  },
+  viewReports: {
+    title: 'View Reports',
+    description: 'Access to system reports',
+    category: 'Reports',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'inventory_manager']
+  },
+  viewChat: {
+    title: 'View Chat',
+    description: 'Access to chat functionality',
+    category: 'Communication',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge']
+  },
+  view_damage_reports: {
+    title: 'View Damage Reports',
+    description: 'Access to damage reports',
+    category: 'Reports',
+    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
   }
 };
 
-// Helper function to convert UserProfile to User
-export const profileToUser = (profile: any): User => {
-  return {
-    id: profile.id,
-    name: profile.name,
-    email: profile.email,
-    role: profile.role,
-    avatar: profile.avatar,
-    phone: profile.phone,
-    secondaryRoles: profile.secondary_roles,
-    customPermissions: profile.custom_permissions,
-    custom_permissions: profile.custom_permissions
-  };
-};
-
-// Helper function to safely cast role to UserRole
 export const safeRoleCast = (role: string): UserRole => {
   const validRoles: UserRole[] = [
     'superadmin',
     'tenant_admin', 
     'property_manager',
     'housekeeping_staff',
-    'maintenance_staff',
+    'maintenance_staff', 
     'inventory_manager',
     'concierge'
   ];

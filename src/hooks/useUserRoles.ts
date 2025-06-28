@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { UserWithRoles } from '@/types/role-permission';
-import { UserRoleService } from '@/services/role-permission/user-role.service';
 import { toast } from 'sonner';
 
 export const useUserRoles = () => {
@@ -11,49 +11,54 @@ export const useUserRoles = () => {
   const fetchUsersWithRoles = async () => {
     try {
       setIsLoading(true);
-      const data = await UserRoleService.getUsersWithRoles();
-      setUsersWithRoles(data);
+      
+      // Get users from profiles table
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*');
+
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        toast.error('Failed to fetch users');
+        return;
+      }
+
+      // For now, return users with empty roles array since we're transitioning
+      const users: UserWithRoles[] = (profiles || []).map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        roles: [] // Placeholder until RBAC is fully implemented
+      }));
+
+      setUsersWithRoles(users);
     } catch (error) {
-      console.error('Error fetching users with roles:', error);
-      toast.error('Failed to fetch users with roles');
+      console.error('Error in fetchUsersWithRoles:', error);
+      toast.error('Failed to fetch users');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const assignRoleToUser = async (userId: string, roleId: string, tenantId: string) => {
+  const assignMultipleRolesToUser = async (userId: string, roleIds: string[], tenantId: string) => {
     try {
-      await UserRoleService.assignRoleToUser(userId, roleId, tenantId);
-      await fetchUsersWithRoles(); // Refresh data
-      toast.success('Role assigned successfully');
+      // Placeholder implementation - will be updated after schema migration
+      console.warn('Role assignment temporarily disabled during RBAC transition');
+      toast.info('Role assignment will be available soon');
     } catch (error) {
-      console.error('Error assigning role:', error);
-      toast.error('Failed to assign role');
-      throw error;
+      console.error('Error assigning roles:', error);
+      toast.error('Failed to assign roles');
     }
   };
 
   const revokeRoleFromUser = async (userId: string, roleId: string) => {
     try {
-      await UserRoleService.revokeRoleFromUser(userId, roleId);
-      await fetchUsersWithRoles(); // Refresh data
-      toast.success('Role revoked successfully');
+      // Placeholder implementation - will be updated after schema migration
+      console.warn('Role revocation temporarily disabled during RBAC transition');
+      toast.info('Role revocation will be available soon');
     } catch (error) {
       console.error('Error revoking role:', error);
       toast.error('Failed to revoke role');
-      throw error;
-    }
-  };
-
-  const assignMultipleRolesToUser = async (userId: string, roleIds: string[], tenantId: string) => {
-    try {
-      await UserRoleService.assignMultipleRolesToUser(userId, roleIds, tenantId);
-      await fetchUsersWithRoles(); // Refresh data
-      toast.success('Roles assigned successfully');
-    } catch (error) {
-      console.error('Error assigning multiple roles:', error);
-      toast.error('Failed to assign roles');
-      throw error;
     }
   };
 
@@ -64,9 +69,8 @@ export const useUserRoles = () => {
   return {
     usersWithRoles,
     isLoading,
-    assignRoleToUser,
-    revokeRoleFromUser,
     assignMultipleRolesToUser,
+    revokeRoleFromUser,
     refetch: fetchUsersWithRoles
   };
 };
