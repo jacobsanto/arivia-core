@@ -14,32 +14,37 @@ export const useHasPermission = (permissionKey: string): boolean => {
         return;
       }
 
+      // For now, use a simple role-based permission system
+      // Since the database doesn't have the role-permission tables yet
       try {
-        // Get user's roles and their permissions
-        const { data, error } = await supabase
-          .from('user_roles')
-          .select(`
-            roles!inner(
-              role_permissions!inner(
-                permissions!inner(key)
-              )
-            )
-          `)
-          .eq('user_id', user.id)
-          .eq('is_active', true);
+        const rolePermissions: Record<string, string[]> = {
+          'superadmin': ['*'], // All permissions
+          'tenant_admin': [
+            'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+            'assignTasks', 'viewInventory', 'manageInventory', 'viewUsers', 
+            'manageUsers', 'viewReports', 'viewChat', 'view_damage_reports'
+          ],
+          'property_manager': [
+            'viewDashboard', 'viewProperties', 'viewAllTasks', 'assignTasks', 
+            'viewInventory', 'viewReports', 'viewChat'
+          ],
+          'housekeeping_staff': [
+            'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+          ],
+          'maintenance_staff': [
+            'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+          ],
+          'inventory_manager': [
+            'viewDashboard', 'viewInventory', 'manageInventory', 'approveTransfers', 
+            'viewReports', 'viewChat'
+          ],
+          'concierge': [
+            'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewChat'
+          ]
+        };
 
-        if (error) {
-          console.error('Error checking permission:', error);
-          setHasPermission(false);
-          return;
-        }
-
-        // Check if user has the permission
-        const userHasPermission = data?.some(userRole => 
-          userRole.roles.role_permissions.some(rp => 
-            rp.permissions.key === permissionKey
-          )
-        ) || false;
+        const userPermissions = rolePermissions[user.role] || [];
+        const userHasPermission = userPermissions.includes('*') || userPermissions.includes(permissionKey);
 
         setHasPermission(userHasPermission);
       } catch (error) {
@@ -49,7 +54,7 @@ export const useHasPermission = (permissionKey: string): boolean => {
     };
 
     checkPermission();
-  }, [user?.id, permissionKey]);
+  }, [user?.id, user?.role, permissionKey]);
 
   return hasPermission;
 };

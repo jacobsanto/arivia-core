@@ -38,7 +38,7 @@ export const hasPermission = (userRole: UserRole, permission: string): boolean =
 };
 
 export const getUserPermissions = (userRole: UserRole): string[] => {
-  if (userRole === 'superladmin') return ['*'];
+  if (userRole === 'superadmin') return ['*'];
   
   const rolePermissions: Record<UserRole, string[]> = {
     superadmin: ['*'],

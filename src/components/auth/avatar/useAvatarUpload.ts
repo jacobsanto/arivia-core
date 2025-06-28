@@ -1,64 +1,49 @@
 
-import { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
-import { toast } from "sonner";
-import { User } from "@/types/auth";
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { useUser } from '@/contexts/UserContext';
 
-interface UseAvatarUploadProps {
-  user: User;
-  onAvatarChange?: (url: string) => void;
-}
-
-export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
+export const useAvatarUpload = (userId: string) => {
   const [isUploading, setIsUploading] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatar || "/placeholder.svg");
-  const { updateAvatar } = useUser();
+  const { updateProfile } = useUser();
 
-  const uploadAvatar = async (file: File) => {
-    if (!user) {
-      toast.error("User not found");
-      return false;
-    }
+  const handleAvatarUpload = async (file: File) => {
+    if (!file) return;
 
     setIsUploading(true);
     try {
-      // Mock upload for now - in real implementation, upload to storage
-      const mockUrl = URL.createObjectURL(file);
-      const success = await updateAvatar(user.id, mockUrl);
+      // Create a data URL for the uploaded file
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const avatarUrl = event.target?.result as string;
+        
+        try {
+          // Update the user's avatar
+          const success = await updateProfile(userId, { avatar: avatarUrl });
+          
+          if (success) {
+            toast.success('Avatar updated successfully');
+          } else {
+            toast.error('Failed to update avatar');
+          }
+        } catch (error) {
+          console.error('Error updating avatar:', error);
+          toast.error('Failed to update avatar');
+        } finally {
+          setIsUploading(false);
+        }
+      };
       
-      if (success) {
-        setAvatarUrl(mockUrl);
-        onAvatarChange?.(mockUrl);
-        toast.success("Avatar updated successfully");
-        setIsDialogOpen(false);
-        return true;
-      } else {
-        toast.error("Failed to update avatar");
-        return false;
-      }
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error("Avatar upload error:", error);
-      toast.error("Failed to upload avatar");
-      return false;
-    } finally {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload avatar');
       setIsUploading(false);
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      uploadAvatar(file);
-    }
-  };
-
   return {
-    uploadAvatar,
-    isUploading,
-    avatarUrl,
-    isDialogOpen,
-    setIsDialogOpen,
-    handleFileChange
+    handleAvatarUpload,
+    isUploading
   };
 };
