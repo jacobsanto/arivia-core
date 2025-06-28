@@ -3,7 +3,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
-import { UserProfile } from '@/types/auth/base';
+import { UserProfile, safeRoleCast } from '@/types/auth/base';
+import { getRoleBasedRoute } from '@/lib/utils/routing';
+import { useNavigate } from 'react-router-dom';
 
 interface UserContextType {
   user: UserProfile | null;
@@ -100,27 +102,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       console.log('Fetching profile for user:', sessionData.user.id);
       
-      // Simple profile fetch first - no complex joins
+      // Use maybeSingle() to avoid errors when profile doesn't exist
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', sessionData.user.id)
-        .single();
+        .maybeSingle();
       
       if (error) {
-        console.error('Error fetching basic profile:', error);
-        
-        // Create a basic user profile from session data if profile doesn't exist
+        console.error('Error fetching profile:', error);
+        // Create a basic user profile from session data if query fails
         const basicUserProfile: UserProfile = {
           id: sessionData.user.id,
           name: sessionData.user.email?.split('@')[0] || 'User',
           email: sessionData.user.email || '',
-          role: 'property_manager', // default role
+          role: 'property_manager',
           secondary_roles: [],
           custom_permissions: {}
         };
         
-        console.log('Using basic profile from session:', basicUserProfile);
+        console.log('Using basic profile due to error:', basicUserProfile);
         setUser(basicUserProfile);
         return;
       }
@@ -139,6 +140,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         
         console.log('Profile fetched successfully:', userProfile);
         setUser(userProfile);
+      } else {
+        // No profile found, create one using Supabase auth user data
+        console.log('No profile found, creating basic profile from session');
+        const fallbackProfile: UserProfile = {
+          id: sessionData.user.id,
+          name: sessionData.user.user_metadata?.name || sessionData.user.email?.split('@')[0] || 'User',
+          email: sessionData.user.email || '',
+          role: 'property_manager',
+          secondary_roles: [],
+          custom_permissions: {}
+        };
+        
+        console.log('Using fallback profile:', fallbackProfile);
+        setUser(fallbackProfile);
       }
     } catch (error) {
       console.error('Error in fetchProfileForSession:', error);
@@ -154,7 +169,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           custom_permissions: {}
         };
         
-        console.log('Using fallback profile:', fallbackProfile);
+        console.log('Using fallback profile due to exception:', fallbackProfile);
         setUser(fallbackProfile);
       }
     }
@@ -187,8 +202,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
     );
 
-    // Check for existing session with timeout
-    const sessionTimeout = setTimeout(async () => {
+    // Check for existing session
+    const initializeAuth = async () => {
       try {
         console.log('Checking for existing session');
         const { data: { session: existingSession }, error } = await supabase.auth.getSession();
@@ -212,43 +227,63 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.log('Initial session check complete, setting loading to false');
         setLoading(false);
       }
-    }, 100);
+    };
 
-    // Cleanup timeout if component unmounts
+    initializeAuth();
+
+    // Cleanup
     return () => {
       console.log('Cleaning up auth subscription');
       subscription.unsubscribe();
-      clearTimeout(sessionTimeout);
     };
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signUp = async (email: string, password: string, name: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          name: name
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: name
+          }
         }
-      }
-    });
-    return { error };
+      });
+      return { error };
+    } catch (error) {
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) console.error('Error signing out:', error);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) console.error('Error signing out:', error);
+      
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      
+      // Redirect to login
+      window.location.href = '/internal/login';
+    } catch (error) {
+      console.error('Error in signOut:', error);
+    }
   };
 
   const updateProfile = async (updates: Partial<UserProfile>): Promise<boolean> => {
