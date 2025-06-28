@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUser } from '@/contexts/UserContext';
@@ -24,8 +23,8 @@ const PermissionsDisplay = () => {
   const offlineCapabilities = getOfflineCapabilities();
   const allPermissions = getAllPermissionsList();
   
-  // Check if user has custom permissions - ensure primitive boolean
-  const hasCustomPermissions = Boolean(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
+  // Check if user has custom permissions - use double negation for primitive boolean
+  const hasCustomPermissions: boolean = !!(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
   
   // Group permissions by category
   const permissionGroups = {
