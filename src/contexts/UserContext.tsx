@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,7 +127,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       if (profile) {
         // Extract role from the joined data - check if user_roles exists and has data
-        const roleFromJoin = profile.user_roles && profile.user_roles.length > 0 
+        const roleFromJoin = profile.user_roles && Array.isArray(profile.user_roles) && profile.user_roles.length > 0 
           ? profile.user_roles[0]?.roles?.name 
           : null;
         
@@ -196,7 +195,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         .single();
       
       if (profile) {
-        const roleFromJoin = profile.user_roles && profile.user_roles.length > 0 
+        const roleFromJoin = profile.user_roles && Array.isArray(profile.user_roles) && profile.user_roles.length > 0 
           ? profile.user_roles[0]?.roles?.name 
           : null;
         

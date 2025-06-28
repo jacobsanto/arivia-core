@@ -73,7 +73,7 @@ const UserInformation = () => {
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-shrink-0">
-              <AvatarUpload user={convertedUser} currentAvatar={user.avatar} />
+              <AvatarUpload user={convertedUser} />
             </div>
             
             <div className="flex-1 space-y-4">
@@ -82,7 +82,6 @@ const UserInformation = () => {
                   user={convertedUser}
                   onSubmit={handleSave}
                   onCancel={() => setIsEditing(false)}
-                  isLoading={isUpdating}
                 />
               ) : (
                 <div className="grid gap-4">

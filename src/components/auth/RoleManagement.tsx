@@ -85,7 +85,7 @@ const RoleManagement: React.FC = () => {
                   id: userProfile.id,
                   name: userProfile.name,
                   email: userProfile.email,
-                  role: userProfile.role as any, // Type assertion for role compatibility
+                  role: userProfile.role,
                   phone: userProfile.phone,
                   avatar: userProfile.avatar,
                   secondary_roles: userProfile.secondary_roles || [],
@@ -101,7 +101,7 @@ const RoleManagement: React.FC = () => {
                 id: userProfile.id,
                 name: userProfile.name,
                 email: userProfile.email,
-                role: userProfile.role as any, // Type assertion for role compatibility
+                role: userProfile.role,
                 phone: userProfile.phone,
                 avatar: userProfile.avatar,
                 secondary_roles: userProfile.secondary_roles || [],
