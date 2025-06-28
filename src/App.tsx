@@ -37,8 +37,8 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <TenantProvider>
+      <TenantProvider>
+        <UserProvider>
           <InventoryProvider>
             <ToastProvider>
               <Router>
@@ -130,8 +130,8 @@ function App() {
               </Router>
             </ToastProvider>
           </InventoryProvider>
-        </TenantProvider>
-      </UserProvider>
+        </UserProvider>
+      </TenantProvider>
       <Toaster />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
