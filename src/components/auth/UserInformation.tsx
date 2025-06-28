@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Edit3, Mail, Phone, Shield, Calendar } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import ProfileForm from "./forms/ProfileForm";
 import AvatarUpload from "./avatar/AvatarUpload";
 import { profileToUser } from "@/types/auth/base";
 
 const UserInformation = () => {
-  const { user, updateProfile } = useUser();
+  const { user, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -101,9 +101,7 @@ const UserInformation = () => {
                         <span className="font-medium">{user.email}</span>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    
                     {user.phone && (
                       <div className="space-y-2">
                         <Label className="text-sm font-medium text-muted-foreground">Phone</Label>
@@ -118,12 +116,21 @@ const UserInformation = () => {
                       <Label className="text-sm font-medium text-muted-foreground">Role</Label>
                       <div className="flex items-center gap-2">
                         <Shield className="h-4 w-4 text-muted-foreground" />
-                        <Badge variant="secondary" className="capitalize">
-                          {user.role?.replace('_', ' ') || 'No role assigned'}
-                        </Badge>
+                        <Badge variant="secondary">{user.role}</Badge>
                       </div>
                     </div>
                   </div>
+                  
+                  {user.secondary_roles && user.secondary_roles.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium text-muted-foreground">Secondary Roles</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {user.secondary_roles.map((role, index) => (
+                          <Badge key={index} variant="outline">{role}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

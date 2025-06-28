@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import RoleManagement from "@/components/auth/RoleManagement";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Users } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
@@ -12,9 +12,7 @@ import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
 
 const AdminUsers = () => {
-  const {
-    user
-  } = useUser();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("users");

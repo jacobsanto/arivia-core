@@ -2,11 +2,11 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Lock } from "lucide-react";
 
 const PermissionsDisplay: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   if (!user) return null;
 

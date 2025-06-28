@@ -1,10 +1,9 @@
 
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 
 export const useHasPermission = (permissionKey: string): boolean => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
