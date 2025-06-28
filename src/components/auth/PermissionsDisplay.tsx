@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUser } from '@/contexts/UserContext';
@@ -23,8 +22,8 @@ const PermissionsDisplay = () => {
   const roleDetails = ROLE_DETAILS[user.role as keyof typeof ROLE_DETAILS] || { title: user.role };
   const offlineCapabilities = getOfflineCapabilities();
   
-  // Check if user has custom permissions - explicit boolean check
-  const userHasCustomPermissions = Boolean(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
+  // Check if user has custom permissions - simple boolean conversion
+  const userHasCustomPermissions = !!(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
   
   // Group permissions by category
   const permissionGroups = {
