@@ -139,14 +139,11 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
             title="No Dashboard Data Available"
             description="Start by adding properties, tasks, or maintenance records to see your metrics here."
             className="mx-auto max-w-md"
-          >
-            {onAddSampleData && (
-              <Button onClick={handleAddSampleData} className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Sample Data
-              </Button>
-            )}
-          </EmptyState>
+            action={onAddSampleData ? {
+              label: "Add Sample Data",
+              onClick: handleAddSampleData
+            } : undefined}
+          />
         </section>
       )}
 
