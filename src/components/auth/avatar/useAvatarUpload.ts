@@ -5,6 +5,8 @@ import { useUser } from '@/contexts/UserContext';
 
 export const useAvatarUpload = (userId: string) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { updateProfile } = useUser();
 
   const handleAvatarUpload = async (file: File) => {
@@ -15,17 +17,14 @@ export const useAvatarUpload = (userId: string) => {
       // Create a data URL for the uploaded file
       const reader = new FileReader();
       reader.onload = async (event) => {
-        const avatarUrl = event.target?.result as string;
+        const newAvatarUrl = event.target?.result as string;
         
         try {
           // Update the user's avatar
-          const success = await updateProfile(userId, { avatar: avatarUrl });
-          
-          if (success) {
-            toast.success('Avatar updated successfully');
-          } else {
-            toast.error('Failed to update avatar');
-          }
+          await updateProfile({ avatar: newAvatarUrl });
+          setAvatarUrl(newAvatarUrl);
+          toast.success('Avatar updated successfully');
+          setIsDialogOpen(false);
         } catch (error) {
           console.error('Error updating avatar:', error);
           toast.error('Failed to update avatar');
@@ -42,8 +41,19 @@ export const useAvatarUpload = (userId: string) => {
     }
   };
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      handleAvatarUpload(file);
+    }
+  };
+
   return {
     handleAvatarUpload,
-    isUploading
+    isUploading,
+    avatarUrl,
+    isDialogOpen,
+    setIsDialogOpen,
+    handleFileChange
   };
 };

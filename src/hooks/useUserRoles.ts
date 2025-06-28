@@ -6,19 +6,16 @@ import { toast } from 'sonner';
 
 export const useUserRoles = () => {
   const [usersWithRoles, setUsersWithRoles] = useState<UserWithRoles[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchUsersWithRoles = async () => {
-    setIsLoading(true);
-    setError(null);
     try {
+      setIsLoading(true);
       const data = await UserRoleService.getUsersWithRoles();
       setUsersWithRoles(data);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch users with roles';
-      setError(errorMessage);
-      toast.error(errorMessage);
+    } catch (error) {
+      console.error('Error fetching users with roles:', error);
+      toast.error('Failed to fetch users with roles');
     } finally {
       setIsLoading(false);
     }
@@ -28,11 +25,11 @@ export const useUserRoles = () => {
     try {
       await UserRoleService.assignRoleToUser(userId, roleId, tenantId);
       await fetchUsersWithRoles(); // Refresh data
-      toast.success('Role assigned to user successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to assign role to user';
-      toast.error(errorMessage);
-      throw err;
+      toast.success('Role assigned successfully');
+    } catch (error) {
+      console.error('Error assigning role:', error);
+      toast.error('Failed to assign role');
+      throw error;
     }
   };
 
@@ -40,11 +37,11 @@ export const useUserRoles = () => {
     try {
       await UserRoleService.revokeRoleFromUser(userId, roleId);
       await fetchUsersWithRoles(); // Refresh data
-      toast.success('Role revoked from user successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to revoke role from user';
-      toast.error(errorMessage);
-      throw err;
+      toast.success('Role revoked successfully');
+    } catch (error) {
+      console.error('Error revoking role:', error);
+      toast.error('Failed to revoke role');
+      throw error;
     }
   };
 
@@ -52,11 +49,11 @@ export const useUserRoles = () => {
     try {
       await UserRoleService.assignMultipleRolesToUser(userId, roleIds, tenantId);
       await fetchUsersWithRoles(); // Refresh data
-      toast.success('Roles assigned to user successfully');
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to assign roles to user';
-      toast.error(errorMessage);
-      throw err;
+      toast.success('Roles assigned successfully');
+    } catch (error) {
+      console.error('Error assigning multiple roles:', error);
+      toast.error('Failed to assign roles');
+      throw error;
     }
   };
 
@@ -67,7 +64,6 @@ export const useUserRoles = () => {
   return {
     usersWithRoles,
     isLoading,
-    error,
     assignRoleToUser,
     revokeRoleFromUser,
     assignMultipleRolesToUser,

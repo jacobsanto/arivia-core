@@ -22,7 +22,7 @@ interface UserContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
-  deleteUser: (userId: string) => Promise<void>;
+  deleteUser: (userId: string) => Promise<boolean>;
   deleteAllUsers: () => Promise<void>;
   fetchUsers: () => Promise<UserProfile[]>;
   // Alias methods for compatibility
@@ -223,53 +223,55 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       console.error('Error updating user permissions:', error);
       throw error;
     }
-    
-    // If updating current user, refresh their profile
-    if (userId === user?.id) {
-      await refreshProfile();
-    }
   };
 
-  const deleteUser = async (userId: string) => {
-    // Delete user profile
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', userId);
-    
-    if (error) {
-      console.error('Error deleting user:', error);
-      throw error;
+  const deleteUser = async (userId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (error) {
+        console.error('Error deleting user:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in deleteUser:', error);
+      return false;
     }
   };
 
   const deleteAllUsers = async () => {
-    if (!user) return;
-    
-    // Delete all users except current user
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .neq('id', user.id);
-    
-    if (error) {
+    try {
+      const { data: users } = await supabase
+        .from('profiles')
+        .select('id')
+        .neq('id', user?.id);
+      
+      if (users) {
+        for (const userToDelete of users) {
+          await deleteUser(userToDelete.id);
+        }
+      }
+    } catch (error) {
       console.error('Error deleting all users:', error);
-      throw error;
     }
   };
 
   const fetchUsers = async (): Promise<UserProfile[]> => {
-    const { data, error } = await supabase
+    const { data: profiles, error } = await supabase
       .from('profiles')
-      .select('*')
-      .order('name');
+      .select('*');
     
     if (error) {
       console.error('Error fetching users:', error);
-      throw error;
+      return [];
     }
     
-    return (data || []).map(profile => ({
+    return profiles.map(profile => ({
       id: profile.id,
       name: profile.name,
       email: profile.email,
@@ -282,7 +284,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   const getOfflineLoginStatus = () => {
-    return !!session && !!user;
+    return !!localStorage.getItem('user');
   };
 
   const value: UserContextType = {
@@ -296,15 +298,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     deleteUser,
     deleteAllUsers,
     fetchUsers,
-    // Alias methods
     login: signIn,
     logout: signOut,
     signup: signUp,
-    // Additional methods
     refreshProfile,
     updateAvatar,
     updateUserPermissions,
-    getOfflineLoginStatus,
+    getOfflineLoginStatus
   };
 
   return (

@@ -1,62 +1,51 @@
 
-// User roles for role-based access control
-export type UserRole = 
-  | 'superadmin'
-  | 'tenant_admin'
-  | 'property_manager'
-  | 'housekeeping_staff'
-  | 'maintenance_staff'
-  | 'inventory_manager'
-  | 'concierge';
+import { UserRole } from './base';
 
-// Role details with titles and descriptions
-export const ROLE_DETAILS: Record<UserRole, { title: string; description: string; permissions: string[] }> = {
-  superadmin: {
-    title: 'Super Administrator',
-    description: 'Full system access across all tenants',
-    permissions: ['*']
-  },
-  tenant_admin: {
-    title: 'Administrator', 
-    description: 'Full access within tenant organization',
-    permissions: ['manage_all', 'view_all', 'assign_tasks', 'manage_users']
-  },
-  property_manager: {
-    title: 'Property Manager',
-    description: 'Manage properties, tasks, and team coordination',
-    permissions: ['manage_properties', 'assign_tasks', 'view_reports', 'manage_bookings']
-  },
-  housekeeping_staff: {
-    title: 'Housekeeping Staff',
-    description: 'Handle cleaning and housekeeping tasks',
-    permissions: ['view_assigned_tasks', 'update_task_status', 'view_inventory']
-  },
-  maintenance_staff: {
-    title: 'Maintenance Staff', 
-    description: 'Handle maintenance and repair tasks',
-    permissions: ['view_assigned_tasks', 'update_task_status', 'view_inventory']
-  },
-  inventory_manager: {
-    title: 'Inventory Manager',
-    description: 'Manage inventory, supplies, and orders',
-    permissions: ['manage_inventory', 'view_reports', 'approve_orders']
-  },
-  concierge: {
-    title: 'Concierge',
-    description: 'Guest services and coordination',
-    permissions: ['view_assigned_tasks', 'view_bookings', 'update_task_status']
-  }
-};
-
+// Define default permissions for each role
 export const getDefaultPermissionsForRole = (role: UserRole): Record<string, boolean> => {
-  const rolePermissions = ROLE_DETAILS[role]?.permissions || [];
+  const rolePermissions: Record<UserRole, string[]> = {
+    superadmin: ['*'], // All permissions
+    tenant_admin: [
+      'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+      'assignTasks', 'viewInventory', 'manageInventory', 'viewUsers', 
+      'manageUsers', 'viewReports', 'viewChat', 'view_damage_reports'
+    ],
+    property_manager: [
+      'viewDashboard', 'viewProperties', 'viewAllTasks', 'assignTasks', 
+      'viewInventory', 'viewReports', 'viewChat'
+    ],
+    housekeeping_staff: [
+      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+    ],
+    maintenance_staff: [
+      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+    ],
+    inventory_manager: [
+      'viewDashboard', 'viewInventory', 'manageInventory', 'approveTransfers', 
+      'viewReports', 'viewChat'
+    ],
+    concierge: [
+      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewChat'
+    ]
+  };
+
+  const permissions = rolePermissions[role] || [];
+  const permissionMap: Record<string, boolean> = {};
   
-  if (rolePermissions.includes('*')) {
-    return {}; // Superadmin gets all permissions by default
+  // If user has all permissions
+  if (permissions.includes('*')) {
+    const allPermissions = [
+      'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+      'viewAssignedTasks', 'assignTasks', 'viewInventory', 'manageInventory', 
+      'approveTransfers', 'viewUsers', 'manageUsers', 'viewReports', 'viewChat', 
+      'view_damage_reports'
+    ];
+    allPermissions.forEach(perm => permissionMap[perm] = true);
+  } else {
+    permissions.forEach(perm => permissionMap[perm] = true);
   }
   
-  return rolePermissions.reduce((acc, permission) => {
-    acc[permission] = true;
-    return acc;
-  }, {} as Record<string, boolean>);
+  return permissionMap;
 };
+
+export { ROLE_DETAILS } from './base';
