@@ -13,7 +13,7 @@ import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
-import { safeRoleCast } from "@/types/auth/base";
+import { safeRoleCast, profileToUser } from "@/types/auth/base";
 import type { UserProfile } from "@/contexts/UserContext";
 
 // Main component for Role Management
@@ -41,18 +41,9 @@ const RoleManagement: React.FC = () => {
     return <UnauthorizedAccess />;
   }
 
-  // Helper function to convert UserProfile to User with proper role casting
+  // Helper function to convert UserProfile to User with proper role casting using the utility function
   const convertToUser = (userProfile: UserProfile): User => {
-    return {
-      id: userProfile.id,
-      name: userProfile.name,
-      email: userProfile.email,
-      role: safeRoleCast(userProfile.role), // Use safeRoleCast for proper type conversion
-      phone: userProfile.phone,
-      avatar: userProfile.avatar,
-      secondaryRoles: userProfile.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
-      customPermissions: userProfile.custom_permissions || {}
-    };
+    return profileToUser(userProfile);
   };
   
   return (
