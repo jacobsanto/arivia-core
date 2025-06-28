@@ -10,6 +10,11 @@ import { cn } from "@/lib/utils";
 import { guestyBookingSyncService } from "@/services/guesty/guestyBookingSyncService";
 import { toast } from "sonner";
 import CleaningRulesManager from "./CleaningRulesManager";
+import DashboardMetrics from "./DashboardMetrics";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle, Database, Plus } from "lucide-react";
 
 interface DashboardContentProps {
   dashboardData?: any;
@@ -55,12 +60,101 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
     }
   };
 
+  const handleAddSampleData = async () => {
+    if (!onAddSampleData) return;
+    
+    try {
+      await onAddSampleData();
+      toast.success("Sample data added successfully");
+    } catch (error) {
+      console.error("Error adding sample data:", error);
+      toast.error("Failed to add sample data");
+    }
+  };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <LoadingState 
+          type="card" 
+          count={6}
+          text="Loading dashboard data..."
+        />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <span>Failed to load dashboard: {error}</span>
+            {onRefresh && (
+              <Button variant="outline" size="sm" onClick={onRefresh}>
+                Retry
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  // Check if we have any data
+  const hasData = dashboardData && (
+    dashboardData.properties || 
+    dashboardData.tasks || 
+    dashboardData.maintenance
+  );
+
   return (
     <div className="space-y-6">
+      {/* Dashboard Metrics Section */}
+      {hasData ? (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Dashboard Overview</h2>
+            {onRefresh && (
+              <Button variant="outline" size="sm" onClick={onRefresh}>
+                Refresh Data
+              </Button>
+            )}
+          </div>
+          <DashboardMetrics 
+            data={dashboardData}
+            isLoading={false}
+            error={null}
+            favoriteMetrics={favoriteMetrics}
+            onToggleFavorite={onToggleFavorite}
+          />
+        </section>
+      ) : (
+        <section>
+          <EmptyState
+            icon={Database}
+            title="No Dashboard Data Available"
+            description="Start by adding properties, tasks, or maintenance records to see your metrics here."
+            className="mx-auto max-w-md"
+          >
+            {onAddSampleData && (
+              <Button onClick={handleAddSampleData} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Sample Data
+              </Button>
+            )}
+          </EmptyState>
+        </section>
+      )}
+
+      {/* Quick Actions Section */}
       <section>
         <Card>
           <CardHeader>
-            <CardTitle>Welcome to Ariviva Ops</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
             <CardDescription>
               Manage your properties and bookings efficiently.
             </CardDescription>
@@ -107,7 +201,7 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
         </Card>
       </section>
       
-      {/* Add the Cleaning Rules Manager section */}
+      {/* Cleaning Rules Manager Section */}
       <section>
         <CleaningRulesManager />
       </section>
