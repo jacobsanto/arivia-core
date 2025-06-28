@@ -1,150 +1,113 @@
 
-import React, { useState } from 'react';
+import React from 'react';
+import { User } from '@/types/auth';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Shield, Settings, Check, X } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useUser } from '@/contexts/UserContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Check, X, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';
 
-const MobilePermissionsDisplay = () => {
-  const { user } = useUser();
-  const { canAccess, getOfflineCapabilities } = usePermissions();
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
-  
-  if (!user) return null;
+interface MobilePermissionsDisplayProps {
+  user: User;
+  onPermissionChange?: (permission: string, value: boolean) => void;
+  editable?: boolean;
+}
 
-  const roleDetails = ROLE_DETAILS[user.role as keyof typeof ROLE_DETAILS] || { title: user.role };
-  const offlineCapabilities = getOfflineCapabilities();
+const MobilePermissionsDisplay: React.FC<MobilePermissionsDisplayProps> = ({
+  user,
+  onPermissionChange,
+  editable = false
+}) => {
+  const { canAccess, getAllPermissionsList } = usePermissions();
   
-  // Check if user has custom permissions
-  const hasCustomPermissions = user.custom_permissions && Object.keys(user.custom_permissions).length > 0;
-  
-  // Group permissions by category
-  const permissionGroups = {
-    "Properties": [
-      "viewProperties",
-      "manageProperties"
-    ],
-    "Tasks": [
-      "viewAllTasks",
-      "viewAssignedTasks",
-      "assignTasks"
-    ],
-    "Inventory": [
-      "viewInventory",
-      "manageInventory",
-      "approveTransfers"
-    ],
-    "Users": [
-      "viewUsers",
-      "manageUsers"
-    ],
-    "System": [
-      "manageSettings",
-      "viewReports"
-    ]
+  const allPermissions = [
+    'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks',
+    'viewAssignedTasks', 'assignTasks', 'viewInventory', 'manageInventory',
+    'approveTransfers', 'viewUsers', 'manageUsers', 'viewReports', 'viewChat',
+    'view_damage_reports'
+  ];
+
+  const getPermissionDisplayName = (key: string) => {
+    const displayNames: Record<string, string> = {
+      viewDashboard: 'View Dashboard',
+      viewProperties: 'View Properties',
+      manageProperties: 'Manage Properties',
+      viewAllTasks: 'View All Tasks',
+      viewAssignedTasks: 'View Assigned Tasks',
+      assignTasks: 'Assign Tasks',
+      viewInventory: 'View Inventory',
+      manageInventory: 'Manage Inventory',
+      approveTransfers: 'Approve Transfers',
+      viewUsers: 'View Users',
+      manageUsers: 'Manage Users',
+      viewReports: 'View Reports',
+      viewChat: 'View Chat',
+      view_damage_reports: 'View Damage Reports'
+    };
+    return displayNames[key] || key;
   };
 
-  const toggleSection = (section: string) => {
-    setOpenSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }));
+  const getPermissionCategory = (key: string) => {
+    if (key.includes('Dashboard')) return 'dashboard';
+    if (key.includes('Properties') || key.includes('Property')) return 'properties';
+    if (key.includes('Tasks') || key.includes('Task')) return 'tasks';
+    if (key.includes('Inventory')) return 'inventory';
+    if (key.includes('Users') || key.includes('User')) return 'users';
+    if (key.includes('Reports') || key.includes('Report')) return 'reports';
+    if (key.includes('Chat')) return 'chat';
+    return 'general';
   };
-  
+
+  const categorizedPermissions = allPermissions.reduce((acc, perm) => {
+    const category = getPermissionCategory(perm);
+    if (!acc[category]) acc[category] = [];
+    acc[category].push(perm);
+    return acc;
+  }, {} as Record<string, string[]>);
+
   return (
     <div className="space-y-4">
-      {hasCustomPermissions && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-md flex gap-2 text-xs">
-          <AlertCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
-          <div>
-            <p className="font-medium text-blue-700">Custom permissions enabled</p>
-            <p className="text-blue-600">Your access rights have been customized</p>
-          </div>
-        </div>
-      )}
-      
-      {Object.entries(permissionGroups).map(([group, features]) => {
-        // Count how many permissions the user has in this group
-        const accessCount = features.filter(feature => 
-          FEATURE_PERMISSIONS[feature] && canAccess(feature)
-        ).length;
-        
-        return (
-          <Collapsible 
-            key={group}
-            open={openSections[group]} 
-            onOpenChange={() => toggleSection(group)}
-            className="border rounded-md overflow-hidden"
-          >
-            <CollapsibleTrigger className="w-full p-3 flex justify-between items-center">
-              <div>
-                <h3 className="font-medium">{group}</h3>
-                <p className="text-xs text-muted-foreground">{accessCount} of {features.length} permissions</p>
-              </div>
-              {openSections[group] ? (
-                <ChevronDown className="h-5 w-5" />
-              ) : (
-                <ChevronRight className="h-5 w-5" />
-              )}
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="px-3 pb-3 pt-1 space-y-2">
-                {features.map(feature => {
-                  // Check if the feature exists in FEATURE_PERMISSIONS
-                  const permission = FEATURE_PERMISSIONS[feature];
-                  
-                  // If the permission doesn't exist, skip rendering this item
-                  if (!permission) return null;
-                  
-                  const hasAccess = canAccess(feature);
-                  const isCustomized = user.custom_permissions && 
-                                       user.custom_permissions[feature] !== undefined;
-                  
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Shield className="h-5 w-5" />
+            Permissions for {user.name}
+          </CardTitle>
+          <CardDescription>
+            Current role: <Badge variant="outline">{user.role}</Badge>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Object.entries(categorizedPermissions).map(([category, permissions]) => (
+            <div key={category} className="space-y-2">
+              <h4 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">
+                {category}
+              </h4>
+              <div className="space-y-2">
+                {permissions.map((permission) => {
+                  const hasPermission = canAccess(permission);
                   return (
-                    <div 
-                      key={feature} 
-                      className={`flex justify-between items-center p-2 rounded-sm text-xs ${
-                        isCustomized 
-                          ? hasAccess ? 'bg-blue-50' : 'bg-gray-100' 
-                          : hasAccess ? 'bg-green-50' : 'bg-gray-50'
-                      }`}
-                    >
-                      <div>
-                        <p className="font-medium">{permission.title}</p>
-                        <p className="text-muted-foreground text-[10px]">{permission.description}</p>
+                    <div key={permission} className="flex items-center justify-between p-2 rounded-lg border">
+                      <div className="flex items-center gap-2">
+                        {hasPermission ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <X className="h-4 w-4 text-red-500" />
+                        )}
+                        <span className="text-sm">{getPermissionDisplayName(permission)}</span>
                       </div>
-                      {hasAccess ? (
-                        <Check className={`h-4 w-4 ${isCustomized ? 'text-blue-600' : 'text-green-600'}`} />
-                      ) : (
-                        <X className="h-4 w-4 text-gray-400" />
+                      {editable && (
+                        <Switch
+                          checked={hasPermission}
+                          onCheckedChange={(checked) => onPermissionChange?.(permission, checked)}
+                        />
                       )}
                     </div>
                   );
                 })}
               </div>
-            </CollapsibleContent>
-          </Collapsible>
-        );
-      })}
-      
-      <Card>
-        <CardHeader className="px-4 py-3">
-          <CardTitle className="text-lg">Offline Capabilities</CardTitle>
-        </CardHeader>
-        <CardContent className="px-4 pt-0">
-          <div className="grid grid-cols-2 gap-2">
-            {offlineCapabilities.map((capability, index) => (
-              <div 
-                key={index} 
-                className="bg-green-50 p-2 rounded-md text-sm flex items-center gap-1"
-              >
-                <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
-                <span className="text-green-800">{capability}</span>
-              </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
     </div>

@@ -1,47 +1,48 @@
 
-// Task utilities for dashboard
+// Task utility functions
 export interface TaskRecord {
   id: string;
   title: string;
+  description: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   due_date: string;
   assigned_to?: string;
-  location?: string;
-  property_id?: string;
-  created_at: string;
+  property?: string;
 }
 
-export const getTaskStatusColor = (status: string) => {
+export const getTaskStatusColor = (status: string): string => {
   switch (status) {
     case 'completed':
-      return 'bg-green-100 text-green-800';
+      return 'green';
     case 'in_progress':
-      return 'bg-blue-100 text-blue-800';
+      return 'blue';
     case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'yellow';
     case 'cancelled':
-      return 'bg-red-100 text-red-800';
+      return 'red';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'gray';
   }
 };
 
-export const getTaskPriorityColor = (priority: string) => {
+export const getTaskPriorityColor = (priority: string): string => {
   switch (priority) {
     case 'urgent':
-      return 'bg-red-100 text-red-800';
+      return 'red';
     case 'high':
-      return 'bg-orange-100 text-orange-800';
+      return 'orange';
     case 'medium':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'yellow';
     case 'low':
-      return 'bg-green-100 text-green-800';
+      return 'green';
     default:
-      return 'bg-gray-100 text-gray-800';
+      return 'gray';
   }
 };
 
 export const isTaskOverdue = (dueDate: string): boolean => {
-  return new Date(dueDate) < new Date();
+  const today = new Date();
+  const due = new Date(dueDate);
+  return due < today;
 };

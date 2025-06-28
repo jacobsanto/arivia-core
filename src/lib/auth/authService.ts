@@ -23,17 +23,23 @@ export const authService = {
       avatar: profile.avatar,
       phone: profile.phone,
       secondaryRoles: profile.secondary_roles || [],
-      customPermissions: profile.custom_permissions || {}
+      customPermissions: typeof profile.custom_permissions === 'object' ? profile.custom_permissions as Record<string, boolean> : {}
     };
   },
 
   async createTenantUser(userData: Partial<TenantUser>): Promise<TenantUser> {
     const { data, error } = await supabase
       .from('profiles')
-      .insert([{
-        ...userData,
-        tenant_id: userData.tenant_id // Use snake_case for database
-      }])
+      .insert({
+        id: userData.id,
+        name: userData.name || '',
+        email: userData.email || '',
+        role: userData.role || 'property_manager',
+        phone: userData.phone,
+        avatar: userData.avatar,
+        secondary_roles: userData.secondaryRoles || [],
+        custom_permissions: userData.customPermissions || {}
+      })
       .select()
       .single();
 
@@ -41,7 +47,8 @@ export const authService = {
 
     return {
       ...data,
-      tenant_id: data.tenant_id // Map from database snake_case
+      tenant_id: userData.tenant_id || '',
+      tenant: userData.tenant
     } as TenantUser;
   },
 

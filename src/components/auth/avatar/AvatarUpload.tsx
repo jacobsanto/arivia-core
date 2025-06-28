@@ -9,10 +9,17 @@ import { useAvatarUpload } from './useAvatarUpload';
 
 interface AvatarUploadProps {
   user: User;
-  onAvatarChange: (url: string) => void;
+  onAvatarChange?: (url: string) => void;
+  size?: string;
+  editable?: boolean;
 }
 
-const AvatarUpload: React.FC<AvatarUploadProps> = ({ user, onAvatarChange }) => {
+const AvatarUpload: React.FC<AvatarUploadProps> = ({ 
+  user, 
+  onAvatarChange, 
+  size = 'w-20 h-20',
+  editable = true 
+}) => {
   const {
     handleFileChange,
     isUploading,
@@ -20,14 +27,25 @@ const AvatarUpload: React.FC<AvatarUploadProps> = ({ user, onAvatarChange }) => 
     setIsDialogOpen
   } = useAvatarUpload({ 
     userId: user.id, 
-    onAvatarChange 
+    onAvatarChange: onAvatarChange || (() => {})
   });
+
+  if (!editable) {
+    return (
+      <Avatar className={size}>
+        <AvatarImage src={user.avatar} alt={user.name} />
+        <AvatarFallback className="text-lg">
+          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+    );
+  }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <div className="relative group cursor-pointer">
-          <Avatar className="w-20 h-20">
+          <Avatar className={size}>
             <AvatarImage src={user.avatar} alt={user.name} />
             <AvatarFallback className="text-lg">
               {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
