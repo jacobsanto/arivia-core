@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { User, TenantUser } from '@/types/auth';
+import { User, TenantUser, safeRoleCast } from '@/types/auth';
 
 export const authService = {
   async getCurrentUser(): Promise<User | null> {
@@ -19,10 +19,10 @@ export const authService = {
       id: profile.id,
       name: profile.name,
       email: profile.email,
-      role: profile.role,
+      role: safeRoleCast(profile.role),
       avatar: profile.avatar,
       phone: profile.phone,
-      secondaryRoles: profile.secondary_roles || [],
+      secondaryRoles: profile.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
       customPermissions: typeof profile.custom_permissions === 'object' ? profile.custom_permissions as Record<string, boolean> : {}
     };
   },
@@ -47,8 +47,10 @@ export const authService = {
 
     return {
       ...data,
-      tenant_id: userData.tenant_id || '',
-      tenant: userData.tenant
+      role: safeRoleCast(data.role),
+      tenantId: userData.tenantId || '',
+      secondaryRoles: data.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
+      customPermissions: data.custom_permissions as Record<string, boolean> || {}
     } as TenantUser;
   },
 
@@ -61,6 +63,12 @@ export const authService = {
       .single();
 
     if (error) throw error;
-    return data as User;
+    
+    return {
+      ...data,
+      role: safeRoleCast(data.role),
+      secondaryRoles: data.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
+      customPermissions: data.custom_permissions as Record<string, boolean> || {}
+    } as User;
   }
 };

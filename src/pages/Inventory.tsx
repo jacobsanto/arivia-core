@@ -1,14 +1,15 @@
+
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
-import { InventoryOverview } from '@/components/inventory/InventoryOverview';
-import { InventoryItems } from '@/components/inventory/InventoryItems';
-import { InventoryCategories } from '@/components/inventory/InventoryCategories';
-import { InventoryVendors } from '@/components/inventory/InventoryVendors';
+import InventoryOverview from '@/components/inventory/InventoryOverview';
+import InventoryItems from '@/components/inventory/InventoryItems';
+import InventoryCategories from '@/components/inventory/InventoryCategories';
+import InventoryVendors from '@/components/inventory/InventoryVendors';
 import OrderList from '@/components/inventory/orders/OrderList';
-import { InventoryUsage } from '@/components/inventory/InventoryUsage';
+import InventoryUsage from '@/components/inventory/InventoryUsage';
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -36,7 +37,7 @@ const Inventory = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="items">Items</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>

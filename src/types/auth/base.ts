@@ -141,6 +141,38 @@ export const FEATURE_PERMISSIONS: Record<string, FeaturePermission> = {
   }
 };
 
+// Role details
+export const ROLE_DETAILS: Record<UserRole, { title: string; description: string }> = {
+  superadmin: {
+    title: 'Super Admin',
+    description: 'Full system access with all permissions'
+  },
+  tenant_admin: {
+    title: 'Admin',
+    description: 'Administrative access to tenant resources'
+  },
+  property_manager: {
+    title: 'Property Manager',
+    description: 'Manages properties and oversees operations'
+  },
+  housekeeping_staff: {
+    title: 'Housekeeping Staff',
+    description: 'Handles cleaning and maintenance tasks'
+  },
+  maintenance_staff: {
+    title: 'Maintenance Staff',
+    description: 'Handles repairs and technical maintenance'
+  },
+  inventory_manager: {
+    title: 'Inventory Manager',
+    description: 'Manages inventory and supplies'
+  },
+  concierge: {
+    title: 'Concierge',
+    description: 'Guest services and support'
+  }
+};
+
 export const safeRoleCast = (role: string): UserRole => {
   const validRoles: UserRole[] = [
     'superadmin',
@@ -153,4 +185,18 @@ export const safeRoleCast = (role: string): UserRole => {
   ];
   
   return validRoles.includes(role as UserRole) ? (role as UserRole) : 'property_manager';
+};
+
+// Convert UserProfile to User type
+export const profileToUser = (profile: any): User => {
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    role: safeRoleCast(profile.role),
+    phone: profile.phone,
+    avatar: profile.avatar,
+    secondaryRoles: profile.secondary_roles?.map((role: string) => safeRoleCast(role)),
+    customPermissions: profile.custom_permissions || {}
+  };
 };
