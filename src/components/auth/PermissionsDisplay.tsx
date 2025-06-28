@@ -24,8 +24,8 @@ const PermissionsDisplay = () => {
   const offlineCapabilities = getOfflineCapabilities();
   const allPermissions = getAllPermissionsList();
   
-  // Check if user has custom permissions
-  const hasCustomPermissions = Boolean(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
+  // Check if user has custom permissions - ensure primitive boolean
+  const hasCustomPermissions = !!(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
   
   // Group permissions by category
   const permissionGroups = {
