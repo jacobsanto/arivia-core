@@ -25,7 +25,7 @@ const PermissionsDisplay = () => {
   const allPermissions = getAllPermissionsList();
   
   // Check if user has custom permissions
-  const hasCustomPermissions = user.custom_permissions && Object.keys(user.custom_permissions).length > 0;
+  const hasCustomPermissions = Boolean(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
   
   // Group permissions by category
   const permissionGroups = {
