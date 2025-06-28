@@ -90,14 +90,14 @@ const RoleManagement: React.FC = () => {
             <UserRolesList 
               users={users}
               isLoading={isLoading}
-              currentUser={user}
+              currentUser={convertToUser(user)}
               onEditPermissions={(userProfile) => {
                 const convertedUser = convertToUser(userProfile);
                 setSelectedUser(convertedUser);
                 setActiveTab("permissions");
                 return convertedUser;
               }}
-              onDeleteClick={setUserToDelete}
+              onDeleteClick={(userProfile) => setUserToDelete(convertToUser(userProfile))}
               setActiveTab={setActiveTab}
               setSelectedUser={(userProfile) => setSelectedUser(convertToUser(userProfile))}
             />
