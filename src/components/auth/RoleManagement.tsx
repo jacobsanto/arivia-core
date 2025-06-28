@@ -11,6 +11,7 @@ import UserRolesList from "./role-management/UserRolesList";
 import UnauthorizedAccess from "./role-management/UnauthorizedAccess";
 import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
+import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
 import { profileToUser } from "@/types/auth/base";
 
@@ -73,6 +74,10 @@ const RoleManagement: React.FC = () => {
               <Lock className="h-4 w-4" />
               Permissions
             </TabsTrigger>
+            <TabsTrigger value="role-crud" className="flex items-center gap-1">
+              <Shield className="h-4 w-4" />
+              Role & Permission CRUD
+            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="roles" className="mt-4">
@@ -133,6 +138,10 @@ const RoleManagement: React.FC = () => {
                 </p>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="role-crud" className="mt-4">
+            <RolePermissionCRUD />
           </TabsContent>
         </Tabs>
       </CardContent>
