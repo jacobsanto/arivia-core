@@ -34,6 +34,24 @@ export const useDashboard = () => {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
       setError(errorMessage);
+      console.error('Dashboard data loading error:', err);
+      
+      // Set fallback data to prevent complete UI failure
+      const fallbackData: DashboardData = {
+        properties: { total: 0, occupied: 0, vacant: 0 },
+        tasks: { total: 0, completed: 0, pending: 0 },
+        maintenance: { total: 0, critical: 0, standard: 0 },
+        upcomingTasks: [],
+        housekeepingTasks: [],
+        maintenanceTasks: [],
+        quickStats: {
+          occupancyRate: 0,
+          avgRating: 0,
+          revenueToday: 0,
+          pendingCheckouts: 0
+        }
+      };
+      setDashboardData(fallbackData);
       throw err;
     } finally {
       setIsLoading(false);
@@ -45,6 +63,7 @@ export const useDashboard = () => {
     
     loadDashboardData().catch(err => {
       if (!isMounted) return;
+      console.error('Initial dashboard load failed:', err);
     });
     
     return () => {

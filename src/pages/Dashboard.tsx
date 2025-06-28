@@ -11,6 +11,8 @@ import { Loader2, AlertTriangle, Save } from "lucide-react";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { DateRange } from "@/components/reports/DateRangeSelector";
+import { populateSampleData } from "@/utils/sampleDataPopulator";
+import { toast } from "sonner";
 
 // Loader component for better UX during loading states
 const DashboardLoader = memo(() => (
@@ -75,7 +77,9 @@ const Dashboard: React.FC = () => {
     handleDateRangeChange,
     refreshDashboard,
     isLoading,
-    error
+    error,
+    selectedProperty,
+    dateRange
   } = useDashboard();
   
   // Use the preferences hook
@@ -95,6 +99,27 @@ const Dashboard: React.FC = () => {
     console.log("Manual dashboard refresh triggered");
     return refreshDashboard();
   }, [refreshDashboard]);
+
+  // Handle adding sample data
+  const handleAddSampleData = useCallback(async () => {
+    try {
+      const result = await populateSampleData();
+      if (result.success) {
+        toast.success("Sample data added successfully", {
+          description: "Dashboard will refresh automatically"
+        });
+        await handleRefresh();
+      } else {
+        toast.error("Failed to add sample data", {
+          description: result.message
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to add sample data", {
+        description: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  }, [handleRefresh]);
 
   // Convert stored preferences date range for dashboard
   const convertedDateRange: DateRange = useMemo(() => {
@@ -121,7 +146,7 @@ const Dashboard: React.FC = () => {
   // Memoize the header to prevent unnecessary re-renders
   const dashboardHeader = useMemo(() => (
     <DashboardHeader 
-      selectedProperty={preferences.selectedProperty}
+      selectedProperty={selectedProperty}
       onPropertyChange={handlePropertyChangeWithSave}
       dateRange={convertedDateRange}
       onDateRangeChange={handleDateRangeChangeWithSave}
@@ -130,7 +155,7 @@ const Dashboard: React.FC = () => {
       isLoading={isLoading}
     />
   ), [
-    preferences.selectedProperty, 
+    selectedProperty, 
     handlePropertyChangeWithSave, 
     convertedDateRange, 
     handleDateRangeChangeWithSave, 
@@ -150,7 +175,7 @@ const Dashboard: React.FC = () => {
       );
     }
     
-    if (isLoading || !dashboardData) {
+    if (isLoading) {
       return <DashboardLoader />;
     }
 
@@ -168,6 +193,8 @@ const Dashboard: React.FC = () => {
         error={error}
         favoriteMetrics={preferences.favoriteMetrics}
         onToggleFavorite={toggleFavoriteMetric}
+        onRefresh={handleRefresh}
+        onAddSampleData={handleAddSampleData}
       />
     );
   }, [
@@ -177,7 +204,8 @@ const Dashboard: React.FC = () => {
     error, 
     handleRefresh, 
     preferences.favoriteMetrics, 
-    toggleFavoriteMetric
+    toggleFavoriteMetric,
+    handleAddSampleData
   ]);
 
   return (
