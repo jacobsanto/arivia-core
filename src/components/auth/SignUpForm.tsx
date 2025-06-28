@@ -15,7 +15,11 @@ import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { SecurityEnhancements } from "./SecurityEnhancements";
 
-const SignUpForm = () => {
+interface SignUpFormProps {
+  isMobile?: boolean;
+}
+
+const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
   const { signup } = useUser();
