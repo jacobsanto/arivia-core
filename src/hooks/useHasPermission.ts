@@ -1,9 +1,9 @@
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useEffect, useState } from 'react';
 
 export const useHasPermission = (permissionKey: string): boolean => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {

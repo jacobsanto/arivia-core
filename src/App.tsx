@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Toaster } from "@/components/ui/sonner";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { UserProvider } from "@/contexts/UserContext";
 import { TenantProvider } from "@/lib/context/TenantContext";
 import { InventoryProvider } from "@/contexts/InventoryContext";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -37,7 +37,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+      <UserProvider>
         <TenantProvider>
           <InventoryProvider>
             <ToastProvider>
@@ -131,7 +131,7 @@ function App() {
             </ToastProvider>
           </InventoryProvider>
         </TenantProvider>
-      </AuthProvider>
+      </UserProvider>
       <Toaster />
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>

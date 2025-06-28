@@ -15,7 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
@@ -24,7 +24,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -41,7 +41,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      // Call login function from AuthContext
+      // Call login function from UserContext
       const { error } = await login(values.email, values.password);
       
       if (error) {

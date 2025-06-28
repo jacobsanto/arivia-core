@@ -4,14 +4,14 @@ import LoginForm from "@/components/auth/LoginForm";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { getRoleBasedRoute } from "@/lib/utils/routing";
 import { safeRoleCast } from "@/types/auth/base";
 
 const Login = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isAuthenticated, isLoading, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useUser();
 
   useEffect(() => {
     if (isAuthenticated && !isLoading && user) {

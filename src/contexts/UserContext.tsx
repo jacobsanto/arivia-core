@@ -7,7 +7,7 @@ import { isAuthorizedRole } from "@/lib/utils/routing";
 import { usePermissions } from "@/hooks/usePermissions";
 import type { Session as SupabaseSession } from "@supabase/supabase-js";
 
-interface AuthContextType {
+interface UserContextType {
   user: UserProfile | null;
   session: SupabaseSession | null;
   isLoading: boolean;
@@ -32,7 +32,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper function to safely convert Json to Record<string, boolean>
 const safeConvertCustomPermissions = (customPermissions: any): Record<string, boolean> => {
@@ -50,7 +50,7 @@ const safeConvertCustomPermissions = (customPermissions: any): Record<string, bo
   return {};
 };
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<SupabaseSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -364,7 +364,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return !!localStorage.getItem('user');
   };
 
-  const value: AuthContextType = {
+  const value: UserContextType = {
     user,
     session,
     isLoading,
@@ -390,16 +390,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <UserContext.Provider value={value}>
       {children}
-    </AuthContext.Provider>
+    </UserContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
 };

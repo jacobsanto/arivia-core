@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import { UserProvider } from './contexts/UserContext'
-import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 // Create a client
@@ -22,10 +21,8 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <UserProvider>
-        <App />
-      </UserProvider>
-    </AuthProvider>
+    <UserProvider>
+      <App />
+    </UserProvider>
   </QueryClientProvider>
 );
