@@ -1,31 +1,20 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { useTenant } from '@/lib/tenant/TenantContext';
-import TenantBranding from '@/lib/tenant/components/TenantBranding';
-import { LoadingState } from '@/components/ui/loading-state';
+import { useTenant } from '@/lib/context/TenantContext';
 
 interface TenantLayoutProps {
   children: React.ReactNode;
 }
 
 const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
-  const { tenantId, isLoading } = useTenant();
+  const { tenantId } = useTenant();
 
-  if (isLoading) {
-    return <LoadingState />;
-  }
-
-  if (!tenantId) {
-    return <div>Access denied or tenant not found</div>;
-  }
-
+  // Always render children - tenantId will be set by TenantProvider
+  // No need to show loading or access denied since we have a default tenant
   return (
-    <TenantBranding>
-      <div className="min-h-screen bg-background">
-        {children}
-      </div>
-    </TenantBranding>
+    <div className="min-h-screen bg-background">
+      {children}
+    </div>
   );
 };
 
