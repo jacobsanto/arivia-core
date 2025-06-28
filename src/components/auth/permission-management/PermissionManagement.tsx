@@ -10,7 +10,7 @@ import UnauthorizedPermissionView from './UnauthorizedPermissionView';
 import PermissionHeader from './PermissionHeader';
 import PermissionFilters from './PermissionFilters';
 import PermissionCategoryAccordion from './PermissionCategoryAccordion';
-import usePermissionManagement from './usePermissionManagement';
+import { usePermissionManagement } from './usePermissionManagement';
 
 interface PermissionManagementProps {
   selectedUser: User | null;
@@ -20,23 +20,34 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
   const { user: currentUser, updateUserPermissions } = useUser();
 
   const {
-    permissions,
-    isSaving,
-    activeCategory,
-    permissionGroups,
-    handlePermissionToggle,
-    handleSave,
-    handleResetToDefault,
-    setActiveCategory
-  } = usePermissionManagement({
-    selectedUser,
-    updateUserPermissions
-  });
+    userPermissions,
+    permissionsByCategory,
+    isLoading,
+    hasChanges,
+    togglePermission,
+    savePermissions,
+    resetPermissions
+  } = usePermissionManagement(selectedUser || undefined);
   
   // Only superadmins can access this component
   if (currentUser?.role !== "superadmin" || !selectedUser) {
     return <UnauthorizedPermissionView />;
   }
+  
+  const [activeCategory, setActiveCategory] = React.useState<string>("all");
+  const permissionGroups = permissionsByCategory;
+  
+  const handlePermissionToggle = (permissionKey: string) => {
+    togglePermission(permissionKey);
+  };
+
+  const handleSave = async () => {
+    await savePermissions();
+  };
+
+  const handleResetToDefault = () => {
+    resetPermissions();
+  };
   
   return (
     <Card>
@@ -53,7 +64,7 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
         <div className="space-y-6">
           <PermissionHeader 
             selectedUser={selectedUser}
-            isSaving={isSaving}
+            isSaving={isLoading}
             onSave={handleSave}
             onResetToDefault={handleResetToDefault}
           />
@@ -74,7 +85,7 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
                       key={category}
                       category={category}
                       permKeys={permKeys}
-                      permissions={permissions}
+                      permissions={userPermissions}
                       selectedUser={selectedUser}
                       handlePermissionToggle={handlePermissionToggle}
                     />

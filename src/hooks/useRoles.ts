@@ -31,6 +31,38 @@ export const useRoles = () => {
     }
   };
 
+  const createRole = async (name: string) => {
+    if (!name.trim()) {
+      toast.error('Role name is required');
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('roles')
+        .insert([{ 
+          name: name.trim(),
+          tenant_id: crypto.randomUUID(), // Using random UUID for now
+          description: `${name} role`
+        }])
+        .select('*');
+
+      if (error) {
+        console.error('Error creating role:', error);
+        toast.error('Failed to create role');
+        return;
+      }
+
+      if (data?.[0]) {
+        setRoles(prev => [...prev, data[0]]);
+        toast.success('Role created successfully');
+      }
+    } catch (error) {
+      console.error('Error in createRole:', error);
+      toast.error('Failed to create role');
+    }
+  };
+
   const deleteRole = async (roleId: string) => {
     try {
       const { error } = await supabase
@@ -59,6 +91,7 @@ export const useRoles = () => {
   return {
     roles,
     isLoading,
+    createRole,
     deleteRole,
     refetch: fetchRoles
   };

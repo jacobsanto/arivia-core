@@ -1,37 +1,18 @@
 
-import { useUser } from '@/contexts/UserContext';
-
 export const usePermissions = () => {
-  const { user } = useUser();
-
-  const canAccess = (permission: string): boolean => {
-    if (!user) return false;
-
-    // Simple role-based permission system
-    const rolePermissions: Record<string, string[]> = {
-      superadmin: ['*'], // All permissions
-      tenant_admin: [
-        'viewProperties', 'manageProperties', 'viewUsers', 'manageUsers',
-        'viewAllTasks', 'assignTasks', 'viewInventory', 'manageInventory',
-        'approveTransfers', 'viewReports', 'viewPermissions', 'view_damage_reports'
-      ],
-      property_manager: [
-        'viewProperties', 'viewAllTasks', 'assignTasks', 'viewInventory', 'viewReports'
-      ],
-      housekeeping_staff: ['viewAssignedTasks', 'viewInventory'],
-      maintenance_staff: ['viewAssignedTasks', 'viewInventory'],
-      inventory_manager: ['viewInventory', 'manageInventory', 'approveTransfers', 'viewReports'],
-      concierge: ['viewAssignedTasks', 'viewProperties']
-    };
-
-    const userPermissions = rolePermissions[user.role] || [];
-    
-    // Check for wildcard permission
-    if (userPermissions.includes('*')) return true;
-    
-    // Check specific permission
-    return userPermissions.includes(permission);
-  };
-
-  return { canAccess };
+  const allPermissions = [
+    { key: "viewProperties", label: "View Properties" },
+    { key: "manageProperties", label: "Manage Properties" },
+    { key: "viewUsers", label: "View Users" },
+    { key: "manageUsers", label: "Manage Users" },
+    { key: "assignTasks", label: "Assign Tasks" },
+    { key: "viewAllTasks", label: "View All Tasks" },
+    { key: "viewAssignedTasks", label: "View Assigned Tasks" },
+    { key: "viewInventory", label: "View Inventory" },
+    { key: "manageInventory", label: "Manage Inventory" },
+    { key: "approveTransfers", label: "Approve Transfers" },
+    { key: "viewReports", label: "View Reports" },
+    { key: "manageSettings", label: "Manage Settings" },
+  ];
+  return { allPermissions };
 };

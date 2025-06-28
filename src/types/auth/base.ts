@@ -19,6 +19,19 @@ export interface User {
   customPermissions?: Record<string, boolean>;
 }
 
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: string; // This is a string in the database
+  phone?: string;
+  avatar?: string;
+  secondary_roles?: string[];
+  custom_permissions?: Record<string, boolean>;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface TenantUser extends User {
   tenantId: string;
 }
@@ -188,7 +201,7 @@ export const safeRoleCast = (role: string): UserRole => {
 };
 
 // Convert UserProfile to User type with proper type safety
-export const profileToUser = (profile: any): User => {
+export const profileToUser = (profile: UserProfile): User => {
   return {
     id: profile.id,
     name: profile.name || '',

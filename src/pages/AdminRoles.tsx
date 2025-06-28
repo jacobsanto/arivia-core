@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useRoles } from "@/hooks/useRoles";
-import { useAllPermissions } from "@/hooks/useAllPermissions";
+import { usePermissions } from "@/hooks/usePermissions";
 import { useRolePermissions } from "@/hooks/useRolePermissions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -9,19 +9,18 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const AdminRoles = () => {
-  const { roles } = useRoles();
-  const { allPermissions } = useAllPermissions();
+  const { roles, createRole } = useRoles();
+  const { allPermissions } = usePermissions();
   const { getPermissionsForRole, togglePermissionForRole } = useRolePermissions();
 
-  const createRole = async (name: string) => {
+  const handleCreateRole = async (name: string) => {
     if (!name.trim()) {
       toast.error('Role name is required');
       return;
     }
 
     try {
-      // This would need to be implemented in the useRoles hook
-      toast.info('Role creation not yet implemented');
+      await createRole(name);
     } catch (error) {
       console.error('Error creating role:', error);
       toast.error('Failed to create role');
@@ -58,7 +57,7 @@ const AdminRoles = () => {
 
       <Button onClick={() => {
         const name = prompt("Role name:");
-        if (name) createRole(name);
+        if (name) handleCreateRole(name);
       }}>
         Add Role
       </Button>
