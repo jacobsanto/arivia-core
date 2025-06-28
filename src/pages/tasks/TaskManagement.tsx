@@ -5,26 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus } from 'lucide-react';
 import { useTaskManagement } from '@/hooks/useTaskManagement';
-import TaskList from '@/components/task-management/TaskList';
-import TaskFilters from '@/components/task-management/TaskFilters';
-import { Task, TaskFilters as TaskFiltersType } from '@/types/task-management';
+import { Task } from '@/services/task-management/task.service';
 
 const TaskManagement: React.FC = () => {
   const {
     tasks,
-    loading,
-    filters,
-    applyFilters,
+    isLoading,
     completeTask,
     deleteTask,
-    refreshTasks
+    refetch
   } = useTaskManagement();
 
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-
-  const handleClearFilters = () => {
-    applyFilters({});
-  };
 
   const openTasks = tasks.filter(task => task.status === 'open');
   const inProgressTasks = tasks.filter(task => task.status === 'in_progress');
@@ -44,7 +36,61 @@ const TaskManagement: React.FC = () => {
     // TODO: Open view modal
   };
 
-  if (loading) {
+  const TaskList: React.FC<{ tasks: Task[]; showActions?: boolean; emptyMessage?: string }> = ({ 
+    tasks, 
+    showActions = true, 
+    emptyMessage = "No tasks found." 
+  }) => {
+    if (tasks.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          {emptyMessage}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {tasks.map(task => (
+          <Card key={task.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>{task.title}</span>
+                <div className="flex gap-2">
+                  {showActions && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => handleTaskView(task)}>
+                        View
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleTaskEdit(task)}>
+                        Edit
+                      </Button>
+                      {task.status !== 'completed' && (
+                        <Button size="sm" onClick={() => handleTaskComplete(task.id)}>
+                          Complete
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Status: {task.status}</span>
+                <span>Priority: {task.priority}</span>
+                {task.due_date && <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>}
+                {task.assigned_to && <span>Assigned to: {task.assigned_to}</span>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">Loading tasks...</div>
@@ -62,66 +108,43 @@ const TaskManagement: React.FC = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1">
-          <TaskFilters
-            filters={filters}
-            onFiltersChange={applyFilters}
-            onClearFilters={handleClearFilters}
+      <Tabs defaultValue="all" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
+          <TabsTrigger value="open">Open ({openTasks.length})</TabsTrigger>
+          <TabsTrigger value="in_progress">In Progress ({inProgressTasks.length})</TabsTrigger>
+          <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all">
+          <TaskList
+            tasks={tasks}
+            emptyMessage="No tasks found. Create your first task to get started."
           />
-        </div>
+        </TabsContent>
 
-        <div className="lg:col-span-3">
-          <Tabs defaultValue="all" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="all">All Tasks ({tasks.length})</TabsTrigger>
-              <TabsTrigger value="open">Open ({openTasks.length})</TabsTrigger>
-              <TabsTrigger value="in_progress">In Progress ({inProgressTasks.length})</TabsTrigger>
-              <TabsTrigger value="completed">Completed ({completedTasks.length})</TabsTrigger>
-            </TabsList>
+        <TabsContent value="open">
+          <TaskList
+            tasks={openTasks}
+            emptyMessage="No open tasks."
+          />
+        </TabsContent>
 
-            <TabsContent value="all">
-              <TaskList
-                tasks={tasks}
-                onComplete={handleTaskComplete}
-                onEdit={handleTaskEdit}
-                onView={handleTaskView}
-                emptyMessage="No tasks found. Create your first task to get started."
-              />
-            </TabsContent>
+        <TabsContent value="in_progress">
+          <TaskList
+            tasks={inProgressTasks}
+            emptyMessage="No tasks in progress."
+          />
+        </TabsContent>
 
-            <TabsContent value="open">
-              <TaskList
-                tasks={openTasks}
-                onComplete={handleTaskComplete}
-                onEdit={handleTaskEdit}
-                onView={handleTaskView}
-                emptyMessage="No open tasks."
-              />
-            </TabsContent>
-
-            <TabsContent value="in_progress">
-              <TaskList
-                tasks={inProgressTasks}
-                onComplete={handleTaskComplete}
-                onEdit={handleTaskEdit}
-                onView={handleTaskView}
-                emptyMessage="No tasks in progress."
-              />
-            </TabsContent>
-
-            <TabsContent value="completed">
-              <TaskList
-                tasks={completedTasks}
-                onEdit={handleTaskEdit}
-                onView={handleTaskView}
-                showActions={false}
-                emptyMessage="No completed tasks."
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </div>
+        <TabsContent value="completed">
+          <TaskList
+            tasks={completedTasks}
+            showActions={false}
+            emptyMessage="No completed tasks."
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

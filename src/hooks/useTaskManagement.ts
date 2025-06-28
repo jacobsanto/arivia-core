@@ -74,14 +74,27 @@ export const useTaskManagement = () => {
   const completeTask = async (id: string) => {
     try {
       const updatedTask = await TaskService.updateTask(id, { 
-        status: 'completed',
-        completed_at: new Date().toISOString()
+        status: 'completed'
+        // Remove completed_at as it doesn't exist in UpdateTaskData
       });
       setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
       toast.success('Task completed successfully');
       return updatedTask;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to complete task';
+      toast.error(errorMessage);
+      throw err;
+    }
+  };
+
+  const updateTaskStatus = async (id: string, status: 'open' | 'in_progress' | 'completed' | 'cancelled') => {
+    try {
+      const updatedTask = await TaskService.updateTask(id, { status });
+      setTasks(prev => prev.map(task => task.id === id ? updatedTask : task));
+      toast.success('Task status updated successfully');
+      return updatedTask;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update task status';
       toast.error(errorMessage);
       throw err;
     }
@@ -100,6 +113,18 @@ export const useTaskManagement = () => {
     deleteTask,
     getMyTasks,
     completeTask,
+    updateTaskStatus,
     refetch: fetchTasks
+  };
+};
+
+// Export hook for staff tasks
+export const useMyTasks = () => {
+  const { tasks, isLoading, updateTaskStatus } = useTaskManagement();
+  
+  return {
+    tasks,
+    loading: isLoading,  // Alias for compatibility
+    updateTaskStatus
   };
 };

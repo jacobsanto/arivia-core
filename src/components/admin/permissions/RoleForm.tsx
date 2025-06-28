@@ -35,7 +35,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({ role, onBack, onSaved }) => 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    tenant_id: 'default-tenant-id', // You'll need to get this from context
+    tenant_id: 'default-tenant-id',
     is_active: true
   });
   
@@ -89,11 +89,19 @@ export const RoleForm: React.FC<RoleFormProps> = ({ role, onBack, onSaved }) => 
     try {
       const validatedData = roleSchema.parse(formData);
       
+      // Ensure required fields are present
+      const roleData = {
+        name: validatedData.name,
+        description: validatedData.description || '',
+        tenant_id: validatedData.tenant_id,
+        is_active: validatedData.is_active
+      };
+      
       let savedRole: Role;
       if (role) {
-        savedRole = await updateRole(role.id, validatedData);
+        savedRole = await updateRole(role.id, roleData);
       } else {
-        savedRole = await createRole(validatedData);
+        savedRole = await createRole(roleData);
       }
 
       // Assign permissions

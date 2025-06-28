@@ -3,7 +3,6 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMyTasks } from '@/hooks/useTaskManagement';
-import TaskList from '@/components/task-management/TaskList';
 
 const StaffTasks: React.FC = () => {
   const { tasks, loading, updateTaskStatus } = useMyTasks();
@@ -22,6 +21,57 @@ const StaffTasks: React.FC = () => {
   const myOpenTasks = tasks.filter(task => task.status === 'open');
   const myInProgressTasks = tasks.filter(task => task.status === 'in_progress');
   const myCompletedTasks = tasks.filter(task => task.status === 'completed');
+
+  const TaskList: React.FC<{ 
+    tasks: any[]; 
+    onComplete?: (taskId: string) => void; 
+    isStaffView?: boolean; 
+    showActions?: boolean; 
+    emptyMessage?: string; 
+  }> = ({ 
+    tasks, 
+    onComplete, 
+    showActions = true, 
+    emptyMessage = "No tasks found." 
+  }) => {
+    if (tasks.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          {emptyMessage}
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        {tasks.map(task => (
+          <Card key={task.id}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>{task.title}</span>
+                {showActions && onComplete && (
+                  <button
+                    onClick={() => onComplete(task.id)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  >
+                    {task.status === 'open' ? 'Start' : 'Complete'}
+                  </button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-2">{task.description}</p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span>Status: {task.status}</span>
+                <span>Priority: {task.priority}</span>
+                {task.due_date && <span>Due: {new Date(task.due_date).toLocaleDateString()}</span>}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
