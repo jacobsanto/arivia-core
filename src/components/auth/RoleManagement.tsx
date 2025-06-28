@@ -13,7 +13,7 @@ import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
-import { safeRoleCast, profileToUser } from "@/types/auth/base";
+import { profileToUser } from "@/types/auth/base";
 import type { UserProfile } from "@/contexts/UserContext";
 
 // Main component for Role Management
