@@ -3,7 +3,12 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useUser } from '@/contexts/UserContext';
 
-export const useAvatarUpload = (userId: string) => {
+interface UseAvatarUploadParams {
+  userId: string;
+  onAvatarChange?: (url: string) => void;
+}
+
+export const useAvatarUpload = ({ userId, onAvatarChange }: UseAvatarUploadParams) => {
   const [isUploading, setIsUploading] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -23,6 +28,7 @@ export const useAvatarUpload = (userId: string) => {
           // Update the user's avatar
           await updateProfile({ avatar: newAvatarUrl });
           setAvatarUrl(newAvatarUrl);
+          onAvatarChange?.(newAvatarUrl);
           toast.success('Avatar updated successfully');
           setIsDialogOpen(false);
         } catch (error) {

@@ -1,95 +1,51 @@
 
 import { useState, useEffect } from 'react';
-import { Task } from '@/services/task-management/task.service';
-import { useTaskManagement } from './useTaskManagement';
 import { 
-  refreshDashboardData, 
-  setupAutoRefresh, 
+  getDashboardData,
+  refreshDashboardData,
+  setupAutoRefresh,
   getRefreshStatus,
-  mockBookingData,
-  mockTaskData,
-  mockInventoryData,
-  calculateOccupancyRate,
-  generateFinancialSummary,
-  calculateTaskCompletion
+  calculationUtils
 } from '@/utils/dashboard';
 
-export interface DashboardData {
-  tasks: Task[];
-  bookings: any[];
-  occupancyRate: number;
-  financialSummary: any;
-  taskCompletion: number;
-  inventoryAlerts: any[];
-}
-
 export const useDashboard = () => {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
-  
-  const { tasks } = useTaskManagement();
+  const [dashboardData, setDashboardData] = useState(getDashboardData());
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshStatus, setRefreshStatus] = useState(getRefreshStatus());
 
-  const fetchDashboardData = async (): Promise<DashboardData> => {
+  const refreshData = async () => {
+    setIsLoading(true);
     try {
-      // Use mock data and calculations
-      const bookings = mockBookingData;
-      const inventoryData = mockInventoryData;
-      
-      const dashboardData: DashboardData = {
-        tasks: tasks || [],
-        bookings,
-        occupancyRate: calculateOccupancyRate(bookings),
-        financialSummary: generateFinancialSummary(bookings),
-        taskCompletion: calculateTaskCompletion(tasks || []),
-        inventoryAlerts: inventoryData.filter(item => item.quantity <= item.minQuantity)
-      };
-      
-      return dashboardData;
+      const newData = await refreshDashboardData();
+      setDashboardData(newData);
+      setRefreshStatus(getRefreshStatus());
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      throw error;
-    }
-  };
-
-  const refresh = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const dashboardData = await fetchDashboardData();
-      setData(dashboardData);
-      setLastRefresh(new Date());
-      
-      // Call the dashboard refresh function
-      await refreshDashboardData();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to refresh dashboard');
+      console.error('Error refreshing dashboard:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    refresh();
-    
-    // Set up auto-refresh
-    const interval = setupAutoRefresh(refresh, 30000);
-    
-    return () => {
-      if (interval) {
-        clearInterval(interval);
-      }
-    };
-  }, [tasks]);
+    const cleanup = setupAutoRefresh(30000, refreshData);
+    return cleanup;
+  }, []);
+
+  // Convert inventory items to have consistent naming
+  const normalizedInventory = dashboardData.inventory.map(item => ({
+    ...item,
+    minQuantity: item.min_quantity || 0
+  }));
 
   return {
-    data,
+    ...dashboardData,
+    inventory: normalizedInventory,
     isLoading,
-    error,
-    refresh,
-    lastRefresh,
-    refreshStatus: getRefreshStatus()
+    refreshStatus,
+    refreshData,
+    // Utility functions
+    calculateOccupancyRate: calculationUtils.calculateOccupancyRate,
+    generateFinancialSummary: calculationUtils.generateFinancialSummary,
+    calculateTaskCompletion: calculationUtils.calculateTaskCompletion
   };
 };

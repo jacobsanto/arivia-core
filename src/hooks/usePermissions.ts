@@ -2,11 +2,13 @@
 import { useState, useEffect } from 'react';
 import { Permission, CreatePermissionData, UpdatePermissionData } from '@/types/role-permission';
 import { PermissionService } from '@/services/role-permission/permission.service';
+import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 
 export const usePermissions = () => {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
   const fetchPermissions = async () => {
     try {
@@ -68,6 +70,64 @@ export const usePermissions = () => {
     return acc;
   }, {} as Record<string, Permission[]>);
 
+  // Enhanced RBAC methods
+  const canAccess = (permissionKey: string): boolean => {
+    if (!user) return false;
+    
+    // Check custom permissions first
+    if (user.custom_permissions && user.custom_permissions[permissionKey]) {
+      return true;
+    }
+    
+    // Fallback to role-based permissions for now
+    const rolePermissions: Record<string, string[]> = {
+      'superadmin': ['*'], // All permissions
+      'tenant_admin': [
+        'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+        'assignTasks', 'viewInventory', 'manageInventory', 'viewUsers', 
+        'manageUsers', 'viewReports', 'viewChat', 'view_damage_reports'
+      ],
+      'property_manager': [
+        'viewDashboard', 'viewProperties', 'viewAllTasks', 'assignTasks', 
+        'viewInventory', 'viewReports', 'viewChat'
+      ],
+      'housekeeping_staff': [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+      ],
+      'maintenance_staff': [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+      ],
+      'inventory_manager': [
+        'viewDashboard', 'viewInventory', 'manageInventory', 'approveTransfers', 
+        'viewReports', 'viewChat'
+      ],
+      'concierge': [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewChat'
+      ]
+    };
+
+    const userPermissions = rolePermissions[user.role] || [];
+    return userPermissions.includes('*') || userPermissions.includes(permissionKey);
+  };
+
+  const getOfflineCapabilities = (): Record<string, boolean> => {
+    return user?.custom_permissions || {};
+  };
+
+  const getAllPermissionsList = (): string[] => {
+    if (!user) return [];
+    
+    // Return all available permission keys
+    const allPermissions = [
+      'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+      'viewAssignedTasks', 'assignTasks', 'viewInventory', 'manageInventory', 
+      'approveTransfers', 'viewUsers', 'manageUsers', 'viewReports', 'viewChat', 
+      'view_damage_reports'
+    ];
+    
+    return allPermissions.filter(perm => canAccess(perm));
+  };
+
   useEffect(() => {
     fetchPermissions();
   }, []);
@@ -79,6 +139,10 @@ export const usePermissions = () => {
     createPermission,
     updatePermission,
     deletePermission,
-    refetch: fetchPermissions
+    refetch: fetchPermissions,
+    // Enhanced RBAC methods
+    canAccess,
+    getOfflineCapabilities,
+    getAllPermissionsList
   };
 };

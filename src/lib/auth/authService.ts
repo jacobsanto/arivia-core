@@ -1,60 +1,59 @@
 
-import { supabase } from '@/lib/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
-import { TenantUser } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { User, TenantUser } from '@/types/auth';
 
-export class AuthService {
-  static async signIn(email: string, password: string) {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
-  }
-
-  static async signUp(email: string, password: string, tenantId?: string) {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          tenant_id: tenantId,
-        }
-      }
-    });
-    return { data, error };
-  }
-
-  static async signOut() {
-    const { error } = await supabase.auth.signOut();
-    return { error };
-  }
-
-  static async getCurrentSession(): Promise<Session | null> {
-    const { data } = await supabase.auth.getSession();
-    return data.session;
-  }
-
-  static async getCurrentUser(): Promise<TenantUser | null> {
-    const session = await this.getCurrentSession();
-    if (!session?.user) return null;
+export const authService = {
+  async getCurrentUser(): Promise<User | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single();
 
     if (!profile) return null;
 
     return {
-      id: session.user.id,
-      email: session.user.email || '',
+      id: profile.id,
       name: profile.name,
+      email: profile.email,
       role: profile.role,
-      tenantId: profile.tenant_id,
       avatar: profile.avatar,
-      permissions: profile.custom_permissions || {}
+      phone: profile.phone,
+      secondaryRoles: profile.secondary_roles || [],
+      customPermissions: profile.custom_permissions || {}
     };
+  },
+
+  async createTenantUser(userData: Partial<TenantUser>): Promise<TenantUser> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([{
+        ...userData,
+        tenant_id: userData.tenant_id // Use snake_case for database
+      }])
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      ...data,
+      tenant_id: data.tenant_id // Map from database snake_case
+    } as TenantUser;
+  },
+
+  async updateUserProfile(userId: string, updates: Partial<User>): Promise<User> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as User;
   }
-}
+};
