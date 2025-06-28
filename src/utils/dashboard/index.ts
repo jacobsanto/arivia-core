@@ -9,6 +9,17 @@ export {
   calculateTaskCompletion 
 } from './calculationUtils';
 
+// Task record type for weekly review
+export interface TaskRecord {
+  id: string;
+  title: string;
+  status: 'open' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  due_date?: string;
+  assigned_to?: string;
+  property_id?: string;
+}
+
 // Placeholder functions for refresh functionality
 export const refreshDashboardData = async () => {
   console.log('Dashboard data refresh triggered');

@@ -1,62 +1,98 @@
-import React from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { SidebarClose } from "./SidebarClose";
-import { useUser } from "@/contexts/UserContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
-import { getNavigationItems } from "@/lib/utils/routing";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useUser } from '@/contexts/UserContext';
+import { Button } from '@/components/ui/button';
+import { LogOut, X } from 'lucide-react';
+import { navigationItems } from '@/lib/navigation';
+import { hasPermission } from '@/lib/utils/permissions';
+import { safeRoleCast } from '@/types/auth/base';
 
 interface MobileSidebarProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
+export const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useUser();
-  const isMobile = useIsMobile();
 
-  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin";
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      onClose();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
-  const navigationItems = getNavigationItems(user?.role || "property_manager");
+  if (!user) return null;
+
+  const userRole = safeRoleCast(user.role);
+
+  if (!isOpen) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="left" className="w-64">
-        <SheetHeader>
-          <SheetTitle>
-            <div className="flex items-center space-x-2">
-              <Avatar>
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
-                <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
-              </Avatar>
-              <span className="font-semibold">{user?.name || "Guest"}</span>
-            </div>
-          </SheetTitle>
-        </SheetHeader>
-        <div className="py-4">
-          <nav className="grid gap-2">
-            {navigationItems.map((item) => (
-              <Link to={item.path} key={item.label} className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-secondary">
-                <span>{item.label}</span>
-              </Link>
-            ))}
-            {isAdmin && (
-              <Link to="/admin/users" className="flex items-center space-x-2 px-4 py-2 rounded-md hover:bg-secondary">
-                <span>Manage Users</span>
-              </Link>
-            )}
-          </nav>
+    <>
+      {/* Backdrop */}
+      <div 
+        className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+        onClick={onClose}
+      />
+      
+      {/* Sidebar */}
+      <div className="fixed left-0 top-0 h-full w-64 bg-background border-r z-50 md:hidden">
+        <div className="flex items-center justify-between p-4 border-b">
+          <img 
+            src="/arivia-logo-full-dark-bg.png" 
+            alt="Arivia Villas" 
+            className="h-8 w-auto"
+          />
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
-        <Button variant="ghost" className="w-full justify-start" onClick={logout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          Log Out
-        </Button>
-      </SheetContent>
-    </Sheet>
+        
+        <div className="py-4">
+          <div className="space-y-1 px-3">
+            <nav className="grid items-start text-sm font-medium">
+              {navigationItems.map((item) => {
+                if (!hasPermission(userRole, item.permission)) {
+                  return null;
+                }
+
+                return (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      cn(
+                        "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                        isActive && "bg-muted text-primary"
+                      )
+                    }
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.title}
+                  </NavLink>
+                );
+              })}
+            </nav>
+          </div>
+          
+          <div className="px-3 mt-4">
+            <Button
+              variant="ghost"
+              className="w-full justify-start"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign out
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
-
-export default MobileSidebar;

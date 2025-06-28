@@ -25,6 +25,15 @@ interface UserContextType {
   deleteUser: (userId: string) => Promise<void>;
   deleteAllUsers: () => Promise<void>;
   fetchUsers: () => Promise<UserProfile[]>;
+  // Alias methods for compatibility
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  // Additional methods
+  refreshProfile: () => Promise<void>;
+  updateAvatar: (avatarUrl: string) => Promise<void>;
+  updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => Promise<void>;
+  getOfflineLoginStatus: () => boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -41,10 +50,50 @@ interface UserProviderProps {
   children: ReactNode;
 }
 
+// Helper function to safely convert Json to Record<string, boolean>
+const safeConvertCustomPermissions = (customPermissions: any): Record<string, boolean> => {
+  if (!customPermissions) return {};
+  if (typeof customPermissions === 'object' && customPermissions !== null) {
+    return customPermissions as Record<string, boolean>;
+  }
+  if (typeof customPermissions === 'string') {
+    try {
+      return JSON.parse(customPermissions);
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshProfile = async () => {
+    if (!session?.user) return;
+    
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', session.user.id)
+      .single();
+    
+    if (profile) {
+      const userProfile: UserProfile = {
+        id: profile.id,
+        name: profile.name,
+        email: profile.email,
+        role: profile.role,
+        phone: profile.phone,
+        avatar: profile.avatar,
+        secondary_roles: profile.secondary_roles || [],
+        custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+      };
+      setUser(userProfile);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener
@@ -62,7 +111,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             .single();
           
           if (profile) {
-            setUser(profile);
+            const userProfile: UserProfile = {
+              id: profile.id,
+              name: profile.name,
+              email: profile.email,
+              role: profile.role,
+              phone: profile.phone,
+              avatar: profile.avatar,
+              secondary_roles: profile.secondary_roles || [],
+              custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+            };
+            setUser(userProfile);
           }
         } else {
           setUser(null);
@@ -83,7 +142,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           .single()
           .then(({ data: profile }) => {
             if (profile) {
-              setUser(profile);
+              const userProfile: UserProfile = {
+                id: profile.id,
+                name: profile.name,
+                email: profile.email,
+                role: profile.role,
+                phone: profile.phone,
+                avatar: profile.avatar,
+                secondary_roles: profile.secondary_roles || [],
+                custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+              };
+              setUser(userProfile);
             }
             setLoading(false);
           });
@@ -140,6 +209,27 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setUser({ ...user, ...updates });
   };
 
+  const updateAvatar = async (avatarUrl: string) => {
+    await updateProfile({ avatar: avatarUrl });
+  };
+
+  const updateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ custom_permissions: permissions })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('Error updating user permissions:', error);
+      throw error;
+    }
+    
+    // If updating current user, refresh their profile
+    if (userId === user?.id) {
+      await refreshProfile();
+    }
+  };
+
   const deleteUser = async (userId: string) => {
     // Delete user profile
     const { error } = await supabase
@@ -179,7 +269,20 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(profile => ({
+      id: profile.id,
+      name: profile.name,
+      email: profile.email,
+      role: profile.role,
+      phone: profile.phone,
+      avatar: profile.avatar,
+      secondary_roles: profile.secondary_roles || [],
+      custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+    }));
+  };
+
+  const getOfflineLoginStatus = () => {
+    return !!session && !!user;
   };
 
   const value: UserContextType = {
@@ -193,6 +296,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     deleteUser,
     deleteAllUsers,
     fetchUsers,
+    // Alias methods
+    login: signIn,
+    logout: signOut,
+    signup: signUp,
+    // Additional methods
+    refreshProfile,
+    updateAvatar,
+    updateUserPermissions,
+    getOfflineLoginStatus,
   };
 
   return (

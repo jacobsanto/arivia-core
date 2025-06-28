@@ -10,6 +10,7 @@ import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { profileToUser } from "@/types/auth/base";
 
 const UserInformation = () => {
   const { user, updateProfile, refreshProfile } = useUser();
@@ -29,18 +30,16 @@ const UserInformation = () => {
     if (!user) return;
     
     try {
-      const result = await updateProfile(user.id, {
+      await updateProfile({
         name: data.name,
         email: data.email,
         phone: data.phone
       });
       
-      if (result) {
-        toast.success("Profile updated successfully");
-        setIsEditing(false);
-        // Ensure profile is refreshed after successful update
-        await refreshProfile();
-      }
+      toast.success("Profile updated successfully");
+      setIsEditing(false);
+      // Ensure profile is refreshed after successful update
+      await refreshProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
@@ -60,6 +59,9 @@ const UserInformation = () => {
       </Card>
     );
   }
+
+  // Convert UserProfile to User for compatibility
+  const convertedUser = profileToUser(user);
 
   return (
     <Card className="mb-6">
@@ -81,8 +83,8 @@ const UserInformation = () => {
           />
         ) : (
           <div className="space-y-6">
-            <UserProfileInfo user={user} />
-            <AccountDetails user={user} />
+            <UserProfileInfo user={convertedUser} />
+            <AccountDetails user={convertedUser} />
             {isSuperAdmin && <SuperAdminInfo />}
           </div>
         )}

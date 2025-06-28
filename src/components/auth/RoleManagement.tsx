@@ -12,6 +12,7 @@ import UnauthorizedAccess from "./role-management/UnauthorizedAccess";
 import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import { useRoleManagement } from "./role-management/useRoleManagement";
+import { profileToUser } from "@/types/auth/base";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
@@ -80,14 +81,14 @@ const RoleManagement: React.FC = () => {
               isLoading={isLoading}
               currentUser={user}
               onEditPermissions={(user) => {
-                const selectedUserData = handleEditPermissions(user);
-                setSelectedUser(selectedUserData);
+                const convertedUser = profileToUser(user);
+                setSelectedUser(convertedUser);
                 setActiveTab("permissions");
-                return selectedUserData;
+                return convertedUser;
               }}
               onDeleteClick={setUserToDelete}
               setActiveTab={setActiveTab}
-              setSelectedUser={setSelectedUser}
+              setSelectedUser={(user) => setSelectedUser(profileToUser(user))}
             />
           </TabsContent>
           

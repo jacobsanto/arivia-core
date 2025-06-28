@@ -1,62 +1,63 @@
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  avatar?: string;
-  phone?: string;
-  secondaryRoles?: UserRole[];
-  customPermissions?: Record<string, boolean>;
-}
-
-export interface TenantUser {
-  id: string;
-  email: string;
-  name: string;
-  role: UserRole;
-  tenantId: string;
-  avatar?: string;
-  permissions: Record<string, boolean>;
-}
+// Base auth types for the application
+export type UserRole = 
+  | 'superadmin'
+  | 'tenant_admin'
+  | 'property_manager'
+  | 'housekeeping_staff'
+  | 'maintenance_staff'
+  | 'inventory_manager'
+  | 'concierge';
 
 export interface Session {
   access_token: string;
   refresh_token: string;
-  expires_at?: number;
-  user: User;
+  expires_in: number;
+  user: {
+    id: string;
+    email: string;
+  };
 }
 
-export type UserRole = 
-  | "superadmin"
-  | "tenant_admin" 
-  | "property_manager" 
-  | "concierge" 
-  | "housekeeping_staff" 
-  | "maintenance_staff" 
-  | "inventory_manager";
-
-export interface Tenant {
+// Unified User interface that works with both auth systems
+export interface User {
   id: string;
   name: string;
-  subdomain: string;
-  settings: TenantSettings;
-  createdAt: Date;
-  isActive: boolean;
+  email: string;
+  role: UserRole | string; // Allow both enum and string for flexibility
+  avatar?: string;
+  phone?: string;
+  secondaryRoles?: (UserRole | string)[];
+  customPermissions?: Record<string, boolean>;
+  custom_permissions?: Record<string, boolean>; // Database field name
 }
 
-export interface TenantSettings {
-  branding: {
-    logo?: string;
-    primaryColor: string;
-    secondaryColor: string;
+// Helper function to convert UserProfile to User
+export const profileToUser = (profile: any): User => {
+  return {
+    id: profile.id,
+    name: profile.name,
+    email: profile.email,
+    role: profile.role,
+    avatar: profile.avatar,
+    phone: profile.phone,
+    secondaryRoles: profile.secondary_roles,
+    customPermissions: profile.custom_permissions,
+    custom_permissions: profile.custom_permissions
   };
-  features: {
-    housekeeping: boolean;
-    maintenance: boolean;
-    inventory: boolean;
-    analytics: boolean;
-  };
-}
+};
 
-export type StateSetter<T> = (value: T) => void;
+// Helper function to safely cast role to UserRole
+export const safeRoleCast = (role: string): UserRole => {
+  const validRoles: UserRole[] = [
+    'superadmin',
+    'tenant_admin', 
+    'property_manager',
+    'housekeeping_staff',
+    'maintenance_staff',
+    'inventory_manager',
+    'concierge'
+  ];
+  
+  return validRoles.includes(role as UserRole) ? (role as UserRole) : 'property_manager';
+};

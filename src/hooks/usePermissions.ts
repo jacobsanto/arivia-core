@@ -77,8 +77,8 @@ export const usePermissions = () => {
     if (user.role === 'superadmin') return true;
     
     // Check custom permissions first
-    if (user.customPermissions && user.customPermissions[permissionName] !== undefined) {
-      return user.customPermissions[permissionName];
+    if (user.custom_permissions && user.custom_permissions[permissionName] !== undefined) {
+      return user.custom_permissions[permissionName];
     }
     
     // Default role-based permissions
@@ -111,7 +111,7 @@ export const usePermissions = () => {
   };
 
   const getAllPermissionsList = (): string[] => {
-    return permissions.map(p => p.name);
+    return permissions.map(p => p.label);
   };
 
   useEffect(() => {

@@ -14,11 +14,11 @@ const MobilePermissionsDisplay = () => {
   
   if (!user) return null;
 
-  const roleDetails = ROLE_DETAILS[user.role];
+  const roleDetails = ROLE_DETAILS[user.role as keyof typeof ROLE_DETAILS] || { title: user.role };
   const offlineCapabilities = getOfflineCapabilities();
   
   // Check if user has custom permissions
-  const hasCustomPermissions = user.customPermissions && Object.keys(user.customPermissions).length > 0;
+  const hasCustomPermissions = user.custom_permissions && Object.keys(user.custom_permissions).length > 0;
   
   // Group permissions by category
   const permissionGroups = {
@@ -99,8 +99,8 @@ const MobilePermissionsDisplay = () => {
                   if (!permission) return null;
                   
                   const hasAccess = canAccess(feature);
-                  const isCustomized = user.customPermissions && 
-                                       user.customPermissions[feature] !== undefined;
+                  const isCustomized = user.custom_permissions && 
+                                       user.custom_permissions[feature] !== undefined;
                   
                   return (
                     <div 

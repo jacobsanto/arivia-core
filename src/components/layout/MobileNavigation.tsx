@@ -1,93 +1,46 @@
-import React from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { getNavigationItems } from "@/lib/utils/routing";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Link } from "react-router-dom";
 
-interface MobileNavigationProps {
-  onClose: () => void;
-}
+import React from 'react';
+import { NavLink } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { useUser } from '@/contexts/UserContext';
+import { navigationItems } from '@/lib/navigation';
+import { hasPermission } from '@/lib/utils/permissions';
+import { safeRoleCast } from '@/types/auth/base';
 
-const MobileNavigation: React.FC<MobileNavigationProps> = ({ onClose }) => {
+export const MobileNavigation: React.FC = () => {
   const { user } = useUser();
-  const navigate = useNavigate();
-  const isMobile = useIsMobile();
 
-  const isAdmin = user?.role === "superadmin" || user?.role === "tenant_admin";
+  if (!user) return null;
 
-  const navigationItems = getNavigationItems(user?.role || "property_manager");
+  const userRole = safeRoleCast(user.role);
+
+  // Filter navigation items based on user permissions
+  const allowedItems = navigationItems.filter(item => 
+    hasPermission(userRole, item.permission)
+  );
+
+  // Only show the first 4 items on mobile
+  const mobileItems = allowedItems.slice(0, 4);
 
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Menu />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="sm:max-w-sm">
-        <SheetHeader>
-          <SheetTitle>Menu</SheetTitle>
-          <SheetDescription>
-            Explore Arivia Villa Sync
-          </SheetDescription>
-        </SheetHeader>
-        <ScrollArea className="my-4">
-          <div className="flex flex-col space-y-4">
-            <div className="flex items-center space-x-2">
-              <Avatar>
-                <AvatarImage src={user?.avatar || "/placeholder.svg"} alt={user?.name || "User"} />
-                <AvatarFallback>{user?.name?.charAt(0) || "U"}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-medium">{user?.name || "Guest"}</p>
-                <p className="text-sm text-muted-foreground">{user?.email}</p>
-              </div>
-            </div>
-            <div className="flex flex-col space-y-2">
-              {navigationItems.map((item) => (
-                <Button
-                  key={item.label}
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => {
-                    navigate(item.path);
-                    onClose();
-                  }}
-                >
-                  {item.label}
-                </Button>
-              ))}
-              {isAdmin && (
-                <Button
-                  variant="ghost"
-                  className="justify-start"
-                  onClick={() => {
-                    navigate("/admin");
-                    onClose();
-                  }}
-                >
-                  Admin Dashboard
-                </Button>
-              )}
-            </div>
-          </div>
-        </ScrollArea>
-      </SheetContent>
-    </Sheet>
+    <div className="fixed bottom-0 left-0 right-0 bg-background border-t md:hidden">
+      <nav className="flex items-center justify-around py-2">
+        {mobileItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            className={({ isActive }) =>
+              cn(
+                "flex flex-col items-center gap-1 px-2 py-1 text-xs text-muted-foreground transition-colors",
+                isActive && "text-primary"
+              )
+            }
+          >
+            <item.icon className="h-5 w-5" />
+            <span className="truncate">{item.title}</span>
+          </NavLink>
+        ))}
+      </nav>
+    </div>
   );
 };
-
-export default MobileNavigation;
