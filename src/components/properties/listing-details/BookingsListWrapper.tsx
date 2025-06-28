@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { BookingObject } from "@/utils/booking/housekeepingTaskGenerator";
-import { HousekeepingTask } from "@/components/tasks/TaskTable";
 import {
   Table,
   TableBody,
@@ -22,6 +21,19 @@ import {
 
 import BookingCleaningTasksIndicator from "./BookingCleaningTasksIndicator";
 import GenerateCleaningTasksButton from "./GenerateCleaningTasksButton";
+
+// Define the HousekeepingTask type locally since it's used here
+interface HousekeepingTask {
+  id: string;
+  booking_id: string;
+  listing_id: string;
+  task_type: string;
+  status: string;
+  due_date: string;
+  created_at: string;
+  updated_at: string;
+  assigned_to?: string;
+}
 
 interface BookingsListWrapperProps {
   listingId: string;

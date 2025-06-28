@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +12,24 @@ import { toast } from "sonner";
 import CleaningRulesManager from "./CleaningRulesManager";
 
 interface DashboardContentProps {
-  onBookingSync: () => void;
+  dashboardData?: any;
+  isLoading?: boolean;
+  error?: string | null;
+  favoriteMetrics?: string[];
+  onToggleFavorite?: (metricId: string) => void;
+  onRefresh?: () => Promise<any>;
+  onAddSampleData?: () => Promise<void>;
+  onBookingSync?: () => void;
 }
 
 const DashboardContent: React.FC<DashboardContentProps> = ({
+  dashboardData,
+  isLoading,
+  error,
+  favoriteMetrics,
+  onToggleFavorite,
+  onRefresh,
+  onAddSampleData,
   onBookingSync
 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
@@ -27,7 +42,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       const result = await guestyBookingSyncService.syncAllBookings();
       if (result.success) {
         toast.success(result.message);
-        onBookingSync(); // Refresh bookings
+        onBookingSync?.(); // Refresh bookings
+        onRefresh?.(); // Refresh dashboard
       } else {
         toast.error(result.message);
       }
