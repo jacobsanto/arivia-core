@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -87,7 +86,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     if (!session?.user) return;
     
     try {
-      // Fetch profile with roles joined from Supabase
+      // Try to fetch profile with roles joined from user_roles table
       const { data: profile, error } = await supabase
         .from('profiles')
         .select(`
@@ -127,8 +126,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       }
       
       if (profile) {
-        // Extract role from the joined data
-        const roleFromJoin = profile.user_roles?.[0]?.roles?.name;
+        // Extract role from the joined data - check if user_roles exists and has data
+        const roleFromJoin = profile.user_roles && profile.user_roles.length > 0 
+          ? profile.user_roles[0]?.roles?.name 
+          : null;
         
         const userProfile: UserProfile = {
           id: profile.id,
@@ -179,7 +180,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const refreshProfileForSession = async (session: Session) => {
     try {
-      // Fetch profile with roles joined
+      // Try to fetch profile with roles joined
       const { data: profile } = await supabase
         .from('profiles')
         .select(`
@@ -194,7 +195,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         .single();
       
       if (profile) {
-        const roleFromJoin = profile.user_roles?.[0]?.roles?.name;
+        const roleFromJoin = profile.user_roles && profile.user_roles.length > 0 
+          ? profile.user_roles[0]?.roles?.name 
+          : null;
         
         const userProfile: UserProfile = {
           id: profile.id,

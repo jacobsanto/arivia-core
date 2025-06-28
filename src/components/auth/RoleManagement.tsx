@@ -88,8 +88,8 @@ const RoleManagement: React.FC = () => {
                   role: userProfile.role,
                   phone: userProfile.phone,
                   avatar: userProfile.avatar,
-                  secondary_roles: userProfile.secondary_roles,
-                  custom_permissions: userProfile.custom_permissions
+                  secondary_roles: userProfile.secondaryRoles || [],
+                  custom_permissions: userProfile.customPermissions || {}
                 });
                 setSelectedUser(convertedUser);
                 setActiveTab("permissions");
@@ -104,8 +104,8 @@ const RoleManagement: React.FC = () => {
                 role: userProfile.role,
                 phone: userProfile.phone,
                 avatar: userProfile.avatar,
-                secondary_roles: userProfile.secondary_roles,
-                custom_permissions: userProfile.custom_permissions
+                secondary_roles: userProfile.secondaryRoles || [],
+                custom_permissions: userProfile.customPermissions || {}
               }))}
             />
           </TabsContent>

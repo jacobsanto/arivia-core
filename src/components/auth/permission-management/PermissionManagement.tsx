@@ -48,6 +48,14 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
   const handleResetToDefault = () => {
     resetPermissions();
   };
+
+  // Fix the category filtering to work with the actual permission structure
+  const categoryPermissions = Object.entries(permissionsByCategory)
+    .filter(([category]) => activeCategory === "all" || category === activeCategory)
+    .reduce((acc, [category, permissions]) => {
+      acc[category] = permissions.map(p => p.key);
+      return acc;
+    }, {} as Record<string, string[]>);
   
   return (
     <Card>
@@ -72,19 +80,18 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
           <Tabs value={activeCategory} onValueChange={setActiveCategory}>
             <PermissionFilters 
               activeCategory={activeCategory}
-              permissionGroups={permissionsByCategory}
+              permissionGroups={categoryPermissions}
               onCategoryChange={setActiveCategory}
             />
             
             <TabsContent value={activeCategory} className="mt-4">
               <Accordion type="multiple" className="w-full">
-                {Object.entries(permissionsByCategory)
-                  .filter(([category]) => activeCategory === "all" || category === activeCategory)
-                  .map(([category, permissions]) => (
+                {Object.entries(categoryPermissions)
+                  .map(([category, permissionKeys]) => (
                     <PermissionCategoryAccordion
                       key={category}
                       category={category}
-                      permKeys={permissions.map(p => p.key)}
+                      permKeys={permissionKeys}
                       permissions={userPermissions}
                       selectedUser={selectedUser}
                       handlePermissionToggle={handlePermissionToggle}

@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Edit3, Mail, Phone, Shield, Calendar } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
-import { ProfileForm } from "./forms/ProfileForm";
-import { AvatarUpload } from "./avatar/AvatarUpload";
+import ProfileForm from "./forms/ProfileForm";
+import AvatarUpload from "./avatar/AvatarUpload";
 import { profileToUser } from "@/types/auth/base";
 
 const UserInformation = () => {
