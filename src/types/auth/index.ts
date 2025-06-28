@@ -1,3 +1,4 @@
+
 // Re-export base types
 export * from './base';
 
@@ -6,8 +7,6 @@ export type StateSetter<T> = React.Dispatch<React.SetStateAction<T>>;
 
 // Re-export all auth types and utilities
 export type { UserRole, Session } from './base';
-export type { FeaturePermission } from './permissions';
-export { FEATURE_PERMISSIONS, hasPermissionWithAllRoles } from './permissions';
 
 // Additional utilities
 export const isValidUserRole = (role: string): boolean => {

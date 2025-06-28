@@ -995,42 +995,6 @@ export type Database = {
           },
         ]
       }
-      permissions: {
-        Row: {
-          category: string
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          key: string
-          label: string
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          key: string
-          label: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          key?: string
-          label?: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar: string | null
@@ -1157,75 +1121,6 @@ export type Database = {
           recipients?: string[] | null
           status?: string | null
           type?: string
-        }
-        Relationships: []
-      }
-      role_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          permission_id: string
-          role_id: string
-          tenant_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          permission_id: string
-          role_id: string
-          tenant_id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          permission_id?: string
-          role_id?: string
-          tenant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "permissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      roles: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          name: string
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          tenant_id?: string
-          updated_at?: string
         }
         Relationships: []
       }
