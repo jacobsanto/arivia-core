@@ -17,8 +17,6 @@ import { loginSchema } from "@/lib/validation/auth-schema";
 import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { getRoleBasedRoute } from "@/lib/utils/routing";
-import { safeRoleCast } from "@/types/auth/base";
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -49,8 +47,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
         throw error;
       }
       
-      toast({
-        title: "Login Successful",
+      toast.success("Login Successful", {
         description: "You have successfully logged in.",
       });
       
@@ -64,8 +61,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
       }
     } catch (error: any) {
       console.error("Login failed:", error);
-      toast({
-        title: "Login Failed",
+      toast.error("Login Failed", {
         description: error.message || "Invalid credentials. Please try again.",
       });
     } finally {
