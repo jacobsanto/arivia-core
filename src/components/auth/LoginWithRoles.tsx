@@ -51,11 +51,7 @@ const LoginWithRoles: React.FC = () => {
   const onSubmit = async (data: FormValues) => {
     try {
       setIsLoading(true);
-      const { error } = await login(data.email, data.password);
-      
-      if (error) {
-        throw error;
-      }
+      await login(data.email, data.password);
       
       // Get the redirect path from location state or default to "/"
       const from = location.state?.from?.pathname || "/";
@@ -76,11 +72,7 @@ const LoginWithRoles: React.FC = () => {
   const handleDemoLogin = async (demoAccount: typeof demoAccounts[0]) => {
     try {
       setIsLoading(true);
-      const { error } = await login(demoAccount.email, demoAccount.password);
-      
-      if (error) {
-        throw error;
-      }
+      await login(demoAccount.email, demoAccount.password);
       
       const from = location.state?.from?.pathname || "/";
       navigate(from);

@@ -10,8 +10,7 @@ import UnauthorizedPermissionView from './UnauthorizedPermissionView';
 import PermissionHeader from './PermissionHeader';
 import PermissionFilters from './PermissionFilters';
 import PermissionCategoryAccordion from './PermissionCategoryAccordion';
-import { usePermissionManagement } from './usePermissionManagement';
-import { profileToUser } from '@/types/auth/base';
+import usePermissionManagement from './usePermissionManagement';
 
 interface PermissionManagementProps {
   selectedUser: User | null;
@@ -21,41 +20,23 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
   const { user: currentUser, updateUserPermissions } = useUser();
 
   const {
-    userPermissions,
-    permissionsByCategory,
-    isLoading,
-    hasChanges,
-    togglePermission,
-    savePermissions,
-    resetPermissions
-  } = usePermissionManagement(selectedUser || undefined);
+    permissions,
+    isSaving,
+    activeCategory,
+    permissionGroups,
+    handlePermissionToggle,
+    handleSave,
+    handleResetToDefault,
+    setActiveCategory
+  } = usePermissionManagement({
+    selectedUser,
+    updateUserPermissions
+  });
   
   // Only superadmins can access this component
   if (currentUser?.role !== "superadmin" || !selectedUser) {
     return <UnauthorizedPermissionView />;
   }
-  
-  const [activeCategory, setActiveCategory] = React.useState<string>("all");
-  
-  const handlePermissionToggle = (permissionKey: string) => {
-    togglePermission(permissionKey);
-  };
-
-  const handleSave = async () => {
-    await savePermissions();
-  };
-
-  const handleResetToDefault = () => {
-    resetPermissions();
-  };
-
-  // Fix the category filtering to work with the actual permission structure
-  const categoryPermissions = Object.entries(permissionsByCategory)
-    .filter(([category]) => activeCategory === "all" || category === activeCategory)
-    .reduce((acc, [category, permissions]) => {
-      acc[category] = permissions.map(p => p.key);
-      return acc;
-    }, {} as Record<string, string[]>);
   
   return (
     <Card>
@@ -72,7 +53,7 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
         <div className="space-y-6">
           <PermissionHeader 
             selectedUser={selectedUser}
-            isSaving={isLoading}
+            isSaving={isSaving}
             onSave={handleSave}
             onResetToDefault={handleResetToDefault}
           />
@@ -80,19 +61,20 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
           <Tabs value={activeCategory} onValueChange={setActiveCategory}>
             <PermissionFilters 
               activeCategory={activeCategory}
-              permissionGroups={categoryPermissions}
+              permissionGroups={permissionGroups}
               onCategoryChange={setActiveCategory}
             />
             
             <TabsContent value={activeCategory} className="mt-4">
               <Accordion type="multiple" className="w-full">
-                {Object.entries(categoryPermissions)
-                  .map(([category, permissionKeys]) => (
+                {Object.entries(permissionGroups)
+                  .filter(([category]) => activeCategory === "all" || category === activeCategory)
+                  .map(([category, permKeys]) => (
                     <PermissionCategoryAccordion
                       key={category}
                       category={category}
-                      permKeys={permissionKeys}
-                      permissions={userPermissions}
+                      permKeys={permKeys}
+                      permissions={permissions}
                       selectedUser={selectedUser}
                       handlePermissionToggle={handlePermissionToggle}
                     />

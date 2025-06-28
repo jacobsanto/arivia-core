@@ -1,21 +1,31 @@
 
 import { z } from "zod";
+import { UserRole } from "@/types/auth";
 
 export const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-export const signupSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+export type LoginFormValues = z.infer<typeof loginSchema>;
+
+export const signUpFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().optional(),
-  role: z.string().optional(),
-  confirmPassword: z.string().optional(),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+  role: z.enum([
+    "administrator", 
+    "property_manager", 
+    "concierge", 
+    "housekeeping_staff", 
+    "maintenance_staff", 
+    "inventory_manager",
+    "superadmin"
+  ] as const)
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
-export type LoginFormData = z.infer<typeof loginSchema>;
-export type SignupFormData = z.infer<typeof signupSchema>;
-export type SignUpFormData = z.infer<typeof signupSchema>;
-export type SignUpFormValues = z.infer<typeof signupSchema>;
+export type SignUpFormValues = z.infer<typeof signUpFormSchema>;

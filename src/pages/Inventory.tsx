@@ -1,90 +1,100 @@
 
-import React, { useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus } from 'lucide-react';
-import InventoryOverview from '@/components/inventory/InventoryOverview';
-import InventoryItems from '@/components/inventory/InventoryItems';
-import InventoryCategories from '@/components/inventory/InventoryCategories';
-import InventoryVendors from '@/components/inventory/InventoryVendors';
-import OrderList from '@/components/inventory/orders/OrderList';
-import InventoryUsage from '@/components/inventory/InventoryUsage';
+import React, { useState } from "react";
+import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import InventoryOverview from "@/components/inventory/InventoryOverview";
+import StockLevels from "@/components/inventory/StockLevels";
+import AddItem from "@/components/inventory/AddItem";
+import StockReceipt from "@/components/inventory/StockReceipt";
+import StockTransfer from "@/components/inventory/StockTransfer";
+import InventoryUsage from "@/components/inventory/InventoryUsage";
+import VendorsList from "@/components/inventory/vendors/VendorsList";
+import OrderForm from "@/components/inventory/orders/OrderForm";
+import OrderList from "@/components/inventory/orders/OrderList";
+import { InventoryProvider } from "@/contexts/InventoryContext";
+import { OrderProvider } from "@/contexts/OrderContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import MobileInventory from "@/components/inventory/MobileInventory";
 
 const Inventory = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
+  const isMobile = useIsMobile();
 
-  // Mock orders data for OrderList component
-  const mockOrders = [];
+  // Render mobile-specific UI
+  if (isMobile) {
+    return <MobileInventory />;
+  }
 
+  // Desktop UI
   return (
-    <div className="space-y-6">
-      <Helmet>
-        <title>Inventory Management - Arivia Villa Sync</title>
-      </Helmet>
-
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Inventory Management</h1>
-          <p className="text-muted-foreground">
-            Manage your property's inventory, track stock levels, and create purchase orders.
-          </p>
-        </div>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add Item
-        </Button>
-      </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="items">Items</TabsTrigger>
-          <TabsTrigger value="categories">Categories</TabsTrigger>
-          <TabsTrigger value="vendors">Vendors</TabsTrigger>
-          <TabsTrigger value="orders">Orders</TabsTrigger>
-          <TabsTrigger value="usage">Usage</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <InventoryOverview />
-        </TabsContent>
-
-        <TabsContent value="items">
-          <InventoryItems />
-        </TabsContent>
-
-        <TabsContent value="categories">
-          <InventoryCategories />
-        </TabsContent>
-
-        <TabsContent value="vendors">
-          <InventoryVendors />
-        </TabsContent>
-
-        <TabsContent value="orders">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-semibold">Purchase Orders</h3>
-                <p className="text-sm text-muted-foreground">
-                  Manage inventory purchase orders
-                </p>
-              </div>
-              <Button className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                New Order
-              </Button>
-            </div>
-            <OrderList orders={mockOrders} />
+    <InventoryProvider>
+      <OrderProvider>
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
+            <p className="text-muted-foreground">
+              Manage supplies across main storage and property locations
+            </p>
           </div>
-        </TabsContent>
 
-        <TabsContent value="usage">
-          <InventoryUsage />
-        </TabsContent>
-      </Tabs>
-    </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="border-b">
+              <TabsList className="bg-transparent -mb-px">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
+                <TabsTrigger value="add-item">Add Item</TabsTrigger>
+                <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
+                <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
+                <TabsTrigger value="usage">Usage Reports</TabsTrigger>
+                <TabsTrigger value="vendors">Vendors</TabsTrigger>
+                <TabsTrigger value="orders">Orders</TabsTrigger>
+                <TabsTrigger value="create-order">Create Order</TabsTrigger>
+              </TabsList>
+            </div>
+            
+            <Card className="mt-6 border-t-0 rounded-t-none">
+              <CardContent className="pt-6">
+                <TabsContent value="overview" className="mt-0">
+                  <InventoryOverview />
+                </TabsContent>
+                
+                <TabsContent value="stock-levels" className="mt-0">
+                  <StockLevels />
+                </TabsContent>
+                
+                <TabsContent value="add-item" className="mt-0">
+                  <AddItem />
+                </TabsContent>
+                
+                <TabsContent value="receipts" className="mt-0">
+                  <StockReceipt />
+                </TabsContent>
+                
+                <TabsContent value="transfers" className="mt-0">
+                  <StockTransfer />
+                </TabsContent>
+                
+                <TabsContent value="usage" className="mt-0">
+                  <InventoryUsage />
+                </TabsContent>
+                
+                <TabsContent value="vendors" className="mt-0">
+                  <VendorsList />
+                </TabsContent>
+                
+                <TabsContent value="orders" className="mt-0">
+                  <OrderList />
+                </TabsContent>
+                
+                <TabsContent value="create-order" className="mt-0">
+                  <OrderForm />
+                </TabsContent>
+              </CardContent>
+            </Card>
+          </Tabs>
+        </div>
+      </OrderProvider>
+    </InventoryProvider>
   );
 };
 

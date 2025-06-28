@@ -1,8 +1,8 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,9 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
+import { loginUser } from "@/services/auth/userAuthService";
 import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -24,9 +24,10 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useUser();
+  const { login } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   
   // Use react-hook-form with zod for validation
   const form = useForm({
@@ -40,28 +41,22 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      // Call signIn function from UserContext (uses Supabase)
-      const { error } = await signIn(values.email, values.password);
+      // Call login function from UserContext
+      await login(values.email, values.password);
       
-      if (error) {
-        throw error;
-      }
+      // Redirect to previous page or dashboard
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
       
-      toast.success("Login Successful", {
+      toast({
+        title: "Login Successful",
         description: "You have successfully logged in.",
       });
-      
-      // Get redirect path from location state or use role-based routing
-      const from = location.state?.from?.pathname;
-      if (from) {
-        navigate(from, { replace: true });
-      } else {
-        // Let the UserContext handle redirect after profile is loaded
-        navigate("/", { replace: true });
-      }
     } catch (error: any) {
-      console.error("Login failed:", error);
-      toast.error("Login Failed", {
+      console.error("Login failed:", error.message);
+      toast({
+        variant: "destructive",
+        title: "Login Failed",
         description: error.message || "Invalid credentials. Please try again.",
       });
     } finally {

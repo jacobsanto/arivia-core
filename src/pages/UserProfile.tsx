@@ -2,6 +2,7 @@
 import React, { useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
 import { useUser } from "@/contexts/UserContext";
+import { usePermissions } from "@/hooks/usePermissions";
 import UserInformation from "@/components/auth/UserInformation";
 import SecurityActivity from "@/components/auth/SecurityActivity";
 import PermissionsDisplay from "@/components/auth/PermissionsDisplay";
@@ -11,29 +12,16 @@ import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useProfileTabs } from "@/components/profile/ProfileTabDefinitions";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { profileToUser } from "@/types/auth/base";
 
 const UserProfile = () => {
-  const { user, canAccess } = useUser();
+  const { user } = useUser();
+  const { canAccess } = usePermissions();
   const [activeTab, setActiveTab] = useState("info");
   const tabsRef = useRef(null);
   
   // Custom hooks
   const { showSwipeHint, isMobile } = useSwipeHint();
-  
-  // Convert user profile to User type for ProfileTabDefinitions
-  const convertedUser = user ? profileToUser({
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    phone: user.phone,
-    avatar: user.avatar,
-    secondary_roles: user.secondary_roles,
-    custom_permissions: user.custom_permissions
-  }) : null;
-  
-  const { tabs } = useProfileTabs(convertedUser, canAccess("viewPermissions"));
+  const { tabs } = useProfileTabs(user, canAccess("viewPermissions"));
   
   // Tab navigation
   const currentTabIndex = tabs.findIndex(tab => tab.id === activeTab);

@@ -1,108 +1,111 @@
 
 import { useState } from "react";
-import { ChecklistTemplate, ChecklistItem } from "@/types/checklistTypes";
-import { toast } from "sonner";
+import { ChecklistTemplate, ChecklistTemplateFormValues } from "@/types/checklistTypes";
+import { toastService } from "@/services/toast";
 
-export const useChecklistForm = () => {
-  const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+/**
+ * Custom hook for managing checklist template form state and actions
+ */
+export const useChecklistForm = (
+  templates: ChecklistTemplate[],
+  setTemplates: React.Dispatch<React.SetStateAction<ChecklistTemplate[]>>
+) => {
+  const [selectedTemplate, setSelectedTemplate] = useState<ChecklistTemplate | null>(null);
+  const [isCreateTemplateOpen, setIsCreateTemplateOpen] = useState(false);
+  const [isEditTemplateOpen, setIsEditTemplateOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<string | null>(null);
 
-  const createTemplate = async (templateData: Omit<ChecklistTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
-    setIsLoading(true);
-    try {
-      // Convert form items to ChecklistItem format
-      const items: ChecklistItem[] = templateData.items.map((item, index) => ({
-        id: `${Date.now()}-${index}`,
-        title: item.title,
-        text: item.title, // Use title as text for consistency
-        completed: false
-      }));
+  const handleCreateTemplate = (data: ChecklistTemplateFormValues) => {
+    // Generate a new unique ID as string
+    const maxId = Math.max(0, ...templates.map(t => parseInt(t.id))) + 1;
+    const newId = maxId.toString();
+    
+    const newTemplate: ChecklistTemplate = {
+      id: newId,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      items: data.items.map((item, index) => ({ 
+        id: index + 1, 
+        title: item.title, 
+        completed: false 
+      })),
+      createdBy: "Admin", // In a real app, this would be the current user
+      createdAt: new Date().toISOString(),
+      isDefault: false
+    };
+    
+    setTemplates([...templates, newTemplate]);
+    setIsCreateTemplateOpen(false);
+    toastService.success(`Checklist template "${data.name}" created successfully!`);
+  };
 
-      const newTemplate: ChecklistTemplate = {
-        ...templateData,
-        id: `template-${Date.now()}`,
-        items,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
+  const handleEditTemplate = (data: ChecklistTemplateFormValues) => {
+    if (!selectedTemplate) return;
+    
+    const updatedTemplate = {
+      ...selectedTemplate,
+      name: data.name,
+      description: data.description,
+      category: data.category,
+      items: data.items.map((item, index) => ({ 
+        id: index + 1, 
+        title: item.title, 
+        completed: false 
+      })),
+      updatedAt: new Date().toISOString()
+    };
+    
+    setTemplates(templates.map(t => 
+      t.id === selectedTemplate.id ? updatedTemplate : t
+    ));
+    
+    setSelectedTemplate(null);
+    setIsEditTemplateOpen(false);
+    toastService.success(`Checklist template "${data.name}" updated successfully!`);
+  };
 
-      setTemplates(prev => [...prev, newTemplate]);
-      toast.success("Template created successfully!");
-      return newTemplate;
-    } catch (error) {
-      toast.error("Failed to create template");
-      throw error;
-    } finally {
-      setIsLoading(false);
+  const handleDeleteTemplate = () => {
+    if (templateToDelete === null) return;
+    
+    setTemplates(templates.filter(t => t.id !== templateToDelete));
+    setTemplateToDelete(null);
+    setIsDeleteDialogOpen(false);
+    toastService.success("Checklist template deleted successfully!");
+  };
+
+  const selectTemplateForEdit = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedTemplate(template);
+      setIsEditTemplateOpen(true);
     }
   };
 
-  const updateTemplate = async (templateId: string, updates: Partial<ChecklistTemplate>) => {
-    setIsLoading(true);
-    try {
-      const updatedTemplates = templates.map(template => {
-        if (template.id === templateId) {
-          // Convert form items to ChecklistItem format if items are being updated
-          const items = updates.items ? updates.items.map((item, index) => ({
-            id: `${Date.now()}-${index}`,
-            title: item.title,
-            text: item.title,
-            completed: false
-          })) : template.items;
-
-          return {
-            ...template,
-            ...updates,
-            items,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return template;
-      });
-      
-      setTemplates(updatedTemplates);
-      toast.success("Template updated successfully!");
-    } catch (error) {
-      toast.error("Failed to update template");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
+  const selectTemplateForDelete = (templateId: string) => {
+    setTemplateToDelete(templateId);
+    setIsDeleteDialogOpen(true);
   };
-
-  const deleteTemplate = async (templateId: string) => {
-    setIsLoading(true);
-    try {
-      setTemplates(prev => prev.filter(template => template.id !== templateId));
-      toast.success("Template deleted successfully!");
-    } catch (error) {
-      toast.error("Failed to delete template");
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredTemplates = templates.filter(template => {
-    const matchesSearch = template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         template.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || template.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
 
   return {
-    templates,
-    setTemplates,
-    filteredTemplates,
-    isLoading,
-    searchTerm,
-    setSearchTerm,
-    selectedCategory,
-    setSelectedCategory,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate
+    // Template form state
+    selectedTemplate,
+    isCreateTemplateOpen,
+    setIsCreateTemplateOpen,
+    isEditTemplateOpen,
+    setIsEditTemplateOpen,
+    
+    // Delete dialog state
+    isDeleteDialogOpen,
+    setIsDeleteDialogOpen,
+    templateToDelete,
+    
+    // Form handlers
+    handleCreateTemplate,
+    handleEditTemplate,
+    handleDeleteTemplate,
+    selectTemplateForEdit,
+    selectTemplateForDelete,
   };
 };

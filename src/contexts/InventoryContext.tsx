@@ -1,62 +1,88 @@
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
+// Define the shape of our context data
 interface InventoryContextType {
   categories: string[];
-  units: string[];
   addCategory: (category: string) => void;
+  units: string[];
   addUnit: (unit: string) => void;
 }
 
-const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
+// Initial default values
+const defaultInventoryContext: InventoryContextType = {
+  categories: [
+    "Office Supplies",
+    "Paper Products",
+    "Cleaning Supplies",
+    "Guest Amenities",
+    "Toiletries",
+    "Kitchen Supplies",
+    "Electronics",
+    "Furniture",
+    "Linens",
+    "Safety Equipment"
+  ],
+  addCategory: () => {},
+  units: ["Each", "Box", "Case", "Roll", "Pack", "Gallon", "Bottle", "Dozen"],
+  addUnit: () => {},
+};
 
-interface InventoryProviderProps {
-  children: React.ReactNode;
-}
+// Create the context
+const InventoryContext = createContext<InventoryContextType>(defaultInventoryContext);
 
-export const InventoryProvider: React.FC<InventoryProviderProps> = ({ children }) => {
-  const [categories, setCategories] = useState<string[]>([
-    'Housekeeping',
-    'Maintenance', 
-    'Kitchen',
-    'Bathroom',
-    'Bedroom',
-    'Living Room'
-  ]);
+// Custom hook for using this context
+export const useInventory = () => useContext(InventoryContext);
 
-  const [units, setUnits] = useState<string[]>([
-    'pieces',
-    'bottles',
-    'boxes',
-    'rolls',
-    'packs',
-    'liters',
-    'kilograms'
-  ]);
+// Provider component
+export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Initialize state with default values
+  const [categories, setCategories] = useState<string[]>(defaultInventoryContext.categories);
+  const [units, setUnits] = useState<string[]>(defaultInventoryContext.units);
 
+  // Add a new category if it doesn't already exist
   const addCategory = (category: string) => {
     if (!categories.includes(category)) {
       setCategories(prev => [...prev, category]);
     }
   };
 
+  // Add a new unit if it doesn't already exist
   const addUnit = (unit: string) => {
     if (!units.includes(unit)) {
       setUnits(prev => [...prev, unit]);
     }
   };
 
+  // Use localStorage to persist data
+  useEffect(() => {
+    // Load from localStorage on first render
+    const savedCategories = localStorage.getItem('inventoryCategories');
+    const savedUnits = localStorage.getItem('inventoryUnits');
+    
+    if (savedCategories) {
+      setCategories(JSON.parse(savedCategories));
+    }
+    
+    if (savedUnits) {
+      setUnits(JSON.parse(savedUnits));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Save to localStorage whenever data changes
+    localStorage.setItem('inventoryCategories', JSON.stringify(categories));
+  }, [categories]);
+
+  useEffect(() => {
+    localStorage.setItem('inventoryUnits', JSON.stringify(units));
+  }, [units]);
+
   return (
-    <InventoryContext.Provider value={{ categories, units, addCategory, addUnit }}>
+    <InventoryContext.Provider value={{ categories, addCategory, units, addUnit }}>
       {children}
     </InventoryContext.Provider>
   );
 };
 
-export const useInventory = () => {
-  const context = useContext(InventoryContext);
-  if (context === undefined) {
-    throw new Error('useInventory must be used within an InventoryProvider');
-  }
-  return context;
-};
+export default InventoryContext;

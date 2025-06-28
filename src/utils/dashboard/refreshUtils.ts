@@ -1,67 +1,113 @@
+import { toastService } from '@/services/toast';
+import { ToastId } from '@/services/toast/toast.types';
 
-import { toast } from "sonner";
+// Keep track of the last refresh timestamp
+let lastRefreshTimestamp: number = Date.now();
 
-interface RefreshOptions {
-  showToast?: boolean;
-  successMessage?: string;
-  errorMessage?: string;
-}
-
-export const createRefreshHandler = (
-  refreshFn: () => Promise<void>,
-  options: RefreshOptions = {}
+/**
+ * Refreshes dashboard data with loading indicator and success message
+ */
+export const refreshDashboardData = async (
+  refreshFn: () => Promise<any>,
+  options: {
+    silent?: boolean;
+    successMessage?: string;
+    errorMessage?: string;
+  } = {}
 ) => {
   const {
-    showToast = true,
-    successMessage = "Data refreshed successfully",
-    errorMessage = "Failed to refresh data"
+    silent = false,
+    successMessage = "Dashboard refreshed",
+    errorMessage = "Failed to refresh dashboard"
   } = options;
-
-  return async () => {
-    let toastId: string | number | undefined;
-    
-    try {
-      if (showToast) {
-        toastId = toast.info("Refreshing data...", {
-          duration: Infinity
-        });
-      }
-      
-      await refreshFn();
-      
-      if (showToast && toastId) {
-        toast.dismiss(toastId);
-        toast.success(successMessage);
-      }
-    } catch (error) {
-      console.error("Refresh failed:", error);
-      
-      if (showToast && toastId) {
-        toast.dismiss(toastId);
-        toast.error(errorMessage);
-      }
+  
+  let loadingToastId: ToastId | undefined;
+  
+  try {
+    // Show loading toast if not silent
+    if (!silent) {
+      loadingToastId = toastService.loading("Refreshing dashboard", {
+        description: "Getting the latest data..."
+      });
     }
+    
+    // Call the refresh function
+    const result = await refreshFn();
+    
+    // Update last refresh timestamp
+    lastRefreshTimestamp = Date.now();
+    
+    // Show success toast if not silent
+    if (!silent) {
+      toastService.dismiss(loadingToastId);
+      toastService.success(successMessage, {
+        description: "Your dashboard is now up-to-date"
+      });
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("Dashboard refresh error:", error);
+    
+    // Show error toast if not silent
+    if (!silent) {
+      toastService.dismiss(loadingToastId);
+      toastService.error(errorMessage, {
+        description: "There was a problem getting the latest data"
+      });
+    }
+    
+    return null;
+  }
+};
+
+/**
+ * Get the status of the last refresh
+ */
+export const getRefreshStatus = () => {
+  return {
+    lastRefresh: new Date(lastRefreshTimestamp)
   };
 };
 
-export const withRefreshFeedback = async (
-  operation: () => Promise<void>,
-  loadingMessage = "Processing...",
-  successMessage = "Operation completed",
-  errorMessage = "Operation failed"
+/**
+ * Performs automatic dashboard refresh on a schedule
+ */
+export const setupAutoRefresh = (
+  refreshFn: () => Promise<any>,
+  intervalMinutes: number = 5
 ) => {
-  const toastId = toast.info(loadingMessage, {
-    duration: Infinity
+  // Initial refresh
+  refreshDashboardData(refreshFn, { silent: true });
+  
+  // Setup interval refresh
+  const intervalId = setInterval(() => {
+    refreshDashboardData(refreshFn, { 
+      silent: true,
+      successMessage: "Auto-refresh complete",
+      errorMessage: "Auto-refresh failed"
+    });
+  }, intervalMinutes * 60 * 1000);
+  
+  // Return cleanup function
+  return () => clearInterval(intervalId);
+};
+
+/**
+ * Create a helper function to prepare dashboard for refresh operations
+ * Renamed to avoid conflict with dataPreparationUtils.ts
+ */
+export const prepareRefreshData = (
+  dashboardData: any,
+  sections: string[] = ['properties', 'tasks', 'maintenance', 'bookings']
+) => {
+  const exportData: Record<string, any[]> = {};
+  
+  sections.forEach(section => {
+    if (dashboardData && dashboardData[section]) {
+      exportData[section] = dashboardData[section];
+    }
   });
   
-  try {
-    await operation();
-    toast.dismiss(toastId);
-    toast.success(successMessage);
-  } catch (error) {
-    console.error("Operation failed:", error);
-    toast.dismiss(toastId);
-    toast.error(errorMessage);
-    throw error;
-  }
+  return exportData;
 };

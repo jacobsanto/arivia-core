@@ -1,48 +1,126 @@
 
-import { useState, useEffect } from 'react';
-import { Task } from '@/services/task-management/task.service';
-import { useTaskManagement } from '@/hooks/useTaskManagement';
-import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { Task } from "@/types/taskTypes";
+import { MaintenanceTask } from "@/types/maintenanceTypes";
+import { format, parse, isSameDay } from "date-fns";
 
-export interface CombinedTask extends Task {
-  source: 'task' | 'booking' | 'maintenance';
+export interface CombinedTask {
+  id: string;
+  title: string;
+  type: string;
+  dueDate: string | Date;
+  priority: string;
+  property: string;
+  status: string;
+  taskType: "housekeeping" | "maintenance";
+  assignedTo?: string;  // Added missing property
+  description?: string; // Added missing property
 }
 
-export const useAgendaData = () => {
-  const { tasks, isLoading } = useTaskManagement();
-  const [todayTasks, setTodayTasks] = useState<CombinedTask[]>([]);
-  const [upcomingTasks, setUpcomingTasks] = useState<CombinedTask[]>([]);
-  const [overdueTasks, setOverdueTasks] = useState<CombinedTask[]>([]);
+export const combineTasks = (
+  housekeepingTasks: Task[],
+  maintenanceTasks: MaintenanceTask[]
+): CombinedTask[] => {
+  return [
+    ...housekeepingTasks.map(task => ({
+      id: task.id,
+      title: task.title,
+      type: task.type || "Housekeeping",
+      dueDate: task.dueDate,
+      priority: task.priority,
+      property: task.property,
+      status: task.status,
+      taskType: "housekeeping" as const,
+      assignedTo: task.assignedTo,
+      description: task.description
+    })),
+    ...maintenanceTasks.map(task => ({
+      id: task.id.toString(),
+      title: task.title,
+      type: "Maintenance",
+      dueDate: task.dueDate,
+      priority: task.priority,
+      property: task.property,
+      status: task.status,
+      taskType: "maintenance" as const,
+      assignedTo: task.assignee,
+      description: task.description
+    }))
+  ];
+};
 
-  useEffect(() => {
-    if (!tasks) return;
-
-    const today: CombinedTask[] = [];
-    const upcoming: CombinedTask[] = [];
-    const overdue: CombinedTask[] = [];
-
-    tasks.forEach(task => {
-      const combinedTask: CombinedTask = { ...task, source: 'task' };
-      const dueDate = task.due_date ? new Date(task.due_date) : new Date();
-
-      if (isPast(dueDate) && !isToday(dueDate) && task.status !== 'completed') {
-        overdue.push(combinedTask);
-      } else if (isToday(dueDate)) {
-        today.push(combinedTask);
-      } else if (isTomorrow(dueDate) || dueDate > new Date()) {
-        upcoming.push(combinedTask);
+export const filterTasksForSelectedDate = (tasks: CombinedTask[], selectedDate: Date): CombinedTask[] => {
+  return tasks.filter(task => {
+    try {
+      if (typeof task.dueDate === 'object' && task.dueDate !== null && 'getTime' in task.dueDate) {
+        return isSameDay(task.dueDate as Date, selectedDate);
       }
-    });
 
-    setTodayTasks(today);
-    setUpcomingTasks(upcoming);
-    setOverdueTasks(overdue);
-  }, [tasks]);
+      let taskDate;
+      if (typeof task.dueDate === 'string') {
+        if (task.dueDate.includes('T')) {
+          taskDate = new Date(task.dueDate);
+        } else if (task.dueDate.includes('/')) {
+          taskDate = parse(task.dueDate, 'MM/dd/yyyy', new Date());
+        } else {
+          taskDate = parse(task.dueDate, 'yyyy-MM-dd', new Date());
+        }
+      } else {
+        console.error("Invalid date format for task:", task.title);
+        return false;
+      }
 
-  return {
-    todayTasks,
-    upcomingTasks,
-    overdueTasks,
-    isLoading
-  };
+      return isSameDay(taskDate, selectedDate);
+    } catch (e) {
+      console.error("Error parsing date for task:", task.title, e);
+      return false;
+    }
+  });
+};
+
+export const sortTasksByTime = (tasks: CombinedTask[]): CombinedTask[] => {
+  return [...tasks].sort((a, b) => {
+    const getTime = (dateStr: string | Date) => {
+      try {
+        if (typeof dateStr === 'object' && dateStr !== null && 'getTime' in dateStr) {
+          return (dateStr as Date).getTime();
+        }
+        return new Date(String(dateStr)).getTime();
+      } catch {
+        return 0;
+      }
+    };
+
+    return getTime(a.dueDate) - getTime(b.dueDate);
+  });
+};
+
+export const groupTasksByTimeOfDay = (tasks: CombinedTask[]) => {
+  const morningTasks: CombinedTask[] = [];
+  const afternoonTasks: CombinedTask[] = [];
+  const eveningTasks: CombinedTask[] = [];
+
+  tasks.forEach(task => {
+    try {
+      let hour;
+      
+      if (typeof task.dueDate === 'object' && task.dueDate !== null && 'getHours' in task.dueDate) {
+        hour = (task.dueDate as Date).getHours();
+      } else {
+        const date = new Date(String(task.dueDate));
+        hour = date.getHours();
+      }
+
+      if (hour < 12) {
+        morningTasks.push(task);
+      } else if (hour < 17) {
+        afternoonTasks.push(task);
+      } else {
+        eveningTasks.push(task);
+      }
+    } catch (e) {
+      morningTasks.push(task);
+    }
+  });
+
+  return { morningTasks, afternoonTasks, eveningTasks };
 };

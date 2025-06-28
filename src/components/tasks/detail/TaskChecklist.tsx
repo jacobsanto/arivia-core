@@ -5,7 +5,7 @@ import { ChecklistItem } from "@/types/taskTypes";
 
 interface TaskChecklistProps {
   checklist: ChecklistItem[];
-  onToggle: (itemId: string) => void;
+  onToggle: (itemId: number) => void;
   disabled: boolean;
 }
 
@@ -28,7 +28,7 @@ const TaskChecklist = ({ checklist, onToggle, disabled }: TaskChecklistProps) =>
                 item.completed ? "line-through text-muted-foreground" : ""
               }`}
             >
-              {item.title || item.text}
+              {item.title}
             </label>
           </div>
         ))}

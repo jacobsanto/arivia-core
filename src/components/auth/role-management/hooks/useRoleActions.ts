@@ -1,19 +1,19 @@
 
 import { useState } from "react";
-import { User, UserRole, safeRoleCast } from "@/types/auth";
+import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useRoleActions = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("tenant_admin");
+  const [selectedRole, setSelectedRole] = useState<UserRole>("administrator");
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   
   const handleEditRole = (userId: string, user: User) => {
     setEditingUserId(userId);
-    setSelectedRole(safeRoleCast(user.role));
-    setSelectedSecondaryRoles(user.secondaryRoles?.map(role => safeRoleCast(role)) || []);
+    setSelectedRole(user.role);
+    setSelectedSecondaryRoles(user.secondaryRoles || []);
   };
   
   const handleSaveRole = async (userId: string, users: User[], setUsers: (users: User[]) => void) => {
@@ -53,8 +53,8 @@ export const useRoleActions = () => {
         if (data) {
           const updatedUser = {
             ...users.find(u => u.id === userId)!,
-            role: safeRoleCast(data.role),
-            secondaryRoles: data.secondary_roles ? data.secondary_roles.map((role: string) => safeRoleCast(role)) : undefined
+            role: data.role as UserRole,
+            secondaryRoles: data.secondary_roles as UserRole[] | undefined
           };
           
           // Update users array

@@ -1,41 +1,38 @@
 
-import { useUser } from '@/contexts/UserContext';
-import { updatePermissions } from '@/contexts/auth/operations/permissionOperations';
-import { profileToUser } from '@/types/auth/base';
+import { useAuthState } from "./auth/useAuthState";
+import { useUserData } from "./users/useUserData";
+import { useSessionSync } from "./auth/useSessionSync";
+import { useAuth } from "@/contexts/AuthContext";
 
-export const usePermissionOperations = () => {
-  const { user } = useUser();
-
-  const updateUserPermissions = async (
-    users: any[], 
-    setUsers: (users: any[]) => void, 
-    setUser: (user: any) => void, 
-    userId: string, 
-    permissions: Record<string, boolean>
-  ) => {
-    // Convert user profile to User type if needed
-    const convertedUser = user ? profileToUser({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      avatar: user.avatar,
-      secondary_roles: user.secondary_roles,
-      custom_permissions: user.custom_permissions
-    }) : null;
-
-    return await updatePermissions(
-      convertedUser, 
-      users, 
-      setUsers, 
-      setUser, 
-      userId, 
-      permissions
-    );
-  };
-
+// Refactored hook to avoid duplicate subscriptions and ensure consistent typing
+export const useUserState = () => {
+  // Use the centralized auth state
+  const centralAuth = useAuth(); 
+  
+  // Get auth state (session, online status, etc)
+  const authState = useAuthState();
+  
+  // Get user data management with combined functionality
+  const userData = useUserData();
+  
+  // Use session sync hook to tie everything together but with reduced responsibility
+  // since we're now using the central AuthContext
+  useSessionSync(
+    userData.setUser,
+    authState.setSession,
+    authState.setLastAuthTime,
+    authState.setIsLoading,
+    userData.fetchProfileData
+  );
+  
+  // Return the combined state and functions
   return {
-    updateUserPermissions
+    ...authState,
+    ...userData,
+    // Use data from central auth state when available
+    user: centralAuth.user || userData.user,
+    session: centralAuth.session || authState.session,
+    isLoading: centralAuth.isLoading || authState.isLoading,
+    refreshUserProfile: userData.refreshUserProfile
   };
 };

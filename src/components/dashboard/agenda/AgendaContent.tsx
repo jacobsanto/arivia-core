@@ -1,73 +1,84 @@
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Users } from 'lucide-react';
+import { format } from 'date-fns';
+import { motion } from "framer-motion";
+import { CombinedTask } from './agendaUtils';
 import TaskGroup from './TaskGroup';
-import { useAgendaData } from './agendaUtils';
 
-const AgendaContent: React.FC = () => {
-  const { todayTasks, upcomingTasks, overdueTasks, isLoading } = useAgendaData();
+interface AgendaContentProps {
+  selectedDate: Date;
+  sortedTasks: CombinedTask[];
+  morningTasks: CombinedTask[];
+  afternoonTasks: CombinedTask[];
+  eveningTasks: CombinedTask[];
+  onTaskClick: (task: CombinedTask) => void;
+  swipeDirection: number;
+}
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="h-8 bg-muted animate-pulse rounded" />
-        <div className="h-32 bg-muted animate-pulse rounded" />
-        <div className="h-32 bg-muted animate-pulse rounded" />
-      </div>
-    );
-  }
+// Animation variants for day transitions
+const variants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 300 : -300,
+    opacity: 0
+  }),
+  center: {
+    x: 0,
+    opacity: 1
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 300 : -300,
+    opacity: 0
+  })
+};
 
+export const AgendaContent: React.FC<AgendaContentProps> = ({
+  selectedDate,
+  sortedTasks,
+  morningTasks,
+  afternoonTasks,
+  eveningTasks,
+  onTaskClick,
+  swipeDirection
+}) => {
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Calendar className="h-6 w-6" />
-            Today's Agenda
-          </h2>
-          <p className="text-muted-foreground">
-            {new Date().toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
+    <motion.div
+      key={selectedDate.toISOString()}
+      custom={swipeDirection}
+      variants={variants}
+      initial="enter"
+      animate="center"
+      exit="exit"
+      transition={{
+        type: "tween",
+        duration: 0.3
+      }}
+    >
+      {sortedTasks.length === 0 ? (
+        <div className="text-center py-6 text-muted-foreground">
+          No tasks scheduled for {format(selectedDate, 'MMMM d')}
         </div>
-        <div className="flex gap-2">
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            {todayTasks.length} Today
-          </Badge>
-          <Badge variant="outline" className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {upcomingTasks.length} Upcoming
-          </Badge>
+      ) : (
+        <div className="space-y-3">
+          <TaskGroup
+            title="Morning"
+            tasks={morningTasks}
+            onTaskClick={onTaskClick}
+          />
+          
+          <TaskGroup
+            title="Afternoon"
+            tasks={afternoonTasks}
+            onTaskClick={onTaskClick}
+          />
+          
+          <TaskGroup
+            title="Evening"
+            tasks={eveningTasks}
+            onTaskClick={onTaskClick}
+          />
         </div>
-      </div>
-
-      {overdueTasks.length > 0 && (
-        <TaskGroup
-          title="Overdue Tasks"
-          tasks={overdueTasks}
-          badgeVariant="destructive"
-        />
       )}
-
-      <TaskGroup
-        title="Today's Tasks"
-        tasks={todayTasks}
-        badgeVariant="default"
-      />
-
-      <TaskGroup
-        title="Upcoming Tasks"
-        tasks={upcomingTasks}
-        badgeVariant="secondary"
-      />
-    </div>
+    </motion.div>
   );
 };
 

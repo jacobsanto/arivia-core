@@ -1,124 +1,78 @@
 
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Toaster } from "@/components/ui/sonner";
-import { InventoryProvider } from "@/contexts/InventoryContext";
+import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
+
+// Unified Layout
+import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import TenantLayout from "@/components/layout/TenantLayout";
 
-// Internal pages
+// Pages
+import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
-import AdminDashboard from "@/pages/admin/AdminDashboard";
-import BookingManagement from "@/pages/admin/BookingManagement";
-import ManagerDashboard from "@/pages/manager/ManagerDashboard";
-import CleanerDashboard from "@/pages/cleaner/CleanerDashboard";
-import MaintenanceDashboard from "@/pages/maintenance/MaintenanceDashboard";
-import TaskManagement from "@/pages/tasks/TaskManagement";
-import StaffTasks from "@/pages/staff/StaffTasks";
+import UserProfile from "@/pages/UserProfile";
+import Maintenance from "@/pages/Maintenance";
+import Housekeeping from "@/pages/Housekeeping";
+import Properties from "@/pages/Properties";
+import Inventory from "@/pages/Inventory";
+import TeamChat from "@/pages/TeamChat";
+import Analytics from "@/pages/Analytics";
+import Reports from "@/pages/Reports";
+import DamageReports from "@/pages/DamageReports";
+import ListingDetails from "@/pages/ListingDetails";
 
-// Error pages
-import Unauthorized from "@/pages/Unauthorized";
-import NotFound from "@/pages/NotFound";
+// Admin Pages
+import AdminUsers from "@/pages/AdminUsers";
+import AdminPermissions from "@/pages/AdminPermissions";
+import AdminSettings from "@/pages/AdminSettings";
+import AdminChecklists from "@/pages/AdminChecklists";
+// Removed import for AdminSyncHistory
 
 function App() {
   return (
-    <>
-      <InventoryProvider>
-        <ToastProvider>
-          <Router>
-            <Routes>
-              {/* Internal login */}
-              <Route path="/internal/login" element={<Login />} />
-              <Route path="/login" element={<Navigate to="/internal/login" replace />} />
+    <HelmetProvider>
+      <ToastProvider>
+        <Router>
+          <Routes>
+            {/* Login route - doesn't use the unified layout */}
+            <Route path="/login" element={<Login />} />
+            
+            {/* Protected routes with UnifiedLayout */}
+            <Route element={
+              <ProtectedRoute>
+                <UnifiedLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<UserProfile />} />
+              <Route path="/housekeeping" element={<Housekeeping />} />
+              <Route path="/maintenance" element={<Maintenance />} />
+              <Route path="/properties" element={<Properties />} />
+              <Route path="/inventory" element={<Inventory />} />
+              <Route path="/team-chat" element={<TeamChat />} />
+              <Route path="/analytics" element={<Analytics />} />
+              <Route path="/reports" element={<Reports />} />
+              <Route path="/damage-reports" element={<DamageReports />} />
               
-              {/* Protected internal routes */}
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
-                    <TenantLayout>
-                      <AdminDashboard />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/bookings"
-                element={
-                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin']}>
-                    <TenantLayout>
-                      <BookingManagement />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/tasks"
-                element={
-                  <ProtectedRoute allowedRoles={['superadmin', 'tenant_admin', 'property_manager']}>
-                    <TenantLayout>
-                      <TaskManagement />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/manager"
-                element={
-                  <ProtectedRoute allowedRoles={['property_manager', 'tenant_admin']}>
-                    <TenantLayout>
-                      <ManagerDashboard />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/cleaner"
-                element={
-                  <ProtectedRoute allowedRoles={['housekeeping_staff']}>
-                    <TenantLayout>
-                      <CleanerDashboard />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/maintenance"
-                element={
-                  <ProtectedRoute allowedRoles={['maintenance_staff']}>
-                    <TenantLayout>
-                      <MaintenanceDashboard />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/staff/tasks"
-                element={
-                  <ProtectedRoute allowedRoles={['housekeeping_staff', 'maintenance_staff', 'concierge']}>
-                    <TenantLayout>
-                      <StaffTasks />
-                    </TenantLayout>
-                  </ProtectedRoute>
-                }
-              />
-
-              {/* Error routes */}
-              <Route path="/unauthorized" element={<Unauthorized />} />
-              <Route path="/404" element={<NotFound />} />
+              {/* Add the new listing details route */}
+              <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
               
-              {/* Default redirects */}
-              <Route path="/" element={<Navigate to="/internal/login" replace />} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
-            </Routes>
-          </Router>
-        </ToastProvider>
-      </InventoryProvider>
-      <Toaster />
-      <ReactQueryDevtools initialIsOpen={false} />
-    </>
+              {/* Admin routes */}
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/permissions" element={<AdminPermissions />} />
+              <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/checklists" element={<AdminChecklists />} />
+              {/* Removed /admin/sync-history route */}
+            </Route>
+            
+            {/* Catch all route */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </Router>
+      </ToastProvider>
+    </HelmetProvider>
   );
 }
 

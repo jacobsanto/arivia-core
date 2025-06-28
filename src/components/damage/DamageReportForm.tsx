@@ -14,7 +14,7 @@ interface DamageReportFormValues {
   title: string;
   description: string;
   property_id: string;
-  damage_date: string; // Changed from Date to string
+  damage_date: Date;
   estimated_cost?: number;
   media: File[];
   assigned_to: string;
@@ -30,18 +30,9 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
   const { properties } = useProperties();
   const { registeredUsers } = useUsers();
 
-  const handleSubmit = (data: DamageReportFormValues) => {
-    // Convert Date to string if needed
-    const formattedData = {
-      ...data,
-      damage_date: typeof data.damage_date === 'string' ? data.damage_date : new Date(data.damage_date).toISOString()
-    };
-    onSubmit(formattedData);
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="title"
@@ -134,7 +125,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
                 <Input 
                   type="datetime-local" 
                   {...field} 
-                  value={field.value || ''}
+                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
                 />
               </FormControl>
             </FormItem>

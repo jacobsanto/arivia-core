@@ -1,101 +1,39 @@
 
-import { UserRole, ROLE_DETAILS } from "./base";
+/**
+ * Role definitions, details, and related utilities
+ */
+import { UserRole } from "./base";
 
-// Role hierarchy and utilities
-export const ROLE_HIERARCHY: Record<UserRole, number> = {
-  superadmin: 100,
-  tenant_admin: 90,
-  property_manager: 70,
-  inventory_manager: 50,
-  concierge: 40,
-  maintenance_staff: 30,
-  housekeeping_staff: 20
-};
-
-export const getRoleLevel = (role: UserRole): number => {
-  return ROLE_HIERARCHY[role] || 0;
-};
-
-export const isHigherRole = (role1: UserRole, role2: UserRole): boolean => {
-  return getRoleLevel(role1) > getRoleLevel(role2);
-};
-
-export const canManageRole = (managerRole: UserRole, targetRole: UserRole): boolean => {
-  // Superadmin can manage all roles
-  if (managerRole === 'superadmin') return true;
-  
-  // Tenant admin can manage all except superadmin
-  if (managerRole === 'tenant_admin' && targetRole !== 'superadmin') return true;
-  
-  // Property managers can manage staff roles
-  if (managerRole === 'property_manager') {
-    return ['housekeeping_staff', 'maintenance_staff', 'concierge'].includes(targetRole);
-  }
-  
-  return false;
-};
-
-export const getDefaultRoleForNewUser = (): UserRole => {
-  return 'property_manager';
-};
-
-export const getAllowedRolesForUser = (userRole: UserRole): UserRole[] => {
-  switch (userRole) {
-    case 'superadmin':
-      return Object.keys(ROLE_HIERARCHY) as UserRole[];
-    
-    case 'tenant_admin':
-      return [
-        'tenant_admin',
-        'property_manager',
-        'inventory_manager',
-        'concierge',
-        'maintenance_staff',
-        'housekeeping_staff'
-      ];
-    
-    case 'property_manager':
-      return [
-        'property_manager',
-        'concierge',
-        'maintenance_staff',
-        'housekeeping_staff'
-      ];
-    
-    default:
-      return [userRole]; // Users can only see their own role
+export const ROLE_DETAILS: Record<UserRole, {
+  title: string;
+  description: string;
+}> = {
+  superadmin: {
+    title: "Super Admin",
+    description: "Full access to all system features, requires a secondary role"
+  },
+  administrator: {
+    title: "Administrator",
+    description: "Manage properties, staff, and system settings"
+  },
+  property_manager: {
+    title: "Property Manager",
+    description: "Manage assigned properties and staff"
+  },
+  concierge: {
+    title: "Concierge",
+    description: "Handle guest services and requests"
+  },
+  housekeeping_staff: {
+    title: "Housekeeping Staff",
+    description: "Manage cleaning and housekeeping tasks"
+  },
+  maintenance_staff: {
+    title: "Maintenance Staff",
+    description: "Handle property maintenance and repairs"
+  },
+  inventory_manager: {
+    title: "Inventory Manager",
+    description: "Manage supplies and inventory across properties"
   }
 };
-
-export const getDefaultPermissionsForRole = (role: UserRole): string[] => {
-  const rolePermissions: Record<UserRole, string[]> = {
-    superadmin: ['*'],
-    tenant_admin: [
-      'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
-      'assignTasks', 'viewInventory', 'manageInventory', 'viewUsers', 
-      'manageUsers', 'viewReports', 'viewChat', 'view_damage_reports'
-    ],
-    property_manager: [
-      'viewDashboard', 'viewProperties', 'viewAllTasks', 'assignTasks', 
-      'viewInventory', 'viewReports', 'viewChat'
-    ],
-    housekeeping_staff: [
-      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
-    ],
-    maintenance_staff: [
-      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
-    ],
-    inventory_manager: [
-      'viewDashboard', 'viewInventory', 'manageInventory', 'approveTransfers', 
-      'viewReports', 'viewChat'
-    ],
-    concierge: [
-      'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewChat'
-    ]
-  };
-  
-  return rolePermissions[role] || [];
-};
-
-// Re-export ROLE_DETAILS for compatibility
-export { ROLE_DETAILS };

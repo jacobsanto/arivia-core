@@ -1,63 +1,97 @@
 
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { useUser } from '@/contexts/UserContext';
+import { useState, useEffect, useRef } from "react";
+import { useUser } from "@/contexts/UserContext";
+import { User } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface UseAvatarUploadParams {
-  userId: string;
+interface UseAvatarUploadProps {
+  user: User;
   onAvatarChange?: (url: string) => void;
 }
 
-export const useAvatarUpload = ({ userId, onAvatarChange }: UseAvatarUploadParams) => {
+export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
+  const { updateUserAvatar, refreshProfile } = useUser();
   const [isUploading, setIsUploading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { updateProfile } = useUser();
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const previousAvatarRef = useRef<string>("");
+  
+  useEffect(() => {
+    const newUrl = user.avatar || "/placeholder.svg";
+    setAvatarUrl(newUrl);
+    previousAvatarRef.current = newUrl;
+  }, [user.avatar]);
 
-  const handleAvatarUpload = async (file: File) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-
-    setIsUploading(true);
+    
     try {
-      // Create a data URL for the uploaded file
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const newAvatarUrl = event.target?.result as string;
-        
-        try {
-          // Update the user's avatar
-          await updateProfile({ avatar: newAvatarUrl });
-          setAvatarUrl(newAvatarUrl);
-          onAvatarChange?.(newAvatarUrl);
-          toast.success('Avatar updated successfully');
-          setIsDialogOpen(false);
-        } catch (error) {
-          console.error('Error updating avatar:', error);
-          toast.error('Failed to update avatar');
-        } finally {
-          setIsUploading(false);
-        }
-      };
+      setIsUploading(true);
+
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Please upload an image file');
+      }
       
-      reader.readAsDataURL(file);
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error('Image size should be less than 2MB');
+      }
+
+      const userId = user.id;
+      const fileExt = file.name.split('.').pop();
+      const fileName = `avatar-${Date.now()}.${fileExt}`; // Add timestamp to filename
+      const filePath = `${userId}/${fileName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type,
+          cacheControl: 'no-cache' // Disable caching
+        });
+      
+      if (error) {
+        console.error("Storage error:", error);
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      if (publicUrlData?.publicUrl) {
+        // Update avatar in database
+        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        
+        // Update local state
+        setAvatarUrl(publicUrlData.publicUrl);
+        previousAvatarRef.current = publicUrlData.publicUrl;
+
+        // Notify parent component
+        if (onAvatarChange) {
+          onAvatarChange(publicUrlData.publicUrl);
+        }
+
+        // Refresh profile to update all components
+        await refreshProfile();
+        
+        toast.success("Avatar updated successfully");
+        setIsDialogOpen(false);
+      }
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload avatar');
+      console.error("Error uploading avatar:", error);
+      toast.error("Failed to upload avatar", {
+        description: error instanceof Error ? error.message : "An unknown error occurred"
+      });
+    } finally {
       setIsUploading(false);
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      handleAvatarUpload(file);
-    }
-  };
-
   return {
-    handleAvatarUpload,
-    isUploading,
     avatarUrl,
+    isUploading,
     isDialogOpen,
     setIsDialogOpen,
     handleFileChange

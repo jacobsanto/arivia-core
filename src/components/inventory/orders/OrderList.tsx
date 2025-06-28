@@ -1,116 +1,265 @@
 
-import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { usePermissions } from '@/hooks/usePermissions';
-import { Package, Clock, CheckCircle, XCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useUser } from "@/contexts/UserContext";
+import { useOrders } from "@/contexts/OrderContext";
+import { 
+  Order, 
+  OrderStatus, 
+  canTakeActionOnOrder, 
+  getNextOrderStatus, 
+  sendOrderNotification 
+} from "./OrderUtils";
+import OrdersFilterBar from "./list/OrdersFilterBar";
+import OrderTable from "./list/OrderTable";
+import OrderDetailsDialog from "./details/OrderDetailsDialog";
+import { toastService } from "@/services/toast/toast.service";
+import { orderService } from "@/services/orders/order.service";
 
-interface OrderListProps {
-  orders: any[];
-  isLoading?: boolean;
-}
-
-const OrderList: React.FC<OrderListProps> = ({ orders, isLoading }) => {
+const OrderList: React.FC = () => {
+  const { orders, updateOrder } = useOrders();
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
+  const [rejectionReason, setRejectionReason] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterDepartment, setFilterDepartment] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  
   const { canAccess } = usePermissions();
+  const { user } = useUser();
+  
+  const userRole = user?.role || "concierge";
+  const canViewOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(userRole);
+  const canApproveAsManager = ["superadmin", "property_manager"].includes(userRole);
+  const canApproveAsAdmin = ["superadmin", "administrator"].includes(userRole);
+  const isSuperAdmin = userRole === "superadmin";
 
-  if (isLoading) {
+  const filteredOrders = orders.filter((order) => {
+    if (filterStatus !== "all" && order.status !== filterStatus) {
+      return false;
+    }
+
+    if (filterDepartment !== "all" && order.department !== filterDepartment) {
+      return false;
+    }
+
+    if (searchQuery && !(
+      order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.vendorName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.requestor.toLowerCase().includes(searchQuery.toLowerCase())
+    )) {
+      return false;
+    }
+
+    if (userRole === "housekeeping_staff" && order.requesterRole !== "housekeeping_staff") {
+      return false;
+    }
+
+    if (userRole === "maintenance_staff" && order.requesterRole !== "maintenance_staff") {
+      return false;
+    }
+
+    return true;
+  });
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      const checkOverdueOrders = async () => {
+        try {
+          const pendingOverdueOrders = await orderService.getPendingOverdueOrders();
+          
+          if (pendingOverdueOrders.length > 0) {
+            toastService.warning("Attention Required", {
+              description: `${pendingOverdueOrders.length} order(s) pending for more than 24 hours`
+            });
+          }
+        } catch (error) {
+          console.error("Error checking overdue orders:", error);
+        }
+      };
+      
+      checkOverdueOrders();
+    }
+  }, [orders, isSuperAdmin]);
+
+  const handleViewDetails = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailsOpen(true);
+    setRejectionReason("");
+  };
+
+  const openRejectionDialog = (order: Order) => {
+    setSelectedOrder(order);
+    setIsDetailsOpen(true);
+  };
+
+  const handleApproveOrder = async (orderId: string) => {
+    const orderToUpdate = orders.find(order => order.id === orderId);
+    if (!orderToUpdate) return;
+
+    const canApprove = canTakeActionOnOrder(orderToUpdate.status, userRole as any);
+    
+    if (!canApprove) {
+      toastService.error("Access Denied", {
+        description: "You don't have permission to approve this order."
+      });
+      return;
+    }
+
+    const nextStatus = getNextOrderStatus(orderToUpdate.status, userRole as any);
+    
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, nextStatus as OrderStatus, user);
+      
+      // Update the UI state
+      updateOrder(orderId, { status: nextStatus });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification(nextStatus as OrderStatus, orderId, orderToUpdate);
+      
+      setIsDetailsOpen(false);
+    } catch (error) {
+      console.error("Error approving order:", error);
+    }
+  };
+
+  const handleRejectOrder = async (orderId: string) => {
+    if (!rejectionReason) {
+      toastService.error("Reason Required", {
+        description: "Please provide a rejection reason."
+      });
+      return;
+    }
+
+    const orderToUpdate = orders.find(order => order.id === orderId);
+    if (!orderToUpdate) return;
+
+    const canReject = canTakeActionOnOrder(orderToUpdate.status, userRole as any);
+    
+    if (!canReject) {
+      toastService.error("Access Denied", {
+        description: "You don't have permission to reject this order."
+      });
+      return;
+    }
+    
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, 'rejected', user, rejectionReason);
+      
+      // Update the UI state
+      updateOrder(orderId, { 
+        status: 'rejected',
+        rejectedBy: user?.name,
+        rejectedAt: new Date().toISOString(),
+        rejectionReason: rejectionReason,
+      });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification('rejected', orderId, { rejectedBy: user?.name, reason: rejectionReason });
+      
+      setIsDetailsOpen(false);
+      setRejectionReason("");
+    } catch (error) {
+      console.error("Error rejecting order:", error);
+    }
+  };
+
+  const handleSendOrder = async (orderId: string) => {
+    const orderToUpdate = orders.find(order => order.id === orderId);
+    if (!orderToUpdate || orderToUpdate.status !== "approved") return;
+
+    if (!canApproveAsAdmin && !isSuperAdmin) {
+      toastService.error("Access Denied", {
+        description: "You don't have permission to send orders to vendors."
+      });
+      return;
+    }
+
+    try {
+      // Update the order using the order service
+      await orderService.updateOrderStatus(orderId, 'sent', user);
+      
+      // Update the UI state
+      updateOrder(orderId, { 
+        status: 'sent',
+        sentAt: new Date().toISOString(),
+      });
+      
+      // Send notification (this should eventually be handled by the service)
+      sendOrderNotification('sent', orderId, orderToUpdate);
+      
+      setIsDetailsOpen(false);
+    } catch (error) {
+      console.error("Error sending order:", error);
+    }
+  };
+
+  if (!canViewOrders) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map(i => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
-              <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-3 bg-gray-200 rounded w-full"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Purchase Orders</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">You don't have permission to view orders.</p>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="h-4 w-4" />;
-      case 'approved':
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'delivered':
-        return <Package className="h-4 w-4 text-blue-500" />;
-      case 'cancelled':
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Clock className="h-4 w-4" />;
-    }
-  };
-
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'secondary';
-      case 'approved':
-        return 'default';
-      case 'delivered':
-        return 'success';
-      case 'cancelled':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      {orders.map((order) => (
-        <Card key={order.id}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Order #{order.id.slice(-8)}
-              </CardTitle>
-              <Badge variant={getStatusVariant(order.status)} className="flex items-center gap-1">
-                {getStatusIcon(order.status)}
-                {order.status}
-              </Badge>
-            </div>
-            <CardDescription>
-              Created: {new Date(order.created_at).toLocaleDateString()}
-              {order.vendor && ` • Vendor: ${order.vendor.name}`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Items:</span>
-                <span className="font-medium">{order.items?.length || 0}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Total Price:</span>
-                <span className="font-medium">€{order.total_price || '0.00'}</span>
-              </div>
-              {canAccess('approveTransfers') && order.status === 'pending' && (
-                <div className="mt-3 text-sm text-amber-600">
-                  Awaiting approval
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-      
-      {orders.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">No orders found</h3>
-            <p className="text-muted-foreground">Orders will appear here once created.</p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <CardTitle>Purchase Orders</CardTitle>
+            
+            <OrdersFilterBar
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              filterStatus={filterStatus}
+              setFilterStatus={setFilterStatus}
+              filterDepartment={filterDepartment}
+              setFilterDepartment={setFilterDepartment}
+              isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
+            />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <OrderTable
+            filteredOrders={filteredOrders}
+            canApproveAsManager={canApproveAsManager}
+            canApproveAsAdmin={canApproveAsAdmin}
+            isSuperAdmin={isSuperAdmin}
+            handleViewDetails={handleViewDetails}
+            handleApproveOrder={handleApproveOrder}
+            handleSendOrder={handleSendOrder}
+            openRejectionDialog={openRejectionDialog}
+          />
+        </CardContent>
+      </Card>
+
+      <OrderDetailsDialog
+        isOpen={isDetailsOpen}
+        setIsOpen={setIsDetailsOpen}
+        selectedOrder={selectedOrder}
+        rejectionReason={rejectionReason}
+        setRejectionReason={setRejectionReason}
+        canApproveAsManager={canApproveAsManager}
+        canApproveAsAdmin={canApproveAsAdmin}
+        isSuperAdmin={isSuperAdmin}
+        handleApproveOrder={handleApproveOrder}
+        handleRejectOrder={handleRejectOrder}
+        handleSendOrder={handleSendOrder}
+      />
+    </>
   );
 };
 

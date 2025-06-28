@@ -21,9 +21,9 @@ export const useUserDeletion = () => {
       console.log("Starting delete operation for user:", userToDelete.id);
       
       // Call the deleteUser function from the context
-      const success = await deleteUser(userToDelete.id);
+      const result = await deleteUser(userToDelete.id);
       
-      if (success) {
+      if (result) {
         console.log("User deleted successfully");
         toast.success("User deleted successfully");
         
@@ -31,8 +31,7 @@ export const useUserDeletion = () => {
         setUserToDelete(null);
         return true;
       } else {
-        toast.error("Failed to delete user");
-        return false;
+        throw new Error("Delete operation failed");
       }
     } catch (error) {
       console.error("Error in handleDeleteConfirm:", error);
@@ -57,8 +56,8 @@ export const useUserDeletion = () => {
       for (const user of usersToDelete) {
         try {
           console.log(`Attempting to delete user: ${user.id} (${user.name})`);
-          const success = await deleteUser(user.id);
-          if (success) {
+          const result = await deleteUser(user.id);
+          if (result) {
             successCount++;
           } else {
             failCount++;

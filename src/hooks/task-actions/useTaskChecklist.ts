@@ -8,14 +8,14 @@ export const useTaskChecklist = (
   selectedTask: Task | null,
   setSelectedTask: React.Dispatch<React.SetStateAction<Task | null>>
 ) => {
-  const handleToggleChecklistItem = (itemId: string) => {
+  const handleToggleChecklistItem = (itemId: number) => {
     if (selectedTask) {
-      const updatedChecklist = selectedTask.checklist?.map((item) => {
+      const updatedChecklist = selectedTask.checklist.map((item) => {
         if (item.id === itemId) {
           return { ...item, completed: !item.completed };
         }
         return item;
-      }) || [];
+      });
       
       const updatedTask = {
         ...selectedTask,

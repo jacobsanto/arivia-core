@@ -1,83 +1,102 @@
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { useState } from "react";
+import { CardContent } from "@/components/ui/card";
+import { SwipeableCard } from "@/components/ui/swipeable-card";
 import { Task } from "@/types/taskTypes";
-import { format } from "date-fns";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { TaskCardHeader } from "./card/TaskCardHeader";
+import { TaskCardStatusBadges } from "./card/TaskCardStatusBadges";
+import { Check, X } from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
-  onClick?: () => void;
+  onClick: () => void;
+  onComplete?: (task: Task) => void;
+  onReject?: (task: Task) => void;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "Urgent": return "bg-red-500 text-white";
-      case "High": return "bg-orange-500 text-white";
-      case "Medium": return "bg-yellow-500 text-white";
-      case "Low": return "bg-green-500 text-white";
-      default: return "bg-gray-500 text-white";
+const TaskCard = ({ task, onClick, onComplete, onReject }: TaskCardProps) => {
+  const isMobile = useIsMobile();
+  const [swipeAction, setSwipeAction] = useState<string | null>(null);
+
+  // Handle swipe right to complete
+  const handleSwipeRight = () => {
+    if (onComplete) {
+      setSwipeAction("complete");
+      setTimeout(() => {
+        onComplete(task);
+        setSwipeAction(null);
+      }, 500);
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed": return "bg-green-100 text-green-800 border-green-200";
-      case "In Progress": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "Pending": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+  // Handle swipe left to reject
+  const handleSwipeLeft = () => {
+    if (onReject) {
+      setSwipeAction("reject");
+      setTimeout(() => {
+        onReject(task);
+        setSwipeAction(null);
+      }, 500);
     }
+  };
+
+  // Get appropriate feedback color based on swipe direction
+  const getSwipeFeedbackColor = () => {
+    if (swipeAction === "complete") return "rgba(22, 163, 74, 0.2)"; // Green
+    if (swipeAction === "reject") return "rgba(220, 38, 38, 0.2)"; // Red
+    return "rgba(0, 0, 0, 0.1)"; // Default
+  };
+
+  // Show swipe feedback icons
+  const renderSwipeIcon = () => {
+    if (swipeAction === "complete") {
+      return (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-green-100 rounded-full p-2">
+          <Check className="h-6 w-6 text-green-600" />
+        </div>
+      );
+    }
+    if (swipeAction === "reject") {
+      return (
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 bg-red-100 rounded-full p-2">
+          <X className="h-6 w-6 text-red-600" />
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <Card 
-      className="cursor-pointer hover:shadow-md transition-shadow"
+    <SwipeableCard
+      className={`hover:bg-secondary/50 cursor-pointer transition-colors relative ${
+        swipeAction ? 'opacity-80' : ''
+      }`}
       onClick={onClick}
+      onSwipeRight={onComplete ? handleSwipeRight : undefined}
+      onSwipeLeft={onReject ? handleSwipeLeft : undefined}
+      swipeEnabled={isMobile}
+      feedbackColor={getSwipeFeedbackColor()}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg">{task.title}</CardTitle>
-          <div className="flex gap-2">
-            <Badge className={getPriorityColor(task.priority)}>
-              {task.priority}
-            </Badge>
-            <Badge className={getStatusColor(task.status)}>
-              {task.status}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {task.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
-              {task.description}
-            </p>
-          )}
-          
-          <div className="flex items-center justify-between text-sm">
-            {task.assignedTo && (
-              <span className="text-muted-foreground">
-                Assigned to: {task.assignedTo}
-              </span>
-            )}
-            
-            {task.dueDate && (
-              <span className="text-muted-foreground">
-                Due: {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(task.dueDate), 'MMM dd, yyyy')}
-              </span>
-            )}
-          </div>
-          
-          {task.property && (
-            <div className="text-sm text-muted-foreground">
-              Property: {task.property}
-            </div>
-          )}
+      <CardContent className="p-5">
+        <div className={`flex ${isMobile ? 'flex-col gap-2' : 'flex-row justify-between items-center'}`}>
+          <TaskCardHeader 
+            title={task.title}
+            type={task.type || "Housekeeping"}
+            approvalStatus={task.approvalStatus}
+            property={task.property}
+          />
+          <TaskCardStatusBadges
+            status={task.status}
+            priority={task.priority}
+            approvalStatus={task.approvalStatus}
+            isMobile={isMobile}
+            dueDate={task.dueDate}
+          />
         </div>
       </CardContent>
-    </Card>
+      {renderSwipeIcon()}
+    </SwipeableCard>
   );
 };
 

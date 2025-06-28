@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { User, UserRole, ROLE_DETAILS, safeRoleCast } from "@/types/auth";
+import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +25,9 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
 }) => {
   const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(safeRoleCast(user.role));
+  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
-    user.secondaryRoles?.map(role => safeRoleCast(role)) || []
+    user.secondaryRoles || []
   );
   const [isSaving, setIsSaving] = useState(false);
   
@@ -37,8 +37,8 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedRole(safeRoleCast(user.role));
-    setSelectedSecondaryRoles(user.secondaryRoles?.map(role => safeRoleCast(role)) || []);
+    setSelectedRole(user.role);
+    setSelectedSecondaryRoles(user.secondaryRoles || []);
   };
   
   const handleSaveRole = async () => {
@@ -54,16 +54,14 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
     try {
       // Call the updateProfile function from UserContext
       // This will handle both the database update and local state updates
-      const success = await updateProfile({
+      const success = await updateProfile(user.id, {
         role: selectedRole,
-        secondary_roles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
       });
       
       if (success) {
         setIsEditing(false);
         toast.success("User role updated successfully");
-      } else {
-        toast.error("Failed to update role");
       }
     } catch (error) {
       toast.error("Failed to update role", {
@@ -144,13 +142,13 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
           </div>
         ) : (
           <div>
-            <Badge variant="outline">{ROLE_DETAILS[safeRoleCast(user.role)].title}</Badge>
+            <Badge variant="outline">{ROLE_DETAILS[user.role].title}</Badge>
             
             {user.secondaryRoles && user.secondaryRoles.length > 0 && (
               <div className="mt-1 flex flex-wrap gap-1">
                 {user.secondaryRoles.map(role => (
                   <Badge key={role} variant="secondary" className="text-xs">
-                    +{ROLE_DETAILS[safeRoleCast(role)].title}
+                    +{ROLE_DETAILS[role].title}
                   </Badge>
                 ))}
               </div>

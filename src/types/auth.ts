@@ -1,11 +1,35 @@
 
-// Re-export everything from the base auth types for backward compatibility
-export * from './auth/base';
-export * from './auth/roles';
-export * from './auth/capabilities';
+// This file is deprecated and should be imported from the auth directory instead
+// Import from @/types/auth instead of directly from this file
 
-// Export the main types that components expect
-export type { User, TenantUser, Session, UserRole, Tenant, TenantSettings, FeaturePermission } from './auth/base';
-export { ROLE_DETAILS, getDefaultPermissionsForRole } from './auth/roles';
-export { OFFLINE_CAPABILITIES } from './auth/capabilities';
-export { FEATURE_PERMISSIONS } from './auth/base';
+// Re-export all types from the new structure for backwards compatibility
+import {
+  User,
+  Session,
+  UserRole,
+  StateSetter,
+  UserStateSetter,
+  FEATURE_PERMISSIONS,
+  ROLE_DETAILS,
+  OFFLINE_CAPABILITIES,
+  hasPermissionWithAllRoles,
+  getAllPermissionKeys,
+  getDefaultPermissionsForRole
+} from '@/types/auth/index';
+
+export type {
+  User,
+  Session,
+  UserRole,
+  StateSetter,
+  UserStateSetter
+};
+
+export {
+  FEATURE_PERMISSIONS,
+  ROLE_DETAILS,
+  OFFLINE_CAPABILITIES,
+  hasPermissionWithAllRoles,
+  getAllPermissionKeys,
+  getDefaultPermissionsForRole
+};

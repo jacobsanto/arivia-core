@@ -1,25 +1,23 @@
-
 import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
+import SignUpForm from "@/components/auth/SignUpForm";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
-import { useUser } from "@/contexts/UserContext";
-import { getRoleBasedRoute } from "@/lib/utils/routing";
-import { safeRoleCast } from "@/types/auth/base";
+import { LoginInfoPanel } from "@/components/auth/LoginInfoPanel";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
+  const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isAuthenticated, isLoading, user } = useUser();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated && !isLoading && user) {
-      const userRole = safeRoleCast(user.role);
-      const redirectPath = getRoleBasedRoute(userRole);
-      navigate(redirectPath, { replace: true });
+    if (isAuthenticated && !isLoading) {
+      navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, isLoading, user, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   if (isLoading) {
     return (
@@ -49,26 +47,66 @@ const Login = () => {
             />
           </div>
 
+          <div className="flex mb-6 border-b">
+            <button
+              onClick={() => setActiveTab("signin")}
+              className={`flex-1 py-3 text-center ${
+                activeTab === "signin" 
+                  ? "font-medium border-b-2 border-primary" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Login
+            </button>
+            <button
+              onClick={() => setActiveTab("signup")}
+              className={`flex-1 py-3 text-center ${
+                activeTab === "signup" 
+                  ? "font-medium border-b-2 border-primary" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Register
+            </button>
+          </div>
+
           <div className="mt-6">
-            <h2 className="text-2xl font-bold mb-1">Internal Access</h2>
-            <p className="text-gray-500 mb-6">Login with your staff credentials</p>
-            <LoginForm />
+            {activeTab === "signin" ? (
+              <div>
+                <h2 className="text-2xl font-bold mb-1">Welcome back</h2>
+                <p className="text-gray-500 mb-6">Login to your account to continue</p>
+                <LoginForm />
+                <div className="mt-4 text-center text-sm text-gray-500">
+                  Don't have an account?{" "}
+                  <button 
+                    onClick={() => setActiveTab("signup")}
+                    className="text-primary hover:underline"
+                  >
+                    Register
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h2 className="text-2xl font-bold mb-1">Create account</h2>
+                <p className="text-gray-500 mb-6">Register to start managing your properties</p>
+                <SignUpForm />
+                <div className="mt-4 text-center text-sm text-gray-500">
+                  Already have an account?{" "}
+                  <button 
+                    onClick={() => setActiveTab("signin")}
+                    className="text-primary hover:underline"
+                  >
+                    Login
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
       
-      <div className="hidden lg:flex lg:flex-1 lg:bg-gradient-to-br lg:from-primary lg:to-blue-700">
-        <div className="flex flex-col justify-center p-12 text-white">
-          <h2 className="text-3xl font-bold mb-6">Welcome to Arivia Villas</h2>
-          <p className="text-lg mb-4">Internal operations management system</p>
-          <ul className="space-y-2">
-            <li>• Property management</li>
-            <li>• Task coordination</li>
-            <li>• Inventory tracking</li>
-            <li>• Team collaboration</li>
-          </ul>
-        </div>
-      </div>
+      <LoginInfoPanel />
     </div>
   );
 };

@@ -1,83 +1,154 @@
 
-import React from "react";
-import { format } from "date-fns";
-import { Calendar, Clock, User } from "lucide-react";
+import React, { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { CalendarDays, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { Task } from "@/types/taskTypes";
 import { MaintenanceTask } from "@/types/maintenanceTypes";
+import { format, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
+import { EmptyState } from "@/components/ui/empty-state";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TasksScheduleProps {
-  housekeepingTasks?: Task[];
-  maintenanceTasks?: MaintenanceTask[];
-  tasks?: Task[];
-  onTaskClick?: (task: Task) => void;
+  housekeepingTasks: Task[];
+  maintenanceTasks: MaintenanceTask[];
+  onCreateTask?: () => void;
 }
 
-const TasksSchedule = ({ housekeepingTasks = [], maintenanceTasks = [], tasks = [], onTaskClick }: TasksScheduleProps) => {
-  const today = format(new Date(), 'yyyy-MM-dd');
+const TasksSchedule: React.FC<TasksScheduleProps> = ({ 
+  housekeepingTasks = [], 
+  maintenanceTasks = [],
+  onCreateTask
+}) => {
+  const [currentWeek, setCurrentWeek] = useState(new Date());
+  const isMobile = useIsMobile();
   
-  // Combine all tasks
-  const allTasks = [...(housekeepingTasks || []), ...(tasks || [])];
+  const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
+  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   
-  // Filter and sort tasks for today
-  const todayTasks = allTasks.filter(task => {
-    if (!task.dueDate) return false;
-    // Ensure we have a string to work with
-    const taskDateString = typeof task.dueDate === 'string' ? task.dueDate : task.dueDate;
-    return taskDateString.split('T')[0] === today;
-  }).sort((a, b) => {
-    const aDate = new Date(a.dueDate || '');
-    const bDate = new Date(b.dueDate || '');
-    return aDate.getTime() - bDate.getTime();
-  });
+  const allTasks = useMemo(() => [
+    ...housekeepingTasks,
+    ...maintenanceTasks
+  ], [housekeepingTasks, maintenanceTasks]);
+
+  const getTasksForDay = (day: Date) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return allTasks.filter(task => task.dueDate?.startsWith(dayStr));
+  };
+
+  const hasAnyTasks = allTasks.length > 0;
+
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    setCurrentWeek(prev => direction === 'prev' ? subWeeks(prev, 1) : addWeeks(prev, 1));
+  };
+
+  if (!hasAnyTasks) {
+    return (
+      <EmptyState
+        icon={Calendar}
+        title="No Tasks Scheduled"
+        description="No housekeeping or maintenance tasks are currently scheduled. Create your first task to get started."
+        action={onCreateTask ? {
+          label: "Create First Task",
+          onClick: onCreateTask
+        } : undefined}
+        compact={isMobile}
+      />
+    );
+  }
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Tasks Schedule</span>
-          <Badge variant="outline">
-            {todayTasks.length} Tasks
-          </Badge>
-        </CardTitle>
+      <CardHeader className="pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <CardTitle className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5" />
+            <span className={isMobile ? "text-base" : "text-lg"}>
+              Weekly Schedule
+            </span>
+          </CardTitle>
+          
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateWeek('prev')}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            
+            <span className="text-sm font-medium px-3 py-1 bg-muted rounded-md whitespace-nowrap">
+              {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+            </span>
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigateWeek('next')}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {todayTasks.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              No tasks scheduled for today
-            </div>
-          ) : (
-            todayTasks.map((task) => (
+      
+      <CardContent className="pt-0">
+        <div className={`grid gap-2 ${isMobile ? 'grid-cols-1' : 'grid-cols-7'}`}>
+          {weekDays.map((day) => {
+            const dayTasks = getTasksForDay(day);
+            const isToday = isSameDay(day, new Date());
+            
+            return (
               <div
-                key={task.id}
-                className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors"
-                onClick={() => onTaskClick?.(task)}
+                key={day.toISOString()}
+                className={`p-3 rounded-lg border ${
+                  isToday ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
+                } ${isMobile ? 'min-h-[80px]' : 'min-h-[120px]'}`}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium truncate">{task.title}</h4>
-                    <Badge className="text-xs">{task.priority}</Badge>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-sm font-medium">
+                    {format(day, isMobile ? 'EEE' : 'EEEE')}
                   </div>
-                  <div className="flex items-center text-xs text-muted-foreground mt-1 space-x-4">
-                    {task.dueDate && (
-                      <span className="flex items-center">
-                        <Clock className="h-3 w-3 mr-1" />
-                        {format(new Date(task.dueDate), 'HH:mm')}
-                      </span>
-                    )}
-                    {(task.assignedTo) && (
-                      <span className="flex items-center">
-                        <User className="h-3 w-3 mr-1" />
-                        {task.assignedTo}
-                      </span>
-                    )}
+                  <div className={`text-sm ${isToday ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                    {format(day, 'd')}
                   </div>
                 </div>
+                
+                <div className="space-y-1">
+                  {dayTasks.length === 0 ? (
+                    <div className="text-xs text-muted-foreground text-center py-2">
+                      No tasks
+                    </div>
+                  ) : (
+                    dayTasks.slice(0, isMobile ? 2 : 3).map((task, index) => (
+                      <div
+                        key={`${task.id}-${index}`}
+                        className="p-2 bg-background rounded text-xs"
+                      >
+                        <div className="font-medium truncate mb-1">
+                          {task.title || 'Untitled Task'}
+                        </div>
+                        <Badge
+                          variant={task.status === 'completed' || task.status === 'Completed' ? 'default' : 'secondary'}
+                          className="text-xs px-1 py-0"
+                        >
+                          {task.status}
+                        </Badge>
+                      </div>
+                    ))
+                  )}
+                  {dayTasks.length > (isMobile ? 2 : 3) && (
+                    <div className="text-xs text-muted-foreground text-center py-1">
+                      +{dayTasks.length - (isMobile ? 2 : 3)} more
+                    </div>
+                  )}
+                </div>
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
       </CardContent>
     </Card>

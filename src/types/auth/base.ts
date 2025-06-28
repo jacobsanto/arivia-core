@@ -1,217 +1,42 @@
 
-export type UserRole = 
-  | 'superadmin'
-  | 'tenant_admin'
-  | 'property_manager'
-  | 'housekeeping_staff'
-  | 'maintenance_staff'
-  | 'inventory_manager'
-  | 'concierge';
+/**
+ * Core user and session type definitions
+ */
+import { Session as SupabaseSession, User as SupabaseUser } from "@supabase/supabase-js";
 
 export interface User {
   id: string;
-  name: string;
   email: string;
+  name: string;
   role: UserRole;
-  phone?: string;
-  avatar?: string;
   secondaryRoles?: UserRole[];
-  customPermissions?: Record<string, boolean>;
-}
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: string; // This is a string in the database
-  phone?: string;
   avatar?: string;
-  secondary_roles?: string[];
-  custom_permissions?: Record<string, boolean>;
-  created_at?: string;
-  updated_at?: string;
+  phone?: string;
+  customPermissions?: {
+    [key: string]: boolean;  // Permission key to boolean (granted/denied)
+  };
 }
 
-export interface TenantUser extends User {
-  tenantId: string;
-}
-
+// Updated Session interface to correctly match Supabase's Session type
 export interface Session {
-  user: User;
-  token: string;
-  expiresAt: Date;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token: string;
+  user: SupabaseUser; // Use the full Supabase User type to ensure compatibility
 }
 
-export interface Tenant {
-  id: string;
-  name: string;
-  domain: string;
-  settings: TenantSettings;
-}
+export type UserRole = 
+  | "superadmin"
+  | "administrator" 
+  | "property_manager" 
+  | "concierge" 
+  | "housekeeping_staff" 
+  | "maintenance_staff" 
+  | "inventory_manager";
 
-export interface TenantSettings {
-  allowRegistration: boolean;
-  defaultRole: UserRole;
-  customBranding?: {
-    logo?: string;
-    primaryColor?: string;
-    secondaryColor?: string;
-  };
-}
+// Type for React state setter functions that can accept a value or update function
+export type StateSetter<T> = (value: T | ((prev: T) => T)) => void;
 
-// Permission system
-export interface FeaturePermission {
-  title: string;
-  description: string;
-  category: string;
-  allowedRoles: UserRole[];
-}
-
-export const FEATURE_PERMISSIONS: Record<string, FeaturePermission> = {
-  viewDashboard: {
-    title: 'View Dashboard',
-    description: 'Access to main dashboard',
-    category: 'Dashboard',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge']
-  },
-  viewProperties: {
-    title: 'View Properties',
-    description: 'View property listings',
-    category: 'Properties',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'concierge']
-  },
-  manageProperties: {
-    title: 'Manage Properties',
-    description: 'Create, edit, and delete properties',
-    category: 'Properties',
-    allowedRoles: ['superadmin', 'tenant_admin']
-  },
-  viewAllTasks: {
-    title: 'View All Tasks',
-    description: 'View all system tasks',
-    category: 'Tasks',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
-  },
-  viewAssignedTasks: {
-    title: 'View Assigned Tasks',
-    description: 'View tasks assigned to user',
-    category: 'Tasks',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'concierge']
-  },
-  assignTasks: {
-    title: 'Assign Tasks',
-    description: 'Assign tasks to team members',
-    category: 'Tasks',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
-  },
-  viewInventory: {
-    title: 'View Inventory',
-    description: 'View inventory levels and items',
-    category: 'Inventory',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'inventory_manager', 'housekeeping_staff', 'maintenance_staff']
-  },
-  manageInventory: {
-    title: 'Manage Inventory',
-    description: 'Add, edit, and manage inventory items',
-    category: 'Inventory',
-    allowedRoles: ['superadmin', 'tenant_admin', 'inventory_manager']
-  },
-  approveTransfers: {
-    title: 'Approve Transfers',
-    description: 'Approve inventory transfers',
-    category: 'Inventory',
-    allowedRoles: ['superadmin', 'tenant_admin', 'inventory_manager']
-  },
-  viewUsers: {
-    title: 'View Users',
-    description: 'View user profiles',
-    category: 'Users',
-    allowedRoles: ['superadmin', 'tenant_admin']
-  },
-  manageUsers: {
-    title: 'Manage Users',
-    description: 'Create, edit, and manage user accounts',
-    category: 'Users',
-    allowedRoles: ['superadmin', 'tenant_admin']
-  },
-  viewReports: {
-    title: 'View Reports',
-    description: 'Access to system reports',
-    category: 'Reports',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'inventory_manager']
-  },
-  viewChat: {
-    title: 'View Chat',
-    description: 'Access to chat functionality',
-    category: 'Communication',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge']
-  },
-  view_damage_reports: {
-    title: 'View Damage Reports',
-    description: 'Access to damage reports',
-    category: 'Reports',
-    allowedRoles: ['superadmin', 'tenant_admin', 'property_manager']
-  }
-};
-
-// Role details
-export const ROLE_DETAILS: Record<UserRole, { title: string; description: string }> = {
-  superadmin: {
-    title: 'Super Admin',
-    description: 'Full system access with all permissions'
-  },
-  tenant_admin: {
-    title: 'Admin',
-    description: 'Administrative access to tenant resources'
-  },
-  property_manager: {
-    title: 'Property Manager',
-    description: 'Manages properties and oversees operations'
-  },
-  housekeeping_staff: {
-    title: 'Housekeeping Staff',
-    description: 'Handles cleaning and maintenance tasks'
-  },
-  maintenance_staff: {
-    title: 'Maintenance Staff',
-    description: 'Handles repairs and technical maintenance'
-  },
-  inventory_manager: {
-    title: 'Inventory Manager',
-    description: 'Manages inventory and supplies'
-  },
-  concierge: {
-    title: 'Concierge',
-    description: 'Guest services and support'
-  }
-};
-
-export const safeRoleCast = (role: string): UserRole => {
-  const validRoles: UserRole[] = [
-    'superadmin',
-    'tenant_admin', 
-    'property_manager',
-    'housekeeping_staff',
-    'maintenance_staff', 
-    'inventory_manager',
-    'concierge'
-  ];
-  
-  return validRoles.includes(role as UserRole) ? (role as UserRole) : 'property_manager';
-};
-
-// Convert UserProfile to User type with proper type safety
-export const profileToUser = (profile: UserProfile): User => {
-  return {
-    id: profile.id,
-    name: profile.name || '',
-    email: profile.email || '',
-    role: safeRoleCast(profile.role || 'property_manager'),
-    phone: profile.phone,
-    avatar: profile.avatar,
-    secondaryRoles: profile.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
-    customPermissions: (typeof profile.custom_permissions === 'object' && profile.custom_permissions !== null) 
-      ? profile.custom_permissions as Record<string, boolean> 
-      : {}
-  };
-};
+// Specific type for the user state setter to ensure consistency
+export type UserStateSetter = StateSetter<User | null>;

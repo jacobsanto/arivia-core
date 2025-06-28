@@ -1,135 +1,136 @@
-
-import React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { CheckCircle, Clock, User } from "lucide-react";
+import React, { useState } from 'react';
+import { format } from 'date-fns';
+import TaskDetail from "@/components/tasks/TaskDetail";
+import MaintenanceDetail from "@/components/maintenance/MaintenanceDetail";
 import { Task } from "@/types/taskTypes";
-import { format } from "date-fns";
+import { MaintenanceTask } from "@/types/maintenanceTypes";
+import { toast } from "sonner";
+import { CombinedTask } from "./agendaUtils";
+import TaskBadge from "./TaskBadge";
+import { getTaskNameWithoutVilla } from "./taskTitleUtils";
+import { createMockHousekeepingTask, createMockMaintenanceTask } from "./mockTaskUtils";
 
 interface AgendaTaskProps {
-  task: Task;
-  onComplete?: () => void;
-  onToggleChecklistItem?: (itemId: string) => void;
-  onClick?: () => void;
+  task: CombinedTask;
+  onClick: () => void;
 }
 
-const AgendaTask: React.FC<AgendaTaskProps> = ({
-  task,
-  onComplete,
-  onToggleChecklistItem,
-  onClick
-}) => {
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "Urgent": return "border-l-red-500 bg-red-50";
-      case "High": return "border-l-orange-500 bg-orange-50";
-      case "Medium": return "border-l-yellow-500 bg-yellow-50";
-      case "Low": return "border-l-green-500 bg-green-50";
-      default: return "border-l-gray-500 bg-gray-50";
+export const AgendaTask: React.FC<AgendaTaskProps> = ({ task, onClick }) => {
+  const [isTaskDetailOpen, setIsTaskDetailOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedMaintenanceTask, setSelectedMaintenanceTask] = useState<MaintenanceTask | null>(null);
+  
+  const taskTime = typeof task.dueDate === 'string' 
+    ? format(new Date(task.dueDate), 'h:mm a')
+    : format(task.dueDate as Date, 'h:mm a');
+  
+  // Prioritize which badge to show on mobile - only show the most important one
+  const showPriorityBadge = task.priority === "High" || task.priority === "high";
+  
+  // Handle task click to show the appropriate detail view
+  const handleTaskClick = async () => {
+    try {
+      if (task.taskType === "housekeeping") {
+        const housekeepingTask = createMockHousekeepingTask(task);
+        setSelectedTask(housekeepingTask);
+      } else {
+        const maintenanceTask = createMockMaintenanceTask(task);
+        setSelectedMaintenanceTask(maintenanceTask);
+      }
+      setIsTaskDetailOpen(true);
+    } catch (error) {
+      toast.error("Could not load task details");
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed": return "bg-green-100 text-green-800";
-      case "In Progress": return "bg-blue-100 text-blue-800";
-      case "Pending": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
+  // Handle closing the task detail view
+  const handleCloseTaskDetail = () => {
+    setIsTaskDetailOpen(false);
+    setSelectedTask(null);
+    setSelectedMaintenanceTask(null);
+  };
+  
+  // Mock handlers for task actions
+  const handleCompleteTask = () => {
+    toast.success("Task marked as complete");
+    handleCloseTaskDetail();
+  };
+  
+  const handleToggleChecklistItem = (itemId: number) => {
+    // In a real implementation, this would update the checklist item state
+    console.log("Toggle checklist item:", itemId);
+  };
+  
+  const handlePhotoUpload = (file: File) => {
+    // In a real implementation, this would upload the photo
+    console.log("Photo uploaded:", file.name);
   };
 
-  const handleChecklistToggle = (itemId: string) => {
-    if (onToggleChecklistItem) {
-      onToggleChecklistItem(itemId);
-    }
+  const handleToggleInstruction = (itemId: number) => {
+    // In a real implementation, this would update the instruction state
+    console.log("Toggle instruction:", itemId);
   };
 
-  const isCompleted = task.status === "Completed";
-  const completedItems = task.checklist.filter(item => item.completed).length;
-  const totalItems = task.checklist.length;
+  const handleMaintenanceMediaUpload = (file: File, type: 'before' | 'after') => {
+    // In a real implementation, this would upload the media file
+    console.log(`${type} photo uploaded:`, file.name);
+  };
+
+  // Extract clean task title
+  const cleanTaskTitle = getTaskNameWithoutVilla(task.title, task.property);
 
   return (
-    <div 
-      className={`border-l-4 p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow ${getPriorityColor(task.priority)}`}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-lg">{task.title}</h3>
-        <div className="flex items-center gap-2">
-          <Badge className={getStatusColor(task.status)}>
-            {task.status}
-          </Badge>
-          {task.priority && (
-            <Badge variant="outline">
-              {task.priority}
-            </Badge>
-          )}
+    <>
+      <div 
+        className="flex items-center p-3 rounded-md border hover:bg-secondary/50 active:bg-secondary cursor-pointer transition-colors my-1"
+        onClick={handleTaskClick}
+        role="button"
+        tabIndex={0}
+        aria-label={`Task: ${cleanTaskTitle} at ${taskTime}`}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleTaskClick();
+          }
+        }}
+      >
+        <div className="min-w-[50px] text-xs md:text-sm text-muted-foreground">
+          {taskTime}
+        </div>
+        <div className="flex-1 ml-3 mr-2">
+          <div className="font-medium text-sm md:text-base line-clamp-1">{cleanTaskTitle}</div>
+          <div className="text-2xs md:text-xs text-muted-foreground line-clamp-1">{task.property}</div>
+        </div>
+        <div className="ml-auto">
+          <TaskBadge 
+            priority={task.priority} 
+            taskType={task.taskType}
+            showPriorityBadge={showPriorityBadge}
+          />
         </div>
       </div>
 
-      {task.description && (
-        <p className="text-sm text-gray-600 mb-3">{task.description}</p>
+      {/* Task Detail Modal for Housekeeping */}
+      {isTaskDetailOpen && selectedTask && (
+        <TaskDetail
+          task={selectedTask}
+          onClose={handleCloseTaskDetail}
+          onComplete={handleCompleteTask}
+          onToggleChecklistItem={handleToggleChecklistItem}
+          onPhotoUpload={handlePhotoUpload}
+        />
       )}
 
-      <div className="flex items-center justify-between text-sm text-gray-500 mb-3">
-        <div className="flex items-center gap-4">
-          {task.assignedTo && (
-            <span className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              {task.assignedTo}
-            </span>
-          )}
-          {task.dueDate && (
-            <span className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              {format(typeof task.dueDate === 'string' ? new Date(task.dueDate) : new Date(task.dueDate), 'HH:mm')}
-            </span>
-          )}
-        </div>
-        {totalItems > 0 && (
-          <span className="text-xs">
-            {completedItems}/{totalItems} items completed
-          </span>
-        )}
-      </div>
-
-      {task.checklist.length > 0 && (
-        <div className="space-y-2 mb-3">
-          {task.checklist.slice(0, 3).map((item) => (
-            <div key={item.id} className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={item.completed}
-                onChange={() => handleChecklistToggle(item.id)}
-                className="rounded"
-              />
-              <span className={`text-sm ${item.completed ? 'line-through text-gray-400' : ''}`}>
-                {item.title || item.text}
-              </span>
-            </div>
-          ))}
-          {task.checklist.length > 3 && (
-            <p className="text-xs text-gray-500">
-              +{task.checklist.length - 3} more items
-            </p>
-          )}
-        </div>
+      {/* Maintenance Detail Modal */}
+      {isTaskDetailOpen && selectedMaintenanceTask && (
+        <MaintenanceDetail
+          task={selectedMaintenanceTask}
+          onClose={handleCloseTaskDetail}
+          onComplete={handleCompleteTask}
+          onToggleInstruction={handleToggleInstruction}
+          onPhotoUpload={handleMaintenanceMediaUpload}
+        />
       )}
-
-      {!isCompleted && onComplete && (
-        <Button
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            onComplete();
-          }}
-          className="w-full"
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Mark Complete
-        </Button>
-      )}
-    </div>
+    </>
   );
 };
 

@@ -1,69 +1,104 @@
 
 import { ChecklistItem } from "@/types/taskTypes";
+import { format, addDays, differenceInDays } from "date-fns";
 
 export const getCleaningChecklist = (cleaningType: string): ChecklistItem[] => {
-  const baseChecklist: ChecklistItem[] = [
-    { id: "1", title: "Vacuum all rooms", text: "Vacuum all rooms", completed: false },
-    { id: "2", title: "Change bed linens", text: "Change bed linens", completed: false },
-    { id: "3", title: "Clean bathrooms", text: "Clean bathrooms", completed: false },
-    { id: "4", title: "Clean kitchen", text: "Clean kitchen", completed: false },
-    { id: "5", title: "Empty trash bins", text: "Empty trash bins", completed: false }
-  ];
-
-  const deepCleaningItems: ChecklistItem[] = [
-    { id: "6", title: "Clean inside appliances", text: "Clean inside appliances", completed: false },
-    { id: "7", title: "Wash windows", text: "Wash windows", completed: false },
-    { id: "8", title: "Clean baseboards", text: "Clean baseboards", completed: false },
-    { id: "9", title: "Deep clean carpets", text: "Deep clean carpets", completed: false },
-    { id: "10", title: "Sanitize all surfaces", text: "Sanitize all surfaces", completed: false },
-    { id: "11", title: "Clean light fixtures", text: "Clean light fixtures", completed: false },
-    { id: "12", title: "Organize storage areas", text: "Organize storage areas", completed: false },
-    { id: "13", title: "Check all amenities", text: "Check all amenities", completed: false },
-    { id: "14", title: "Replace air fresheners", text: "Replace air fresheners", completed: false }
-  ];
-
-  const linenChangeItems: ChecklistItem[] = [
-    { id: "15", title: "Change all bed linens", text: "Change all bed linens", completed: false },
-    { id: "16", title: "Replace towels", text: "Replace towels", completed: false },
-    { id: "17", title: "Check towel inventory", text: "Check towel inventory", completed: false },
-    { id: "18", title: "Fold and store clean linens", text: "Fold and store clean linens", completed: false }
-  ];
-
-  switch (cleaningType) {
-    case "Standard Cleaning":
-      return baseChecklist;
-    case "Full Cleaning":
-      return [...baseChecklist, ...deepCleaningItems];
-    case "Linen & Towel Change":
-      return linenChangeItems;
+  switch (cleaningType.toLowerCase()) {
+    case 'standard':
+      return [
+        { id: 1, title: "Clean bathroom", completed: false },
+        { id: 2, title: "Make bed with fresh linens", completed: false },
+        { id: 3, title: "Vacuum floors", completed: false },
+        { id: 4, title: "Clean kitchen area", completed: false },
+        { id: 5, title: "Empty trash", completed: false }
+      ];
+    case 'full':
+      return [
+        { id: 1, title: "Deep clean bathroom", completed: false },
+        { id: 2, title: "Clean behind furniture", completed: false },
+        { id: 3, title: "Change all linens", completed: false },
+        { id: 4, title: "Vacuum and mop floors", completed: false },
+        { id: 5, title: "Dust all surfaces", completed: false },
+        { id: 6, title: "Clean windows", completed: false },
+        { id: 7, title: "Sanitize kitchen", completed: false },
+        { id: 8, title: "Replace bathroom amenities", completed: false },
+        { id: 9, title: "Clean outside areas/balcony", completed: false },
+        { id: 10, title: "Restock kitchen essentials", completed: false }
+      ];
+    case 'linen & towel change':
+      return [
+        { id: 1, title: "Change bed linens", completed: false },
+        { id: 2, title: "Replace bath towels", completed: false },
+        { id: 3, title: "Replace kitchen towels", completed: false },
+        { id: 4, title: "Quick bathroom cleanup", completed: false },
+        { id: 5, title: "Empty bathroom trash", completed: false },
+        { id: 6, title: "Wipe down countertops", completed: false }
+      ];
+    case 'custom':
+      return [
+        { id: 1, title: "Custom cleaning items to be defined", completed: false }
+      ];
     default:
-      return baseChecklist;
+      return [
+        { id: 1, title: "General cleaning", completed: false },
+        { id: 2, title: "Dust surfaces", completed: false },
+        { id: 3, title: "Vacuum floors", completed: false }
+      ];
   }
 };
 
-export const generateCleaningSchedule = (
-  checkIn: Date,
-  checkOut: Date,
-  stayDuration: number
-): Date[] => {
-  const schedule: Date[] = [];
-  
-  if (stayDuration <= 2) {
-    // Short stays: only checkout cleaning
-    schedule.push(checkOut);
-  } else if (stayDuration <= 5) {
-    // Medium stays: mid-stay and checkout
-    const midPoint = new Date(checkIn.getTime() + (stayDuration / 2) * 24 * 60 * 60 * 1000);
-    schedule.push(midPoint, checkOut);
-  } else {
-    // Long stays: multiple cleanings
-    const interval = Math.floor(stayDuration / 3);
-    for (let i = interval; i < stayDuration; i += interval) {
-      const cleaningDate = new Date(checkIn.getTime() + i * 24 * 60 * 60 * 1000);
-      schedule.push(cleaningDate);
-    }
-    schedule.push(checkOut);
+export const generateCleaningSchedule = (checkIn: Date, checkOut: Date) => {
+  const stayDuration = differenceInDays(checkOut, checkIn);
+  const scheduledCleanings: string[] = [];
+  const cleaningTypes: string[] = [];
+
+  // Always add check-in day (pre-arrival cleaning)
+  scheduledCleanings.push(format(checkIn, "yyyy-MM-dd"));
+  cleaningTypes.push("Full");
+
+  // Based on the user's new cleaning service breakdown:
+  if (stayDuration <= 3) {
+    // No additional cleaning except check-in and check-out
+  } 
+  else if (stayDuration <= 5) {
+    // One full cleaning mid-stay
+    const midStayDate = addDays(checkIn, Math.floor(stayDuration / 2));
+    scheduledCleanings.push(format(midStayDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Full");
   }
-  
-  return schedule;
+  else if (stayDuration <= 7) {
+    // Two cleanings during stay
+    const firstCleanDate = addDays(checkIn, 2);
+    scheduledCleanings.push(format(firstCleanDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Full");
+    
+    const secondCleanDate = addDays(checkIn, 5);
+    scheduledCleanings.push(format(secondCleanDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Linen & Towel Change");
+  }
+  else {
+    // For stays more than 7 nights: custom schedule with cleanings every 3 days
+    let currentDay = addDays(checkIn, 3);
+    let cleaningCount = 0;
+    
+    while (differenceInDays(checkOut, currentDay) > 1) {
+      scheduledCleanings.push(format(currentDay, "yyyy-MM-dd"));
+      
+      // Alternate between full cleaning and linen change
+      if (cleaningCount % 2 === 0) {
+        cleaningTypes.push("Full");
+      } else {
+        cleaningTypes.push("Linen & Towel Change");
+      }
+      
+      currentDay = addDays(currentDay, 3);
+      cleaningCount++;
+    }
+  }
+
+  // Always add check-out day
+  scheduledCleanings.push(format(checkOut, "yyyy-MM-dd"));
+  cleaningTypes.push("Full");
+
+  return { scheduledCleanings, cleaningTypes, stayDuration };
 };

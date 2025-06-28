@@ -1,95 +1,59 @@
 
-import React from 'react';
-import { User } from '@/types/auth';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Camera, Upload } from 'lucide-react';
-import { useAvatarUpload } from './useAvatarUpload';
+import React from "react";
+import { User } from "@/types/auth";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Camera } from "lucide-react";
+import AvatarDisplay from "./AvatarDisplay";
+import AvatarUploadDialog from "./AvatarUploadDialog";
+import { useAvatarUpload } from "./useAvatarUpload";
 
 interface AvatarUploadProps {
   user: User;
+  size?: "sm" | "md" | "lg";
   onAvatarChange?: (url: string) => void;
-  size?: string;
   editable?: boolean;
 }
 
-const AvatarUpload: React.FC<AvatarUploadProps> = ({ 
-  user, 
-  onAvatarChange, 
-  size = 'w-20 h-20',
-  editable = true 
+const AvatarUpload: React.FC<AvatarUploadProps> = ({
+  user,
+  size = "md",
+  onAvatarChange,
+  editable = true
 }) => {
   const {
-    handleFileChange,
+    avatarUrl,
     isUploading,
     isDialogOpen,
-    setIsDialogOpen
-  } = useAvatarUpload({ 
-    userId: user.id, 
-    onAvatarChange: onAvatarChange || (() => {})
+    setIsDialogOpen,
+    handleFileChange
+  } = useAvatarUpload({
+    user,
+    onAvatarChange
   });
-
+  
   if (!editable) {
-    return (
-      <Avatar className={size}>
-        <AvatarImage src={user.avatar} alt={user.name} />
-        <AvatarFallback className="text-lg">
-          {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-    );
+    return <AvatarDisplay user={{...user, avatar: avatarUrl}} size={size} />;
   }
-
+  
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <div className="relative group cursor-pointer">
-          <Avatar className={size}>
-            <AvatarImage src={user.avatar} alt={user.name} />
-            <AvatarFallback className="text-lg">
-              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-            <Camera className="w-6 h-6 text-white" />
+        <div className="relative inline-flex">
+          <AvatarDisplay user={{...user, avatar: avatarUrl}} size={size} />
+          <div className="absolute -bottom-1 -right-1 rounded-full bg-background p-1.5 ring-1 ring-border group-hover:bg-primary/10 transition-colors">
+            <Camera className="h-3 w-3 text-muted-foreground" />
           </div>
         </div>
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Avatar</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="flex justify-center">
-            <Avatar className="w-32 h-32">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback className="text-2xl">
-                {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-          <div className="flex justify-center">
-            <Button
-              onClick={() => document.getElementById('avatar-upload')?.click()}
-              disabled={isUploading}
-              className="flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              {isUploading ? 'Uploading...' : 'Choose Photo'}
-            </Button>
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-          </div>
-        </div>
-      </DialogContent>
+      <AvatarUploadDialog 
+        user={user}
+        avatarUrl={avatarUrl}
+        isUploading={isUploading}
+        onFileChange={handleFileChange}
+      />
     </Dialog>
   );
 };
 
 export default AvatarUpload;
+

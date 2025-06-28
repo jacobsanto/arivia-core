@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { User, UserRole, safeRoleCast } from "@/types/auth/base";
+import { User, UserRole } from "@/types/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
@@ -28,9 +28,9 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
 }) => {
   const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(safeRoleCast(user.role));
+  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
-    user.secondaryRoles?.map(role => safeRoleCast(role)) || []
+    user.secondaryRoles || []
   );
   const [isSaving, setIsSaving] = useState(false);
   
@@ -40,8 +40,8 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
   
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedRole(safeRoleCast(user.role));
-    setSelectedSecondaryRoles(user.secondaryRoles?.map(role => safeRoleCast(role)) || []);
+    setSelectedRole(user.role);
+    setSelectedSecondaryRoles(user.secondaryRoles || []);
   };
   
   const handleSaveRole = async () => {
@@ -56,18 +56,14 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
     setIsSaving(true);
     try {
       // Call the updateProfile function from UserContext
-      const success = await updateProfile({
-        name: user.name,
-        email: user.email,
+      const success = await updateProfile(user.id, {
         role: selectedRole,
-        secondary_roles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
       });
       
       if (success) {
         setIsEditing(false);
         toast.success("User role updated successfully");
-      } else {
-        toast.error("Failed to update role");
       }
     } catch (error) {
       toast.error("Failed to update role", {

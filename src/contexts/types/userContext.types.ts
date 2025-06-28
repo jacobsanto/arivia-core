@@ -4,10 +4,7 @@ import { User, UserRole, Session } from "@/types/auth";
 export interface UserContextType {
   user: User | null;
   session: Session | null;
-  users?: User[];
   isLoading: boolean;
-  isOffline?: boolean;
-  lastAuthTime?: number;
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, fullName: string, role?: UserRole) => Promise<any>;
   logout: () => Promise<void>;
@@ -15,9 +12,9 @@ export interface UserContextType {
   hasFeatureAccess: (featureKey: string) => boolean;
   getOfflineLoginStatus: () => { isOfflineLoggedIn: boolean; timeRemaining: number };
   updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => Promise<boolean>;
-  updateAvatar: (userId: string, avatarUrl: string) => Promise<boolean>;
+  updateUserAvatar: (userId: string, avatarUrl: string) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
-  syncUserWithProfile: () => Promise<boolean>;
+  syncUserProfile: () => Promise<boolean>;
   updateProfile: (
     userId: string,
     profileData: Partial<{

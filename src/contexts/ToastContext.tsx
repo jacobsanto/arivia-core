@@ -1,86 +1,79 @@
 
-import React, { createContext, useContext, useState } from 'react';
-import { toast } from 'sonner';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { IToastService } from '@/services/toast/toast.types';
+import { toastService as defaultToastService } from '@/services/toast';
+import { SonnerToastService } from '@/services/toast/sonner-toast.service';
+import { ShadcnToastService } from '@/services/toast/shadcn-toast.service';
+import { Toaster as ShadcnToaster } from '@/components/ui/toaster';
+import { Toaster as SonnerToaster } from 'sonner';
+
+type ToastImplementation = 'sonner' | 'shadcn';
 
 interface ToastContextType {
-  success: (title: string, options?: { description?: string }) => void;
-  error: (title: string, options?: { description?: string }) => void;
-  info: (title: string, options?: { description?: string }) => void;
-  warning: (title: string, options?: { description?: string }) => void;
-  show: (title: string, options?: { description?: string }) => void;
-  loading: (title: string, options?: { description?: string }) => string;
-  dismiss: (id?: string) => void;
-  implementation: string;
-  setImplementation: (impl: string) => void;
+  implementation: ToastImplementation;
+  setImplementation: (impl: ToastImplementation) => void;
+  service: IToastService;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-interface ToastProviderProps {
-  children: React.ReactNode;
-}
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [implementation, setImplementationState] = useState<ToastImplementation>('sonner');
+  const [service, setService] = useState<IToastService>(defaultToastService);
 
-export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [implementation, setImplementation] = useState<string>('sonner');
-
-  const success = (title: string, options?: { description?: string }) => {
-    toast.success(title, options);
+  const setImplementation = (impl: ToastImplementation) => {
+    setImplementationState(impl);
+    const newService = impl === 'sonner' 
+      ? new SonnerToastService()
+      : new ShadcnToastService();
+    setService(newService);
   };
 
-  const error = (title: string, options?: { description?: string }) => {
-    toast.error(title, options);
-  };
-
-  const info = (title: string, options?: { description?: string }) => {
-    toast.info(title, options);
-  };
-
-  const warning = (title: string, options?: { description?: string }) => {
-    toast.warning(title, options);
-  };
-
-  const show = (title: string, options?: { description?: string }) => {
-    toast(title, options);
-  };
-
-  const loading = (title: string, options?: { description?: string }): string => {
-    const id = toast.loading(title, options);
-    return String(id);
-  };
-
-  const dismiss = (id?: string) => {
-    if (id) {
-      toast.dismiss(id);
-    } else {
-      toast.dismiss();
+  // Initialize with user preference or default
+  useEffect(() => {
+    const savedImpl = localStorage.getItem('toast-implementation') as ToastImplementation | null;
+    if (savedImpl) {
+      setImplementation(savedImpl);
     }
+  }, []);
+
+  // Save preference when it changes
+  useEffect(() => {
+    localStorage.setItem('toast-implementation', implementation);
+  }, [implementation]);
+
+  const value = {
+    implementation,
+    setImplementation,
+    service
   };
 
   return (
-    <ToastContext.Provider value={{ 
-      success, 
-      error, 
-      info, 
-      warning, 
-      show,
-      loading,
-      dismiss,
-      implementation,
-      setImplementation
-    }}>
+    <ToastContext.Provider value={value}>
       {children}
+      
+      {/* Render the appropriate toaster based on implementation */}
+      {implementation === 'sonner' ? (
+        <SonnerToaster richColors position="top-right" />
+      ) : (
+        <ShadcnToaster />
+      )}
     </ToastContext.Provider>
   );
-};
+}
 
-export const useToast = () => {
+export function useToastContext() {
   const context = useContext(ToastContext);
+  
   if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error('useToastContext must be used within a ToastProvider');
   }
+  
   return context;
-};
+}
 
-// Alias exports for compatibility
-export const useToastContext = useToast;
-export const useToastService = useToast;
+// Helper hook to directly access the toast service
+export function useToastService() {
+  const { service } = useToastContext();
+  return service;
+}

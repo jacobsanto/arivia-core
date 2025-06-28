@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { User, UserProfile } from "@/types/auth";
+import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,9 +11,7 @@ import UserRolesList from "./role-management/UserRolesList";
 import UnauthorizedAccess from "./role-management/UnauthorizedAccess";
 import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
-import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
-import { profileToUser } from "@/types/auth/base";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
@@ -39,11 +37,6 @@ const RoleManagement: React.FC = () => {
   if (user?.role !== "superadmin") {
     return <UnauthorizedAccess />;
   }
-
-  // Helper function to convert UserProfile to User with proper role casting using the utility function
-  const convertToUser = (userProfile: UserProfile): User => {
-    return profileToUser(userProfile);
-  };
   
   return (
     <Card>
@@ -79,23 +72,20 @@ const RoleManagement: React.FC = () => {
               <Lock className="h-4 w-4" />
               Permissions
             </TabsTrigger>
-            <TabsTrigger value="role-crud" className="flex items-center gap-1">
-              <Shield className="h-4 w-4" />
-              Role & Permission CRUD
-            </TabsTrigger>
           </TabsList>
           
           <TabsContent value="roles" className="mt-4">
             <UserRolesList 
-              users={users.map(convertToUser)}
+              users={users}
               isLoading={isLoading}
-              currentUser={user ? convertToUser(user) : null}
+              currentUser={user}
               onEditPermissions={(user) => {
-                setSelectedUser(user);
+                const selectedUserData = handleEditPermissions(user);
+                setSelectedUser(selectedUserData);
                 setActiveTab("permissions");
-                return user;
+                return selectedUserData;
               }}
-              onDeleteClick={(user) => setUserToDelete(user)}
+              onDeleteClick={setUserToDelete}
               setActiveTab={setActiveTab}
               setSelectedUser={setSelectedUser}
             />
@@ -125,10 +115,6 @@ const RoleManagement: React.FC = () => {
               </div>
             )}
           </TabsContent>
-
-          <TabsContent value="role-crud" className="mt-4">
-            <RolePermissionCRUD />
-          </TabsContent>
         </Tabs>
       </CardContent>
       
@@ -144,7 +130,7 @@ const RoleManagement: React.FC = () => {
       <DeleteAllUsersDialog
         isOpen={isDeleteAllDialogOpen}
         isDeleting={isDeletingAll}
-        userCount={users.filter(u => u.id !== user?.id).length}
+        userCount={users.filter(u => u.id !== currentUser?.id).length}
         onCancel={() => setIsDeleteAllDialogOpen(false)}
         onConfirm={deleteAllUsers}
       />

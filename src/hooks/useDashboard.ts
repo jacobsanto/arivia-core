@@ -1,58 +1,78 @@
 
-import { useState, useEffect } from 'react';
-import { 
-  getDashboardData,
-  refreshDashboardData,
-  setupAutoRefresh,
-  getRefreshStatus,
-  calculationUtils
-} from '@/utils/dashboard';
+import { useState, useEffect, useCallback } from "react";
+import { DateRange } from "@/components/reports/DateRangeSelector";
+import { startOfDay, endOfDay, addDays } from "date-fns";
+import { toastService } from "@/services/toast";
+import { fetchDashboardData, TaskRecord, DashboardData } from "@/utils/dashboard";
+import { refreshDashboardData } from "@/utils/dashboard";
 
 export const useDashboard = () => {
-  const [dashboardData, setDashboardData] = useState(getDashboardData());
-  const [isLoading, setIsLoading] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfDay(new Date()),
+    to: endOfDay(addDays(new Date(), 7))
+  });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [refreshStatus, setRefreshStatus] = useState(getRefreshStatus());
+  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
 
-  const refresh = async () => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    
     try {
-      const newData = await refreshDashboardData();
-      setDashboardData(newData);
-      setRefreshStatus(getRefreshStatus());
+      const safeRange = {
+        from: dateRange.from || new Date(),
+        to: dateRange.to || new Date()
+      };
+      
+      const data = await fetchDashboardData(selectedProperty, safeRange);
+      setDashboardData(data);
+      setLastRefreshed(new Date());
+      return data;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Error refreshing dashboard';
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
       setError(errorMessage);
-      console.error('Error refreshing dashboard:', err);
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedProperty, dateRange]);
 
   useEffect(() => {
-    const cleanup = setupAutoRefresh(30000, refresh);
-    return cleanup;
+    let isMounted = true;
+    
+    loadDashboardData().catch(err => {
+      if (!isMounted) return;
+    });
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [loadDashboardData]);
+
+  const handlePropertyChange = useCallback((property: string) => {
+    setSelectedProperty(property);
   }, []);
 
-  // Convert inventory items to have consistent naming
-  const normalizedInventory = dashboardData.inventory.map(item => ({
-    ...item,
-    minQuantity: item.min_quantity || 0
-  }));
+  const handleDateRangeChange = useCallback((range: DateRange) => {
+    setDateRange(range);
+  }, []);
+
+  const refreshDashboard = useCallback(() => {
+    return refreshDashboardData(loadDashboardData);
+  }, [loadDashboardData]);
 
   return {
-    data: dashboardData,
-    ...dashboardData,
-    inventory: normalizedInventory,
+    selectedProperty,
+    dateRange,
+    dashboardData,
+    lastRefreshed,
+    handlePropertyChange,
+    handleDateRangeChange,
+    refreshDashboard,
     isLoading,
-    error,
-    refreshStatus,
-    refresh,
-    lastRefresh: refreshStatus.lastRefreshed,
-    // Utility functions
-    calculateOccupancyRate: calculationUtils.calculateOccupancyRate,
-    generateFinancialSummary: calculationUtils.generateFinancialSummary,
-    calculateTaskCompletion: calculationUtils.calculateTaskCompletion
+    error
   };
 };

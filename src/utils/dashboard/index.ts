@@ -1,64 +1,22 @@
 
-// Dashboard utilities export
-export { formatCurrency, formatPercentage, formatDate, formatDateTime } from './formatUtils';
-export { getTaskStatusColor, getTaskPriorityColor, isTaskOverdue } from './taskUtils';
-import { mockTaskData, mockBookingData, mockInventoryData } from './mockData';
-export { mockTaskData, mockBookingData, mockInventoryData };
-export type { TaskRecord as DashboardTaskRecord } from './taskUtils';
+// Export all dashboard utilities from this central file
+export * from './weeklyReviewUtils';
+export { 
+  formatMetricsForExport,
+  prepareDashboardExportData 
+} from './dataPreparationUtils';
+export * from './exportUtils';
+export { 
+  refreshDashboardData,
+  setupAutoRefresh,
+  getRefreshStatus
+} from './refreshUtils';
 
-// Re-export calculation utilities
-import * as calculationUtils from './calculationUtils';
-export { calculationUtils };
+// Export fetch utilities
+export { fetchDashboardData } from './fetch/dashboardDataFetcher';
+export { fetchPropertiesData } from './fetch/propertyUtils';
+export { fetchHousekeepingTasks } from './fetch/housekeepingUtils';
+export { fetchMaintenanceTasks } from './fetch/maintenanceUtils';
 
-// Export individual calculation functions
-export { calculateOccupancyRate, generateFinancialSummary, calculateTaskCompletion } from './calculationUtils';
-
-// Dashboard data aggregation
-export const getDashboardData = () => {
-  const tasks = mockTaskData;
-  const bookings = mockBookingData;
-  const occupancyRate = calculationUtils.calculateOccupancyRate(bookings);
-  const financialSummary = calculationUtils.generateFinancialSummary(bookings);
-  const taskCompletion = calculationUtils.calculateTaskCompletion(tasks);
-  const inventory = mockInventoryData;
-
-  return {
-    tasks,
-    bookings,
-    occupancyRate,
-    financialSummary,
-    taskCompletion,
-    inventory,
-    // Quick stats
-    stats: {
-      totalTasks: tasks.length,
-      completedTasks: tasks.filter(t => t.status === 'completed').length,
-      pendingTasks: tasks.filter(t => t.status === 'pending').length,
-      totalBookings: bookings.length,
-      totalRevenue: financialSummary.totalRevenue,
-      occupancyRate,
-      taskCompletionRate: taskCompletion
-    }
-  };
-};
-
-// Additional dashboard utilities
-export const refreshDashboardData = async () => {
-  // Placeholder for dashboard refresh logic
-  console.log('Refreshing dashboard data...');
-  return getDashboardData();
-};
-
-export const setupAutoRefresh = (intervalMs: number = 30000, callback: () => void) => {
-  const interval = setInterval(callback, intervalMs);
-  return () => clearInterval(interval);
-};
-
-export const getRefreshStatus = () => {
-  // Placeholder for refresh status logic
-  return {
-    isRefreshing: false,
-    lastRefreshed: new Date(),
-    nextRefresh: new Date(Date.now() + 30000)
-  };
-};
+// Export types
+export type { TaskRecord, DashboardData } from './types';

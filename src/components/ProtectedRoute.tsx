@@ -1,35 +1,35 @@
 
-import React from 'react';
-import { Navigate } from 'react-router-dom';
-import { useUser } from '@/contexts/UserContext';
-import { UserRole, safeRoleCast } from '@/types/auth/base';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: UserRole[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
-  const { user, isLoading, isAuthenticated } = useUser();
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
 
+  // Show loading state while authentication is being determined
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">Loading...</div>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verifying authentication...</p>
+        </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/internal/login" replace />;
+  // If not authenticated, redirect to login page
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Use safeRoleCast to handle string to UserRole conversion
-  const userRole = safeRoleCast(user.role);
-  if (!allowedRoles.includes(userRole)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
-
+  // If authenticated, render the children
   return <>{children}</>;
 };
 

@@ -26,11 +26,11 @@ interface TaskDetailProps {
   onComplete: () => void;
   onApprove?: () => void;
   onReject?: () => void;
-  onToggleChecklistItem: (itemId: string) => void;
+  onToggleChecklistItem: (itemId: number) => void;
   onPhotoUpload?: (file: File) => void;
 }
 
-const TaskDetail: React.FC<TaskDetailProps> = ({
+const TaskDetail = ({
   task,
   onClose,
   onComplete,
@@ -41,7 +41,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
 }: TaskDetailProps) => {
   const { user } = useUser();
   const isMobile = useIsMobile();
-  const isManager = user?.role === "superadmin" || user?.role === "tenant_admin" || user?.role === "property_manager";
+  const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
   
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {

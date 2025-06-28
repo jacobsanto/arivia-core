@@ -1,148 +1,100 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-// Define the interface that matches the database schema
-interface DatabaseDamageReport {
+export interface DamageReport {
   id: string;
-  property_id: string;
   title: string;
   description: string;
-  status: 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed';
-  damage_date: string;
+  property_id: string;
   reported_by: string;
   assigned_to?: string;
+  status: 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed';
+  damage_date: string;
+  created_at: string;
+  updated_at: string;
   estimated_cost?: number;
   final_cost?: number;
   compensation_amount?: number;
   compensation_notes?: string;
   conclusion?: string;
   resolution_date?: string;
+}
+
+export interface DamageReportMedia {
+  id: string;
+  report_id: string;
+  media_type: 'photo' | 'video';
+  url: string;
   created_at: string;
-  updated_at: string;
+  uploaded_by: string;
 }
 
-// Export interface for use in components (with priority field)
-export interface DamageReport extends DatabaseDamageReport {
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-}
+export const damageService = {
+  async getDamageReports(): Promise<DamageReport[]> {
+    try {
+      const { data, error } = await supabase
+        .from('damage_reports')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-export type DamageReportStatus = 'pending' | 'investigating' | 'resolved' | 'compensation_required' | 'compensation_paid' | 'closed';
-
-export class DamageService {
-  static async getDamageReports(): Promise<DamageReport[]> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
+      if (error) throw error;
+      return data || [];
+    } catch (error: any) {
       console.error('Error fetching damage reports:', error);
-      throw new Error('Failed to fetch damage reports');
+      toast.error('Failed to load damage reports');
+      return [];
     }
+  },
 
-    // Add default priority to match interface
-    return (data || []).map(report => ({
-      ...report,
-      priority: 'medium' as const
-    }));
-  }
+  async createDamageReport(report: Omit<DamageReport, 'id' | 'created_at' | 'updated_at'>): Promise<DamageReport | null> {
+    try {
+      const { data, error } = await supabase
+        .from('damage_reports')
+        .insert(report)
+        .select()
+        .single();
 
-  static async getDamageReportById(id: string): Promise<DamageReport | null> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error) {
-      console.error('Error fetching damage report:', error);
+      if (error) throw error;
+      toast.success('Damage report created successfully');
+      return data;
+    } catch (error: any) {
+      console.error('Error creating damage report:', error);
+      toast.error('Failed to create damage report');
       return null;
     }
+  },
 
-    return data ? { ...data, priority: 'medium' as const } : null;
-  }
+  async uploadMedia(file: File, reportId: string, type: 'photo' | 'video'): Promise<string | null> {
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${reportId}/${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('damage-reports')
+        .upload(fileName, file);
 
-  static async createDamageReport(
-    report: Omit<DatabaseDamageReport, 'id' | 'created_at' | 'updated_at'>
-  ): Promise<DamageReport> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .insert([report])
-      .select()
-      .single();
+      if (uploadError) throw uploadError;
 
-    if (error) {
-      console.error('Error creating damage report:', error);
-      throw new Error('Failed to create damage report');
-    }
+      const { data: { publicUrl } } = supabase.storage
+        .from('damage-reports')
+        .getPublicUrl(fileName);
 
-    return { ...data, priority: 'medium' as const };
-  }
+      const { error: dbError } = await supabase
+        .from('damage_report_media')
+        .insert({
+          report_id: reportId,
+          media_type: type,
+          url: publicUrl,
+          uploaded_by: (await supabase.auth.getUser()).data.user?.id
+        });
 
-  static async updateDamageReport(
-    id: string,
-    updates: Partial<DatabaseDamageReport>
-  ): Promise<DamageReport> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating damage report:', error);
-      throw new Error('Failed to update damage report');
-    }
-
-    return { ...data, priority: 'medium' as const };
-  }
-
-  static async deleteDamageReport(id: string): Promise<void> {
-    const { error } = await supabase
-      .from('damage_reports')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Error deleting damage report:', error);
-      throw new Error('Failed to delete damage report');
+      if (dbError) throw dbError;
+      return publicUrl;
+    } catch (error: any) {
+      console.error('Error uploading media:', error);
+      toast.error('Failed to upload media');
+      return null;
     }
   }
-
-  static async getDamageReportsByStatus(status: DamageReportStatus): Promise<DamageReport[]> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .select('*')
-      .eq('status', status)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching damage reports by status:', error);
-      throw new Error('Failed to fetch damage reports');
-    }
-
-    return (data || []).map(report => ({
-      ...report,
-      priority: 'medium' as const
-    }));
-  }
-
-  static async getDamageReportsByProperty(propertyId: string): Promise<DamageReport[]> {
-    const { data, error } = await supabase
-      .from('damage_reports')
-      .select('*')
-      .eq('property_id', propertyId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching damage reports by property:', error);
-      throw new Error('Failed to fetch damage reports');
-    }
-
-    return (data || []).map(report => ({
-      ...report,
-      priority: 'medium' as const
-    }));
-  }
-}
+};

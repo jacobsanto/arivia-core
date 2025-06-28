@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { VendorStatus, Vendor } from "../orders/OrderUtils";
@@ -16,7 +15,6 @@ export const useVendorManagement = () => {
     name: "",
     email: "",
     phone: "",
-    category: "",
     categories: [],
     address: "",
     notes: "",
@@ -44,8 +42,7 @@ export const useVendorManagement = () => {
     if (selectedCategory && !formData.categories.includes(selectedCategory)) {
       setFormData((prev) => ({
         ...prev,
-        categories: [...prev.categories, selectedCategory],
-        category: prev.category || selectedCategory // Set primary category if not set
+        categories: [...prev.categories, selectedCategory]
       }));
       setSelectedCategory("");
     } else if (selectedCategory) {
@@ -65,8 +62,7 @@ export const useVendorManagement = () => {
       if (!formData.categories.includes(categoryName)) {
         setFormData(prev => ({
           ...prev,
-          categories: [...prev.categories, categoryName],
-          category: prev.category || categoryName // Set primary category if not set
+          categories: [...prev.categories, categoryName]
         }));
       }
       
@@ -85,14 +81,10 @@ export const useVendorManagement = () => {
   };
 
   const handleRemoveCategory = (categoryToRemove: string) => {
-    setFormData((prev) => {
-      const newCategories = prev.categories.filter(category => category !== categoryToRemove);
-      return {
-        ...prev,
-        categories: newCategories,
-        category: prev.category === categoryToRemove ? (newCategories[0] || "") : prev.category
-      };
-    });
+    setFormData((prev) => ({
+      ...prev,
+      categories: prev.categories.filter(category => category !== categoryToRemove)
+    }));
   };
 
   const handleAddVendor = () => {
@@ -101,7 +93,6 @@ export const useVendorManagement = () => {
       name: "",
       email: "",
       phone: "",
-      category: "",
       categories: [],
       address: "",
       notes: "",
@@ -117,7 +108,6 @@ export const useVendorManagement = () => {
       name: vendor.name,
       email: vendor.email,
       phone: vendor.phone,
-      category: vendor.category,
       categories: vendor.categories,
       address: vendor.address,
       notes: vendor.notes,
@@ -159,33 +149,27 @@ export const useVendorManagement = () => {
       return;
     }
 
-    // Ensure category is set from categories if not already set
-    const finalFormData = {
-      ...formData,
-      category: formData.category || formData.categories[0]
-    };
-
     if (currentVendor) {
       // Editing existing vendor
       setVendors(
         vendors.map((vendor) =>
-          vendor.id === currentVendor.id ? { ...vendor, ...finalFormData } : vendor
+          vendor.id === currentVendor.id ? { ...vendor, ...formData } : vendor
         )
       );
       toast({
         title: "Vendor Updated",
-        description: `${finalFormData.name} has been updated successfully.`,
+        description: `${formData.name} has been updated successfully.`,
       });
     } else {
       // Adding new vendor
       const newVendor = {
-        ...finalFormData,
+        ...formData,
         id: Date.now().toString(),
       };
       setVendors([...vendors, newVendor]);
       toast({
         title: "Vendor Added",
-        description: `${finalFormData.name} has been added to your vendors list.`,
+        description: `${formData.name} has been added to your vendors list.`,
       });
     }
     

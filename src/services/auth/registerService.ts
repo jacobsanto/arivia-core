@@ -1,8 +1,9 @@
 
+import { SignUpFormValues } from "@/lib/validation/auth-schema";
 import { toast } from "sonner";
 import { hashPassword } from "@/services/auth/authService";
 
-export const registerUser = async (data: any, superAdminExists: boolean): Promise<boolean> => {
+export const registerUser = async (data: SignUpFormValues, superAdminExists: boolean): Promise<boolean> => {
   try {
     // Check if trying to create superadmin when one already exists
     if (data.role === "superadmin" && superAdminExists) {

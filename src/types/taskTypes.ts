@@ -1,101 +1,63 @@
 
-export type TaskStatus = "Pending" | "In Progress" | "Completed" | "Cancelled" | "Approved" | "Rejected";
+import { z } from "zod";
 
-export type TaskPriority = "Low" | "Medium" | "High" | "Urgent";
-
-export type TaskType = "Cleaning" | "Maintenance" | "Inspection" | "Check-in" | "Check-out" | "Other";
-
-export type ApprovalStatus = 'Approved' | 'Rejected' | 'Pending';
+export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+export type ApprovalStatus = 'Pending' | 'Approved' | 'Rejected' | null;
 
 export interface ChecklistItem {
-  id: string;
+  id: number;
   title: string;
-  text: string;
-  description?: string;
   completed: boolean;
-  required?: boolean;
 }
 
 export interface CleaningDetails {
-  roomsCleaned: number;
-  cleaningType: string;
-  notes?: string;
-  scheduledCleanings?: Date[];
+  roomType: string;
+  bedCount: number;
+  bathCount: number;
+  estimatedTime: number;
+  cleaningType?: string;
   stayDuration?: number;
   guestCheckIn?: string;
   guestCheckOut?: string;
+  scheduledCleanings?: string[];
 }
 
 export interface Task {
   id: string;
   title: string;
-  description: string;
+  property: string;
+  assignedTo: string;
+  dueDate: string; // Date stored as string format
   status: TaskStatus;
-  priority: TaskPriority;
-  type: TaskType;
-  assignedTo?: string;
-  assignedRole?: string;
-  propertyId?: string;
-  property?: string; // Keep for backward compatibility
-  roomNumber?: string;
-  dueDate?: string; // Always string for consistency
-  createdAt: string; // Changed to string
-  updatedAt: string; // Changed to string
-  completedAt?: string;
-  estimatedDuration?: number;
+  priority: 'Low' | 'Medium' | 'High';
+  description: string;
   checklist: ChecklistItem[];
-  notes?: string;
-  attachments?: string[];
-  createdBy: string;
-  tags?: string[];
-  approvalStatus?: ApprovalStatus;
-  photos: string[];
+  photos?: string[];
+  location?: string;
+  approvalStatus: ApprovalStatus;
+  rejectionReason?: string | null;
   cleaningDetails?: CleaningDetails;
-  rejectionReason?: string;
+  type?: string; // Added type field as it's used in many places
 }
 
-export interface TaskComment {
-  id: string;
-  taskId: string;
-  userId: string;
-  content: string;
-  createdAt: string; // Changed to string
-}
-
-export interface TaskFilter {
-  status?: TaskStatus[];
-  priority?: TaskPriority[];
-  type?: TaskType[];
-  assignedTo?: string;
-  propertyId?: string;
-  dateRange?: {
-    start: Date;
-    end: Date;
-  };
-}
-
-// Form types
 export interface CleaningTaskFormValues {
   title: string;
   property: string;
   roomType: string;
-  dueDate?: Date;
+  dueDate: Date | undefined;
   assignedTo: string;
-  priority: TaskPriority;
+  priority: string;
   description: string;
-  checklist: string[];
+  checklistTemplate?: string;
 }
 
-// Import zod for schema validation
-import { z } from "zod";
-
-// Zod schema for cleaning task form
 export const cleaningTaskFormSchema = z.object({
-  title: z.string().min(3, "Title must be at least 3 characters"),
-  property: z.string().min(1, "Property is required"),
-  roomType: z.string().min(1, "Room type is required"),
-  assignedTo: z.string().min(1, "Assignee is required"),
-  priority: z.enum(["Low", "Medium", "High", "Urgent"]),
+  title: z.string().min(3, { message: "Title must be at least 3 characters" }),
+  property: z.string().min(1, { message: "Property is required" }),
+  roomType: z.string().min(1, { message: "Room type is required" }),
+  dueDate: z.date().optional(),
+  assignedTo: z.string().min(1, { message: "Assignee is required" }),
+  priority: z.string().min(1, { message: "Priority is required" }),
   description: z.string().optional(),
-  checklist: z.array(z.string()).optional()
+  checklistTemplate: z.string().optional()
 });

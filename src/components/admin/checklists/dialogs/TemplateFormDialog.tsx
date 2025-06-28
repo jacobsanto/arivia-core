@@ -1,31 +1,29 @@
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ChecklistTemplate } from '@/types/checklistTypes';
-import ChecklistTemplateForm from '../ChecklistTemplateForm';
+import React from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ChecklistTemplateForm from "@/components/admin/checklists/ChecklistTemplateForm";
+import { ChecklistTemplate, ChecklistTemplateFormValues } from "@/types/checklistTypes";
 
 interface TemplateFormDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (formData: any) => Promise<void>;
-  template?: ChecklistTemplate | null;
-  title?: string;
+  title: string;
+  template?: ChecklistTemplate;
+  onSubmit: (data: ChecklistTemplateFormValues) => void;
 }
 
-const TemplateFormDialog: React.FC<TemplateFormDialogProps> = ({
+const TemplateFormDialog = ({
   isOpen,
   onOpenChange,
-  onSubmit,
+  title,
   template,
-  title
-}) => {
+  onSubmit,
+}: TemplateFormDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {title || (template ? 'Edit Template' : 'Create New Template')}
-          </DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <ChecklistTemplateForm
           template={template}
