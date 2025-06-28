@@ -1,40 +1,7 @@
 
 import { format, subDays } from 'date-fns';
 import { DateRange } from "@/components/reports/DateRangeSelector";
-
-// Define the structure for dashboard data
-export interface DashboardData {
-  properties: {
-    total: number;
-    occupied: number;
-    vacant: number;
-  };
-  tasks: {
-    total: number;
-    completed: number;
-    pending: number;
-  };
-  maintenance: {
-    total: number;
-    critical: number;
-    standard: number;
-  };
-  upcomingTasks: Array<{
-    id: string;
-    title: string;
-    due_date: string;
-    status: string;
-    type: string;
-  }>;
-  housekeepingTasks: Array<any>;
-  maintenanceTasks: Array<any>;
-  quickStats: {
-    occupancyRate: number;
-    avgRating: number;
-    revenueToday: number;
-    pendingCheckouts: number;
-  };
-}
+import { DashboardData, TaskRecord } from "@/utils/dashboard/types";
 
 // Get default/fallback dashboard data
 export const getDefaultDashboardData = (): DashboardData => {
