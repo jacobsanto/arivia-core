@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import LoginForm from "@/components/auth/LoginForm";
 import SignUpForm from "@/components/auth/SignUpForm";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
 import { LoginInfoPanel } from "@/components/auth/LoginInfoPanel";
@@ -11,19 +10,15 @@ import { useAuth } from "@/contexts/AuthContext";
 const Login = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
-  const location = useLocation();
   const isMobile = useIsMobile();
-  const { isAuthenticated, isLoading, error } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      // Get the intended destination or default to dashboard
-      const from = location.state?.from?.pathname || "/dashboard";
-      navigate(from, { replace: true });
+      navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, isLoading, navigate, location.state]);
+  }, [isAuthenticated, isLoading, navigate]);
 
-  // Show loading while checking authentication
   if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
@@ -32,13 +27,9 @@ const Login = () => {
     );
   }
 
-  // If already authenticated, don't show login form
   if (isAuthenticated) {
     return null;
   }
-
-  // Show any authentication errors
-  const authError = location.state?.error || error;
 
   if (isMobile) {
     return <MobileLogin />;
@@ -55,14 +46,6 @@ const Login = () => {
               className="h-24 w-auto object-contain"
             />
           </div>
-
-          {authError && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600">
-                Authentication error. Please try logging in again.
-              </p>
-            </div>
-          )}
 
           <div className="flex mb-6 border-b">
             <button

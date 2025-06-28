@@ -32,7 +32,6 @@ import { CalendarIcon, Save } from "lucide-react";
 import { cleaningTaskFormSchema, CleaningTaskFormValues } from "@/types/taskTypes";
 import { useTaskDrafts } from "@/hooks/task-drafts/useTaskDrafts";
 import { Badge } from "@/components/ui/badge";
-import CleaningServiceTypeSelector from "./CleaningServiceTypeSelector";
 
 interface CleaningTaskFormProps {
   onSubmit: (data: CleaningTaskFormValues) => void;
@@ -57,7 +56,6 @@ const CleaningTaskForm: React.FC<CleaningTaskFormProps> = ({
       assignedTo: "",
       priority: "Medium",
       description: "",
-      cleaningServiceType: "Standard Cleaning",
     },
   });
 
@@ -184,17 +182,6 @@ const CleaningTaskForm: React.FC<CleaningTaskFormProps> = ({
               </FormControl>
               <FormMessage />
             </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="cleaningServiceType"
-          render={({ field }) => (
-            <CleaningServiceTypeSelector
-              value={field.value}
-              onValueChange={field.onChange}
-            />
           )}
         />
 

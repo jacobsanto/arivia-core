@@ -995,42 +995,6 @@ export type Database = {
           },
         ]
       }
-      permissions: {
-        Row: {
-          category: string
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          key: string
-          label: string
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          key: string
-          label: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Update: {
-          category?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          key?: string
-          label?: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar: string | null
@@ -1160,75 +1124,6 @@ export type Database = {
         }
         Relationships: []
       }
-      role_permissions: {
-        Row: {
-          created_at: string
-          id: string
-          permission_id: string
-          role_id: string
-          tenant_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          permission_id: string
-          role_id: string
-          tenant_id?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          permission_id?: string
-          role_id?: string
-          tenant_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_permissions_permission_id_fkey"
-            columns: ["permission_id"]
-            isOneToOne: false
-            referencedRelation: "permissions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "role_permissions_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "roles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      roles: {
-        Row: {
-          created_at: string
-          description: string | null
-          id: string
-          is_active: boolean
-          name: string
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          description?: string | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       sync_logs: {
         Row: {
           bookings_created: number | null
@@ -1328,233 +1223,6 @@ export type Database = {
           id?: string
           settings?: Json
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      task_comments: {
-        Row: {
-          comment: string
-          created_at: string
-          id: string
-          task_id: string
-          tenant_id: string
-          user_id: string
-        }
-        Insert: {
-          comment: string
-          created_at?: string
-          id?: string
-          task_id: string
-          tenant_id: string
-          user_id: string
-        }
-        Update: {
-          comment?: string
-          created_at?: string
-          id?: string
-          task_id?: string
-          tenant_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "task_comments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      task_templates: {
-        Row: {
-          assigned_role: string
-          checklist: Json | null
-          created_at: string
-          created_by: string
-          description: string | null
-          estimated_duration: number | null
-          id: string
-          is_active: boolean
-          name: string
-          priority: Database["public"]["Enums"]["task_priority"]
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_role: string
-          checklist?: Json | null
-          created_at?: string
-          created_by: string
-          description?: string | null
-          estimated_duration?: number | null
-          id?: string
-          is_active?: boolean
-          name: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          tenant_id: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_role?: string
-          checklist?: Json | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          estimated_duration?: number | null
-          id?: string
-          is_active?: boolean
-          name?: string
-          priority?: Database["public"]["Enums"]["task_priority"]
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tasks: {
-        Row: {
-          assigned_role: string | null
-          assigned_to: string | null
-          booking_id: string | null
-          completed_at: string | null
-          created_at: string
-          created_by: string
-          description: string | null
-          due_date: string | null
-          id: string
-          metadata: Json | null
-          priority: Database["public"]["Enums"]["task_priority"]
-          property_id: string | null
-          status: Database["public"]["Enums"]["task_status"]
-          tenant_id: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assigned_role?: string | null
-          assigned_to?: string | null
-          booking_id?: string | null
-          completed_at?: string | null
-          created_at?: string
-          created_by: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          metadata?: Json | null
-          priority?: Database["public"]["Enums"]["task_priority"]
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
-          tenant_id: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assigned_role?: string | null
-          assigned_to?: string | null
-          booking_id?: string | null
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          metadata?: Json | null
-          priority?: Database["public"]["Enums"]["task_priority"]
-          property_id?: string | null
-          status?: Database["public"]["Enums"]["task_status"]
-          tenant_id?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      tenant_branding: {
-        Row: {
-          accent_color: string | null
-          background_color: string | null
-          brand_name: string
-          created_at: string
-          custom_css: string | null
-          custom_properties: Json | null
-          favicon_url: string | null
-          font_family: string | null
-          id: string
-          is_active: boolean | null
-          logo_url: string | null
-          primary_color: string | null
-          secondary_color: string | null
-          tenant_id: string
-          text_color: string | null
-          theme_mode: string | null
-          updated_at: string
-        }
-        Insert: {
-          accent_color?: string | null
-          background_color?: string | null
-          brand_name: string
-          created_at?: string
-          custom_css?: string | null
-          custom_properties?: Json | null
-          favicon_url?: string | null
-          font_family?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          primary_color?: string | null
-          secondary_color?: string | null
-          tenant_id: string
-          text_color?: string | null
-          theme_mode?: string | null
-          updated_at?: string
-        }
-        Update: {
-          accent_color?: string | null
-          background_color?: string | null
-          brand_name?: string
-          created_at?: string
-          custom_css?: string | null
-          custom_properties?: Json | null
-          favicon_url?: string | null
-          font_family?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          primary_color?: string | null
-          secondary_color?: string | null
-          tenant_id?: string
-          text_color?: string | null
-          theme_mode?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          role: string
-          tenant_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          role: string
-          tenant_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          role?: string
-          tenant_id?: string
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -1662,16 +1330,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      generate_housekeeping_tasks_for_booking: {
-        Args: {
-          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
-        }
-        Returns: undefined
-      }
-      get_current_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      [_ in never]: never
     }
     Enums: {
       damage_report_status:
@@ -1687,8 +1346,6 @@ export type Database = {
         | "Full Cleaning"
         | "Linen & Towel Change"
         | "Custom Cleaning Schedule"
-      task_priority: "low" | "medium" | "high" | "urgent"
-      task_status: "open" | "in_progress" | "completed" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1819,8 +1476,6 @@ export const Constants = {
         "Linen & Towel Change",
         "Custom Cleaning Schedule",
       ],
-      task_priority: ["low", "medium", "high", "urgent"],
-      task_status: ["open", "in_progress", "completed", "cancelled"],
     },
   },
 } as const

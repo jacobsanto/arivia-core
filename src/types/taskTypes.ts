@@ -27,7 +27,7 @@ export interface Task {
   title: string;
   property: string;
   assignedTo: string;
-  dueDate: string;
+  dueDate: string; // Date stored as string format
   status: TaskStatus;
   priority: 'Low' | 'Medium' | 'High';
   description: string;
@@ -37,8 +37,7 @@ export interface Task {
   approvalStatus: ApprovalStatus;
   rejectionReason?: string | null;
   cleaningDetails?: CleaningDetails;
-  type?: string;
-  cleaningServiceType?: 'Standard Cleaning' | 'Full Cleaning' | 'Linen & Towel Change';
+  type?: string; // Added type field as it's used in many places
 }
 
 export interface CleaningTaskFormValues {
@@ -50,7 +49,6 @@ export interface CleaningTaskFormValues {
   priority: string;
   description: string;
   checklistTemplate?: string;
-  cleaningServiceType: 'Standard Cleaning' | 'Full Cleaning' | 'Linen & Towel Change';
 }
 
 export const cleaningTaskFormSchema = z.object({
@@ -61,6 +59,5 @@ export const cleaningTaskFormSchema = z.object({
   assignedTo: z.string().min(1, { message: "Assignee is required" }),
   priority: z.string().min(1, { message: "Priority is required" }),
   description: z.string().optional(),
-  checklistTemplate: z.string().optional(),
-  cleaningServiceType: z.enum(['Standard Cleaning', 'Full Cleaning', 'Linen & Towel Change']).default('Standard Cleaning')
+  checklistTemplate: z.string().optional()
 });

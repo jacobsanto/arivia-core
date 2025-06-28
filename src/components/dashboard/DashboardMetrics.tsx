@@ -1,12 +1,14 @@
 
 import React from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MetricCard from "./metrics/MetricCard";
 import { MetricCardContainer } from "./metrics/MetricCardContainer";
 import { createMetricCards } from "./metrics/createMetricCards";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Database, RefreshCw, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface DashboardMetricsProps {
   data?: {
