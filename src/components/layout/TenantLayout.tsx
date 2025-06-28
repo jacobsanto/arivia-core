@@ -1,8 +1,6 @@
 
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import { useTenant } from '@/lib/tenant/TenantContext';
-import TenantBranding from '@/lib/tenant/components/TenantBranding';
+import { useTenant } from '@/lib/context/TenantContext';
 import { LoadingState } from '@/components/ui/loading-state';
 
 interface TenantLayoutProps {
@@ -16,16 +14,11 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
     return <LoadingState />;
   }
 
-  if (!tenantId) {
-    return <div>Access denied or tenant not found</div>;
-  }
-
+  // Always render children - tenantId defaults to 'arivia-villas'
   return (
-    <TenantBranding>
-      <div className="min-h-screen bg-background">
-        {children}
-      </div>
-    </TenantBranding>
+    <div className="min-h-screen bg-background">
+      {children}
+    </div>
   );
 };
 

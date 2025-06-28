@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { UserRole, ROLE_DETAILS } from '@/types/auth/base';
@@ -17,6 +17,7 @@ const SignUpForm = () => {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState<UserRole>('property_manager');
   const [isLoading, setIsLoading] = useState(false);
+  const { signup } = useUser();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,27 +25,10 @@ const SignUpForm = () => {
     setIsLoading(true);
 
     try {
-      // Use window.location.origin for the redirect URL
-      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await signup(email, password, name);
       
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          phone,
-          role,
-          redirectUrl
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to sign up');
+      if (error) {
+        throw error;
       }
 
       toast.success('Account created successfully!', {

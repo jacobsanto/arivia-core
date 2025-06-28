@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +9,8 @@ interface UserContextType {
   user: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  isLoading: boolean;
+  isAuthenticated: boolean;
   userRole: string | null;
   canAccess: (permission: string) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -66,6 +69,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   // Extract user role from current user
   const userRole = user?.role || null;
+  const isAuthenticated = !!session?.user;
+  const isLoading = loading;
 
   // Permission check function using the user's role
   const canAccess = (permission: string) => {
@@ -350,6 +355,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    isLoading,
+    isAuthenticated,
     userRole,
     canAccess,
     signIn,
