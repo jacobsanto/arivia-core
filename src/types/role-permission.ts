@@ -35,3 +35,35 @@ export interface UserWithRoles {
   email: string;
   roles: Role[];
 }
+
+// Create/Update data types for forms
+export interface CreateRoleData {
+  name: string;
+  description?: string;
+  tenant_id: string;
+}
+
+export interface UpdateRoleData {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+}
+
+export interface CreatePermissionData {
+  key: string;
+  label: string;
+  description?: string;
+  category: string;
+  tenant_id: string;
+}
+
+export interface UpdatePermissionData {
+  label?: string;
+  description?: string;
+  category?: string;
+  is_active?: boolean;
+}
+
+export interface RoleWithPermissions extends Role {
+  permissions: Permission[];
+}

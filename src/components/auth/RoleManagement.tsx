@@ -81,14 +81,32 @@ const RoleManagement: React.FC = () => {
               isLoading={isLoading}
               currentUser={user}
               onEditPermissions={(userProfile) => {
-                const convertedUser = profileToUser(userProfile);
+                const convertedUser = profileToUser({
+                  id: userProfile.id,
+                  name: userProfile.name,
+                  email: userProfile.email,
+                  role: userProfile.role,
+                  phone: userProfile.phone,
+                  avatar: userProfile.avatar,
+                  secondary_roles: userProfile.secondary_roles,
+                  custom_permissions: userProfile.custom_permissions
+                });
                 setSelectedUser(convertedUser);
                 setActiveTab("permissions");
                 return convertedUser;
               }}
               onDeleteClick={setUserToDelete}
               setActiveTab={setActiveTab}
-              setSelectedUser={(userProfile) => setSelectedUser(profileToUser(userProfile))}
+              setSelectedUser={(userProfile) => setSelectedUser(profileToUser({
+                id: userProfile.id,
+                name: userProfile.name,
+                email: userProfile.email,
+                role: userProfile.role,
+                phone: userProfile.phone,
+                avatar: userProfile.avatar,
+                secondary_roles: userProfile.secondary_roles,
+                custom_permissions: userProfile.custom_permissions
+              }))}
             />
           </TabsContent>
           
@@ -131,7 +149,7 @@ const RoleManagement: React.FC = () => {
       <DeleteAllUsersDialog
         isOpen={isDeleteAllDialogOpen}
         isDeleting={isDeletingAll}
-        userCount={users.filter(u => u.id !== currentUser?.id).length}
+        userCount={users.filter(u => u.id !== user?.id).length}
         onCancel={() => setIsDeleteAllDialogOpen(false)}
         onConfirm={deleteAllUsers}
       />

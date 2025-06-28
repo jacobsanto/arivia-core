@@ -11,6 +11,7 @@ import PermissionHeader from './PermissionHeader';
 import PermissionFilters from './PermissionFilters';
 import PermissionCategoryAccordion from './PermissionCategoryAccordion';
 import { usePermissionManagement } from './usePermissionManagement';
+import { profileToUser } from '@/types/auth/base';
 
 interface PermissionManagementProps {
   selectedUser: User | null;
@@ -35,7 +36,6 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
   }
   
   const [activeCategory, setActiveCategory] = React.useState<string>("all");
-  const permissionGroups = permissionsByCategory;
   
   const handlePermissionToggle = (permissionKey: string) => {
     togglePermission(permissionKey);
@@ -72,19 +72,19 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
           <Tabs value={activeCategory} onValueChange={setActiveCategory}>
             <PermissionFilters 
               activeCategory={activeCategory}
-              permissionGroups={permissionGroups}
+              permissionGroups={permissionsByCategory}
               onCategoryChange={setActiveCategory}
             />
             
             <TabsContent value={activeCategory} className="mt-4">
               <Accordion type="multiple" className="w-full">
-                {Object.entries(permissionGroups)
+                {Object.entries(permissionsByCategory)
                   .filter(([category]) => activeCategory === "all" || category === activeCategory)
-                  .map(([category, permKeys]) => (
+                  .map(([category, permissions]) => (
                     <PermissionCategoryAccordion
                       key={category}
                       category={category}
-                      permKeys={permKeys}
+                      permKeys={permissions.map(p => p.key)}
                       permissions={userPermissions}
                       selectedUser={selectedUser}
                       handlePermissionToggle={handlePermissionToggle}

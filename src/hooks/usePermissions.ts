@@ -14,5 +14,37 @@ export const usePermissions = () => {
     { key: "viewReports", label: "View Reports" },
     { key: "manageSettings", label: "Manage Settings" },
   ];
-  return { allPermissions };
+
+  // Role-based permission mapping
+  const rolePermissions: Record<string, string[]> = {
+    'superadmin': allPermissions.map(p => p.key),
+    'tenant_admin': [
+      'viewProperties', 'manageProperties', 'viewUsers', 'manageUsers',
+      'assignTasks', 'viewAllTasks', 'viewInventory', 'manageInventory',
+      'viewReports', 'manageSettings'
+    ],
+    'property_manager': [
+      'viewProperties', 'assignTasks', 'viewAllTasks', 'viewInventory',
+      'viewReports'
+    ],
+    'housekeeping_staff': [
+      'viewProperties', 'viewAssignedTasks', 'viewInventory'
+    ],
+    'maintenance_staff': [
+      'viewProperties', 'viewAssignedTasks', 'viewInventory'
+    ],
+    'inventory_manager': [
+      'viewInventory', 'manageInventory', 'approveTransfers', 'viewReports'
+    ],
+    'concierge': [
+      'viewProperties', 'viewAssignedTasks'
+    ]
+  };
+
+  const canAccess = (permission: string, userRole?: string | null) => {
+    if (!userRole) return false;
+    return rolePermissions[userRole]?.includes(permission) ?? false;
+  };
+
+  return { allPermissions, canAccess, rolePermissions };
 };

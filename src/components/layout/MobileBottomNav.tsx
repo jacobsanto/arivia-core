@@ -3,15 +3,13 @@ import React from "react";
 import { Home, Menu, BedDouble, Package, Wrench, FileWarning } from "lucide-react";
 import NavItem from "./NavItem";
 import { useUser } from "@/contexts/UserContext";
-import { usePermissions } from "@/hooks/usePermissions";
 
 interface MobileBottomNavProps {
   onOpenMenu: () => void;
 }
 
 const MobileBottomNav = ({ onOpenMenu }: MobileBottomNavProps) => {
-  const { user } = useUser();
-  const { canAccess } = usePermissions();
+  const { user, canAccess } = useUser();
 
   if (!user) return null;
 

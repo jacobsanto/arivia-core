@@ -1,6 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export interface UserProfile {
   id: string;
@@ -17,6 +19,8 @@ interface UserContextType {
   user: UserProfile | null;
   session: Session | null;
   loading: boolean;
+  userRole: string | null;
+  canAccess: (permission: string) => boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -69,28 +73,77 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const { canAccess: permissionCanAccess } = usePermissions();
+
+  // Extract user role from current user
+  const userRole = user?.role || null;
+
+  // Permission check function using the user's role
+  const canAccess = (permission: string) => {
+    return permissionCanAccess(permission, userRole);
+  };
 
   const refreshProfile = async () => {
     if (!session?.user) return;
     
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', session.user.id)
-      .single();
-    
-    if (profile) {
-      const userProfile: UserProfile = {
-        id: profile.id,
-        name: profile.name,
-        email: profile.email,
-        role: profile.role,
-        phone: profile.phone,
-        avatar: profile.avatar,
-        secondary_roles: profile.secondary_roles || [],
-        custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
-      };
-      setUser(userProfile);
+    try {
+      // Fetch profile with roles joined from Supabase
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles!inner (
+            roles!inner (
+              name
+            )
+          )
+        `)
+        .eq('id', session.user.id)
+        .single();
+      
+      if (error) {
+        console.error('Error fetching profile with roles:', error);
+        // Fallback to basic profile fetch
+        const { data: basicProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (basicProfile) {
+          const userProfile: UserProfile = {
+            id: basicProfile.id,
+            name: basicProfile.name,
+            email: basicProfile.email,
+            role: basicProfile.role,
+            phone: basicProfile.phone,
+            avatar: basicProfile.avatar,
+            secondary_roles: basicProfile.secondary_roles || [],
+            custom_permissions: safeConvertCustomPermissions(basicProfile.custom_permissions)
+          };
+          setUser(userProfile);
+        }
+        return;
+      }
+      
+      if (profile) {
+        // Extract role from the joined data
+        const roleFromJoin = profile.user_roles?.[0]?.roles?.name;
+        
+        const userProfile: UserProfile = {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: roleFromJoin || profile.role, // Use joined role or fallback to profile role
+          phone: profile.phone,
+          avatar: profile.avatar,
+          secondary_roles: profile.secondary_roles || [],
+          custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+        };
+        setUser(userProfile);
+      }
+    } catch (error) {
+      console.error('Error in refreshProfile:', error);
     }
   };
 
@@ -102,26 +155,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setSession(session);
         
         if (session?.user) {
-          // Fetch user profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            const userProfile: UserProfile = {
-              id: profile.id,
-              name: profile.name,
-              email: profile.email,
-              role: profile.role,
-              phone: profile.phone,
-              avatar: profile.avatar,
-              secondary_roles: profile.secondary_roles || [],
-              custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
-            };
-            setUser(userProfile);
-          }
+          // Fetch user profile with roles
+          await refreshProfileForSession(session);
         } else {
           setUser(null);
         }
@@ -133,28 +168,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSession(session);
-        // Fetch user profile if session exists
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
-            if (profile) {
-              const userProfile: UserProfile = {
-                id: profile.id,
-                name: profile.name,
-                email: profile.email,
-                role: profile.role,
-                phone: profile.phone,
-                avatar: profile.avatar,
-                secondary_roles: profile.secondary_roles || [],
-                custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
-              };
-              setUser(userProfile);
-            }
-            setLoading(false);
-          });
+        refreshProfileForSession(session);
       } else {
         setLoading(false);
       }
@@ -162,6 +176,63 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const refreshProfileForSession = async (session: Session) => {
+    try {
+      // Fetch profile with roles joined
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(`
+          *,
+          user_roles!inner (
+            roles!inner (
+              name
+            )
+          )
+        `)
+        .eq('id', session.user.id)
+        .single();
+      
+      if (profile) {
+        const roleFromJoin = profile.user_roles?.[0]?.roles?.name;
+        
+        const userProfile: UserProfile = {
+          id: profile.id,
+          name: profile.name,
+          email: profile.email,
+          role: roleFromJoin || profile.role,
+          phone: profile.phone,
+          avatar: profile.avatar,
+          secondary_roles: profile.secondary_roles || [],
+          custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
+        };
+        setUser(userProfile);
+      } else {
+        // Fallback to basic profile if no roles are assigned
+        const { data: basicProfile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (basicProfile) {
+          const userProfile: UserProfile = {
+            id: basicProfile.id,
+            name: basicProfile.name,
+            email: basicProfile.email,
+            role: basicProfile.role,
+            phone: basicProfile.phone,
+            avatar: basicProfile.avatar,
+            secondary_roles: basicProfile.secondary_roles || [],
+            custom_permissions: safeConvertCustomPermissions(basicProfile.custom_permissions)
+          };
+          setUser(userProfile);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -296,6 +367,8 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     user,
     session,
     loading,
+    userRole,
+    canAccess,
     signIn,
     signUp,
     signOut,
