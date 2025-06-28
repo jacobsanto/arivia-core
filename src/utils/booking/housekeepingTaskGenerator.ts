@@ -34,7 +34,7 @@ export interface TaskGenerationResult {
 }
 
 /**
- * Generates housekeeping tasks for a given booking based on cleaning service guide
+ * Generates housekeeping tasks based on the new cleaning service breakdown by length of stay
  */
 export async function generateHousekeepingTasksFromBooking(booking: BookingObject): Promise<TaskGenerationResult> {
   try {
@@ -67,7 +67,7 @@ export async function generateHousekeepingTasksFromBooking(booking: BookingObjec
     
     const tasks = [];
     
-    // 1. Pre-arrival Standard Cleaning (check-in preparation)
+    // Always include pre-arrival Standard Cleaning (check-in preparation)
     const preArrivalDate = format(addDays(checkIn, -1), 'yyyy-MM-dd');
     tasks.push({
       booking_id: booking.id,
@@ -78,34 +78,39 @@ export async function generateHousekeepingTasksFromBooking(booking: BookingObjec
       description: `Pre-arrival preparation for ${booking.guest_name} (${stayDuration} nights)`
     });
     
-    // 2. Mid-stay services based on duration
-    if (stayDuration >= 3 && stayDuration <= 5) {
-      // Full Cleaning for maintenance
+    // Apply cleaning breakdown based on length of stay
+    if (stayDuration <= 3) {
+      // Stays of Up to 3 Nights: No additional cleaning during stay
+      // Only pre-arrival and post-checkout standard cleaning
+    } 
+    else if (stayDuration <= 5) {
+      // Stays of Up to 5 Nights: Two cleaning sessions during stay
+      // One full cleaning service + One linen and towel change
       const midStayDate = format(addDays(checkIn, Math.floor(stayDuration / 2)), 'yyyy-MM-dd');
+      
       tasks.push({
         booking_id: booking.id,
         listing_id: listingId,
         task_type: "Full Cleaning",
         due_date: midStayDate,
         status: "pending",
-        description: `Mid-stay maintenance cleaning for ${booking.guest_name}`
+        description: `Mid-stay full cleaning for ${booking.guest_name} (coordinate with guest)`
       });
       
-      // Linen & Towel Change for stays 4+ nights
-      if (stayDuration >= 4) {
-        const linenDate = format(addDays(checkOut, -1), 'yyyy-MM-dd');
-        tasks.push({
-          booking_id: booking.id,
-          listing_id: listingId,
-          task_type: "Linen & Towel Change",
-          due_date: linenDate,
-          status: "pending",
-          description: `Fresh linens and towels for ${booking.guest_name}`
-        });
-      }
+      // Schedule linen change 1-2 days after full cleaning
+      const linenChangeDate = format(addDays(checkIn, Math.floor(stayDuration / 2) + 1), 'yyyy-MM-dd');
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Linen & Towel Change",
+        due_date: linenChangeDate,
+        status: "pending",
+        description: `Linen and towel change for ${booking.guest_name} (coordinate with guest)`
+      });
     } 
-    else if (stayDuration >= 6 && stayDuration <= 7) {
-      // Multiple Full Cleaning sessions
+    else if (stayDuration <= 7) {
+      // Stays of Up to 7 Nights: Three cleaning sessions during stay
+      // Two full cleaning services + Two linen and towel changes
       const firstCleanDate = format(addDays(checkIn, Math.floor(stayDuration / 3)), 'yyyy-MM-dd');
       tasks.push({
         booking_id: booking.id,
@@ -113,7 +118,17 @@ export async function generateHousekeepingTasksFromBooking(booking: BookingObjec
         task_type: "Full Cleaning",
         due_date: firstCleanDate,
         status: "pending",
-        description: `First maintenance cleaning for ${booking.guest_name}`
+        description: `First mid-stay cleaning for ${booking.guest_name} (coordinate with guest)`
+      });
+      
+      const firstLinenDate = format(addDays(checkIn, Math.floor(stayDuration / 3) + 1), 'yyyy-MM-dd');
+      tasks.push({
+        booking_id: booking.id,
+        listing_id: listingId,
+        task_type: "Linen & Towel Change",
+        due_date: firstLinenDate,
+        status: "pending",
+        description: `First linen change for ${booking.guest_name} (coordinate with guest)`
       });
       
       const secondCleanDate = format(addDays(checkIn, Math.floor((stayDuration / 3) * 2)), 'yyyy-MM-dd');
@@ -123,36 +138,34 @@ export async function generateHousekeepingTasksFromBooking(booking: BookingObjec
         task_type: "Full Cleaning",
         due_date: secondCleanDate,
         status: "pending",
-        description: `Second maintenance cleaning for ${booking.guest_name}`
+        description: `Second mid-stay cleaning for ${booking.guest_name} (coordinate with guest)`
       });
       
-      // Linen & Towel Change scheduled separately
-      const linenDate = format(addDays(checkIn, Math.floor(stayDuration / 2)), 'yyyy-MM-dd');
+      const secondLinenDate = format(addDays(checkIn, Math.floor((stayDuration / 3) * 2) + 1), 'yyyy-MM-dd');
       tasks.push({
         booking_id: booking.id,
         listing_id: listingId,
         task_type: "Linen & Towel Change",
-        due_date: linenDate,
+        due_date: secondLinenDate,
         status: "pending",
-        description: `Mid-stay linen and towel change for ${booking.guest_name}`
+        description: `Second linen change for ${booking.guest_name} (coordinate with guest)`
       });
     } 
-    else if (stayDuration > 7) {
-      // Extended stays - create initial tasks but flag for manual scheduling
-      const firstCleanDate = format(addDays(checkIn, 3), 'yyyy-MM-dd');
+    else {
+      // Stays of More Than 7 Nights: Custom cleaning schedule
       tasks.push({
         booking_id: booking.id,
         listing_id: listingId,
-        task_type: "Full Cleaning",
-        due_date: firstCleanDate,
+        task_type: "Custom Cleaning Schedule",
+        due_date: format(addDays(checkIn, 1), 'yyyy-MM-dd'), // Schedule planning for day after check-in
         status: "pending",
-        description: `Extended stay cleaning for ${booking.guest_name} (${stayDuration} nights) - Manual schedule required`
+        description: `Extended stay (${stayDuration} nights) - Arrange custom cleaning schedule with ${booking.guest_name} based on preferences`
       });
       
       result.manual_schedule_required = true;
     }
     
-    // 3. Post-checkout Standard Cleaning (if no same-day check-in)
+    // Post-checkout Standard Cleaning (if no same-day check-in)
     if (!hasSameDayCheckIn) {
       const checkoutDate = format(checkOut, 'yyyy-MM-dd');
       tasks.push({

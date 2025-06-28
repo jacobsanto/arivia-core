@@ -34,9 +34,12 @@ export const getCleaningChecklist = (cleaningType: string): ChecklistItem[] => {
         { id: 2, title: "Provide fresh towels - bath, hand and face towels", completed: false },
         { id: 3, title: "Collect used linens and towels for laundering", completed: false }
       ];
+    case 'custom cleaning schedule':
     case 'custom':
       return [
-        { id: 1, title: "Custom cleaning items to be defined", completed: false }
+        { id: 1, title: "Coordinate with guest to arrange cleaning schedule", completed: false },
+        { id: 2, title: "Plan regular full cleaning services based on guest preferences", completed: false },
+        { id: 3, title: "Schedule linen and towel changes at agreed intervals", completed: false }
       ];
     default:
       return [
@@ -57,45 +60,43 @@ export const generateCleaningSchedule = (checkIn: Date, checkOut: Date) => {
   scheduledCleanings.push(format(preArrivalDate, "yyyy-MM-dd"));
   cleaningTypes.push("Standard Cleaning");
 
-  // Mid-stay services based on duration
-  if (stayDuration >= 3 && stayDuration <= 5) {
-    // One Full Cleaning mid-stay
+  // Apply new cleaning breakdown by length of stay
+  if (stayDuration <= 3) {
+    // Up to 3 nights: No additional cleaning during stay
+  }
+  else if (stayDuration <= 5) {
+    // Up to 5 nights: Two cleaning sessions during stay
     const midStayDate = addDays(checkIn, Math.floor(stayDuration / 2));
     scheduledCleanings.push(format(midStayDate, "yyyy-MM-dd"));
     cleaningTypes.push("Full Cleaning");
     
-    // Linen & Towel Change day before checkout if stay is 4+ nights
-    if (stayDuration >= 4) {
-      const linenChangeDate = addDays(checkOut, -1);
-      scheduledCleanings.push(format(linenChangeDate, "yyyy-MM-dd"));
-      cleaningTypes.push("Linen & Towel Change");
-    }
+    const linenChangeDate = addDays(checkIn, Math.floor(stayDuration / 2) + 1);
+    scheduledCleanings.push(format(linenChangeDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Linen & Towel Change");
   }
-  else if (stayDuration >= 6 && stayDuration <= 7) {
-    // Two Full Cleaning sessions
+  else if (stayDuration <= 7) {
+    // Up to 7 nights: Three cleaning sessions during stay
     const firstCleanDate = addDays(checkIn, Math.floor(stayDuration / 3));
     scheduledCleanings.push(format(firstCleanDate, "yyyy-MM-dd"));
     cleaningTypes.push("Full Cleaning");
+    
+    const firstLinenDate = addDays(checkIn, Math.floor(stayDuration / 3) + 1);
+    scheduledCleanings.push(format(firstLinenDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Linen & Towel Change");
     
     const secondCleanDate = addDays(checkIn, Math.floor((stayDuration / 3) * 2));
     scheduledCleanings.push(format(secondCleanDate, "yyyy-MM-dd"));
     cleaningTypes.push("Full Cleaning");
     
-    // Linen & Towel Change scheduled separately
-    const linenChangeDate = addDays(checkIn, Math.floor(stayDuration / 2));
-    scheduledCleanings.push(format(linenChangeDate, "yyyy-MM-dd"));
+    const secondLinenDate = addDays(checkIn, Math.floor((stayDuration / 3) * 2) + 1);
+    scheduledCleanings.push(format(secondLinenDate, "yyyy-MM-dd"));
     cleaningTypes.push("Linen & Towel Change");
   }
-  else if (stayDuration > 7) {
-    // Extended stays - custom schedule required
-    // Create initial Full Cleaning and Linen Change, but flag for manual scheduling
-    const firstCleanDate = addDays(checkIn, 3);
-    scheduledCleanings.push(format(firstCleanDate, "yyyy-MM-dd"));
-    cleaningTypes.push("Full Cleaning");
-    
-    const firstLinenDate = addDays(checkIn, 4);
-    scheduledCleanings.push(format(firstLinenDate, "yyyy-MM-dd"));
-    cleaningTypes.push("Linen & Towel Change");
+  else {
+    // More than 7 nights: Custom cleaning schedule required
+    const customScheduleDate = addDays(checkIn, 1);
+    scheduledCleanings.push(format(customScheduleDate, "yyyy-MM-dd"));
+    cleaningTypes.push("Custom Cleaning Schedule");
   }
 
   // Post-checkout Standard Cleaning

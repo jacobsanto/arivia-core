@@ -30,6 +30,11 @@ const cleaningServiceTypes = [
     value: "Linen & Towel Change",
     label: "Linen & Towel Change",
     description: "Fresh linens and towels replacement service"
+  },
+  {
+    value: "Custom Cleaning Schedule",
+    label: "Custom Cleaning Schedule",
+    description: "Personalized cleaning plan for extended stays (7+ nights)"
   }
 ];
 
