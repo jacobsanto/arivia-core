@@ -56,7 +56,7 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
     setIsSaving(true);
     try {
       // Call the updateProfile function from UserContext
-      const success = await updateProfile(user.id, {
+      const success = await updateProfile({
         name: user.name,
         email: user.email,
         role: selectedRole,
@@ -66,6 +66,8 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
       if (success) {
         setIsEditing(false);
         toast.success("User role updated successfully");
+      } else {
+        toast.error("Failed to update role");
       }
     } catch (error) {
       toast.error("Failed to update role", {

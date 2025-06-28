@@ -17,7 +17,7 @@ const PermissionsDisplay = () => {
 
   // Use the mobile-specific component for mobile devices
   if (isMobile) {
-    return <MobilePermissionsDisplay />;
+    return <MobilePermissionsDisplay user={user} />;
   }
   
   const roleDetails = ROLE_DETAILS[user.role as keyof typeof ROLE_DETAILS] || { title: user.role };

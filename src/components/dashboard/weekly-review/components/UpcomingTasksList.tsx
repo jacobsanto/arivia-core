@@ -1,10 +1,10 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { TaskRecord } from "@/utils/dashboard";
+import { DashboardTaskRecord } from "@/utils/dashboard";
 
 interface UpcomingTasksListProps {
-  tasks: TaskRecord[];
+  tasks: DashboardTaskRecord[];
 }
 
 export const UpcomingTasksList: React.FC<UpcomingTasksListProps> = ({ tasks }) => {
@@ -26,12 +26,12 @@ export const UpcomingTasksList: React.FC<UpcomingTasksListProps> = ({ tasks }) =
               <Badge variant={task.priority === "high" ? "destructive" : task.priority === "medium" ? "default" : "outline"}>
                 {task.priority || 'low'}
               </Badge>
-              <span className="text-xs">{task.location || 'General'}</span>
+              <span className="text-xs">{task.property || 'General'}</span>
             </div>
           </div>
           <div className="text-right">
             <p className="text-sm font-medium">{task.due_date}</p>
-            <p className="text-xs text-muted-foreground">{task.property_id || 'All properties'}</p>
+            <p className="text-xs text-muted-foreground">{task.property || 'All properties'}</p>
           </div>
         </div>
       ))}

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +20,7 @@ interface UserContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
-  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<boolean>;
   deleteUser: (userId: string) => Promise<boolean>;
   deleteAllUsers: () => Promise<void>;
   fetchUsers: () => Promise<UserProfile[]>;
@@ -193,20 +192,26 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     if (error) console.error('Error signing out:', error);
   };
 
-  const updateProfile = async (updates: Partial<UserProfile>) => {
-    if (!user) return;
+  const updateProfile = async (updates: Partial<UserProfile>): Promise<boolean> => {
+    if (!user) return false;
     
-    const { error } = await supabase
-      .from('profiles')
-      .update(updates)
-      .eq('id', user.id);
-    
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+      
+      if (error) {
+        console.error('Error updating profile:', error);
+        return false;
+      }
+      
+      setUser({ ...user, ...updates });
+      return true;
+    } catch (error) {
       console.error('Error updating profile:', error);
-      throw error;
+      return false;
     }
-    
-    setUser({ ...user, ...updates });
   };
 
   const updateAvatar = async (avatarUrl: string) => {

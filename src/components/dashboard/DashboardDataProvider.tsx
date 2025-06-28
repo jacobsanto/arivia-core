@@ -31,7 +31,11 @@ export const DashboardDataProvider: React.FC<{ children: React.ReactNode }> = ({
     error: dashboardHook.error,
     refresh: dashboardHook.refresh,
     lastRefresh: dashboardHook.lastRefresh,
-    refreshStatus: dashboardHook.refreshStatus,
+    refreshStatus: {
+      lastRefresh: dashboardHook.lastRefresh,
+      isRefreshing: dashboardHook.isLoading,
+      nextRefresh: new Date(Date.now() + 30000)
+    },
     // Legacy properties for backward compatibility
     dashboardData: dashboardHook.data,
     handlePropertyChange: (property: string) => {

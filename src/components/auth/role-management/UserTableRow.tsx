@@ -54,7 +54,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
     try {
       // Call the updateProfile function from UserContext
       // This will handle both the database update and local state updates
-      const success = await updateProfile(user.id, {
+      const success = await updateProfile({
         role: selectedRole,
         secondary_roles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
       });
@@ -62,6 +62,8 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       if (success) {
         setIsEditing(false);
         toast.success("User role updated successfully");
+      } else {
+        toast.error("Failed to update role");
       }
     } catch (error) {
       toast.error("Failed to update role", {
