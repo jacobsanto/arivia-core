@@ -13,7 +13,6 @@ import UserDeleteDialog from "./role-management/UserDeleteDialog";
 import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
-import { profileToUser } from "@/types/auth/base";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
@@ -39,6 +38,20 @@ const RoleManagement: React.FC = () => {
   if (user?.role !== "superadmin") {
     return <UnauthorizedAccess />;
   }
+
+  // Helper function to convert UserProfile to User
+  const convertToUser = (userProfile: any): User => {
+    return {
+      id: userProfile.id,
+      name: userProfile.name,
+      email: userProfile.email,
+      role: userProfile.role, // Keep as string, type assertion handled elsewhere
+      phone: userProfile.phone,
+      avatar: userProfile.avatar,
+      secondaryRoles: userProfile.secondary_roles || [],
+      customPermissions: userProfile.custom_permissions || {}
+    };
+  };
   
   return (
     <Card>
@@ -86,32 +99,14 @@ const RoleManagement: React.FC = () => {
               isLoading={isLoading}
               currentUser={user}
               onEditPermissions={(userProfile) => {
-                const convertedUser = profileToUser({
-                  id: userProfile.id,
-                  name: userProfile.name,
-                  email: userProfile.email,
-                  role: userProfile.role,
-                  phone: userProfile.phone,
-                  avatar: userProfile.avatar,
-                  secondary_roles: userProfile.secondary_roles || [],
-                  custom_permissions: userProfile.custom_permissions || {}
-                });
+                const convertedUser = convertToUser(userProfile);
                 setSelectedUser(convertedUser);
                 setActiveTab("permissions");
                 return convertedUser;
               }}
               onDeleteClick={setUserToDelete}
               setActiveTab={setActiveTab}
-              setSelectedUser={(userProfile) => setSelectedUser(profileToUser({
-                id: userProfile.id,
-                name: userProfile.name,
-                email: userProfile.email,
-                role: userProfile.role,
-                phone: userProfile.phone,
-                avatar: userProfile.avatar,
-                secondary_roles: userProfile.secondary_roles || [],
-                custom_permissions: userProfile.custom_permissions || {}
-              }))}
+              setSelectedUser={(userProfile) => setSelectedUser(convertToUser(userProfile))}
             />
           </TabsContent>
           
