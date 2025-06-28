@@ -1,6 +1,7 @@
 
 import { useUser } from '@/contexts/UserContext';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useHasPermission = (permissionKey: string): boolean => {
   const { user } = useUser();

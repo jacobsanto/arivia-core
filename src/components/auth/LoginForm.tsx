@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
+import { loginUser } from "@/services/auth/userAuthService";
 import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
 
@@ -42,14 +42,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
     setIsLoading(true);
     try {
       // Call login function from UserContext
-      const { error } = await login(values.email, values.password);
-      
-      if (error) {
-        throw new Error(error.message || "Invalid credentials");
-      }
+      await login(values.email, values.password);
       
       // Redirect to previous page or dashboard
-      const from = location.state?.from?.pathname || "/admin";
+      const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
       
       toast({

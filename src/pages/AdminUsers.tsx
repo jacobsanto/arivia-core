@@ -12,7 +12,9 @@ import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
 
 const AdminUsers = () => {
-  const { user } = useUser();
+  const {
+    user
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("users");
