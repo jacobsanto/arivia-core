@@ -14,6 +14,7 @@ import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
 import { safeRoleCast } from "@/types/auth/base";
+import type { UserProfile } from "@/contexts/UserContext";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
@@ -41,7 +42,7 @@ const RoleManagement: React.FC = () => {
   }
 
   // Helper function to convert UserProfile to User with proper role casting
-  const convertToUser = (userProfile: any): User => {
+  const convertToUser = (userProfile: UserProfile): User => {
     return {
       id: userProfile.id,
       name: userProfile.name,
