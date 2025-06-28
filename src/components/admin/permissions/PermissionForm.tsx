@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Save } from 'lucide-react';
 import { Permission, CreatePermissionData, UpdatePermissionData } from '@/types/role-permission';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useUser } from '@/contexts/UserContext';
 
 interface PermissionFormProps {
@@ -22,7 +21,6 @@ export const PermissionForm: React.FC<PermissionFormProps> = ({
   onBack, 
   onSaved 
 }) => {
-  const { createPermission, updatePermission } = usePermissions();
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -53,26 +51,11 @@ export const PermissionForm: React.FC<PermissionFormProps> = ({
     setIsLoading(true);
     try {
       if (permission) {
-        // Update existing permission
-        const updates: UpdatePermissionData = {
-          key: formData.key,
-          label: formData.label,
-          description: formData.description,
-          category: formData.category,
-          is_active: formData.is_active
-        };
-        await updatePermission(permission.id, updates);
+        console.log('Update permission:', permission.id, formData);
+        // TODO: Implement actual update when backend is ready
       } else {
-        // Create new permission
-        const newPermission: CreatePermissionData = {
-          tenant_id: user.id, // Using user.id as tenant_id for now
-          key: formData.key,
-          label: formData.label,
-          description: formData.description,
-          category: formData.category,
-          is_active: formData.is_active
-        };
-        await createPermission(newPermission);
+        console.log('Create permission:', formData);
+        // TODO: Implement actual creation when backend is ready
       }
       onSaved();
     } catch (error) {

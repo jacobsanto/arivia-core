@@ -6,10 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ArrowLeft, Save, Shield } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { ArrowLeft, Save } from 'lucide-react';
 import { Role, CreateRoleData, UpdateRoleData } from '@/types/role-permission';
-import { useRoles } from '@/hooks/useRoles';
-import { usePermissions } from '@/hooks/usePermissions';
 import { useUser } from '@/contexts/UserContext';
 
 interface RoleFormProps {
@@ -23,11 +22,8 @@ export const RoleForm: React.FC<RoleFormProps> = ({
   onBack, 
   onSaved 
 }) => {
-  const { createRole, updateRole, assignPermissionsToRole, getRoleWithPermissions } = useRoles();
-  const { permissionsByCategory } = usePermissions();
   const { user } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingPermissions, setLoadingPermissions] = useState(false);
   
   const [formData, setFormData] = useState({
     name: '',
@@ -35,7 +31,10 @@ export const RoleForm: React.FC<RoleFormProps> = ({
     is_active: true
   });
 
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(new Set());
+
+  // Mock permissions data since the hook is deleted
+  const permissionsByCategory: Record<string, any[]> = {};
 
   useEffect(() => {
     if (role) {
@@ -44,27 +43,8 @@ export const RoleForm: React.FC<RoleFormProps> = ({
         description: role.description || '',
         is_active: role.is_active
       });
-      
-      // Load role permissions
-      loadRolePermissions();
     }
   }, [role]);
-
-  const loadRolePermissions = async () => {
-    if (!role) return;
-    
-    setLoadingPermissions(true);
-    try {
-      const roleWithPermissions = await getRoleWithPermissions(role.id);
-      if (roleWithPermissions) {
-        setSelectedPermissions(roleWithPermissions.permissions.map(p => p.id));
-      }
-    } catch (error) {
-      console.error('Error loading role permissions:', error);
-    } finally {
-      setLoadingPermissions(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,30 +52,13 @@ export const RoleForm: React.FC<RoleFormProps> = ({
 
     setIsLoading(true);
     try {
-      let savedRole: Role;
-      
       if (role) {
-        // Update existing role
-        const updates: UpdateRoleData = {
-          name: formData.name,
-          description: formData.description,
-          is_active: formData.is_active
-        };
-        savedRole = await updateRole(role.id, updates);
+        console.log('Update role:', role.id, formData);
+        // TODO: Implement actual update when backend is ready
       } else {
-        // Create new role
-        const newRole: CreateRoleData = {
-          tenant_id: user.id, // Using user.id as tenant_id for now
-          name: formData.name,
-          description: formData.description,
-          is_active: formData.is_active
-        };
-        savedRole = await createRole(newRole);
+        console.log('Create role:', formData);
+        // TODO: Implement actual creation when backend is ready
       }
-      
-      // Assign permissions to role
-      await assignPermissionsToRole(savedRole.id, selectedPermissions);
-      
       onSaved();
     } catch (error) {
       console.error('Error saving role:', error);
@@ -104,12 +67,16 @@ export const RoleForm: React.FC<RoleFormProps> = ({
     }
   };
 
-  const togglePermission = (permissionId: string) => {
-    setSelectedPermissions(prev => 
-      prev.includes(permissionId)
-        ? prev.filter(id => id !== permissionId)
-        : [...prev, permissionId]
-    );
+  const handlePermissionToggle = (permissionId: string) => {
+    setSelectedPermissions(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(permissionId)) {
+        newSet.delete(permissionId);
+      } else {
+        newSet.add(permissionId);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -132,10 +99,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Role Details
-            </CardTitle>
+            <CardTitle>Role Details</CardTitle>
             <CardDescription>
               Configure the basic role information
             </CardDescription>
@@ -158,18 +122,16 @@ export const RoleForm: React.FC<RoleFormProps> = ({
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Describe the role and its responsibilities..."
+                placeholder="Describe what this role is responsible for..."
                 rows={3}
               />
             </div>
 
             <div className="flex items-center space-x-2">
-              <Checkbox
+              <Switch
                 id="is_active"
                 checked={formData.is_active}
-                onCheckedChange={(checked) => 
-                  setFormData(prev => ({ ...prev, is_active: !!checked }))
-                }
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
               />
               <Label htmlFor="is_active">Active Role</Label>
             </div>
@@ -180,52 +142,13 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           <CardHeader>
             <CardTitle>Permissions</CardTitle>
             <CardDescription>
-              {loadingPermissions ? 'Loading permissions...' : 'Select the permissions for this role'}
+              Select which permissions this role should have
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {loadingPermissions ? (
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="animate-pulse">
-                    <div className="h-4 bg-muted rounded w-24 mb-2"></div>
-                    <div className="h-3 bg-muted rounded w-48"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-6">
-                {Object.entries(permissionsByCategory).map(([category, permissions]) => (
-                  <div key={category}>
-                    <h4 className="font-medium mb-3 capitalize">{category} Permissions</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {permissions.map(permission => (
-                        <div key={permission.id} className="flex items-start space-x-2">
-                          <Checkbox
-                            id={permission.id}
-                            checked={selectedPermissions.includes(permission.id)}
-                            onCheckedChange={() => togglePermission(permission.id)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <Label 
-                              htmlFor={permission.id}
-                              className="text-sm font-medium cursor-pointer"
-                            >
-                              {permission.label}
-                            </Label>
-                            {permission.description && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {permission.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="text-center py-8 text-muted-foreground">
+              <p>Permission assignment will be available when the backend is ready.</p>
+            </div>
           </CardContent>
         </Card>
 
@@ -233,7 +156,7 @@ export const RoleForm: React.FC<RoleFormProps> = ({
           <Button type="button" variant="outline" onClick={onBack}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading || loadingPermissions}>
+          <Button type="submit" disabled={isLoading}>
             <Save className="h-4 w-4 mr-2" />
             {isLoading ? 'Saving...' : 'Save Role'}
           </Button>
