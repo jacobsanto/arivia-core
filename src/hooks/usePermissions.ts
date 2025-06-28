@@ -110,22 +110,12 @@ export const usePermissions = () => {
     return userPermissions.includes('*') || userPermissions.includes(permissionKey);
   };
 
-  const getOfflineCapabilities = (): Record<string, boolean> => {
-    return user?.custom_permissions || {};
+  const getAllPermissionsList = (): string[] => {
+    return permissions.map(p => p.key);
   };
 
-  const getAllPermissionsList = (): string[] => {
-    if (!user) return [];
-    
-    // Return all available permission keys
-    const allPermissions = [
-      'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
-      'viewAssignedTasks', 'assignTasks', 'viewInventory', 'manageInventory', 
-      'approveTransfers', 'viewUsers', 'manageUsers', 'viewReports', 'viewChat', 
-      'view_damage_reports'
-    ];
-    
-    return allPermissions.filter(perm => canAccess(perm));
+  const getOfflineCapabilities = (): string[] => {
+    return permissions.filter(p => p.offline_capable).map(p => p.title);
   };
 
   useEffect(() => {
