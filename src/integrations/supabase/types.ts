@@ -1662,7 +1662,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_housekeeping_tasks_for_booking: {
+        Args: {
+          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       damage_report_status:
