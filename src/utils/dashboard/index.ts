@@ -2,7 +2,8 @@
 // Dashboard utilities export
 export { formatCurrency, formatPercentage, formatDate, formatDateTime } from './formatUtils';
 export { getTaskStatusColor, getTaskPriorityColor, isTaskOverdue } from './taskUtils';
-export { mockTaskData, mockBookingData, mockInventoryData } from './mockData';
+import { mockTaskData, mockBookingData, mockInventoryData } from './mockData';
+export { mockTaskData, mockBookingData, mockInventoryData };
 export type { TaskRecord as DashboardTaskRecord } from './taskUtils';
 
 // Re-export calculation utilities
