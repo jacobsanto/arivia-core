@@ -1,237 +1,173 @@
 
 import { useState, useEffect } from 'react';
-import { User, getDefaultPermissionsForRole } from "@/types/auth";
-import { safeRoleCast } from "@/types/auth/base";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { User, FEATURE_PERMISSIONS } from '@/types/auth';
+import { useUser } from '@/contexts/UserContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-interface UsePermissionManagementProps {
-  selectedUser: User | null;
-  updateUserPermissions: (userId: string, permissions: Record<string, boolean>) => void;
-}
-
-export const usePermissionManagement = ({ 
-  selectedUser, 
-  updateUserPermissions 
-}: UsePermissionManagementProps) => {
-  const [permissions, setPermissions] = useState<Record<string, boolean>>({});
-  const [isSaving, setIsSaving] = useState(false);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+export const usePermissionManagement = (selectedUser?: User) => {
+  const { user: currentUser } = useUser();
+  const [userPermissions, setUserPermissions] = useState<Record<string, boolean>>({});
   const [originalPermissions, setOriginalPermissions] = useState<Record<string, boolean>>({});
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Get all available permissions
+  const allPermissions = Object.entries(FEATURE_PERMISSIONS).map(([key, permission]) => ({
+    key,
+    ...permission
+  }));
+
   // Group permissions by category
-  const permissionGroups = {
-    "Properties": [
-      "viewProperties",
-      "manageProperties"
-    ],
-    "Tasks": [
-      "viewAllTasks",
-      "viewAssignedTasks",
-      "assignTasks"
-    ],
-    "Inventory": [
-      "viewInventory",
-      "manageInventory",
-      "approveTransfers"
-    ],
-    "Users": [
-      "viewUsers",
-      "manageUsers"
-    ],
-    "System": [
-      "manageSettings",
-      "viewReports"
-    ],
-    "Bookings": [
-      "manage_bookings"
-    ],
-    "Orders": [
-      "create_orders",
-      "approve_orders",
-      "finalize_orders"
-    ],
-    "Reports": [
-      "view_reports"
-    ]
-  };
-  
-  // Initialize permissions when user changes
-  useEffect(() => {
-    if (selectedUser) {
-      // Load the latest profile data directly from Supabase
-      const loadProfilePermissions = async () => {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('custom_permissions')
-            .eq('id', selectedUser.id)
-            .single();
-            
-          if (error) {
-            console.error("Error loading profile permissions:", error);
-            return;
-          }
-          
-          // Start with default role-based permissions
-          const userRole = safeRoleCast(selectedUser.role);
-          const defaultPermissions = getDefaultPermissionsForRole(userRole);
-          
-          // Use database custom permissions if available (preferred source of truth)
-          const dbCustomPermissions = profile?.custom_permissions as Record<string, boolean> || {};
-          
-          console.log("Loaded permissions from database:", dbCustomPermissions);
-          console.log("Default permissions:", defaultPermissions);
-          
-          // Combine default with custom permissions, prioritizing custom permissions
-          const initialPermissions = {
-            ...defaultPermissions,
-            ...dbCustomPermissions
-          };
-          
-          setPermissions(initialPermissions);
-          setOriginalPermissions(initialPermissions);
-          
-          console.log("Initial combined permissions:", initialPermissions);
-        } catch (error) {
-          console.error("Error in loadProfilePermissions:", error);
-        }
-      };
-      
-      loadProfilePermissions();
+  const permissionsByCategory = allPermissions.reduce((acc, permission) => {
+    if (!acc[permission.category]) {
+      acc[permission.category] = [];
     }
-  }, [selectedUser]);
-  
-  // Subscribe to changes in the user's profile for real-time updates
+    acc[permission.category].push(permission);
+    return acc;
+  }, {} as Record<string, typeof allPermissions>);
+
+  // Load user permissions
   useEffect(() => {
     if (!selectedUser) return;
-    
-    const channel = supabase
-      .channel(`profile-permissions-${selectedUser.id}`)
-      .on('postgres_changes', { 
-        event: 'UPDATE', 
-        schema: 'public', 
-        table: 'profiles',
-        filter: `id=eq.${selectedUser.id}`
-      }, (payload) => {
-        console.log("Profile permissions updated:", payload);
-        if (payload.new && (payload.new as any).custom_permissions) {
-          // Reload permissions when profile is updated
-          const updatedCustomPermissions = (payload.new as any).custom_permissions as Record<string, boolean>;
-          const userRole = safeRoleCast(selectedUser.role);
-          const defaultPermissions = getDefaultPermissionsForRole(userRole);
-          
-          const updatedPermissions = {
-            ...defaultPermissions,
-            ...updatedCustomPermissions
-          };
-          
-          setPermissions(updatedPermissions);
-          setOriginalPermissions(updatedPermissions);
-          
-          toast.info("Permissions updated", {
-            description: "Another admin has updated this user's permissions"
-          });
-        }
-      })
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(channel);
+
+    const loadUserPermissions = async () => {
+      setIsLoading(true);
+      try {
+        // Get user's role-based permissions
+        const defaultPermissions = getRolePermissions(selectedUser.role);
+        
+        // Get user's custom permissions
+        const customPermissions = selectedUser.customPermissions || {};
+        
+        // Combine default and custom permissions
+        const combinedPermissions: Record<string, boolean> = {};
+        allPermissions.forEach(permission => {
+          const hasRolePermission = defaultPermissions.includes(permission.key);
+          const hasCustomPermission = customPermissions[permission.key];
+          combinedPermissions[permission.key] = hasCustomPermission !== undefined 
+            ? hasCustomPermission 
+            : hasRolePermission;
+        });
+
+        setUserPermissions(combinedPermissions);
+        setOriginalPermissions(combinedPermissions);
+        setHasChanges(false);
+      } catch (error) {
+        console.error('Error loading user permissions:', error);
+        toast.error('Failed to load user permissions');
+      } finally {
+        setIsLoading(false);
+      }
     };
+
+    loadUserPermissions();
   }, [selectedUser]);
-  
-  const handlePermissionToggle = (key: string) => {
-    setPermissions(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
+
+  // Get default permissions for a role
+  const getRolePermissions = (role: string): string[] => {
+    const rolePermissions: Record<string, string[]> = {
+      superadmin: Object.keys(FEATURE_PERMISSIONS),
+      tenant_admin: [
+        'viewDashboard', 'viewProperties', 'manageProperties', 'viewAllTasks', 
+        'assignTasks', 'viewInventory', 'manageInventory', 'viewUsers', 
+        'manageUsers', 'viewReports', 'viewChat', 'view_damage_reports'
+      ],
+      property_manager: [
+        'viewDashboard', 'viewProperties', 'viewAllTasks', 'assignTasks', 
+        'viewInventory', 'viewReports', 'viewChat'
+      ],
+      housekeeping_staff: [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+      ],
+      maintenance_staff: [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewInventory', 'viewChat'
+      ],
+      inventory_manager: [
+        'viewDashboard', 'viewInventory', 'manageInventory', 'approveTransfers', 
+        'viewReports', 'viewChat'
+      ],
+      concierge: [
+        'viewDashboard', 'viewAssignedTasks', 'viewProperties', 'viewChat'
+      ]
+    };
+    
+    return rolePermissions[role] || [];
   };
-  
-  const handleSave = async () => {
+
+  // Toggle a permission
+  const togglePermission = (permissionKey: string) => {
     if (!selectedUser) return;
+
+    const newPermissions = {
+      ...userPermissions,
+      [permissionKey]: !userPermissions[permissionKey]
+    };
     
-    // Check if there are actual changes
-    const hasChanges = Object.keys(permissions).some(
-      key => permissions[key] !== originalPermissions[key]
+    setUserPermissions(newPermissions);
+    
+    // Check if there are changes
+    const hasChangesNow = Object.keys(newPermissions).some(
+      key => newPermissions[key] !== originalPermissions[key]
     );
-    
-    if (!hasChanges) {
-      toast.info("No changes to save", {
-        description: "No permissions were changed"
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    
+    setHasChanges(hasChangesNow);
+  };
+
+  // Save permissions
+  const savePermissions = async () => {
+    if (!selectedUser || !hasChanges) return;
+
+    setIsLoading(true);
     try {
-      // First, save directly to Supabase for reliability
+      // Calculate custom permissions (differences from role defaults)
+      const roleDefaults = getRolePermissions(selectedUser.role);
+      const customPermissions: Record<string, boolean> = {};
+      
+      Object.keys(userPermissions).forEach(key => {
+        const hasRolePermission = roleDefaults.includes(key);
+        const currentPermission = userPermissions[key];
+        
+        // Only store custom permissions that differ from role defaults
+        if (currentPermission !== hasRolePermission) {
+          customPermissions[key] = currentPermission;
+        }
+      });
+
+      // Update user profile with custom permissions
       const { error } = await supabase
         .from('profiles')
-        .update({ 
-          custom_permissions: permissions 
-        })
+        .update({ custom_permissions: customPermissions })
         .eq('id', selectedUser.id);
-      
-      if (error) {
-        throw error;
-      }
-      
-      // Then update through context to keep local state in sync
-      await updateUserPermissions(selectedUser.id, permissions);
-      
-      // Update original permissions to match current permissions
-      setOriginalPermissions({...permissions});
-      
-      toast.success("Permissions saved successfully", {
-        description: "User permissions have been updated"
-      });
+
+      if (error) throw error;
+
+      setOriginalPermissions(userPermissions);
+      setHasChanges(false);
+      toast.success('Permissions updated successfully');
     } catch (error) {
-      console.error("Error saving permissions:", error);
-      toast.error("Failed to save permissions", {
-        description: error instanceof Error ? error.message : "An unknown error occurred"
-      });
+      console.error('Error saving permissions:', error);
+      toast.error('Failed to save permissions');
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
   };
-  
-  const handleResetToDefault = () => {
-    if (!selectedUser) return;
-    
-    if (confirm("Are you sure you want to reset to default permissions based on role?")) {
-      const userRole = safeRoleCast(selectedUser.role);
-      const defaultPermissions = getDefaultPermissionsForRole(userRole);
-      setPermissions(defaultPermissions);
-      toast.info("Permissions reset to role defaults", {
-        description: "Changes won't be saved until you click Save"
-      });
-    }
+
+  // Reset permissions
+  const resetPermissions = () => {
+    setUserPermissions(originalPermissions);
+    setHasChanges(false);
   };
-  
-  // Filter permissions based on selected category
-  const getFilteredPermissions = () => {
-    if (activeCategory === "all") {
-      return Object.keys(permissionGroups).reduce((acc, group) => {
-        return [...acc, ...permissionGroups[group as keyof typeof permissionGroups]];
-      }, [] as string[]);
-    }
-    
-    return permissionGroups[activeCategory as keyof typeof permissionGroups] || [];
-  };
-  
+
   return {
-    permissions,
-    isSaving,
-    activeCategory,
-    permissionGroups,
-    handlePermissionToggle,
-    handleSave,
-    handleResetToDefault,
-    setActiveCategory,
-    getFilteredPermissions
+    userPermissions,
+    originalPermissions,
+    allPermissions,
+    permissionsByCategory,
+    isLoading,
+    hasChanges,
+    togglePermission,
+    savePermissions,
+    resetPermissions,
+    getRolePermissions
   };
 };
-
-export default usePermissionManagement;

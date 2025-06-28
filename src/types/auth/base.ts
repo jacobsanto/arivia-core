@@ -187,16 +187,18 @@ export const safeRoleCast = (role: string): UserRole => {
   return validRoles.includes(role as UserRole) ? (role as UserRole) : 'property_manager';
 };
 
-// Convert UserProfile to User type
+// Convert UserProfile to User type with proper type safety
 export const profileToUser = (profile: any): User => {
   return {
     id: profile.id,
-    name: profile.name,
-    email: profile.email,
-    role: safeRoleCast(profile.role),
+    name: profile.name || '',
+    email: profile.email || '',
+    role: safeRoleCast(profile.role || 'property_manager'),
     phone: profile.phone,
     avatar: profile.avatar,
-    secondaryRoles: profile.secondary_roles?.map((role: string) => safeRoleCast(role)),
-    customPermissions: profile.custom_permissions || {}
+    secondaryRoles: profile.secondary_roles?.map((role: string) => safeRoleCast(role)) || [],
+    customPermissions: (typeof profile.custom_permissions === 'object' && profile.custom_permissions !== null) 
+      ? profile.custom_permissions as Record<string, boolean> 
+      : {}
   };
 };
