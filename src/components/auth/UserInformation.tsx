@@ -6,13 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { User, Edit3, Mail, Phone, Shield, Calendar } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import ProfileForm from "./forms/ProfileForm";
 import AvatarUpload from "./avatar/AvatarUpload";
 import { profileToUser } from "@/types/auth/base";
 
 const UserInformation = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
