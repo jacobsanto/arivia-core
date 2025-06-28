@@ -73,14 +73,14 @@ const UserInformation = () => {
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row gap-6">
             <div className="flex-shrink-0">
-              <AvatarUpload userId={user.id} currentAvatar={user.avatar} />
+              <AvatarUpload user={convertedUser} currentAvatar={user.avatar} />
             </div>
             
             <div className="flex-1 space-y-4">
               {isEditing ? (
                 <ProfileForm
                   user={convertedUser}
-                  onSave={handleSave}
+                  onSubmit={handleSave}
                   onCancel={() => setIsEditing(false)}
                   isLoading={isUpdating}
                 />
