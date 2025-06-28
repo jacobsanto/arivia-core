@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
-import { User } from "@/types/auth";
+import { User, UserProfile } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +14,6 @@ import DeleteAllUsersDialog from "./role-management/DeleteAllUsersDialog";
 import RolePermissionCRUD from "./role-permission-crud/RolePermissionCRUD";
 import { useRoleManagement } from "./role-management/useRoleManagement";
 import { profileToUser } from "@/types/auth/base";
-import type { UserProfile } from "@/contexts/UserContext";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
@@ -88,18 +87,17 @@ const RoleManagement: React.FC = () => {
           
           <TabsContent value="roles" className="mt-4">
             <UserRolesList 
-              users={users}
+              users={users.map(convertToUser)}
               isLoading={isLoading}
-              currentUser={convertToUser(user)}
-              onEditPermissions={(userProfile) => {
-                const convertedUser = convertToUser(userProfile);
-                setSelectedUser(convertedUser);
+              currentUser={user ? convertToUser(user) : null}
+              onEditPermissions={(user) => {
+                setSelectedUser(user);
                 setActiveTab("permissions");
-                return convertedUser;
+                return user;
               }}
-              onDeleteClick={(userProfile) => setUserToDelete(convertToUser(userProfile))}
+              onDeleteClick={(user) => setUserToDelete(user)}
               setActiveTab={setActiveTab}
-              setSelectedUser={(userProfile) => setSelectedUser(convertToUser(userProfile))}
+              setSelectedUser={setSelectedUser}
             />
           </TabsContent>
           

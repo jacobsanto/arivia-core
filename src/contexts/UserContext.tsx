@@ -2,17 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
-
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  phone?: string;
-  avatar?: string;
-  secondary_roles?: string[];
-  custom_permissions?: Record<string, boolean>;
-}
+import { UserProfile } from '@/types/auth/base';
 
 interface UserContextType {
   user: UserProfile | null;
