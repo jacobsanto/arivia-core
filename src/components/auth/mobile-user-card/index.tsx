@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { User, UserRole } from "@/types/auth";
+import { User, UserRole, safeRoleCast } from "@/types/auth/base";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
@@ -28,9 +28,9 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
 }) => {
   const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
+  const [selectedRole, setSelectedRole] = useState<UserRole>(safeRoleCast(user.role));
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
-    user.secondaryRoles || []
+    user.secondaryRoles?.map(role => safeRoleCast(role)) || []
   );
   const [isSaving, setIsSaving] = useState(false);
   
@@ -40,8 +40,8 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
   
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setSelectedRole(user.role);
-    setSelectedSecondaryRoles(user.secondaryRoles || []);
+    setSelectedRole(safeRoleCast(user.role));
+    setSelectedSecondaryRoles(user.secondaryRoles?.map(role => safeRoleCast(role)) || []);
   };
   
   const handleSaveRole = async () => {
@@ -56,15 +56,15 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
     setIsSaving(true);
     try {
       // Call the updateProfile function from UserContext
-      const success = await updateProfile(user.id, {
+      await updateProfile({
+        name: user.name,
+        email: user.email,
         role: selectedRole,
-        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+        secondaryRoles: selectedRole === "superladmin" ? selectedSecondaryRoles : undefined
       });
       
-      if (success) {
-        setIsEditing(false);
-        toast.success("User role updated successfully");
-      }
+      setIsEditing(false);
+      toast.success("User role updated successfully");
     } catch (error) {
       toast.error("Failed to update role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"

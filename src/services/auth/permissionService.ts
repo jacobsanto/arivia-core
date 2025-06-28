@@ -1,5 +1,6 @@
 
-import { User, UserRole, FEATURE_PERMISSIONS } from "@/types/auth";
+import { User, FEATURE_PERMISSIONS } from "@/types/auth";
+import { UserRole, safeRoleCast } from "@/types/auth/base";
 
 /**
  * Check if a user has permission for specific roles
@@ -8,16 +9,17 @@ export const checkRolePermission = (user: User | null, roles: UserRole[]): boole
   if (!user) return false;
   
   // Superadmin has all permissions
-  if (user.role === "superadmin") return true;
+  const userRole = safeRoleCast(user.role);
+  if (userRole === "superadmin") return true;
   
   // Check if user's primary role is in the list
-  if (roles.includes(user.role)) {
+  if (roles.includes(userRole)) {
     return true;
   }
   
   // Check if any of the user's secondary roles are in the list
   if (user.secondaryRoles && user.secondaryRoles.length > 0) {
-    return user.secondaryRoles.some(role => roles.includes(role));
+    return user.secondaryRoles.some(role => roles.includes(safeRoleCast(role)));
   }
   
   return false;
@@ -30,7 +32,8 @@ export const checkFeatureAccess = (user: User | null, featureKey: string): boole
   if (!user) return false;
   
   // Superadmin always has access to everything
-  if (user.role === "superadmin") return true;
+  const userRole = safeRoleCast(user.role);
+  if (userRole === "superadmin") return true;
   
   // Check custom permissions first if they exist
   if (user.customPermissions && user.customPermissions[featureKey] !== undefined) {
@@ -42,13 +45,13 @@ export const checkFeatureAccess = (user: User | null, featureKey: string): boole
   if (!permission) return false;
   
   // Check if user's role is in the allowed roles
-  if (permission.allowedRoles.includes(user.role)) {
+  if (permission.allowedRoles.includes(userRole)) {
     return true;
   }
   
   // Check if any of the user's secondary roles are allowed
   if (user.secondaryRoles && user.secondaryRoles.length > 0) {
-    return user.secondaryRoles.some(role => permission.allowedRoles.includes(role));
+    return user.secondaryRoles.some(role => permission.allowedRoles.includes(safeRoleCast(role)));
   }
   
   return false;

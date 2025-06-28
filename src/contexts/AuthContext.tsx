@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole } from "@/types/auth";
+import { User, safeRoleCast } from "@/types/auth/base";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
 import { isAuthorizedRole } from "@/lib/utils/routing";
@@ -38,19 +37,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (profile) {
+          const userRole = safeRoleCast(profile.role);
           const newUser = {
             id: data.session.user.id,
             email: data.session.user.email || '',
             name: profile.name || data.session.user.email?.split('@')[0] || 'User',
-            role: profile.role as UserRole || 'property_manager',
+            role: userRole,
             avatar: profile.avatar || "/placeholder.svg",
             phone: profile.phone,
-            secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
+            secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map((role: string) => safeRoleCast(role)) : undefined,
             customPermissions: profile.custom_permissions as Record<string, boolean> || {}
           };
 
           // Check if user has authorized role for internal access
-          if (!isAuthorizedRole(newUser.role)) {
+          if (!isAuthorizedRole(userRole)) {
             await supabase.auth.signOut();
             setUser(null);
             setSession(null);
@@ -92,19 +92,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .single()
               .then(({ data: profile }) => {
                 if (profile) {
+                  const userRole = safeRoleCast(profile.role);
                   const newUser = {
                     id: newSession.user.id,
                     email: newSession.user.email || '',
                     name: profile.name || newSession.user.email?.split('@')[0] || 'User',
-                    role: profile.role as UserRole || 'property_manager',
+                    role: userRole,
                     avatar: profile.avatar || "/placeholder.svg",
                     phone: profile.phone,
-                    secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
+                    secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map((role: string) => safeRoleCast(role)) : undefined,
                     customPermissions: profile.custom_permissions as Record<string, boolean> || {}
                   };
 
                   // Check if user has authorized role for internal access
-                  if (!isAuthorizedRole(newUser.role)) {
+                  if (!isAuthorizedRole(userRole)) {
                     supabase.auth.signOut();
                     setUser(null);
                     setError("Access denied: Unauthorized role");
@@ -133,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     session,
     isLoading,
-    isAuthenticated: !!user && !!session && user.role !== undefined && isAuthorizedRole(user.role),
+    isAuthenticated: !!user && !!session && user.role !== undefined && isAuthorizedRole(safeRoleCast(user.role)),
     error,
     refreshAuthState
   };

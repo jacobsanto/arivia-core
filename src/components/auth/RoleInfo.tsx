@@ -1,18 +1,19 @@
-
 import React from "react";
-import { User, UserRole, ROLE_DETAILS } from "@/types/auth";
+import { User, ROLE_DETAILS } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, User as UserIcon } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileRoleInfo from "./MobileRoleInfo";
+import { safeRoleCast } from "@/types/auth/base";
 
 interface RoleInfoProps {
   user: User;
 }
 
-const getRoleBadgeVariant = (role: UserRole) => {
-  switch (role) {
+const getRoleBadgeVariant = (role: string) => {
+  const safeRole = safeRoleCast(role);
+  switch (safeRole) {
     case "superadmin":
       return "destructive";
     case "tenant_admin":
@@ -24,8 +25,9 @@ const getRoleBadgeVariant = (role: UserRole) => {
   }
 };
 
-const getRoleIcon = (role: UserRole) => {
-  if (role === "superadmin" || role === "tenant_admin") {
+const getRoleIcon = (role: string) => {
+  const safeRole = safeRoleCast(role);
+  if (safeRole === "superadmin" || safeRole === "tenant_admin") {
     return <Shield className="h-5 w-5" />;
   }
   return <UserIcon className="h-5 w-5" />;
@@ -38,7 +40,8 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ user }) => {
     return <MobileRoleInfo user={user} />;
   }
   
-  const roleDetails = ROLE_DETAILS[user.role];
+  const safeRole = safeRoleCast(user.role);
+  const roleDetails = ROLE_DETAILS[safeRole];
   
   return (
     <Card>
@@ -60,7 +63,7 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ user }) => {
           </div>
           <div>
             <h4 className="text-sm font-semibold">Access Level</h4>
-            <AccessLevelIndicator role={user.role} />
+            <AccessLevelIndicator role={safeRole} />
           </div>
         </div>
       </CardContent>
@@ -68,7 +71,7 @@ const RoleInfo: React.FC<RoleInfoProps> = ({ user }) => {
   );
 };
 
-const AccessLevelIndicator: React.FC<{ role: UserRole }> = ({ role }) => {
+const AccessLevelIndicator: React.FC<{ role: string }> = ({ role }) => {
   const accessLevels = [
     { roles: ["housekeeping_staff", "maintenance_staff"], level: "Basic" },
     { roles: ["concierge", "inventory_manager"], level: "Standard" },

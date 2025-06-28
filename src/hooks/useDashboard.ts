@@ -1,78 +1,95 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { DateRange } from "@/components/reports/DateRangeSelector";
-import { startOfDay, endOfDay, addDays } from "date-fns";
-import { toastService } from "@/services/toast";
-import { fetchDashboardData, TaskRecord, DashboardData } from "@/utils/dashboard";
-import { refreshDashboardData } from "@/utils/dashboard";
+import { useState, useEffect } from 'react';
+import { Task } from '@/services/task-management/task.service';
+import { useTaskManagement } from './useTaskManagement';
+import { 
+  refreshDashboardData, 
+  setupAutoRefresh, 
+  getRefreshStatus,
+  mockBookingData,
+  mockTaskData,
+  mockInventoryData,
+  calculateOccupancyRate,
+  generateFinancialSummary,
+  calculateTaskCompletion
+} from '@/utils/dashboard';
+
+export interface DashboardData {
+  tasks: Task[];
+  bookings: any[];
+  occupancyRate: number;
+  financialSummary: any;
+  taskCompletion: number;
+  inventoryAlerts: any[];
+}
 
 export const useDashboard = () => {
-  const [selectedProperty, setSelectedProperty] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: startOfDay(new Date()),
-    to: endOfDay(addDays(new Date(), 7))
-  });
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [lastRefreshed, setLastRefreshed] = useState<Date>(new Date());
+  const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  const { tasks } = useTaskManagement();
 
-  const loadDashboardData = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
+  const fetchDashboardData = async (): Promise<DashboardData> => {
     try {
-      const safeRange = {
-        from: dateRange.from || new Date(),
-        to: dateRange.to || new Date()
+      // Use mock data and calculations
+      const bookings = mockBookingData;
+      const inventoryData = mockInventoryData;
+      
+      const dashboardData: DashboardData = {
+        tasks: tasks || [],
+        bookings,
+        occupancyRate: calculateOccupancyRate(bookings),
+        financialSummary: generateFinancialSummary(bookings),
+        taskCompletion: calculateTaskCompletion(tasks || []),
+        inventoryAlerts: inventoryData.filter(item => item.quantity <= item.minQuantity)
       };
       
-      const data = await fetchDashboardData(selectedProperty, safeRange);
-      setDashboardData(data);
-      setLastRefreshed(new Date());
-      return data;
+      return dashboardData;
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      throw error;
+    }
+  };
+
+  const refresh = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const dashboardData = await fetchDashboardData();
+      setData(dashboardData);
+      setLastRefresh(new Date());
+      
+      // Call the dashboard refresh function
+      await refreshDashboardData();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
-      setError(errorMessage);
-      throw err;
+      setError(err instanceof Error ? err.message : 'Failed to refresh dashboard');
     } finally {
       setIsLoading(false);
     }
-  }, [selectedProperty, dateRange]);
+  };
 
   useEffect(() => {
-    let isMounted = true;
+    refresh();
     
-    loadDashboardData().catch(err => {
-      if (!isMounted) return;
-    });
+    // Set up auto-refresh
+    const interval = setupAutoRefresh(refresh, 30000);
     
     return () => {
-      isMounted = false;
+      if (interval) {
+        clearInterval(interval);
+      }
     };
-  }, [loadDashboardData]);
-
-  const handlePropertyChange = useCallback((property: string) => {
-    setSelectedProperty(property);
-  }, []);
-
-  const handleDateRangeChange = useCallback((range: DateRange) => {
-    setDateRange(range);
-  }, []);
-
-  const refreshDashboard = useCallback(() => {
-    return refreshDashboardData(loadDashboardData);
-  }, [loadDashboardData]);
+  }, [tasks]);
 
   return {
-    selectedProperty,
-    dateRange,
-    dashboardData,
-    lastRefreshed,
-    handlePropertyChange,
-    handleDateRangeChange,
-    refreshDashboard,
+    data,
     isLoading,
-    error
+    error,
+    refresh,
+    lastRefresh,
+    refreshStatus: getRefreshStatus()
   };
 };

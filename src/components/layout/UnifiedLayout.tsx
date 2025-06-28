@@ -1,52 +1,53 @@
 
-import React, { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import Sidebar from "./Sidebar";
-import Header from "./Header";
-import MobileSidebar from "./MobileSidebar";
-import MobileBottomNav from "./MobileBottomNav";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "@/contexts/AuthContext";
-import TenantBranding from "@/lib/tenant/components/TenantBranding";
+import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
+import { useUser } from '@/contexts/UserContext';
+import { Sidebar } from './Sidebar';
+import { Header } from './Header';
+import { MobileSidebar } from './MobileSidebar';
+import { MobileNavigation } from './MobileNavigation';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-const UnifiedLayout = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const UnifiedLayout: React.FC = () => {
+  const { user } = useUser();
   const isMobile = useIsMobile();
-  const { user } = useAuth();
-  const location = useLocation();
-  
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(prev => !prev);
-  };
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+  if (!user) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <TenantBranding>
-      <div className="flex min-h-screen bg-background overflow-hidden">
-        {/* Desktop sidebar - hidden on mobile */}
-        {!isMobile && <Sidebar />}
+    <div className="min-h-screen bg-background">
+      <Header onMobileMenuToggle={() => setIsMobileSidebarOpen(true)} />
+      
+      <div className="flex h-[calc(100vh-3.5rem)]">
+        {/* Desktop Sidebar */}
+        {!isMobile && (
+          <aside className="w-64 border-r bg-background">
+            <Sidebar />
+          </aside>
+        )}
         
-        <div className="flex flex-col flex-1 w-full overflow-hidden">
-          <Header onMobileMenuToggle={toggleMobileMenu} />
-          
-          <ScrollArea className="flex-1" orientation="vertical">
-            <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
-              <div className="max-w-full mx-auto">
-                <Outlet />
-              </div>
-            </div>
-          </ScrollArea>
-          
-          {/* Mobile navigation - only visible on mobile */}
-          {isMobile && (
-            <>
-              <MobileSidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
-              <MobileBottomNav onOpenMenu={toggleMobileMenu} />
-            </>
-          )}
-        </div>
+        {/* Mobile Sidebar */}
+        {isMobile && (
+          <MobileSidebar 
+            isOpen={isMobileSidebarOpen}
+            onClose={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+        
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">
+          <div className="container mx-auto p-6 pb-20 md:pb-6">
+            <Outlet />
+          </div>
+        </main>
       </div>
-    </TenantBranding>
+      
+      {/* Mobile Navigation */}
+      {isMobile && <MobileNavigation />}
+    </div>
   );
 };
 

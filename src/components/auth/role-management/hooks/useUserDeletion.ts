@@ -21,18 +21,14 @@ export const useUserDeletion = () => {
       console.log("Starting delete operation for user:", userToDelete.id);
       
       // Call the deleteUser function from the context
-      const result = await deleteUser(userToDelete.id);
+      await deleteUser(userToDelete.id);
       
-      if (result) {
-        console.log("User deleted successfully");
-        toast.success("User deleted successfully");
-        
-        // No need to update the users array here - will happen via realtime subscription
-        setUserToDelete(null);
-        return true;
-      } else {
-        throw new Error("Delete operation failed");
-      }
+      console.log("User deleted successfully");
+      toast.success("User deleted successfully");
+      
+      // No need to update the users array here - will happen via realtime subscription
+      setUserToDelete(null);
+      return true;
     } catch (error) {
       console.error("Error in handleDeleteConfirm:", error);
       toast.error("Failed to delete user", {
@@ -56,12 +52,8 @@ export const useUserDeletion = () => {
       for (const user of usersToDelete) {
         try {
           console.log(`Attempting to delete user: ${user.id} (${user.name})`);
-          const result = await deleteUser(user.id);
-          if (result) {
-            successCount++;
-          } else {
-            failCount++;
-          }
+          await deleteUser(user.id);
+          successCount++;
           // Small delay to prevent overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {

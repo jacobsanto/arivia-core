@@ -6,6 +6,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobileLogin from "@/components/auth/MobileLogin";
 import { useAuth } from "@/contexts/AuthContext";
 import { getRoleBasedRoute } from "@/lib/utils/routing";
+import { safeRoleCast } from "@/types/auth/base";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -14,7 +15,8 @@ const Login = () => {
 
   useEffect(() => {
     if (isAuthenticated && !isLoading && user) {
-      const redirectPath = getRoleBasedRoute(user.role);
+      const userRole = safeRoleCast(user.role);
+      const redirectPath = getRoleBasedRoute(userRole);
       navigate(redirectPath, { replace: true });
     }
   }, [isAuthenticated, isLoading, user, navigate]);

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserRole } from '@/types/auth';
+import { UserRole, safeRoleCast } from '@/types/auth/base';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,7 +24,9 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/internal/login" replace />;
   }
 
-  if (!allowedRoles.includes(user.role)) {
+  // Use safeRoleCast to handle string to UserRole conversion
+  const userRole = safeRoleCast(user.role);
+  if (!allowedRoles.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

@@ -18,7 +18,31 @@ export interface TaskRecord {
   due_date?: string;
   assigned_to?: string;
   property_id?: string;
+  location?: string; // Add location property
 }
+
+// Dashboard data interface
+export interface DashboardData {
+  tasks: any[];
+  bookings: any[];
+  occupancyRate: number;
+  financialSummary: any;
+  taskCompletion: number;
+  inventoryAlerts: any[];
+}
+
+// Fetch dashboard data function
+export const fetchDashboardData = async (): Promise<DashboardData> => {
+  // Mock implementation - replace with actual data fetching
+  return {
+    tasks: mockTaskData,
+    bookings: mockBookingData,
+    occupancyRate: calculateOccupancyRate(mockBookingData),
+    financialSummary: generateFinancialSummary(mockBookingData),
+    taskCompletion: calculateTaskCompletion(mockTaskData),
+    inventoryAlerts: mockInventoryData.filter(item => item.quantity <= item.minQuantity)
+  };
+};
 
 // Placeholder functions for refresh functionality
 export const refreshDashboardData = async () => {
