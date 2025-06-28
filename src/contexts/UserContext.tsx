@@ -73,159 +73,149 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   };
 
   const refreshProfile = async () => {
-    if (!session?.user) return;
+    if (!session?.user) {
+      console.log('No session user found for profile refresh');
+      return;
+    }
     
     try {
-      // Try to fetch profile with roles joined from user_roles table
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select(`
-          *,
-          user_roles!inner (
-            roles!inner (
-              name
-            )
-          )
-        `)
-        .eq('id', session.user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching profile with roles:', error);
-        // Fallback to basic profile fetch
-        const { data: basicProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (basicProfile) {
-          const userProfile: UserProfile = {
-            id: basicProfile.id,
-            name: basicProfile.name,
-            email: basicProfile.email,
-            role: basicProfile.role,
-            phone: basicProfile.phone,
-            avatar: basicProfile.avatar,
-            secondary_roles: basicProfile.secondary_roles || [],
-            custom_permissions: safeConvertCustomPermissions(basicProfile.custom_permissions)
-          };
-          setUser(userProfile);
-        }
-        return;
-      }
-      
-      if (profile) {
-        // Extract role from the joined data - check if user_roles exists and has data
-        const roleFromJoin = profile.user_roles && Array.isArray(profile.user_roles) && profile.user_roles.length > 0 
-          ? profile.user_roles[0]?.roles?.name 
-          : null;
-        
-        const userProfile: UserProfile = {
-          id: profile.id,
-          name: profile.name,
-          email: profile.email,
-          role: roleFromJoin || profile.role, // Use joined role or fallback to profile role
-          phone: profile.phone,
-          avatar: profile.avatar,
-          secondary_roles: profile.secondary_roles || [],
-          custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
-        };
-        setUser(userProfile);
-      }
+      console.log('Refreshing profile for user:', session.user.id);
+      await fetchProfileForSession(session);
     } catch (error) {
       console.error('Error in refreshProfile:', error);
     }
   };
 
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        setSession(session);
-        
-        if (session?.user) {
-          // Fetch user profile with roles
-          await refreshProfileForSession(session);
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      }
-    );
+  const fetchProfileForSession = async (sessionData: Session) => {
+    if (!sessionData?.user) {
+      console.log('No user in session data');
+      return;
+    }
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
-        refreshProfileForSession(session);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const refreshProfileForSession = async (session: Session) => {
     try {
-      // Try to fetch profile with roles joined
-      const { data: profile } = await supabase
+      console.log('Fetching profile for user:', sessionData.user.id);
+      
+      // Simple profile fetch first - no complex joins
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles!inner (
-            roles!inner (
-              name
-            )
-          )
-        `)
-        .eq('id', session.user.id)
+        .select('*')
+        .eq('id', sessionData.user.id)
         .single();
       
-      if (profile) {
-        const roleFromJoin = profile.user_roles && Array.isArray(profile.user_roles) && profile.user_roles.length > 0 
-          ? profile.user_roles[0]?.roles?.name 
-          : null;
+      if (error) {
+        console.error('Error fetching basic profile:', error);
         
+        // Create a basic user profile from session data if profile doesn't exist
+        const basicUserProfile: UserProfile = {
+          id: sessionData.user.id,
+          name: sessionData.user.email?.split('@')[0] || 'User',
+          email: sessionData.user.email || '',
+          role: 'property_manager', // default role
+          secondary_roles: [],
+          custom_permissions: {}
+        };
+        
+        console.log('Using basic profile from session:', basicUserProfile);
+        setUser(basicUserProfile);
+        return;
+      }
+      
+      if (profile) {
         const userProfile: UserProfile = {
           id: profile.id,
           name: profile.name,
           email: profile.email,
-          role: roleFromJoin || profile.role,
+          role: profile.role,
           phone: profile.phone,
           avatar: profile.avatar,
           secondary_roles: profile.secondary_roles || [],
           custom_permissions: safeConvertCustomPermissions(profile.custom_permissions)
         };
-        setUser(userProfile);
-      } else {
-        // Fallback to basic profile if no roles are assigned
-        const { data: basicProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
         
-        if (basicProfile) {
-          const userProfile: UserProfile = {
-            id: basicProfile.id,
-            name: basicProfile.name,
-            email: basicProfile.email,
-            role: basicProfile.role,
-            phone: basicProfile.phone,
-            avatar: basicProfile.avatar,
-            secondary_roles: basicProfile.secondary_roles || [],
-            custom_permissions: safeConvertCustomPermissions(basicProfile.custom_permissions)
-          };
-          setUser(userProfile);
-        }
+        console.log('Profile fetched successfully:', userProfile);
+        setUser(userProfile);
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Error in fetchProfileForSession:', error);
+      
+      // Fallback: create basic profile from session
+      if (sessionData.user) {
+        const fallbackProfile: UserProfile = {
+          id: sessionData.user.id,
+          name: sessionData.user.email?.split('@')[0] || 'User',
+          email: sessionData.user.email || '',
+          role: 'property_manager',
+          secondary_roles: [],
+          custom_permissions: {}
+        };
+        
+        console.log('Using fallback profile:', fallbackProfile);
+        setUser(fallbackProfile);
+      }
     }
   };
+
+  useEffect(() => {
+    console.log('Setting up auth state listener');
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        
+        try {
+          setSession(session);
+          
+          if (session?.user) {
+            console.log('User session found, fetching profile');
+            await fetchProfileForSession(session);
+          } else {
+            console.log('No user session, clearing user state');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error in auth state change handler:', error);
+        } finally {
+          console.log('Setting loading to false');
+          setLoading(false);
+        }
+      }
+    );
+
+    // Check for existing session with timeout
+    const sessionTimeout = setTimeout(async () => {
+      try {
+        console.log('Checking for existing session');
+        const { data: { session: existingSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setLoading(false);
+          return;
+        }
+        
+        if (existingSession) {
+          console.log('Existing session found:', existingSession.user.id);
+          setSession(existingSession);
+          await fetchProfileForSession(existingSession);
+        } else {
+          console.log('No existing session found');
+        }
+      } catch (error) {
+        console.error('Error checking existing session:', error);
+      } finally {
+        console.log('Initial session check complete, setting loading to false');
+        setLoading(false);
+      }
+    }, 100);
+
+    // Cleanup timeout if component unmounts
+    return () => {
+      console.log('Cleaning up auth subscription');
+      subscription.unsubscribe();
+      clearTimeout(sessionTimeout);
+    };
+  }, []);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
