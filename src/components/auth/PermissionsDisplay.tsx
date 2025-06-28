@@ -22,10 +22,9 @@ const PermissionsDisplay = () => {
   
   const roleDetails = ROLE_DETAILS[user.role as keyof typeof ROLE_DETAILS] || { title: user.role };
   const offlineCapabilities = getOfflineCapabilities();
-  const allPermissions = getAllPermissionsList();
   
-  // Check if user has custom permissions - use double negation for primitive boolean
-  const hasCustomPermissions: boolean = !!(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
+  // Check if user has custom permissions - explicit boolean check
+  const userHasCustomPermissions = Boolean(user.custom_permissions && Object.keys(user.custom_permissions).length > 0);
   
   // Group permissions by category
   const permissionGroups = {
@@ -60,11 +59,11 @@ const PermissionsDisplay = () => {
           <CardTitle>Your Permissions</CardTitle>
           <CardDescription>
             Access levels for {roleDetails.title}
-            {hasCustomPermissions && " (with custom permissions)"}
+            {userHasCustomPermissions && " (with custom permissions)"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {hasCustomPermissions && (
+          {userHasCustomPermissions && (
             <div className="mb-4 p-3 bg-blue-50 rounded-md flex gap-2 text-sm">
               <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0" />
               <div>
