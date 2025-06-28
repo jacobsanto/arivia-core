@@ -1,22 +1,27 @@
 
-// Export all dashboard utilities from this central file
-export * from './weeklyReviewUtils';
+// Dashboard utilities
+export { formatCurrency } from './formatUtils';
+export { generateTaskId, createTaskFromTemplate } from './taskUtils';
+export { mockBookingData, mockTaskData, mockInventoryData } from './mockData';
 export { 
-  formatMetricsForExport,
-  prepareDashboardExportData 
-} from './dataPreparationUtils';
-export * from './exportUtils';
-export { 
-  refreshDashboardData,
-  setupAutoRefresh,
-  getRefreshStatus
-} from './refreshUtils';
+  calculateOccupancyRate, 
+  generateFinancialSummary, 
+  calculateTaskCompletion 
+} from './calculationUtils';
 
-// Export fetch utilities
-export { fetchDashboardData } from './fetch/dashboardDataFetcher';
-export { fetchPropertiesData } from './fetch/propertyUtils';
-export { fetchHousekeepingTasks } from './fetch/housekeepingUtils';
-export { fetchMaintenanceTasks } from './fetch/maintenanceUtils';
+// Placeholder functions for refresh functionality
+export const refreshDashboardData = async () => {
+  console.log('Dashboard data refresh triggered');
+};
 
-// Export types
-export type { TaskRecord, DashboardData } from './types';
+export const setupAutoRefresh = (callback: () => void, interval: number = 30000) => {
+  return setInterval(callback, interval);
+};
+
+export const getRefreshStatus = () => {
+  return {
+    lastRefresh: new Date(),
+    isRefreshing: false,
+    nextRefresh: new Date(Date.now() + 30000)
+  };
+};

@@ -36,28 +36,6 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
     }
   };
 
-  // Convert CombinedTask to a format compatible with existing UI
-  const formatTaskForDisplay = (task: CombinedTask) => {
-    return {
-      id: task.id,
-      title: task.title,
-      description: task.description || '',
-      status: task.status,
-      priority: task.priority,
-      dueDate: task.due_date,
-      property: task.property_id || 'Unknown',
-      assignedTo: task.assigned_to || 'Unassigned',
-      type: task.type,
-      location: task.location || task.property_id || 'Unknown',
-      // Add missing properties with defaults
-      createdAt: task.created_at,
-      updatedAt: task.created_at,
-      checklist: [],
-      createdBy: 'system',
-      photos: []
-    };
-  };
-
   return (
     <Card className="mb-4">
       <CardHeader className="pb-3">
@@ -70,53 +48,49 @@ const TaskGroup: React.FC<TaskGroupProps> = ({
         {tasks.length === 0 ? (
           <p className="text-muted-foreground text-center py-4">No tasks scheduled</p>
         ) : (
-          tasks.map((task) => {
-            const displayTask = formatTaskForDisplay(task);
-            
-            return (
-              <div
-                key={task.id}
-                className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h4 className="font-medium text-sm">{task.title}</h4>
-                  <Badge 
-                    variant="outline" 
-                    className={`text-xs ${getStatusColor(task.status)}`}
-                  >
-                    {task.status}
-                  </Badge>
+          tasks.map((task) => (
+            <div
+              key={task.id}
+              className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-start justify-between mb-2">
+                <h4 className="font-medium text-sm">{task.title}</h4>
+                <Badge 
+                  variant="outline" 
+                  className={`text-xs ${getStatusColor(task.status)}`}
+                >
+                  {task.status}
+                </Badge>
+              </div>
+              
+              {task.description && (
+                <p className="text-sm text-muted-foreground mb-3">
+                  {task.description}
+                </p>
+              )}
+              
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>{format(new Date(task.due_date), 'HH:mm')}</span>
                 </div>
                 
-                {task.description && (
-                  <p className="text-sm text-muted-foreground mb-3">
-                    {task.description}
-                  </p>
-                )}
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" />
+                  <span>{task.property_id || 'No property'}</span>
+                </div>
                 
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{format(new Date(task.due_date), 'HH:mm')}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-3 w-3" />
-                    <span>{task.property_id || 'No property'}</span>
-                  </div>
-                  
-                  <div className="flex items-center gap-1">
-                    <User className="h-3 w-3" />
-                    <span>{task.assigned_to || 'Unassigned'}</span>
-                  </div>
-                  
-                  <div className={`flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
-                    <span className="font-medium">{task.priority}</span>
-                  </div>
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>{task.assigned_to || 'Unassigned'}</span>
+                </div>
+                
+                <div className={`flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
+                  <span className="font-medium">{task.priority}</span>
                 </div>
               </div>
-            );
-          })
+            </div>
+          ))
         )}
       </CardContent>
     </Card>

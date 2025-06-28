@@ -14,10 +14,13 @@ export class UserRoleService {
       throw new Error('Failed to fetch users');
     }
 
-    // Get user roles
+    // Get user roles with role details
     const { data: userRoles, error: rolesError } = await supabase
       .from('user_roles')
-      .select('*')
+      .select(`
+        *,
+        roles!inner(*)
+      `)
       .eq('is_active', true);
 
     if (rolesError) {
@@ -32,15 +35,7 @@ export class UserRoleService {
       email: profile.email,
       roles: userRoles
         ?.filter(ur => ur.user_id === profile.id)
-        ?.map(ur => ({
-          id: ur.role,
-          tenant_id: ur.tenant_id,
-          name: ur.role,
-          description: `${ur.role} role`,
-          is_active: ur.is_active,
-          created_at: ur.created_at,
-          updated_at: ur.updated_at
-        })) || []
+        ?.map(ur => ur.roles) || []
     }));
   }
 
@@ -49,7 +44,7 @@ export class UserRoleService {
       .from('user_roles')
       .insert([{
         user_id: userId,
-        role: roleId,
+        role_id: roleId,
         tenant_id: tenantId,
         is_active: true
       }]);
@@ -65,7 +60,7 @@ export class UserRoleService {
       .from('user_roles')
       .delete()
       .eq('user_id', userId)
-      .eq('role', roleId);
+      .eq('role_id', roleId);
 
     if (error) {
       console.error('Error revoking role:', error);
@@ -84,7 +79,7 @@ export class UserRoleService {
       // Then assign new roles
       const roleInserts = roleIds.map(roleId => ({
         user_id: userId,
-        role: roleId,
+        role_id: roleId,
         tenant_id: tenantId,
         is_active: true
       }));

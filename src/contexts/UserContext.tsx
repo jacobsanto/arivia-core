@@ -1,144 +1,198 @@
 
-import React, { createContext, useContext } from "react";
-import { User, UserRole, Session, StateSetter } from "@/types/auth";
-import { useUserState } from "./hooks";
-import { UserContextType } from "./types/userContext.types";
-import { useAuth } from "./AuthContext";
-import { 
-  login, 
-  logout, 
-  signup 
-} from "./auth/operations/supabaseAuthOperations";
-import {
-  updateAvatar,
-  removeUser,
-  getOfflineLoginStatus
-} from "./auth/operations/userOperations";
-import {
-  syncUserWithProfile,
-  updateUserProfile
-} from "./auth/operations/profileOperations";
-import {
-  hasPermissionWithAllRoles as hasPermission
-} from "@/types/auth/permissions";
-import { checkFeatureAccess } from "@/services/auth/permissionService";
-import { updatePermissions } from "./auth/operations/permissionOperations";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  phone?: string;
+  avatar?: string;
+  secondary_roles?: string[];
+  custom_permissions?: Record<string, boolean>;
+}
+
+interface UserContextType {
+  user: UserProfile | null;
+  session: Session | null;
+  loading: boolean;
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
+  signOut: () => Promise<void>;
+  updateProfile: (updates: Partial<UserProfile>) => Promise<void>;
+  deleteUser: (userId: string) => Promise<void>;
+  deleteAllUsers: () => Promise<void>;
+  fetchUsers: () => Promise<UserProfile[]>;
+}
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+export const useUser = () => {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+};
+
 interface UserProviderProps {
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
-  const { user: authUser, session, isLoading: authLoading, refreshAuthState } = useAuth();
-  
-  const { 
-    user, 
-    setUser, 
-    isLoading, 
-    setIsLoading, 
-    isOffline, 
-    lastAuthTime, 
-    setLastAuthTime, 
-    users, 
-    setUsers,
-    refreshUserProfile
-  } = useUserState();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Use auth state as source of truth
-  const currentUser = authUser || user;
-  const currentSession = session ? {
-    ...session,
-    user: session.user as any // Bridge the type gap
-  } as Session : null;
-  const currentIsLoading = authLoading || isLoading;
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.id);
+        setSession(session);
+        
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            setUser(profile);
+          }
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
 
-  const handleRefreshProfile = async () => {
-    const success = await refreshUserProfile();
-    if (success) {
-      // Also refresh auth state to ensure consistency
-      await refreshAuthState();
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        // Fetch user profile if session exists
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setUser(profile);
+            }
+            setLoading(false);
+          });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string, name: string) => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          name: name
+        }
+      }
+    });
+    return { error };
+  };
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error('Error signing out:', error);
+  };
+
+  const updateProfile = async (updates: Partial<UserProfile>) => {
+    if (!user) return;
+    
+    const { error } = await supabase
+      .from('profiles')
+      .update(updates)
+      .eq('id', user.id);
+    
+    if (error) {
+      console.error('Error updating profile:', error);
+      throw error;
     }
-    return success;
+    
+    setUser({ ...user, ...updates });
   };
 
-  const handleLogin = async (email: string, password: string): Promise<void> => {
-    return await login(email, password, setUser, setLastAuthTime, setIsLoading);
+  const deleteUser = async (userId: string) => {
+    // Delete user profile
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+    
+    if (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
   };
 
-  const handleSignup = async (email: string, password: string, fullName: string, role: UserRole = "property_manager") => {
-    await signup(email, password, fullName, role, setUser, setLastAuthTime, setIsLoading);
+  const deleteAllUsers = async () => {
+    if (!user) return;
+    
+    // Delete all users except current user
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .neq('id', user.id);
+    
+    if (error) {
+      console.error('Error deleting all users:', error);
+      throw error;
+    }
   };
 
-  const handleLogout = async () => {
-    setUser(null);
-    setLastAuthTime(0);
-    await logout();
-  };
-
-  const handleHasPermission = (roles: UserRole[]) => {
-    return hasPermission(currentUser?.role as UserRole, currentUser?.secondaryRoles, roles);
-  };
-
-  const handleHasFeatureAccess = (featureKey: string) => {
-    return checkFeatureAccess(currentUser, featureKey);
-  };
-
-  const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
-    return await updatePermissions(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId, permissions);
-  };
-
-  const handleGetOfflineLoginStatus = () => {
-    const status = getOfflineLoginStatus(currentUser, lastAuthTime, isOffline);
-    return {
-      isOfflineLoggedIn: status,
-      timeRemaining: 0
-    };
-  };
-  
-  const handleUpdateUserAvatar = async (userId: string, avatarUrl: string) => {
-    return await updateAvatar(userId, avatarUrl, users, setUsers, setUser as StateSetter<User | null>, currentUser);
-  };
-  
-  const handleDeleteUser = async (userId: string) => {
-    return await removeUser(currentUser, users, setUsers, setUser as StateSetter<User | null>, userId);
-  };
-
-  const handleUpdateProfile = async (userId: string, profileData: Partial<{
-    name: string;
-    email: string;
-    phone?: string;
-    role: UserRole;
-    secondaryRoles?: UserRole[];
-    customPermissions?: Record<string, boolean>;
-  }>) => {
-    return await updateUserProfile(userId, profileData, setUser, currentUser);
-  };
-
-  const handleSyncUserProfile = async () => {
-    return await syncUserWithProfile(currentUser, setUser);
+  const fetchUsers = async (): Promise<UserProfile[]> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching users:', error);
+      throw error;
+    }
+    
+    return data || [];
   };
 
   const value: UserContextType = {
-    user: currentUser,
-    session: currentSession,
-    users,
-    isLoading: currentIsLoading,
-    isOffline,
-    lastAuthTime,
-    login: handleLogin,
-    signup: handleSignup,
-    logout: handleLogout,
-    refreshProfile: handleRefreshProfile,
-    syncUserWithProfile: handleSyncUserProfile,
-    updateProfile: handleUpdateProfile,
-    updateAvatar: handleUpdateUserAvatar,
-    deleteUser: handleDeleteUser,
-    updateUserPermissions: handleUpdateUserPermissions,
-    hasPermission: handleHasPermission,
-    hasFeatureAccess: handleHasFeatureAccess,
-    getOfflineLoginStatus: handleGetOfflineLoginStatus
+    user,
+    session,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    updateProfile,
+    deleteUser,
+    deleteAllUsers,
+    fetchUsers,
   };
 
   return (
@@ -146,12 +200,4 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       {children}
     </UserContext.Provider>
   );
-};
-
-export const useUser = (): UserContextType => {
-  const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error("useUser must be used within a UserProvider");
-  }
-  return context;
 };

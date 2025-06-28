@@ -1,16 +1,16 @@
 
 // Re-export all auth types and utilities
-export type { User, UserRole, Session, StateSetter } from './auth';
+export type { UserRole, Session } from './base';
 export type { FeaturePermission } from './permissions';
-export { USER_ROLES, FEATURE_PERMISSIONS, getDefaultPermissionsForRole, hasPermissionWithAllRoles } from './permissions';
+export { FEATURE_PERMISSIONS, hasPermissionWithAllRoles } from './permissions';
 
 // Additional utilities
-export const isValidUserRole = (role: string): role is UserRole => {
+export const isValidUserRole = (role: string): boolean => {
   return ['superadmin', 'tenant_admin', 'property_manager', 'housekeeping_staff', 'maintenance_staff', 'inventory_manager', 'concierge'].includes(role);
 };
 
-export const getUserRoleDisplayName = (role: UserRole): string => {
-  const roleNames: Record<UserRole, string> = {
+export const getUserRoleDisplayName = (role: string): string => {
+  const roleNames: Record<string, string> = {
     superadmin: 'Super Admin',
     tenant_admin: 'Admin',
     property_manager: 'Property Manager',

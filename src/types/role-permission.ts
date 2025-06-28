@@ -12,7 +12,8 @@ export interface Role {
 export interface Permission {
   id: string;
   tenant_id: string;
-  name: string;
+  key: string;
+  label: string;
   description?: string;
   category: string;
   is_active: boolean;
@@ -33,8 +34,9 @@ export interface UserRole {
   tenant_id: string;
   user_id: string;
   role_id: string;
-  assigned_by?: string;
+  is_active: boolean;
   created_at: string;
+  updated_at: string;
 }
 
 export interface RoleWithPermissions extends Role {
