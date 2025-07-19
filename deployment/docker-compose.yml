@@ -1,0 +1,47 @@
+
+version: '3.8'
+
+services:
+  arivia-app:
+    build:
+      context: ..
+      dockerfile: deployment/Dockerfile
+    container_name: arivia-villas-app
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+      - VITE_SUPABASE_URL=https://lhhxxnbfdrkvjjbzxdjs.supabase.co
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxoaHh4bmJmZHJrdmpqYnp4ZGpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3OTE0NDMsImV4cCI6MjA1OTM2NzQ0M30.1-WdcaRFaxjvq_dLlQ-XJaOHQANb_jYcTuXP3gpxR5w
+    volumes:
+      - app-logs:/var/log/nginx
+    networks:
+      - arivia-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.arivia.rule=Host(`your-domain.com`)"
+      - "traefik.http.routers.arivia.tls.certresolver=letsencrypt"
+
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: arivia-nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-proxy.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - arivia-network
+    depends_on:
+      - arivia-app
+
+volumes:
+  app-logs:
+
+networks:
+  arivia-network:
+    driver: bridge
