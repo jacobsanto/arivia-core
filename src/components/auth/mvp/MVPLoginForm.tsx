@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@/components/ui/card";
 import { useUser } from "@/contexts/UserContext";
-import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, User } from "lucide-react";
 
 interface MVPLoginFormProps {
   onSwitchToSignUp: () => void;
@@ -32,6 +33,20 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
     }
   };
 
+  // Quick login handler for development accounts
+  const handleQuickLogin = async (devEmail: string, devPassword: string) => {
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      await login(devEmail, devPassword);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Quick login failed.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -45,6 +60,45 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      {/* Development Quick Login */}
+      <Card className="border-orange-200 bg-orange-50">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <User className="h-4 w-4 text-orange-600" />
+            <span className="text-sm font-medium text-orange-800">Development Quick Login</span>
+          </div>
+          <div className="grid grid-cols-1 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("superadmin@ariviavillas.com", "superadmin123")}
+              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+            >
+              Super Admin
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("admin@ariviavillas.com", "admin123")}
+              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+            >
+              Administrator
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => handleQuickLogin("manager@ariviavillas.com", "manager123")}
+              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+            >
+              Property Manager
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
