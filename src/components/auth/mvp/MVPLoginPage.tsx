@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,12 +11,14 @@ import { MVPSignUpForm } from "./MVPSignUpForm";
 import { MVPLoginHero } from "./MVPLoginHero";
 import { DevModeActivator } from "@/components/dev/DevModeActivator";
 import { Badge } from "@/components/ui/badge";
-
 export const MVPLoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isAuthenticated, isLoading } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading
+  } = useAuth();
 
   // Access dev mode context safely
   const devMode = (() => {
@@ -29,27 +30,22 @@ export const MVPLoginPage: React.FC = () => {
       return null;
     }
   })();
-
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true
+      });
     }
   }, [isAuthenticated, isLoading, navigate]);
-
   if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-background">
+    return <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      </div>
-    );
+      </div>;
   }
-
   if (isAuthenticated) {
     return null;
   }
-
-  return (
-    <>
+  return <>
       <Helmet>
         <title>Sign In - Arivia Villas Management</title>
       </Helmet>
@@ -61,11 +57,7 @@ export const MVPLoginPage: React.FC = () => {
             {/* Logo with Dev Mode Activator */}
             <div className="flex justify-center mb-8">
               <DevModeActivator>
-                <img 
-                  src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" 
-                  alt="Arivia Villas Logo" 
-                  className="h-20 w-auto object-contain hover:opacity-80 transition-opacity"
-                />
+                <img src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" alt="Arivia Villas Logo" className="h-20 w-auto object-contain hover:opacity-80 transition-opacity" />
               </DevModeActivator>
             </div>
 
@@ -79,19 +71,17 @@ export const MVPLoginPage: React.FC = () => {
               </p>
               
               {/* Dev Mode Indicator */}
-              {devMode?.isDevMode && (
-                <div className="mt-4">
+              {devMode?.isDevMode && <div className="mt-4">
                   <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-300">
                     🔧 Development Mode Active
                   </Badge>
-                </div>
-              )}
+                </div>}
             </div>
 
             {/* Auth Tabs */}
             <Card className="shadow-lg">
               <CardContent className="p-6">
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "signin" | "signup")}>
+                <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "signin" | "signup")}>
                   <TabsList className="grid w-full grid-cols-2 mb-6">
                     <TabsTrigger value="signin">Sign In</TabsTrigger>
                     <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -109,25 +99,20 @@ export const MVPLoginPage: React.FC = () => {
             </Card>
 
             {/* Dev Mode Quick Access */}
-            {devMode?.isDevMode && devMode.settings.bypassAuth && (
-              <Card className="mt-4 border-orange-200 bg-orange-50">
+            {devMode?.isDevMode && devMode.settings.bypassAuth && <Card className="mt-4 border-orange-200 bg-orange-50">
                 <CardContent className="p-4">
                   <div className="text-sm text-orange-800 mb-2 font-medium">
                     🚀 Development Quick Access
                   </div>
-                  <button
-                    onClick={() => navigate("/dashboard")}
-                    className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 px-4 rounded border border-orange-300 transition-colors"
-                  >
+                  <button onClick={() => navigate("/dashboard")} className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 px-4 rounded border border-orange-300 transition-colors">
                     Skip Authentication → Dashboard
                   </button>
                 </CardContent>
-              </Card>
-            )}
+              </Card>}
 
             {/* Footer */}
             <div className="text-center mt-8 text-sm text-muted-foreground">
-              <p>&copy; 2024 Arivia Villas. All rights reserved.</p>
+              <p>© 2024 Arivia Group. All rights reserved.</p>
             </div>
           </div>
         </div>
@@ -135,6 +120,5 @@ export const MVPLoginPage: React.FC = () => {
         {/* Right side - Hero/Info Panel (hidden on mobile) */}
         {!isMobile && <MVPLoginHero />}
       </div>
-    </>
-  );
+    </>;
 };
