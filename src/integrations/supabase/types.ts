@@ -1736,6 +1736,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_logs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       generate_housekeeping_tasks_for_booking: {
         Args: {
           booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
@@ -1745,6 +1749,14 @@ export type Database = {
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_dashboard_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      refresh_performance_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
