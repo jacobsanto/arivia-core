@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           check_in_date: string
@@ -1117,6 +1156,36 @@ export type Database = {
           price_per_night?: number
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      query_performance_log: {
+        Row: {
+          created_at: string | null
+          execution_time_ms: number
+          id: string
+          metadata: Json | null
+          query_type: string
+          table_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          execution_time_ms: number
+          id?: string
+          metadata?: Json | null
+          query_type: string
+          table_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          execution_time_ms?: number
+          id?: string
+          metadata?: Json | null
+          query_type?: string
+          table_name?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
