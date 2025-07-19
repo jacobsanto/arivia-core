@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/contexts/UserContext";
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 interface MVPLoginFormProps {
@@ -16,7 +16,7 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signin } = useUser();
+  const { login } = useUser();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,12 +24,9 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
     setError("");
 
     try {
-      const { error } = await signin(email, password);
-      if (error) {
-        setError(error.message);
-      }
+      await login(email, password);
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -85,10 +85,10 @@ export const MVPPropertyOverview: React.FC = () => {
                   <div className="flex items-center text-xs text-muted-foreground mb-2">
                     <MapPin className="h-3 w-3 mr-1" />
                     <span className="truncate">
-                      {typeof property.address === 'object' 
-                        ? `${property.address.city || ''}, ${property.address.country || ''}`
-                        : property.address
-                      }
+                    {typeof property.address === 'object' && property.address && !Array.isArray(property.address)
+                      ? `${(property.address as any).city || ''}, ${(property.address as any).country || ''}`
+                      : String(property.address || 'Address not available')
+                    }
                     </span>
                   </div>
                 )}

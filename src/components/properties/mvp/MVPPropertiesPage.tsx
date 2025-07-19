@@ -157,9 +157,9 @@ export const MVPPropertiesPage: React.FC = () => {
                           <div className="flex items-center text-sm text-muted-foreground mb-3">
                             <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
                             <span className="truncate">
-                              {typeof property.address === 'object' 
-                                ? `${property.address.city || ''}, ${property.address.country || ''}`
-                                : property.address
+                              {typeof property.address === 'object' && property.address && !Array.isArray(property.address)
+                                ? `${(property.address as any).city || ''}, ${(property.address as any).country || ''}`
+                                : String(property.address || 'Address not available')
                               }
                             </span>
                           </div>

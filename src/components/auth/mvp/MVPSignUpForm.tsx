@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useUser } from "@/hooks/use-user";
+import { useUser } from "@/contexts/UserContext";
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Phone } from "lucide-react";
 
 interface MVPSignUpFormProps {
@@ -51,21 +51,9 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
     }
 
     try {
-      const { error } = await signup(
-        formData.email, 
-        formData.password, 
-        {
-          name: formData.name,
-          role: formData.role,
-          phone: formData.phone
-        }
-      );
-      
-      if (error) {
-        setError(error.message);
-      }
+      await signup(formData.email, formData.password, formData.name, formData.role as any);
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
