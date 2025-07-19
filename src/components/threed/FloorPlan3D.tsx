@@ -1,9 +1,11 @@
-import React, { useRef, useEffect, useState } from 'react';
-import * as THREE from 'three';
+import React, { useRef, useState } from 'react';
+import { Canvas, useFrame, ThreeEvent } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera, ContactShadows } from '@react-three/drei';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Eye, RotateCcw, Bed, Bath, ChefHat, Sofa } from 'lucide-react';
+import * as THREE from 'three';
 
 interface Room {
   id: string;
@@ -17,19 +19,107 @@ interface Room {
 interface FloorPlan3DProps {
   villaId?: string;
   floor?: number;
+  onRoomSelect?: (room: Room | null) => void;
 }
+
+// Room Component
+const RoomMesh: React.FC<{ room: Room; isSelected: boolean; onClick: () => void }> = ({ 
+  room, 
+  isSelected, 
+  onClick 
+}) => {
+  const meshRef = useRef<THREE.Mesh>(null);
+
+  useFrame((state) => {
+    if (meshRef.current && isSelected) {
+      meshRef.current.position.y = room.position[1] + 0.05 * Math.sin(state.clock.elapsedTime * 3);
+    } else if (meshRef.current) {
+      meshRef.current.position.y = room.position[1];
+    }
+  });
+
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
+    e.stopPropagation();
+    onClick();
+  };
+
+  return (
+    <group>
+      {/* Room floor */}
+      <mesh 
+        ref={meshRef}
+        position={room.position}
+        onClick={handleClick}
+        castShadow
+      >
+        <boxGeometry args={room.size} />
+        <meshLambertMaterial 
+          color={room.color} 
+          transparent 
+          opacity={isSelected ? 0.9 : 0.7}
+          emissive={isSelected ? "#222" : "#000"}
+        />
+      </mesh>
+
+      {/* Room walls */}
+      {/* Front and back walls */}
+      <mesh position={[room.position[0], room.position[1], room.position[2] + room.size[2]/2]}>
+        <boxGeometry args={[room.size[0], room.size[1], 0.1]} />
+        <meshLambertMaterial color="#cccccc" />
+      </mesh>
+      <mesh position={[room.position[0], room.position[1], room.position[2] - room.size[2]/2]}>
+        <boxGeometry args={[room.size[0], room.size[1], 0.1]} />
+        <meshLambertMaterial color="#cccccc" />
+      </mesh>
+
+      {/* Side walls */}
+      <mesh position={[room.position[0] - room.size[0]/2, room.position[1], room.position[2]]}>
+        <boxGeometry args={[0.1, room.size[1], room.size[2]]} />
+        <meshLambertMaterial color="#cccccc" />
+      </mesh>
+      <mesh position={[room.position[0] + room.size[0]/2, room.position[1], room.position[2]]}>
+        <boxGeometry args={[0.1, room.size[1], room.size[2]]} />
+        <meshLambertMaterial color="#cccccc" />
+      </mesh>
+    </group>
+  );
+};
+
+// Floor Plan Scene Component
+const FloorPlanScene: React.FC<{ 
+  rooms: Room[]; 
+  selectedRoom: Room | null; 
+  onRoomSelect: (room: Room | null) => void;
+}> = ({ rooms, selectedRoom, onRoomSelect }) => {
+  return (
+    <>
+      {/* Base floor */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[12, 12]} />
+        <meshLambertMaterial color="#f8f8f8" />
+      </mesh>
+
+      {/* Rooms */}
+      {rooms.map(room => (
+        <RoomMesh 
+          key={room.id}
+          room={room}
+          isSelected={selectedRoom?.id === room.id}
+          onClick={() => onRoomSelect(room)}
+        />
+      ))}
+    </>
+  );
+};
 
 const FloorPlan3D: React.FC<FloorPlan3DProps> = ({ 
   villaId = "sample-villa", 
-  floor = 1 
+  floor = 1,
+  onRoomSelect
 }) => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene>();
-  const rendererRef = useRef<THREE.WebGLRenderer>();
-  const cameraRef = useRef<THREE.PerspectiveCamera>();
-  const animationRef = useRef<number>();
+  const controlsRef = useRef<any>();
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const rooms: Room[] = [
     { id: '1', name: 'Master Bedroom', type: 'bedroom', position: [3, 0.5, 3], size: [4, 1, 3], color: '#E6F3FF' },
@@ -41,195 +131,14 @@ const FloorPlan3D: React.FC<FloorPlan3DProps> = ({
     { id: '7', name: 'Balcony', type: 'balcony', position: [0, 0.5, 5], size: [8, 1, 2], color: '#FFFACD' },
   ];
 
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
-    sceneRef.current = scene;
-
-    // Camera setup - top-down view
-    const camera = new THREE.PerspectiveCamera(
-      60,
-      mountRef.current.clientWidth / mountRef.current.clientHeight,
-      0.1,
-      1000
-    );
-    camera.position.set(0, 15, 8);
-    camera.lookAt(0, 0, 0);
-    cameraRef.current = camera;
-
-    // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    rendererRef.current = renderer;
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(0, 20, 0);
-    directionalLight.castShadow = true;
-    scene.add(directionalLight);
-
-    // Create floor plan
-    createFloorPlan(scene);
-
-    // Mouse controls
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
-    const handleMouseDown = (event: MouseEvent) => {
-      isDragging = true;
-      previousMousePosition = { x: event.clientX, y: event.clientY };
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (isDragging) {
-        const deltaMove = {
-          x: event.clientX - previousMousePosition.x,
-          y: event.clientY - previousMousePosition.y
-        };
-
-        const spherical = new THREE.Spherical();
-        spherical.setFromVector3(camera.position);
-        spherical.theta -= deltaMove.x * 0.01;
-        spherical.phi += deltaMove.y * 0.01;
-        spherical.phi = Math.max(0.1, Math.min(Math.PI - 0.1, spherical.phi));
-        
-        camera.position.setFromSpherical(spherical);
-        camera.lookAt(0, 0, 0);
-      }
-      previousMousePosition = { x: event.clientX, y: event.clientY };
-    };
-
-    const handleMouseUp = () => {
-      isDragging = false;
-    };
-
-    const handleClick = (event: MouseEvent) => {
-      if (isDragging) return;
-
-      const rect = renderer.domElement.getBoundingClientRect();
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children, true);
-
-      if (intersects.length > 0) {
-        const object = intersects[0].object;
-        const roomId = object.userData.roomId;
-        if (roomId) {
-          const room = rooms.find(r => r.id === roomId);
-          setSelectedRoom(room || null);
-        }
-      } else {
-        setSelectedRoom(null);
-      }
-    };
-
-    renderer.domElement.addEventListener('mousedown', handleMouseDown);
-    renderer.domElement.addEventListener('mousemove', handleMouseMove);
-    renderer.domElement.addEventListener('mouseup', handleMouseUp);
-    renderer.domElement.addEventListener('click', handleClick);
-
-    // Animation loop
-    const animate = () => {
-      animationRef.current = requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    setIsLoading(false);
-
-    // Handle resize
-    const handleResize = () => {
-      if (mountRef.current && camera && renderer) {
-        camera.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
-      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
-      renderer.domElement.removeEventListener('mouseup', handleMouseUp);
-      renderer.domElement.removeEventListener('click', handleClick);
-      window.removeEventListener('resize', handleResize);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, []);
-
-  const createFloorPlan = (scene: THREE.Scene) => {
-    // Base floor
-    const floorGeometry = new THREE.PlaneGeometry(12, 12);
-    const floorMaterial = new THREE.MeshLambertMaterial({ color: 0xf8f8f8 });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.receiveShadow = true;
-    scene.add(floor);
-
-    // Create rooms
-    rooms.forEach(room => {
-      const roomGeometry = new THREE.BoxGeometry(...room.size);
-      const roomMaterial = new THREE.MeshLambertMaterial({ 
-        color: room.color,
-        transparent: true,
-        opacity: 0.7 
-      });
-      const roomMesh = new THREE.Mesh(roomGeometry, roomMaterial);
-      roomMesh.position.set(...room.position);
-      roomMesh.userData.roomId = room.id;
-      roomMesh.castShadow = true;
-      scene.add(roomMesh);
-
-      // Add room walls
-      const wallMaterial = new THREE.MeshLambertMaterial({ color: 0xcccccc });
-      
-      // Front and back walls
-      const frontWallGeometry = new THREE.BoxGeometry(room.size[0], room.size[1], 0.1);
-      const frontWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
-      frontWall.position.set(room.position[0], room.position[1], room.position[2] + room.size[2]/2);
-      scene.add(frontWall);
-
-      const backWall = new THREE.Mesh(frontWallGeometry, wallMaterial);
-      backWall.position.set(room.position[0], room.position[1], room.position[2] - room.size[2]/2);
-      scene.add(backWall);
-
-      // Side walls
-      const sideWallGeometry = new THREE.BoxGeometry(0.1, room.size[1], room.size[2]);
-      const leftWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
-      leftWall.position.set(room.position[0] - room.size[0]/2, room.position[1], room.position[2]);
-      scene.add(leftWall);
-
-      const rightWall = new THREE.Mesh(sideWallGeometry, wallMaterial);
-      rightWall.position.set(room.position[0] + room.size[0]/2, room.position[1], room.position[2]);
-      scene.add(rightWall);
-    });
+  const handleRoomSelect = (room: Room | null) => {
+    setSelectedRoom(room);
+    onRoomSelect?.(room);
   };
 
   const resetView = () => {
-    if (cameraRef.current) {
-      cameraRef.current.position.set(0, 15, 8);
-      cameraRef.current.lookAt(0, 0, 0);
+    if (controlsRef.current) {
+      controlsRef.current.reset();
     }
   };
 
@@ -255,11 +164,39 @@ const FloorPlan3D: React.FC<FloorPlan3DProps> = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
             <div className="relative">
-              <div 
-                ref={mountRef} 
-                className="w-full h-96 rounded-lg border bg-muted/50"
-                style={{ cursor: 'grab' }}
-              />
+              <div className="w-full h-96 rounded-lg border bg-muted/50 overflow-hidden">
+                <Canvas shadows>
+                  <PerspectiveCamera makeDefault position={[0, 15, 8]} />
+                  <OrbitControls 
+                    ref={controlsRef}
+                    enablePan={true}
+                    enableZoom={true}
+                    enableRotate={true}
+                    minPolarAngle={Math.PI / 6}
+                    maxPolarAngle={Math.PI / 2}
+                  />
+                  
+                  {/* Lighting */}
+                  <ambientLight intensity={0.6} />
+                  <directionalLight 
+                    position={[0, 20, 0]} 
+                    intensity={0.8} 
+                    castShadow 
+                    shadow-mapSize-width={2048}
+                    shadow-mapSize-height={2048}
+                  />
+                  
+                  {/* Contact shadows for better depth perception */}
+                  <ContactShadows position={[0, 0, 0]} opacity={0.3} scale={15} blur={2} far={5} />
+                  
+                  {/* Floor Plan Scene */}
+                  <FloorPlanScene 
+                    rooms={rooms}
+                    selectedRoom={selectedRoom}
+                    onRoomSelect={handleRoomSelect}
+                  />
+                </Canvas>
+              </div>
               
               {isLoading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg">
@@ -292,7 +229,7 @@ const FloorPlan3D: React.FC<FloorPlan3DProps> = ({
                     className={`p-3 rounded-lg border cursor-pointer transition-colors ${
                       selectedRoom?.id === room.id ? 'bg-primary/10 border-primary' : 'hover:bg-muted/50'
                     }`}
-                    onClick={() => setSelectedRoom(room)}
+                    onClick={() => handleRoomSelect(room)}
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {getRoomIcon(room.type)}

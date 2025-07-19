@@ -22,6 +22,7 @@ import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import DamageReports from "@/pages/DamageReports";
 import ListingDetails from "@/pages/ListingDetails";
+import VirtualTourPage from "@/pages/VirtualTourPage";
 
 // Admin Pages
 import AdminUsers from "@/pages/AdminUsers";
@@ -56,6 +57,7 @@ function App() {
                 <Route path="/analytics" element={<Analytics />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/damage-reports" element={<DamageReports />} />
+                <Route path="/virtual-tours" element={<VirtualTourPage />} />
                 
                 {/* Property details route */}
                 <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
