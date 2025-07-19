@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
+import { useDevMode } from "@/contexts/DevModeContext";
 
 interface AuthContextType {
   user: User | null;
@@ -21,8 +22,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Access dev mode context safely
+  const devMode = (() => {
+    try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return useDevMode();
+    } catch {
+      // Dev mode context not available
+      return null;
+    }
+  })();
+
   const refreshAuthState = async () => {
     try {
+      // Check if dev mode is active and should bypass auth
+      if (devMode?.isDevMode && devMode.settings.bypassAuth) {
+        // Use mock user if available, otherwise create a default dev user
+        const mockUser = devMode.currentMockUser || {
+          id: 'dev-user-default',
+          email: 'dev@ariviavillas.com',
+          name: 'Development User',
+          role: 'administrator' as UserRole,
+          avatar: "/placeholder.svg"
+        };
+        
+        setUser(mockUser);
+        setSession({
+          access_token: 'dev-token',
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: 'dev-refresh',
+          user: {
+            id: mockUser.id,
+            email: mockUser.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            aud: 'authenticated',
+            app_metadata: {},
+            user_metadata: { name: mockUser.name, role: mockUser.role }
+          }
+        } as Session);
+        
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       
@@ -68,6 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         console.log("Auth state change event:", event);
+        
+        // If dev mode is active and bypassing auth, ignore auth state changes
+        if (devMode?.isDevMode && devMode.settings.bypassAuth) {
+          return;
+        }
+        
         setSession(newSession);
         
         if (newSession?.user) {
@@ -106,7 +156,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [devMode?.isDevMode, devMode?.settings.bypassAuth, devMode?.currentMockUser]);
+
+  // Update user when mock user changes in dev mode
+  useEffect(() => {
+    if (devMode?.isDevMode && devMode.settings.bypassAuth && devMode.currentMockUser) {
+      setUser(devMode.currentMockUser);
+    }
+  }, [devMode?.currentMockUser, devMode?.isDevMode, devMode?.settings.bypassAuth]);
 
   const value = {
     user,

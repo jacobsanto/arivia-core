@@ -1,19 +1,34 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDevMode } from "@/contexts/DevModeContext";
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MVPLoginForm } from "./MVPLoginForm";
 import { MVPSignUpForm } from "./MVPSignUpForm";
 import { MVPLoginHero } from "./MVPLoginHero";
+import { DevModeActivator } from "@/components/dev/DevModeActivator";
+import { Badge } from "@/components/ui/badge";
 
 export const MVPLoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isAuthenticated, isLoading } = useAuth();
+
+  // Access dev mode context safely
+  const devMode = (() => {
+    try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return useDevMode();
+    } catch {
+      // Dev mode context not available
+      return null;
+    }
+  })();
 
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
@@ -43,13 +58,15 @@ export const MVPLoginPage: React.FC = () => {
         {/* Left side - Login Form */}
         <div className="flex-1 flex flex-col items-center justify-center bg-background p-6 md:p-10">
           <div className="w-full max-w-md">
-            {/* Logo */}
+            {/* Logo with Dev Mode Activator */}
             <div className="flex justify-center mb-8">
-              <img 
-                src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" 
-                alt="Arivia Villas Logo" 
-                className="h-20 w-auto object-contain"
-              />
+              <DevModeActivator>
+                <img 
+                  src="/lovable-uploads/c71ac675-b13f-4479-a62a-758f193152c2.png" 
+                  alt="Arivia Villas Logo" 
+                  className="h-20 w-auto object-contain hover:opacity-80 transition-opacity"
+                />
+              </DevModeActivator>
             </div>
 
             {/* Welcome Text */}
@@ -60,6 +77,15 @@ export const MVPLoginPage: React.FC = () => {
               <p className="text-muted-foreground">
                 Professional property management platform
               </p>
+              
+              {/* Dev Mode Indicator */}
+              {devMode?.isDevMode && (
+                <div className="mt-4">
+                  <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-300">
+                    🔧 Development Mode Active
+                  </Badge>
+                </div>
+              )}
             </div>
 
             {/* Auth Tabs */}
@@ -81,6 +107,23 @@ export const MVPLoginPage: React.FC = () => {
                 </Tabs>
               </CardContent>
             </Card>
+
+            {/* Dev Mode Quick Access */}
+            {devMode?.isDevMode && devMode.settings.bypassAuth && (
+              <Card className="mt-4 border-orange-200 bg-orange-50">
+                <CardContent className="p-4">
+                  <div className="text-sm text-orange-800 mb-2 font-medium">
+                    🚀 Development Quick Access
+                  </div>
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full bg-orange-100 hover:bg-orange-200 text-orange-800 py-2 px-4 rounded border border-orange-300 transition-colors"
+                  >
+                    Skip Authentication → Dashboard
+                  </button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Footer */}
             <div className="text-center mt-8 text-sm text-muted-foreground">
