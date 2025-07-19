@@ -1,15 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, TrendingUp, Target } from "lucide-react";
+import { BarChart3, TrendingUp, Target, Building } from "lucide-react";
 import { MVPDashboardHeader } from "../mvp/MVPDashboardHeader";
 import { SmartMetricsGrid } from "./SmartMetricsGrid";
 import { TrendChart } from "./TrendChart";
 import { SmartInsights } from "./SmartInsights";
 import { PredictiveAnalytics } from "../predictive/PredictiveAnalytics";
 import { RevenueOptimization } from "../predictive/RevenueOptimization";
+import { PropertyPerformanceGrid } from "../property/PropertyPerformanceGrid";
+import { PropertyRankings } from "../property/PropertyRankings";
+import { PropertyComparison } from "../property/PropertyComparison";
 import { MVPQuickActions } from "../mvp/MVPQuickActions";
 import { MVPRecentActivity } from "../mvp/MVPRecentActivity";
 
@@ -26,7 +28,7 @@ export const SmartDashboard: React.FC = () => {
         <MVPDashboardHeader />
         
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
               Overview
@@ -38,6 +40,10 @@ export const SmartDashboard: React.FC = () => {
             <TabsTrigger value="optimization" className="flex items-center gap-2">
               <Target className="h-4 w-4" />
               Revenue Optimization
+            </TabsTrigger>
+            <TabsTrigger value="properties" className="flex items-center gap-2">
+              <Building className="h-4 w-4" />
+              Property Insights
             </TabsTrigger>
           </TabsList>
 
@@ -90,6 +96,12 @@ export const SmartDashboard: React.FC = () => {
 
           <TabsContent value="optimization">
             <RevenueOptimization />
+          </TabsContent>
+
+          <TabsContent value="properties" className="space-y-6">
+            <PropertyRankings />
+            <PropertyPerformanceGrid />
+            <PropertyComparison />
           </TabsContent>
         </Tabs>
       </div>
