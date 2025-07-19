@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Camera } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Camera, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -66,6 +66,7 @@ const Sidebar = () => {
             <SidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" />
             <SidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" />
             <SidebarLink to="/admin/checklists" icon={<CheckSquare size={20} />} label="Checklists" />
+            <SidebarLink to="/system-admin" icon={<Monitor size={20} />} label="System Admin" />
             <SidebarLink to="/admin/settings" icon={<Settings size={20} />} label="System Settings" />
           </div>}
       </nav>
