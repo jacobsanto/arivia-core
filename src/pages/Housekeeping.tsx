@@ -1,9 +1,9 @@
 
 import React from "react";
-import HousekeepingDashboardContainer from "@/components/housekeeping/HousekeepingDashboardContainer";
+import { MVPTaskManagement } from "@/components/tasks/mvp/MVPTaskManagement";
 
-const HousekeepingDashboard = () => {
-  return <HousekeepingDashboardContainer />;
+const Housekeeping: React.FC = () => {
+  return <MVPTaskManagement />;
 };
 
-export default HousekeepingDashboard;
+export default Housekeeping;
