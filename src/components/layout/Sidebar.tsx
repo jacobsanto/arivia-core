@@ -24,7 +24,7 @@ const Sidebar = () => {
   return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       
       
-      <div className="flex items-center justify-center mb-6">
+      <div className="flex items-center justify-center mb-6 my-[10px] py-0">
         <div className="flex flex-col items-center">
           <div className="w-24 h-24 rounded-full overflow-hidden mb-3">
             <AvatarDisplay user={user} size="md" />
