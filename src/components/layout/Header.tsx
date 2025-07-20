@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
+import { useDevMode } from "@/contexts/DevModeContext";
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -24,6 +25,7 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { isDevMode } = useDevMode();
 
   useEffect(() => {
     if (!user) return;
@@ -47,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
+    <header className={`border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground ${isDevMode ? 'mt-12' : ''}`}>
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           {isMobile}
