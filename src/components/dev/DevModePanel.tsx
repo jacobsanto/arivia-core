@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { User, UserRole } from '@/types/auth';
-import { ChevronDown, ChevronUp, Activity, Wifi, WifiOff, User as UserIcon, Settings, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Activity, Wifi, WifiOff, User as UserIcon, Settings, RotateCcw, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 const mockUsers: User[] = [
   {
@@ -64,6 +64,24 @@ export const DevModePanel: React.FC = () => {
     return `${(latency / 1000).toFixed(1)}s`;
   };
 
+  const handleMockUserChange = (value: string) => {
+    console.log('🔧 DevModePanel: Mock user selection changed to:', value);
+    if (value === 'none') {
+      setMockUser(null);
+    } else {
+      const user = mockUsers.find(u => u.id === value);
+      if (user) {
+        console.log('🔧 DevModePanel: Setting mock user to:', user);
+        setMockUser(user);
+      }
+    }
+  };
+
+  const handleTestConnection = async () => {
+    console.log('🔧 DevModePanel: Test connection button clicked');
+    await checkConnection();
+  };
+
   return (
     <div className="fixed bottom-4 right-4 z-50 max-w-sm">
       <Card className="border-orange-200 bg-orange-50/95 backdrop-blur-sm">
@@ -90,30 +108,49 @@ export const DevModePanel: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {connectionStatus.isConnected ? (
-                    <Wifi className="h-4 w-4 text-green-600" />
+                  {connectionStatus.isChecking ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  ) : connectionStatus.isConnected ? (
+                    <CheckCircle className="h-4 w-4 text-green-600" />
                   ) : (
-                    <WifiOff className="h-4 w-4 text-red-600" />
+                    <XCircle className="h-4 w-4 text-red-600" />
                   )}
                   <span className="text-sm font-medium">Supabase</span>
                 </div>
-                <Badge variant={connectionStatus.isConnected ? "default" : "destructive"}>
-                  {connectionStatus.isConnected ? 'Connected' : 'Disconnected'}
+                <Badge variant={
+                  connectionStatus.isChecking ? "secondary" :
+                  connectionStatus.isConnected ? "default" : "destructive"
+                }>
+                  {connectionStatus.isChecking ? 'Testing...' :
+                   connectionStatus.isConnected ? 'Connected' : 'Disconnected'}
                 </Badge>
               </div>
-              {connectionStatus.isConnected && (
+              
+              {connectionStatus.isConnected && !connectionStatus.isChecking && (
                 <div className="text-xs text-muted-foreground">
-                  Latency: {formatLatency(connectionStatus.latency)}
+                  Latency: {formatLatency(connectionStatus.latency)} • Last: {connectionStatus.lastChecked.toLocaleTimeString()}
                 </div>
               )}
+              
+              {connectionStatus.error && !connectionStatus.isChecking && (
+                <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                  Error: {connectionStatus.error}
+                </div>
+              )}
+              
               <Button
                 variant="outline"
                 size="sm"
-                onClick={checkConnection}
+                onClick={handleTestConnection}
+                disabled={connectionStatus.isChecking}
                 className="w-full"
               >
-                <Activity className="h-3 w-3 mr-1" />
-                Test Connection
+                {connectionStatus.isChecking ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : (
+                  <Activity className="h-3 w-3 mr-1" />
+                )}
+                {connectionStatus.isChecking ? 'Testing...' : 'Test Connection'}
               </Button>
             </div>
 
@@ -154,17 +191,15 @@ export const DevModePanel: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <UserIcon className="h-4 w-4" />
                   <span className="text-sm font-medium">Mock User</span>
+                  {currentMockUser && (
+                    <Badge variant="secondary" className="text-xs">
+                      Active: {currentMockUser.role}
+                    </Badge>
+                  )}
                 </div>
                 <Select
                   value={currentMockUser?.id || 'none'}
-                  onValueChange={(value) => {
-                    if (value === 'none') {
-                      setMockUser(null);
-                    } else {
-                      const user = mockUsers.find(u => u.id === value);
-                      if (user) setMockUser(user);
-                    }
-                  }}
+                  onValueChange={handleMockUserChange}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select mock user" />
@@ -178,6 +213,12 @@ export const DevModePanel: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {currentMockUser && (
+                  <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                    Mock user active: {currentMockUser.name} with {currentMockUser.role} permissions
+                  </div>
+                )}
               </div>
             )}
 

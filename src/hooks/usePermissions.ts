@@ -1,5 +1,7 @@
 
 import { useUser } from '@/contexts/UserContext';
+import { useDevMode } from '@/contexts/DevModeContext';
+import { useEffect, useState } from 'react';
 import { 
   FEATURE_PERMISSIONS, 
   OFFLINE_CAPABILITIES, 
@@ -23,24 +25,73 @@ interface PermissionsReturn {
 export const usePermissions = (): PermissionsReturn => {
   const { user, hasFeatureAccess } = useUser();
   
+  // Get dev mode context safely
+  const devMode = (() => {
+    try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      return useDevMode();
+    } catch {
+      return null;
+    }
+  })();
+  
+  // Force re-calculation when mock user changes
+  const [updateTrigger, setUpdateTrigger] = useState(0);
+  
+  useEffect(() => {
+    const handleMockUserUpdate = () => {
+      console.log('🔧 usePermissions: Mock user update, recalculating permissions');
+      setUpdateTrigger(prev => prev + 1);
+    };
+
+    window.addEventListener('mockUserStateUpdate', handleMockUserUpdate);
+    return () => {
+      window.removeEventListener('mockUserStateUpdate', handleMockUserUpdate);
+    };
+  }, []);
+
+  // Get the effective user (prioritizing mock user in dev mode)
+  const getEffectiveUser = () => {
+    if (devMode?.isDevMode && devMode.settings.enableMockUsers && devMode.currentMockUser) {
+      console.log('🔧 usePermissions: Using mock user for permissions:', devMode.currentMockUser.name, devMode.currentMockUser.role);
+      return devMode.currentMockUser;
+    }
+    return user;
+  };
+
+  const effectiveUser = getEffectiveUser();
+  
   // Check if user has access to a specific feature
   const canAccess = (featureKey: string): boolean => {
-    if (!user) return false;
+    if (!effectiveUser) {
+      console.log('🔧 usePermissions: No effective user, denying access to:', featureKey);
+      return false;
+    }
     
     // Superadmin always has access to everything
-    if (user.role === "superadmin") return true;
+    if (effectiveUser.role === "superadmin") {
+      console.log('🔧 usePermissions: Superadmin access granted for:', featureKey);
+      return true;
+    }
     
     // Check custom permissions first if they exist
-    if (user.customPermissions && user.customPermissions[featureKey] !== undefined) {
-      return user.customPermissions[featureKey];
+    if (effectiveUser.customPermissions && effectiveUser.customPermissions[featureKey] !== undefined) {
+      const hasCustomAccess = effectiveUser.customPermissions[featureKey];
+      console.log('🔧 usePermissions: Custom permission for', featureKey, ':', hasCustomAccess);
+      return hasCustomAccess;
     }
     
     // Check if feature exists in permissions
     const permission = FEATURE_PERMISSIONS[featureKey];
-    if (!permission) return false;
+    if (!permission) {
+      console.log('🔧 usePermissions: Feature not found:', featureKey);
+      return false;
+    }
     
     // Check if user's role is in the allowed roles, including secondary roles
-    return hasPermissionWithAllRoles(user.role, user.secondaryRoles, permission.allowedRoles);
+    const hasAccess = hasPermissionWithAllRoles(effectiveUser.role, effectiveUser.secondaryRoles, permission.allowedRoles);
+    console.log('🔧 usePermissions: Role-based access for', featureKey, ':', hasAccess, 'user role:', effectiveUser.role);
+    return hasAccess;
   };
 
   // Get all permission keys with their status for the current user
@@ -61,13 +112,13 @@ export const usePermissions = (): PermissionsReturn => {
 
   // Get all offline capabilities for current user
   const getOfflineCapabilities = (): string[] => {
-    if (!user) return [];
+    if (!effectiveUser) return [];
     
-    let capabilities = OFFLINE_CAPABILITIES[user.role] || [];
+    let capabilities = OFFLINE_CAPABILITIES[effectiveUser.role] || [];
     
     // If user has secondary roles, add those capabilities
-    if (user.secondaryRoles && user.secondaryRoles.length > 0) {
-      user.secondaryRoles.forEach(role => {
+    if (effectiveUser.secondaryRoles && effectiveUser.secondaryRoles.length > 0) {
+      effectiveUser.secondaryRoles.forEach(role => {
         const roleCapabilities = OFFLINE_CAPABILITIES[role] || [];
         capabilities = [...capabilities, ...roleCapabilities];
       });
@@ -81,10 +132,10 @@ export const usePermissions = (): PermissionsReturn => {
 
   // Check if user has a specific offline capability
   const hasOfflineAccess = (capability: string): boolean => {
-    if (!user) return false;
+    if (!effectiveUser) return false;
     
     // Superadmin has access to all offline capabilities
-    if (user.role === 'superadmin') return true;
+    if (effectiveUser.role === 'superadmin') return true;
     
     const capabilities = getOfflineCapabilities();
     return capabilities.includes(capability);
