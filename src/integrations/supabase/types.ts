@@ -1733,7 +1733,48 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      integration_health_summary: {
+        Row: {
+          health_status: string | null
+          is_rate_limited: boolean | null
+          last_synced: string | null
+          provider: string | null
+          remaining_requests: number | null
+          request_count: number | null
+          status: string | null
+        }
+        Insert: {
+          health_status?: never
+          is_rate_limited?: boolean | null
+          last_synced?: string | null
+          provider?: string | null
+          remaining_requests?: number | null
+          request_count?: number | null
+          status?: string | null
+        }
+        Update: {
+          health_status?: never
+          is_rate_limited?: boolean | null
+          last_synced?: string | null
+          provider?: string | null
+          remaining_requests?: number | null
+          request_count?: number | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      performance_summary: {
+        Row: {
+          avg_execution_time: number | null
+          hour: string | null
+          max_execution_time: number | null
+          p95_execution_time: number | null
+          query_count: number | null
+          query_type: string | null
+          table_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_logs: {
@@ -1754,7 +1795,19 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_system_health: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       refresh_performance_views: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      reset_demo_data: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      scheduled_maintenance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
