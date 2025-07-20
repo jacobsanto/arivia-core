@@ -22,7 +22,7 @@ const UnifiedLayout = () => {
   };
 
   return (
-    <div className={`flex min-h-screen bg-background overflow-hidden ${isDevMode ? 'pt-8' : ''}`}>
+    <div className={`flex min-h-screen bg-background overflow-hidden ${isDevMode ? 'pt-12' : ''}`}>
       {/* Desktop sidebar - hidden on mobile */}
       {!isMobile && <Sidebar />}
       
