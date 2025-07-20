@@ -10,7 +10,7 @@ export const DevModeStatusBar: React.FC = () => {
   if (!isDevMode) return null;
 
   return (
-    <div className="fixed top-14 md:top-16 left-0 right-0 z-10 bg-orange-100 border-b border-orange-200 px-4 py-2">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-orange-100 border-b border-orange-200 px-4 py-2">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-4">
           <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-300">
