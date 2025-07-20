@@ -58,17 +58,31 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     const storedDevMode = localStorage.getItem('arivia-dev-mode');
     const storedSettings = localStorage.getItem('arivia-dev-settings');
+    const storedMockUser = localStorage.getItem('arivia-mock-user');
     
     if (storedDevMode === 'true') {
       setIsDevMode(true);
+      console.log('🔧 Dev mode enabled from localStorage');
     }
     
     if (storedSettings) {
       try {
         const parsedSettings = JSON.parse(storedSettings);
         setSettings({ ...defaultSettings, ...parsedSettings });
+        console.log('🔧 Dev settings loaded:', parsedSettings);
       } catch (error) {
         console.warn('Failed to parse dev mode settings:', error);
+      }
+    }
+
+    // Load mock user from localStorage
+    if (storedMockUser) {
+      try {
+        const parsedMockUser = JSON.parse(storedMockUser);
+        setCurrentMockUser(parsedMockUser);
+        console.log('🔧 Mock user loaded from localStorage:', parsedMockUser.name, parsedMockUser.role);
+      } catch (error) {
+        console.warn('Failed to parse mock user:', error);
       }
     }
   }, []);
@@ -76,11 +90,13 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Persist dev mode state
   useEffect(() => {
     localStorage.setItem('arivia-dev-mode', isDevMode.toString());
+    console.log('🔧 Dev mode persisted:', isDevMode);
   }, [isDevMode]);
 
   // Persist settings
   useEffect(() => {
     localStorage.setItem('arivia-dev-settings', JSON.stringify(settings));
+    console.log('🔧 Dev settings persisted:', settings);
   }, [settings]);
 
   // Auto connection check
@@ -94,11 +110,22 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [isDevMode, settings.showConnectionStatus, settings.autoRefreshInterval]);
 
   const toggleDevMode = () => {
-    setIsDevMode(prev => !prev);
+    const newMode = !isDevMode;
+    setIsDevMode(newMode);
+    console.log('🔧 Dev mode toggled:', newMode);
+    
+    // Clear mock user when disabling dev mode
+    if (!newMode) {
+      setCurrentMockUser(null);
+      localStorage.removeItem('arivia-mock-user');
+      console.log('🔧 Mock user cleared on dev mode disable');
+    }
   };
 
   const updateSettings = (newSettings: Partial<DevModeSettings>) => {
-    setSettings(prev => ({ ...prev, ...newSettings }));
+    const updatedSettings = { ...settings, ...newSettings };
+    setSettings(updatedSettings);
+    console.log('🔧 Dev settings updated:', newSettings);
   };
 
   const checkConnection = async (): Promise<void> => {
@@ -125,15 +152,23 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const setMockUser = (user: User | null) => {
+    console.log('🔧 Setting mock user:', user ? `${user.name} (${user.role})` : 'null');
     setCurrentMockUser(user);
+    
     if (user) {
       localStorage.setItem('arivia-mock-user', JSON.stringify(user));
+      console.log('🔧 Mock user persisted to localStorage');
     } else {
       localStorage.removeItem('arivia-mock-user');
+      console.log('🔧 Mock user removed from localStorage');
     }
+
+    // Trigger a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('mockUserChanged', { detail: user }));
   };
 
   const resetSettings = () => {
+    console.log('🔧 Resetting dev settings to defaults');
     setSettings(defaultSettings);
     setCurrentMockUser(null);
     localStorage.removeItem('arivia-mock-user');

@@ -22,6 +22,15 @@ export const useUserData = () => {
       return false;
     }
     
+    // Check if we're in dev mode and should skip profile fetching
+    const isDevMode = localStorage.getItem('arivia-dev-mode') === 'true';
+    const mockUser = localStorage.getItem('arivia-mock-user');
+    
+    if (isDevMode && mockUser) {
+      console.log("🔧 Skipping profile refresh in dev mode with mock user");
+      return true; // Return true since we don't need to fetch
+    }
+    
     console.log("Refreshing user profile for:", user.id);
     
     try {
@@ -38,7 +47,7 @@ export const useUserData = () => {
     }
   }, [user, fetchProfileData]);
   
-  // Set up subscription for current user profile updates
+  // Set up subscription for current user profile updates (only if not in dev mode)
   useProfileSubscription(user, refreshUserProfile);
   
   return {
