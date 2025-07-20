@@ -1799,6 +1799,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_user_role_safe: {
+        Args: { user_id?: string }
+        Returns: string
+      }
       refresh_performance_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
