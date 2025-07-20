@@ -22,7 +22,7 @@ const UnifiedLayout = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background overflow-hidden">
+    <div className={`flex min-h-screen bg-background overflow-hidden ${isDevMode ? 'pt-8' : ''}`}>
       {/* Desktop sidebar - hidden on mobile */}
       {!isMobile && <Sidebar />}
       
@@ -30,7 +30,7 @@ const UnifiedLayout = () => {
         <Header onMobileMenuToggle={toggleMobileMenu} />
         
         <ScrollArea className="flex-1" orientation="vertical">
-          <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''} ${isDevMode ? 'pt-16' : ''}`}>
+          <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
             <div className="max-w-full mx-auto">
               <Outlet />
             </div>

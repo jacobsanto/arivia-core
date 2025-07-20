@@ -10,28 +10,28 @@ export const DevModeStatusBar: React.FC = () => {
   if (!isDevMode) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-orange-100 border-b border-orange-200 px-4 py-2">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-orange-100 border-b border-orange-200 px-4 py-1">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
-        <div className="flex items-center gap-4">
-          <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-300">
-            🔧 Development Mode
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="bg-orange-50 text-orange-800 border-orange-300 text-xs py-0">
+            🔧 Dev Mode
           </Badge>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             {connectionStatus.isConnected ? (
-              <Wifi className="h-4 w-4 text-green-600" />
+              <Wifi className="h-3 w-3 text-green-600" />
             ) : (
-              <WifiOff className="h-4 w-4 text-red-600" />
+              <WifiOff className="h-3 w-3 text-red-600" />
             )}
-            <span className="text-sm text-orange-700">
-              Supabase: {connectionStatus.isConnected ? 'Connected' : 'Disconnected'}
+            <span className="text-xs text-orange-700">
+              {connectionStatus.isConnected ? 'Connected' : 'Disconnected'}
             </span>
           </div>
         </div>
 
         {currentMockUser && (
-          <Badge variant="secondary" className="bg-blue-50 text-blue-800 border-blue-300">
-            Mock User: {currentMockUser.name} ({currentMockUser.role})
+          <Badge variant="secondary" className="bg-blue-50 text-blue-800 border-blue-300 text-xs py-0">
+            Mock: {currentMockUser.name} ({currentMockUser.role})
           </Badge>
         )}
       </div>
