@@ -8,11 +8,13 @@ import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
+import { useDevMode } from "@/contexts/DevModeContext";
 
 const UnifiedLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const { isDevMode } = useDevMode();
   const location = useLocation();
   
   const toggleMobileMenu = () => {
@@ -28,7 +30,7 @@ const UnifiedLayout = () => {
         <Header onMobileMenuToggle={toggleMobileMenu} />
         
         <ScrollArea className="flex-1" orientation="vertical">
-          <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+          <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''} ${isDevMode ? 'pt-12 md:pt-14' : ''}`}>
             <div className="max-w-full mx-auto">
               <Outlet />
             </div>
