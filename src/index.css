@@ -100,13 +100,13 @@
     --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
     
     /* Sidebar */
-    --sidebar-background: 27 87% 67%;
+    --sidebar-background: 234 53% 19%;   /* HEX #1c174b */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 197 71% 73%;
     --sidebar-primary-foreground: 210 40% 15%;
-    --sidebar-accent: 27 87% 57%;
+    --sidebar-accent: 234 53% 25%;       /* Slightly lighter variant */
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 27 87% 57%;
+    --sidebar-border: 234 53% 25%;
     --sidebar-ring: 197 71% 73%;
   }
 
@@ -159,13 +159,13 @@
     --shadow-glow: 0 0 40px hsl(27 87% 77% / 0.6);
     
     /* Dark mode sidebar */
-    --sidebar-background: 210 40% 8%;
+    --sidebar-background: 234 53% 19%;   /* HEX #1c174b */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 27 87% 67%;
-    --sidebar-primary-foreground: 210 40% 8%;
-    --sidebar-accent: 197 71% 73%;
-    --sidebar-accent-foreground: 210 40% 8%;
-    --sidebar-border: 210 40% 20%;
+    --sidebar-primary-foreground: 234 53% 19%;
+    --sidebar-accent: 234 53% 25%;       /* Slightly lighter variant */
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 234 53% 25%;
     --sidebar-ring: 27 87% 67%;
   }
 }
