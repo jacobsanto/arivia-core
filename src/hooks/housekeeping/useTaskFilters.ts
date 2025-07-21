@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from "react";
 import { Task } from "@/types/housekeepingTypes";
-import { DateRange } from "@/components/reports/DateRangeSelector";
+// Simple date range type
 
 export const useTaskFilters = (tasks: Task[]) => {
   const [filteredTasks, setFilteredTasks] = useState<Task[]>([]);
   const [taskTypeFilter, setTaskTypeFilter] = useState<string>("all");
   const [assignedToFilter, setAssignedToFilter] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<{from?: Date; to?: Date} | undefined>(undefined);
 
   useEffect(() => {
     let filtered = [...tasks];

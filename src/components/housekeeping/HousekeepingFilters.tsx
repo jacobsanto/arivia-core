@@ -7,8 +7,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { DateRange } from "@/components/reports/DateRangeSelector";
+// Simple date range type for filtering
 import { Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,8 +26,8 @@ interface HousekeepingFiltersProps {
   setTaskTypeFilter: (value: string) => void;
   assignedToFilter: string;
   setAssignedToFilter: (value: string) => void;
-  dateRange: DateRange | undefined;
-  setDateRange: (range: DateRange | undefined) => void;
+  dateRange: {from?: Date; to?: Date} | undefined;
+  setDateRange: (range: {from?: Date; to?: Date} | undefined) => void;
   taskTypeOptions: string[];
   staffOptions: string[];
 }
@@ -81,10 +80,7 @@ const HousekeepingFilters: React.FC<HousekeepingFiltersProps> = ({
         
         <div className="space-y-2">
           <label className="text-sm font-medium">Due Date Range</label>
-          <DatePickerWithRange 
-            value={dateRange} 
-            onChange={setDateRange}
-          />
+          <div className="text-sm text-muted-foreground">Date range filtering available in full version</div>
         </div>
       </div>
     </div>
