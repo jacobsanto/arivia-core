@@ -172,29 +172,53 @@ export const CleaningRuleDialog: React.FC<CleaningRuleDialogProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="min_nights">Minimum Nights *</Label>
-              <Input
-                id="min_nights"
-                type="number"
-                min="1"
-                value={formData.min_nights}
-                onChange={(e) => setFormData(prev => ({ ...prev, min_nights: parseInt(e.target.value) || 1 }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="max_nights">Maximum Nights *</Label>
-              <Input
-                id="max_nights"
-                type="number"
-                min={formData.min_nights}
-                value={formData.max_nights}
-                onChange={(e) => setFormData(prev => ({ ...prev, max_nights: parseInt(e.target.value) || 999 }))}
-                placeholder="999 for unlimited"
-                required
-              />
+          <div className="space-y-4">
+            <div className="p-4 border rounded-lg bg-muted/50">
+              <h4 className="font-medium text-sm mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-primary rounded-full"></span>
+                Booking Duration Conditions
+              </h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="min_nights">Minimum Nights *</Label>
+                  <Input
+                    id="min_nights"
+                    type="number"
+                    min="1"
+                    value={formData.min_nights}
+                    onChange={(e) => setFormData(prev => ({ ...prev, min_nights: parseInt(e.target.value) || 1 }))}
+                    placeholder="e.g., 1"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Rule applies when booking is at least this many nights
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="max_nights">Maximum Nights *</Label>
+                  <Input
+                    id="max_nights"
+                    type="number"
+                    min={formData.min_nights}
+                    value={formData.max_nights}
+                    onChange={(e) => setFormData(prev => ({ ...prev, max_nights: parseInt(e.target.value) || 999 }))}
+                    placeholder="999 for unlimited"
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Rule applies when booking is at most this many nights
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 p-3 bg-background rounded border">
+                <p className="text-sm font-medium">Preview:</p>
+                <p className="text-sm text-muted-foreground">
+                  This rule will apply to bookings between{" "}
+                  <span className="font-medium text-foreground">{formData.min_nights}</span> and{" "}
+                  <span className="font-medium text-foreground">{formData.max_nights}</span> nights
+                  {formData.max_nights === 999 ? " (no upper limit)" : ""}
+                </p>
+              </div>
             </div>
           </div>
 
