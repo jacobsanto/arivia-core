@@ -220,6 +220,100 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaning_rules: {
+        Row: {
+          config_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          max_nights: number
+          min_nights: number
+          rule_description: string | null
+          rule_name: string
+          updated_at: string
+        }
+        Insert: {
+          config_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_nights?: number
+          min_nights?: number
+          rule_description?: string | null
+          rule_name: string
+          updated_at?: string
+        }
+        Update: {
+          config_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_nights?: number
+          min_nights?: number
+          rule_description?: string | null
+          rule_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cleaning_rules_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "property_cleaning_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cleaning_schedules: {
+        Row: {
+          created_at: string
+          estimated_duration: number | null
+          id: string
+          is_active: boolean
+          offset_days: number | null
+          priority: string | null
+          requires_guest_coordination: boolean | null
+          rule_id: string
+          schedule_description: string | null
+          task_type: string
+          timing_type: string
+        }
+        Insert: {
+          created_at?: string
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean
+          offset_days?: number | null
+          priority?: string | null
+          requires_guest_coordination?: boolean | null
+          rule_id: string
+          schedule_description?: string | null
+          task_type: string
+          timing_type: string
+        }
+        Update: {
+          created_at?: string
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean
+          offset_days?: number | null
+          priority?: string | null
+          requires_guest_coordination?: boolean | null
+          rule_id?: string
+          schedule_description?: string | null
+          task_type?: string
+          timing_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cleaning_schedules_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cleaning_service_definitions: {
         Row: {
           checklist: Json | null
@@ -376,74 +470,6 @@ export type Database = {
           sender_id?: string
         }
         Relationships: []
-      }
-      financial_reports: {
-        Row: {
-          amount_paid: number | null
-          booking_id: string | null
-          category: string
-          channel_fee: number | null
-          check_in: string | null
-          check_out: string | null
-          created_at: string | null
-          currency: string | null
-          expenses: number
-          id: string
-          listing_id: string | null
-          margin: string
-          month: string
-          profit: number
-          property: string
-          revenue: number
-          updated_at: string | null
-        }
-        Insert: {
-          amount_paid?: number | null
-          booking_id?: string | null
-          category?: string
-          channel_fee?: number | null
-          check_in?: string | null
-          check_out?: string | null
-          created_at?: string | null
-          currency?: string | null
-          expenses: number
-          id?: string
-          listing_id?: string | null
-          margin: string
-          month: string
-          profit: number
-          property: string
-          revenue: number
-          updated_at?: string | null
-        }
-        Update: {
-          amount_paid?: number | null
-          booking_id?: string | null
-          category?: string
-          channel_fee?: number | null
-          check_in?: string | null
-          check_out?: string | null
-          created_at?: string | null
-          currency?: string | null
-          expenses?: number
-          id?: string
-          listing_id?: string | null
-          margin?: string
-          month?: string
-          profit?: number
-          property?: string
-          revenue?: number
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "financial_reports_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: true
-            referencedRelation: "guesty_bookings"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       guesty_api_usage: {
         Row: {
@@ -903,42 +929,6 @@ export type Database = {
           },
         ]
       }
-      occupancy_reports: {
-        Row: {
-          average_stay: number | null
-          bookings: number
-          created_at: string | null
-          id: string
-          month: string
-          occupancy_rate: number
-          property: string
-          revenue: number
-          updated_at: string | null
-        }
-        Insert: {
-          average_stay?: number | null
-          bookings: number
-          created_at?: string | null
-          id?: string
-          month: string
-          occupancy_rate: number
-          property: string
-          revenue: number
-          updated_at?: string | null
-        }
-        Update: {
-          average_stay?: number | null
-          bookings?: number
-          created_at?: string | null
-          id?: string
-          month?: string
-          occupancy_rate?: number
-          property?: string
-          revenue?: number
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string
@@ -1158,6 +1148,44 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      property_cleaning_configs: {
+        Row: {
+          config_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          config_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          config_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_cleaning_configs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       query_performance_log: {
         Row: {
@@ -1823,6 +1851,12 @@ export type Database = {
     Functions: {
       cleanup_old_logs: {
         Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      generate_cleaning_tasks_from_config: {
+        Args: {
+          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
+        }
         Returns: undefined
       }
       generate_housekeeping_tasks_for_booking: {

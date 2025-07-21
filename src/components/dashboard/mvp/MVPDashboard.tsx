@@ -1,4 +1,3 @@
-
 import React from "react";
 import { SmartDashboard } from "../smart/SmartDashboard";
 
