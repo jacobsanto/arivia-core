@@ -1,8 +1,10 @@
 import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCallback } from 'react';
+import { DatabaseConnectionPool, executeOptimizedQuery } from '@/utils/databasePooling';
+import { ServerCache } from '@/utils/cdnOptimization';
 
-// Optimized profiles query with caching
+// Optimized profiles query with caching and connection pooling
 export const useOptimizedProfiles = (filters?: {
   role?: string;
   search?: string;
@@ -11,7 +13,16 @@ export const useOptimizedProfiles = (filters?: {
   return useQuery({
     queryKey: ['profiles', filters],
     queryFn: async () => {
-      let query = supabase
+      const cacheKey = `profiles_${JSON.stringify(filters)}`;
+      
+      // Check server cache first
+      const cachedData = ServerCache.get(cacheKey);
+      if (cachedData) return cachedData;
+
+      const pool = DatabaseConnectionPool.getInstance();
+      const connection = await pool.getConnection();
+      
+      let query = connection
         .from('profiles')
         .select('id, name, email, role, avatar, created_at')
         .order('created_at', { ascending: false });
@@ -30,6 +41,10 @@ export const useOptimizedProfiles = (filters?: {
 
       const { data, error } = await query;
       if (error) throw error;
+      
+      // Cache the result
+      ServerCache.set(cacheKey, data, 5 * 60 * 1000);
+      
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -72,15 +72,11 @@ export const OptimizedUserManagement: React.FC = () => (
 );
 
 export const OptimizedFinancialReports: React.FC<{
-  reports?: any[];
-  searchQuery?: string;
-  statusFilter?: string;
-  onSearchChange?: (query: string) => void;
-  onStatusChange?: (status: string) => void;
-  onEdit?: (report: any) => void;
-  onDelete?: (id: string) => void;
-  sendingReportId?: string;
-  onSendNow?: (id: string) => void;
+  reports: any[];
+  sendingReportId: string | null;
+  onSendNow: (report: any) => void;
+  onEdit: (report: any) => void;
+  onDelete: (id: string) => void;
 }> = (props) => (
   <Suspense fallback={<FinancialReportsSkeleton />}>
     <LazyFinancialReports {...props} />

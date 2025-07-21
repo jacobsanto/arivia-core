@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { CDNManager } from '@/utils/cdnOptimization';
 
 interface LazyImageProps {
   src: string;
