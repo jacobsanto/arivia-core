@@ -1853,6 +1853,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      delete_cleaning_config_safely: {
+        Args: { config_uuid: string }
+        Returns: Json
+      }
       generate_cleaning_tasks_from_config: {
         Args: {
           booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
