@@ -1,22 +1,34 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Shield } from "lucide-react";
+import { ArrowLeft, Shield, Settings, Save, RotateCcw } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FEATURE_PERMISSIONS } from "@/types/auth";
 import { toast } from "sonner";
 import { useSwipe } from "@/hooks/use-swipe";
+import { useSystemPermissions } from "@/hooks/useSystemPermissions";
+import SystemPermissionEditor from "@/components/admin/SystemPermissionEditor";
 
 const AdminPermissions = () => {
-  const {
-    user
-  } = useUser();
+  const { user } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = useState("view");
+  
+  const {
+    permissions: systemPermissions,
+    loading,
+    saving,
+    updatePermission,
+    togglePermissionActive,
+    updateAllowedRoles,
+    refreshPermissions
+  } = useSystemPermissions();
   
   // Add swipe gesture to navigate back
   const { onTouchStart, onTouchMove, onTouchEnd } = useSwipe({
@@ -65,6 +77,34 @@ const AdminPermissions = () => {
     });
     return categories;
   }, []);
+
+  const systemPermissionsByCategory = React.useMemo(() => {
+    const categories: Record<string, typeof systemPermissions> = {
+      "Property": [],
+      "Task": [],
+      "User": [],
+      "Inventory": [],
+      "Report": [],
+      "Other": []
+    };
+    systemPermissions.forEach(permission => {
+      const key = permission.permission_key;
+      if (key.includes("propert")) {
+        categories["Property"].push(permission);
+      } else if (key.includes("task") || key.includes("housekeeping") || key.includes("maintenance")) {
+        categories["Task"].push(permission);
+      } else if (key.includes("user") || key.includes("manage") || key.includes("admin")) {
+        categories["User"].push(permission);
+      } else if (key.includes("inventor") || key.includes("stock") || key.includes("order")) {
+        categories["Inventory"].push(permission);
+      } else if (key.includes("report") || key.includes("analytics")) {
+        categories["Report"].push(permission);
+      } else {
+        categories["Other"].push(permission);
+      }
+    });
+    return categories;
+  }, [systemPermissions]);
   
   const gestureProps = isMobile ? {
     onTouchStart,
@@ -78,7 +118,7 @@ const AdminPermissions = () => {
         <title>System Permissions - Arivia Villa Sync</title>
       </Helmet>
       
-      <div className="space-y-6">
+        <div className="space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1 px-0 text-left">
@@ -89,43 +129,96 @@ const AdminPermissions = () => {
                 <Shield className="mr-2 h-7 w-7" /> System Permissions
               </h1>
               <p className="text-sm text-muted-foreground tracking-tight">
-                View and understand the permission structure of the system
+                View and manage the permission structure of the system
               </p>
             </div>
           </div>
         </div>
         
-        <div className="grid grid-cols-1 gap-6">
-          {Object.entries(permissionsByCategory).map(([category, permissions]) => {
-          if (Object.keys(permissions).length === 0) return null;
-          return <Card key={category}>
-                <CardHeader>
-                  <CardTitle>{category} Permissions</CardTitle>
-                  <CardDescription>
-                    Permissions related to {category.toLowerCase()} operations
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(permissions).map(([key, permission]) => <div key={key} className="p-4 border rounded-md">
-                        <h3 className="font-medium">{permission.title}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {permission.description}
-                        </p>
-                        <div className="mt-2">
-                          <h4 className="text-xs text-muted-foreground font-medium">Allowed roles:</h4>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {permission.allowedRoles.map(role => <span key={role} className="px-2 py-0.5 bg-secondary/50 text-xs rounded-full">
-                                {role}
-                              </span>)}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="view" className="flex items-center gap-2">
+              <Shield className="h-4 w-4" />
+              View Permissions
+            </TabsTrigger>
+            <TabsTrigger value="edit" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Edit Permissions
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="view" className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              {Object.entries(permissionsByCategory).map(([category, permissions]) => {
+                if (Object.keys(permissions).length === 0) return null;
+                return <Card key={category}>
+                  <CardHeader>
+                    <CardTitle>{category} Permissions</CardTitle>
+                    <CardDescription>
+                      Permissions related to {category.toLowerCase()} operations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(permissions).map(([key, permission]) => <div key={key} className="p-4 border rounded-md">
+                          <h3 className="font-medium">{permission.title}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {permission.description}
+                          </p>
+                          <div className="mt-2">
+                            <h4 className="text-xs text-muted-foreground font-medium">Allowed roles:</h4>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {permission.allowedRoles.map(role => <span key={role} className="px-2 py-0.5 bg-secondary/50 text-xs rounded-full">
+                                  {role}
+                                </span>)}
+                            </div>
                           </div>
+                        </div>)}
+                    </div>
+                  </CardContent>
+                </Card>;
+              })}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="edit" className="space-y-6">
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6">
+                {Object.entries(systemPermissionsByCategory).map(([category, permissions]) => {
+                  if (permissions.length === 0) return null;
+                  return (
+                    <Card key={category}>
+                      <CardHeader>
+                        <CardTitle>{category} Permissions</CardTitle>
+                        <CardDescription>
+                          Edit permissions related to {category.toLowerCase()} operations
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {permissions.map(permission => (
+                            <SystemPermissionEditor
+                              key={permission.id}
+                              permission={permission}
+                              onUpdate={updatePermission}
+                              onToggleActive={togglePermissionActive}
+                              onUpdateRoles={updateAllowedRoles}
+                              saving={saving}
+                            />
+                          ))}
                         </div>
-                      </div>)}
-                  </div>
-                </CardContent>
-              </Card>;
-        })}
-        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -1381,6 +1381,50 @@ export type Database = {
         }
         Relationships: []
       }
+      system_permissions: {
+        Row: {
+          allowed_roles: string[]
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          modified_by: string | null
+          permission_key: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          allowed_roles?: string[]
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          modified_by?: string | null
+          permission_key: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          allowed_roles?: string[]
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          modified_by?: string | null
+          permission_key?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "system_permissions_modified_by_fkey"
+            columns: ["modified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_settings: {
         Row: {
           category: string
