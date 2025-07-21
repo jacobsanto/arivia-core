@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Settings, Clock, Calendar } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Settings, Clock, Calendar, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CleaningConfigDialog } from "./CleaningConfigDialog";
@@ -29,6 +30,8 @@ export const CleaningConfigPage: React.FC = () => {
   const [selectedConfig, setSelectedConfig] = useState<CleaningConfig | null>(null);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
   const [showRulesTable, setShowRulesTable] = useState(false);
+  const [configToDelete, setConfigToDelete] = useState<CleaningConfig | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -94,6 +97,38 @@ export const CleaningConfigPage: React.FC = () => {
   const getPropertyTitle = (listingId: string) => {
     const property = properties.find(p => p.id === listingId);
     return property?.title || 'Unknown Property';
+  };
+
+  const handleDeleteConfig = async () => {
+    if (!configToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      
+      const { error } = await supabase
+        .from('property_cleaning_configs')
+        .delete()
+        .eq('id', configToDelete.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: `Configuration "${configToDelete.config_name}" deleted successfully`
+      });
+
+      setConfigToDelete(null);
+      fetchData();
+    } catch (error: any) {
+      console.error('Error deleting config:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete configuration",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (loading) {
@@ -179,6 +214,15 @@ export const CleaningConfigPage: React.FC = () => {
                   <Settings className="h-3 w-3" />
                   Edit
                 </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setConfigToDelete(config)}
+                  className="flex items-center gap-1 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                  Delete
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -219,6 +263,28 @@ export const CleaningConfigPage: React.FC = () => {
         config={selectedConfig}
         onSuccess={fetchData}
       />
+
+      <AlertDialog open={!!configToDelete} onOpenChange={() => setConfigToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Configuration</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the configuration "{configToDelete?.config_name}"? 
+              This will also delete all associated cleaning rules and schedules. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfig}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
