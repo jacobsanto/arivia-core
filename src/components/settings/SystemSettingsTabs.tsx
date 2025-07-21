@@ -7,13 +7,19 @@ import UserManagementSettings from "./sections/UserManagementSettings";
 import NotificationSettings from "./sections/NotificationSettings";
 import IntegrationSettings from "./sections/integration/IntegrationSettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
+import EmailSettings from "./sections/EmailSettings";
+import BackupSettings from "./sections/BackupSettings";
+import EnhancedSecuritySettings from "./sections/EnhancedSecuritySettings";
 import SettingsTabContent from "./tabs/SettingsTabContent";
 
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
+  { value: "email", label: "Email", icon: "Mail" as const },
+  { value: "security", label: "Security", icon: "Shield" as const },
   { value: "notifications", label: "Notifications", icon: "Bell" as const },
   { value: "integrations", label: "Integrations", icon: "Plug" as const },
+  { value: "backup", label: "Backup", icon: "Archive" as const },
   { value: "appearance", label: "Appearance", icon: "Palette" as const },
 ];
 
@@ -47,6 +53,22 @@ const SystemSettingsTabs = () => {
       </SettingsTabContent>
 
       <SettingsTabContent
+        value="email"
+        title="Email Settings"
+        status={{ status: "not-configured" }}
+      >
+        <EmailSettings />
+      </SettingsTabContent>
+
+      <SettingsTabContent
+        value="security"
+        title="Security Settings"
+        status={{ status: "configured" }}
+      >
+        <EnhancedSecuritySettings />
+      </SettingsTabContent>
+
+      <SettingsTabContent
         value="notifications"
         title="Notification Settings"
         status={{ status: "not-configured" }}
@@ -60,6 +82,14 @@ const SystemSettingsTabs = () => {
         status={{ status: "not-configured" }}
       >
         <IntegrationSettings />
+      </SettingsTabContent>
+
+      <SettingsTabContent
+        value="backup"
+        title="Backup & Restore"
+        status={{ status: "configured" }}
+      >
+        <BackupSettings />
       </SettingsTabContent>
 
       <SettingsTabContent

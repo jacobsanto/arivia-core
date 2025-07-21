@@ -10,7 +10,8 @@ export type SettingsCategory =
   | 'integration' 
   | 'maintenance'
   | 'user-management'
-  | 'notifications';
+  | 'notifications'
+  | 'backup';
 
 export interface SystemSettings {
   id: string;

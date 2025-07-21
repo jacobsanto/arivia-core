@@ -1331,6 +1331,72 @@ export type Database = {
         }
         Relationships: []
       }
+      settings_audit_log: {
+        Row: {
+          action: string
+          category: string
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          category: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          category?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      settings_backups: {
+        Row: {
+          backup_name: string
+          created_at: string | null
+          created_by: string | null
+          id: string
+          restored_at: string | null
+          restored_by: string | null
+          settings_data: Json
+        }
+        Insert: {
+          backup_name: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          restored_at?: string | null
+          restored_by?: string | null
+          settings_data: Json
+        }
+        Update: {
+          backup_name?: string
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          restored_at?: string | null
+          restored_by?: string | null
+          settings_data?: Json
+        }
+        Relationships: []
+      }
       sync_logs: {
         Row: {
           bookings_created: number | null
@@ -1849,6 +1915,10 @@ export type Database = {
       }
     }
     Functions: {
+      backup_all_settings: {
+        Args: { backup_name: string }
+        Returns: string
+      }
       cleanup_old_logs: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1870,6 +1940,10 @@ export type Database = {
         Returns: undefined
       }
       get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_current_user_role_secure: {
         Args: Record<PropertyKey, never>
         Returns: string
       }
@@ -1913,9 +1987,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      restore_settings_backup: {
+        Args: { backup_id: string }
+        Returns: boolean
+      }
       scheduled_maintenance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_settings: {
+        Args: { category: string; settings: Json }
+        Returns: boolean
       }
     }
     Enums: {
