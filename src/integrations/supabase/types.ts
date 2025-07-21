@@ -1877,6 +1877,26 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_housekeeping_metrics: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
+      get_inventory_metrics: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
+      get_maintenance_metrics: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
+      get_operational_dashboard: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
+      get_property_metrics: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
       get_system_health: {
         Args: Record<PropertyKey, never>
         Returns: Json

@@ -3,103 +3,124 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BarChart3, TrendingUp, Download, Calendar, Filter, FileText } from 'lucide-react';
+import { Calendar, Download, FileText, TrendingUp, Activity, Clock, CheckCircle, Wrench, Home, Package, Filter } from 'lucide-react';
 import { ReportBuilder } from './ReportBuilder';
 import { DataVisualization } from './DataVisualization';
 import { ScheduledReports } from './ScheduledReports';
 import { ExportCenter } from './ExportCenter';
+import { useOperationalAnalytics } from '@/hooks/useOperationalAnalytics';
 
 export const AdvancedReportingDashboard = () => {
-  const [activeReports] = useState(12);
-  const [scheduledReports] = useState(8);
-  const [dataExports] = useState(24);
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // Set up date range for analytics (last 30 days)
+  const dateRange = {
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    to: new Date(),
+  };
+  
+  const { metrics, loading } = useOperationalAnalytics(dateRange);
 
+  // Operational analytics stats
   const reportingStats = [
     {
-      title: "Active Reports",
-      value: activeReports,
-      icon: FileText,
-      color: "text-primary",
-      trend: "+12%"
+      title: "Housekeeping Tasks",
+      value: metrics?.housekeeping.totalTasks.toString() || "0",
+      icon: CheckCircle,
+      color: "text-blue-600",
+      trend: `${metrics?.housekeeping.completionRate.toFixed(1) || 0}% completion rate`,
     },
     {
-      title: "Scheduled Reports",
-      value: scheduledReports,
-      icon: Calendar,
-      color: "text-info",
-      trend: "+8%"
+      title: "Maintenance Tasks",
+      value: metrics?.maintenance.totalTasks.toString() || "0",
+      icon: Wrench,
+      color: "text-orange-600", 
+      trend: `${metrics?.maintenance.urgentTasks || 0} urgent`,
     },
     {
-      title: "Data Exports",
-      value: dataExports,
-      icon: Download,
-      color: "text-success",
-      trend: "+24%"
+      title: "Active Properties",
+      value: metrics?.properties.activeProperties.toString() || "0",
+      icon: Home,
+      color: "text-green-600",
+      trend: `${metrics?.properties.damageReports || 0} damage reports`,
     },
     {
-      title: "Analytics Views",
-      value: 156,
-      icon: BarChart3,
-      color: "text-warning",
-      trend: "+15%"
-    }
+      title: "Inventory Usage",
+      value: metrics?.inventory.totalUsage.toString() || "0",
+      icon: Package,
+      color: "text-purple-600",
+      trend: `${metrics?.inventory.lowStockItems || 0} low stock items`,
+    },
   ];
 
   const recentReports = [
     {
       id: 1,
-      name: "Monthly Revenue Analysis",
-      type: "Financial",
+      name: "Monthly Housekeeping Performance",
+      type: "Housekeeping",
       lastRun: "2 hours ago",
       status: "completed",
       schedule: "Monthly"
     },
     {
       id: 2,
-      name: "Occupancy Performance",
-      type: "Operations",
+      name: "Weekly Maintenance Summary", 
+      type: "Maintenance",
       lastRun: "1 day ago",
       status: "completed",
       schedule: "Weekly"
     },
     {
       id: 3,
-      name: "Guest Satisfaction Survey",
-      type: "Guest Experience",
-      lastRun: "3 days ago",
-      status: "pending",
-      schedule: "Bi-weekly"
+      name: "Daily Operations Dashboard",
+      type: "Operations",
+      lastRun: "5 hours ago", 
+      status: "running",
+      schedule: "Daily"
     },
     {
       id: 4,
-      name: "Maintenance Cost Analysis",
-      type: "Maintenance",
-      lastRun: "5 days ago",
+      name: "Property Performance Analysis",
+      type: "Properties",
+      lastRun: "3 days ago",
       status: "completed",
-      schedule: "Monthly"
+      schedule: "Weekly"
+    },
+    {
+      id: 5,
+      name: "Inventory Usage Report",
+      type: "Inventory",
+      lastRun: "6 hours ago",
+      status: "completed",
+      schedule: "Daily"
     }
   ];
 
   const quickReports = [
     {
-      name: "Today's Check-ins",
-      description: "Current day arrival summary",
-      type: "operations"
+      name: "Housekeeping Efficiency",
+      description: "Task completion rates, turnaround times, and staff performance",
+      type: "housekeeping"
     },
     {
-      name: "Weekly Revenue",
-      description: "7-day financial overview",
-      type: "financial"
+      name: "Maintenance Overview",
+      description: "Response times, costs, and equipment status",
+      type: "maintenance"
     },
     {
-      name: "Task Completion",
-      description: "Housekeeping & maintenance status",
-      type: "tasks"
+      name: "Property Performance", 
+      description: "Occupancy rates, damage reports, and property status",
+      type: "properties"
     },
     {
-      name: "Guest Reviews",
-      description: "Recent feedback analysis",
-      type: "guest"
+      name: "Inventory Analysis",
+      description: "Stock levels, usage patterns, and reorder recommendations",
+      type: "inventory"
+    },
+    {
+      name: "Staff Productivity",
+      description: "Task assignments, completion rates, and performance metrics",
+      type: "staff"
     }
   ];
 
@@ -108,8 +129,8 @@ export const AdvancedReportingDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold text-foreground">Advanced Reporting</h2>
-          <p className="text-muted-foreground">Comprehensive analytics and data insights</p>
+          <h2 className="text-3xl font-bold text-foreground">Operational Analytics</h2>
+          <p className="text-muted-foreground">Real-time insights into housekeeping, maintenance, and property operations</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline">
@@ -133,11 +154,13 @@ export const AdvancedReportingDashboard = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                    <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                    <p className="text-2xl font-bold text-foreground">
+                      {loading ? "..." : stat.value}
+                    </p>
                   </div>
                   <div className="flex flex-col items-end">
                     <Icon className={`h-8 w-8 ${stat.color}`} />
-                    <span className="text-xs text-success font-medium">{stat.trend}</span>
+                    <span className="text-xs text-muted-foreground font-medium">{stat.trend}</span>
                   </div>
                 </div>
               </CardContent>
