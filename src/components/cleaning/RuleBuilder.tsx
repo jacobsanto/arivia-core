@@ -20,10 +20,35 @@ interface RuleBuilderProps {
 }
 
 export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSave, existingRule }) => {
-  const { actions, createCleaningRule, updateCleaningRule } = useRuleBasedCleaningSystem();
-  const [ruleName, setRuleName] = useState(existingRule?.rule_name || '');
-  const [stayRangeMin, setStayRangeMin] = useState(existingRule?.stay_length_range?.[0] || 1);
-  const [stayRangeMax, setStayRangeMax] = useState(existingRule?.stay_length_range?.[1] || 7);
+  const { actions, rules, createCleaningRule, updateCleaningRule } = useRuleBasedCleaningSystem();
+  
+  // Standard global rule names
+  const STANDARD_GLOBAL_RULES = ['SHORT STAY', 'MEDIUM STAY', 'EXTENDED STAY'];
+  
+  // Initialize with proper defaults based on rule type
+  const getInitialRuleName = () => {
+    if (existingRule?.rule_name) return existingRule.rule_name;
+    if (existingRule?.is_global === false) return ''; // Custom rule
+    return 'SHORT STAY'; // Default to first standard rule
+  };
+  
+  const getInitialStayRange = (ruleName: string) => {
+    if (existingRule?.stay_length_range) return existingRule.stay_length_range;
+    
+    switch (ruleName) {
+      case 'SHORT STAY': return [1, 3];
+      case 'MEDIUM STAY': return [4, 7];
+      case 'EXTENDED STAY': return [8, 999];
+      default: return [1, 7];
+    }
+  };
+  
+  const initialRuleName = getInitialRuleName();
+  const initialRange = getInitialStayRange(initialRuleName);
+  
+  const [ruleName, setRuleName] = useState(initialRuleName);
+  const [stayRangeMin, setStayRangeMin] = useState(initialRange[0]);
+  const [stayRangeMax, setStayRangeMax] = useState(initialRange[1]);
   const [isGlobal, setIsGlobal] = useState(existingRule?.is_global ?? true);
   const [actionsByDay, setActionsByDay] = useState<Record<string, string[]>>(existingRule?.actions_by_day || {});
   const [selectedProperties, setSelectedProperties] = useState<string[]>(existingRule?.assignable_properties || []);
@@ -67,9 +92,25 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
     }));
   };
 
+  const handleRuleNameChange = (value: string) => {
+    setRuleName(value);
+    const newRange = getInitialStayRange(value);
+    setStayRangeMin(newRange[0]);
+    setStayRangeMax(newRange[1]);
+  };
+
   const handleSave = async () => {
     if (!ruleName.trim()) {
       return;
+    }
+
+    // Prevent duplicate global rules
+    if (isGlobal && !existingRule) {
+      const existingGlobalRule = rules.find(r => r.rule_name === ruleName && r.is_global);
+      if (existingGlobalRule) {
+        alert(`Global rule "${ruleName}" already exists. Please choose a different name.`);
+        return;
+      }
     }
 
     setLoading(true);
