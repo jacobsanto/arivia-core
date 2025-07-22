@@ -226,10 +226,13 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          is_template: boolean | null
           max_nights: number
           min_nights: number
           rule_description: string | null
           rule_name: string
+          rule_version: number | null
+          template_id: string | null
           updated_at: string
         }
         Insert: {
@@ -237,10 +240,13 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_template?: boolean | null
           max_nights?: number
           min_nights?: number
           rule_description?: string | null
           rule_name: string
+          rule_version?: number | null
+          template_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -248,10 +254,13 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          is_template?: boolean | null
           max_nights?: number
           min_nights?: number
           rule_description?: string | null
           rule_name?: string
+          rule_version?: number | null
+          template_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -260,6 +269,13 @@ export type Database = {
             columns: ["config_id"]
             isOneToOne: false
             referencedRelation: "property_cleaning_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cleaning_rules_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_templates"
             referencedColumns: ["id"]
           },
         ]
@@ -343,6 +359,88 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      cleaning_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_global: boolean
+          name: string
+          template_data: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          name: string
+          template_data?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          name?: string
+          template_data?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      configuration_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          config_id: string | null
+          id: string
+          listing_id: string | null
+          template_id: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          config_id?: string | null
+          id?: string
+          listing_id?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          config_id?: string | null
+          id?: string
+          listing_id?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuration_assignments_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "property_cleaning_configs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuration_assignments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuration_assignments_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_templates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       damage_report_media: {
         Row: {
@@ -1331,6 +1429,120 @@ export type Database = {
         }
         Relationships: []
       }
+      rule_actions: {
+        Row: {
+          action_data: Json
+          action_order: number
+          action_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          rule_id: string
+        }
+        Insert: {
+          action_data?: Json
+          action_order?: number
+          action_type: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          rule_id: string
+        }
+        Update: {
+          action_data?: Json
+          action_order?: number
+          action_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_actions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_conditions: {
+        Row: {
+          condition_order: number
+          condition_type: string
+          created_at: string
+          id: string
+          logical_operator: string | null
+          operator: string
+          rule_id: string
+          value: Json
+        }
+        Insert: {
+          condition_order?: number
+          condition_type: string
+          created_at?: string
+          id?: string
+          logical_operator?: string | null
+          operator: string
+          rule_id: string
+          value: Json
+        }
+        Update: {
+          condition_order?: number
+          condition_type?: string
+          created_at?: string
+          id?: string
+          logical_operator?: string | null
+          operator?: string
+          rule_id?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_conditions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_test_results: {
+        Row: {
+          id: string
+          rule_id: string
+          test_booking_data: Json
+          test_result: Json
+          tested_at: string
+          tested_by: string | null
+        }
+        Insert: {
+          id?: string
+          rule_id: string
+          test_booking_data: Json
+          test_result: Json
+          tested_at?: string
+          tested_by?: string | null
+        }
+        Update: {
+          id?: string
+          rule_id?: string
+          test_booking_data?: Json
+          test_result?: Json
+          tested_at?: string
+          tested_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_test_results_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       security_events: {
         Row: {
           created_at: string | null
@@ -1972,6 +2184,10 @@ export type Database = {
       delete_cleaning_config_safely: {
         Args: { config_uuid: string }
         Returns: Json
+      }
+      evaluate_rule_conditions: {
+        Args: { rule_uuid: string; booking_data: Json }
+        Returns: boolean
       }
       generate_cleaning_tasks_from_config: {
         Args: {

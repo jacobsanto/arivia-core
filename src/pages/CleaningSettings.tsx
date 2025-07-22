@@ -1,11 +1,11 @@
 import React from "react";
-import { CleaningConfigPage } from "@/components/cleaning/CleaningConfigPage";
+import { UnifiedCleaningDashboard } from "@/components/cleaning/UnifiedCleaningDashboard";
 import { CleaningErrorBoundary } from "@/components/error-boundaries/CleaningErrorBoundary";
 
 const CleaningSettings = () => {
   return (
     <CleaningErrorBoundary>
-      <CleaningConfigPage />
+      <UnifiedCleaningDashboard />
     </CleaningErrorBoundary>
   );
 };
