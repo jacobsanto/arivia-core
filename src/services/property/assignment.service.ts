@@ -136,7 +136,7 @@ export const assignmentService = {
         throw new Error(error.message);
       }
 
-      return (data || []).map(property => ({
+      return (data || []).map((property: any) => ({
         property_id: property.id,
         property_name: property.name,
         property_address: property.address,
@@ -253,8 +253,9 @@ export const assignmentService = {
         .eq('id', propertyId)
         .single();
 
-      if (property && property.assigned_users) {
-        const updatedUsers = (property.assigned_users as string[]).filter((id: string) => id !== userId);
+      const propertyData = property as any;
+      if (propertyData && propertyData.assigned_users) {
+        const updatedUsers = (propertyData.assigned_users as string[]).filter((id: string) => id !== userId);
         
         const { error } = await supabase
           .from('properties')

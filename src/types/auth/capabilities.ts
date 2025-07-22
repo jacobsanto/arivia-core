@@ -11,5 +11,9 @@ export const OFFLINE_CAPABILITIES: Record<UserRole, string[]> = {
   concierge: ["manage_bookings"],
   housekeeping_staff: ["view_tasks", "create_orders"],
   maintenance_staff: ["view_tasks", "create_orders"],
-  inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"]
+  inventory_manager: ["manage_inventory", "view_reports", "manage_vendors", "create_orders"],
+  housekeeper: ["view_tasks", "create_orders"],
+  manager: ["manage_bookings", "view_reports"],
+  pool_service: ["view_tasks", "create_orders"],
+  external_partner: ["view_tasks"]
 };
