@@ -1,11 +1,12 @@
+
 import React from "react";
-import { UnifiedCleaningDashboard } from "@/components/cleaning/UnifiedCleaningDashboard";
+import { RuleBasedDashboard } from "@/components/cleaning/RuleBasedDashboard";
 import { CleaningErrorBoundary } from "@/components/error-boundaries/CleaningErrorBoundary";
 
 const CleaningSettings = () => {
   return (
     <CleaningErrorBoundary>
-      <UnifiedCleaningDashboard />
+      <RuleBasedDashboard />
     </CleaningErrorBoundary>
   );
 };
