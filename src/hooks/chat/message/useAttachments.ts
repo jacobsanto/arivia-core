@@ -1,7 +1,17 @@
 import { useState, useRef } from 'react';
 
+export interface Attachment {
+  id: string;
+  type: string;
+  name: string;
+  size: number;
+  url: string;
+  file: File;
+  preview?: string;
+}
+
 export function useAttachments() {
-  const [attachments, setAttachments] = useState<any[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 

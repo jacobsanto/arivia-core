@@ -6,7 +6,7 @@ import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
 import { useChatError } from "@/hooks/chat/useChatError";
-import { useChatEfficiency } from "@/hooks/chat/useChatEfficiency";
+
 import { toast } from "@/hooks/use-toast";
 
 export function useTeamChat() {
@@ -20,7 +20,6 @@ export function useTeamChat() {
   const isMobile = useIsMobile();
   const { user } = useUser();
   const { addError, removeError, errors } = useChatError();
-  const efficiency = useChatEfficiency();
   
   // Use our new hook for channel and users data
   const {
@@ -71,10 +70,6 @@ export function useTeamChat() {
     handleEmojiSelect
   } = useChat(chatType, activeChatId);
 
-  // Once messages are loaded, mark initial load as complete
-  if (messages.length > 0 && !efficiency.hasInitialLoad) {
-    efficiency.markInitialLoadComplete();
-  }
 
   // Handle chat errors with toast notifications
   if (error && errors.length === 0) {
@@ -97,7 +92,7 @@ export function useTeamChat() {
   }, [sendMessage]);
 
   const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessageInput(e.target.value);
+    setMessageInput(e);
     handleTyping();
   }, [setMessageInput, handleTyping]);
 
