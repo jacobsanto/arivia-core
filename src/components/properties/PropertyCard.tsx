@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, Users } from "lucide-react";
 import { useProperties } from "@/hooks/useProperties";
+import { assignmentService, type AssignableUser } from "@/services/property/assignment.service";
 import type { Property } from "@/types/property.types";
 
 interface PropertyCardProps {
@@ -28,6 +29,7 @@ interface PropertyCardProps {
   onPricingConfig: (property: Property) => void;
   onGuestManagement: (property: Property) => void;
   onDelete: (id: string, name: string) => void;
+  onManageAssignments?: (property: Property) => void;
 }
 
 const PropertyCard = ({ 
@@ -36,7 +38,8 @@ const PropertyCard = ({
   onBookingManagement,
   onPricingConfig,
   onGuestManagement,
-  onDelete
+  onDelete,
+  onManageAssignments
 }: PropertyCardProps) => {
   const statusColors = {
     Occupied: "bg-green-100 text-green-800",
@@ -46,10 +49,12 @@ const PropertyCard = ({
 
   const [currentBooking, setCurrentBooking] = useState<any>(null);
   const [nextBooking, setNextBooking] = useState<any>(null);
+  const [assignedUsers, setAssignedUsers] = useState<AssignableUser[]>([]);
   const { getPropertyBookings } = useProperties();
 
   useEffect(() => {
-    const fetchBookings = async () => {
+    const fetchData = async () => {
+      // Fetch bookings
       const bookings = await getPropertyBookings(property.id);
       
       const today = new Date();
@@ -63,10 +68,21 @@ const PropertyCard = ({
         .filter(booking => new Date(booking.check_in_date) > today)
         .sort((a, b) => new Date(a.check_in_date).getTime() - new Date(b.check_in_date).getTime())[0];
       setNextBooking(upcoming || null);
+
+      // Fetch assigned users
+      if (property.assigned_users && property.assigned_users.length > 0) {
+        try {
+          const users = await assignmentService.getAssignableUsers();
+          const assigned = users.filter(user => property.assigned_users?.includes(user.id));
+          setAssignedUsers(assigned);
+        } catch (error) {
+          console.error('Error fetching assigned users:', error);
+        }
+      }
     };
     
-    fetchBookings();
-  }, [property.id]);
+    fetchData();
+  }, [property.id, property.assigned_users]);
 
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
@@ -94,6 +110,11 @@ const PropertyCard = ({
               <DropdownMenuItem onClick={() => onBookingManagement(property)}>Manage Bookings</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onPricingConfig(property)}>Configure Pricing</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onGuestManagement(property)}>Guest Management</DropdownMenuItem>
+              {onManageAssignments && (
+                <DropdownMenuItem onClick={() => onManageAssignments(property)}>
+                  Manage Staff Assignments
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-red-600" onClick={() => onDelete(property.id, property.name)}>
                 Delete Property
@@ -124,6 +145,28 @@ const PropertyCard = ({
             <p className="font-medium">Next booking:</p>
             <p className="text-muted-foreground">{nextBooking.guest_name}</p>
             <p className="text-muted-foreground">From {new Date(nextBooking.check_in_date).toLocaleDateString()}</p>
+          </div>
+        )}
+
+        {/* Assigned Staff */}
+        {assignedUsers.length > 0 && (
+          <div className="mt-2 pt-2 border-t">
+            <div className="flex items-center gap-1 mb-1">
+              <Users className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">Assigned Staff</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {assignedUsers.slice(0, 3).map((user) => (
+                <Badge key={user.id} variant="outline" className="text-xs">
+                  {user.name}
+                </Badge>
+              ))}
+              {assignedUsers.length > 3 && (
+                <Badge variant="outline" className="text-xs">
+                  +{assignedUsers.length - 3} more
+                </Badge>
+              )}
+            </div>
           </div>
         )}
       </CardContent>

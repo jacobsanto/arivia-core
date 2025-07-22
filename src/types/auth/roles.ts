@@ -35,5 +35,21 @@ export const ROLE_DETAILS: Record<UserRole, {
   inventory_manager: {
     title: "Inventory Manager",
     description: "Manage supplies and inventory across properties"
+  },
+  housekeeper: {
+    title: "Housekeeper",
+    description: "Housekeeping services for assigned properties"
+  },
+  manager: {
+    title: "Manager",
+    description: "General management of assigned properties"
+  },
+  pool_service: {
+    title: "Pool Service",
+    description: "Pool maintenance and services"
+  },
+  external_partner: {
+    title: "External Partner",
+    description: "External service provider access"
   }
 };

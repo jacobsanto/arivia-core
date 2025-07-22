@@ -8,6 +8,7 @@ import PropertyHeader from "@/components/properties/PropertyHeader";
 import PropertyFilters from "@/components/properties/PropertyFilters";
 import PropertyList from "@/components/properties/PropertyList";
 import PropertyPagination from "@/components/properties/PropertyPagination";
+import { PropertyAssignmentManager } from "@/components/properties/PropertyAssignmentManager";
 import { usePropertyFiltering } from "@/hooks/usePropertyFiltering";
 
 interface PropertiesListViewProps {
@@ -24,13 +25,16 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
   onGuestManagement
 }) => {
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [isAssignmentDialogOpen, setIsAssignmentDialogOpen] = useState(false);
+  const [selectedPropertyForAssignment, setSelectedPropertyForAssignment] = useState<Property | null>(null);
   
   const { 
     properties, 
     isLoading, 
     error, 
     addProperty, 
-    deleteProperty 
+    deleteProperty,
+    fetchProperties 
   } = useProperties();
 
   const unifiedProperties: UnifiedProperty[] = properties.map(property => ({
@@ -73,6 +77,15 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
     }
   };
 
+  const handleManageAssignments = (property: Property) => {
+    setSelectedPropertyForAssignment(property);
+    setIsAssignmentDialogOpen(true);
+  };
+
+  const handleAssignmentChanged = () => {
+    fetchProperties(); // Refresh properties to show updated assignments
+  };
+
   const convertedPaginatedProperties = paginatedProperties as unknown as Property[];
 
   return (
@@ -93,6 +106,7 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
         onGuestManagement={onGuestManagement}
         onDelete={handleDeleteProperty}
         onAddProperty={handleAddProperty}
+        onManageAssignments={handleManageAssignments}
       />
       
       <PropertyPagination 
@@ -109,6 +123,16 @@ const PropertiesListView: React.FC<PropertiesListViewProps> = ({
           <PropertyForm onSubmit={handlePropertyCreated} />
         </DialogContent>
       </Dialog>
+
+      <PropertyAssignmentManager
+        property={selectedPropertyForAssignment}
+        isOpen={isAssignmentDialogOpen}
+        onClose={() => {
+          setIsAssignmentDialogOpen(false);
+          setSelectedPropertyForAssignment(null);
+        }}
+        onAssignmentChanged={handleAssignmentChanged}
+      />
     </div>
   );
 };

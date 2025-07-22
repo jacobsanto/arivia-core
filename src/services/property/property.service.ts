@@ -30,7 +30,8 @@ export const propertyService = {
         address: item.address,
         max_guests: item.max_guests,
         created_at: item.created_at,
-        updated_at: item.updated_at
+        updated_at: item.updated_at,
+        assigned_users: (item as any).assigned_users || []
       }));
     } catch (err: any) {
       console.error('Error fetching properties:', err);

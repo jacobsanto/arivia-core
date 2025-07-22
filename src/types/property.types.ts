@@ -16,6 +16,7 @@ export interface Property {
   price_per_night: number;
   created_at: string;
   updated_at: string;
+  assigned_users?: string[];
 }
 
 export interface PropertyFormData {

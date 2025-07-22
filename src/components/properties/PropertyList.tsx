@@ -13,6 +13,7 @@ interface PropertyListProps {
   onGuestManagement: (property: Property) => void;
   onDelete: (id: string, name: string) => void;
   onAddProperty: () => void;
+  onManageAssignments?: (property: Property) => void;
 }
 
 const PropertyList = ({ 
@@ -23,7 +24,8 @@ const PropertyList = ({
   onPricingConfig,
   onGuestManagement,
   onDelete,
-  onAddProperty
+  onAddProperty,
+  onManageAssignments
 }: PropertyListProps) => {
   if (isLoading) {
     return (
@@ -83,6 +85,7 @@ const PropertyList = ({
           onPricingConfig={onPricingConfig}
           onGuestManagement={onGuestManagement}
           onDelete={onDelete}
+          onManageAssignments={onManageAssignments}
         />
       ))}
     </div>

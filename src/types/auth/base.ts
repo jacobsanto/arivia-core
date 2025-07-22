@@ -33,7 +33,11 @@ export type UserRole =
   | "concierge" 
   | "housekeeping_staff" 
   | "maintenance_staff" 
-  | "inventory_manager";
+  | "inventory_manager"
+  | "housekeeper"
+  | "manager"
+  | "pool_service"
+  | "external_partner";
 
 // Type for React state setter functions that can accept a value or update function
 export type StateSetter<T> = (value: T | ((prev: T) => T)) => void;
