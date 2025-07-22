@@ -7,6 +7,7 @@ import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
 import { useChatError } from "@/hooks/chat/useChatError";
 import { useChatEfficiency } from "@/hooks/chat/useChatEfficiency";
+import { toast } from "@/hooks/use-toast";
 
 export function useTeamChat() {
   // State
@@ -33,9 +34,14 @@ export function useTeamChat() {
     handleSelectChat
   } = useChannelAndUsers();
   
-  // Handle connection errors
+  // Handle connection errors with toast notifications
   if (loadError && errors.length === 0) {
     addError('connection', loadError);
+    toast({
+      title: "Connection Error",
+      description: "Unable to connect to chat services. Please check your connection.",
+      variant: "destructive",
+    });
   }
   
   // Use our chat hook to manage messages with memoization to prevent excessive renders
@@ -70,9 +76,14 @@ export function useTeamChat() {
     efficiency.markInitialLoadComplete();
   }
 
-  // Handle chat errors
+  // Handle chat errors with toast notifications
   if (error && errors.length === 0) {
     addError('general', error);
+    toast({
+      title: "Chat Error",
+      description: "Failed to load chat messages. Please try refreshing.",
+      variant: "destructive",
+    });
   }
 
   const toggleSidebar = useCallback(() => {

@@ -15,6 +15,7 @@ import { InventoryProvider } from "@/contexts/InventoryContext";
 import { OrderProvider } from "@/contexts/OrderContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileInventory from "@/components/inventory/MobileInventory";
+import { InventoryErrorBoundary } from "@/components/error-boundaries/InventoryErrorBoundary";
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -22,79 +23,85 @@ const Inventory = () => {
 
   // Render mobile-specific UI
   if (isMobile) {
-    return <MobileInventory />;
+    return (
+      <InventoryErrorBoundary>
+        <MobileInventory />
+      </InventoryErrorBoundary>
+    );
   }
 
   // Desktop UI
   return (
-    <InventoryProvider>
-      <OrderProvider>
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
-            <p className="text-muted-foreground">
-              Manage supplies across main storage and property locations
-            </p>
-          </div>
-
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="border-b">
-              <TabsList className="bg-transparent -mb-px">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
-                <TabsTrigger value="add-item">Add Item</TabsTrigger>
-                <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
-                <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
-                <TabsTrigger value="usage">Usage Reports</TabsTrigger>
-                <TabsTrigger value="vendors">Vendors</TabsTrigger>
-                <TabsTrigger value="orders">Orders</TabsTrigger>
-                <TabsTrigger value="create-order">Create Order</TabsTrigger>
-              </TabsList>
+    <InventoryErrorBoundary>
+      <InventoryProvider>
+        <OrderProvider>
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
+              <p className="text-muted-foreground">
+                Manage supplies across main storage and property locations
+              </p>
             </div>
-            
-            <Card className="mt-6 border-t-0 rounded-t-none">
-              <CardContent className="pt-6">
-                <TabsContent value="overview" className="mt-0">
-                  <InventoryOverview />
-                </TabsContent>
-                
-                <TabsContent value="stock-levels" className="mt-0">
-                  <StockLevels />
-                </TabsContent>
-                
-                <TabsContent value="add-item" className="mt-0">
-                  <AddItem />
-                </TabsContent>
-                
-                <TabsContent value="receipts" className="mt-0">
-                  <StockReceipt />
-                </TabsContent>
-                
-                <TabsContent value="transfers" className="mt-0">
-                  <StockTransfer />
-                </TabsContent>
-                
-                <TabsContent value="usage" className="mt-0">
-                  <InventoryUsage />
-                </TabsContent>
-                
-                <TabsContent value="vendors" className="mt-0">
-                  <VendorsList />
-                </TabsContent>
-                
-                <TabsContent value="orders" className="mt-0">
-                  <OrderList />
-                </TabsContent>
-                
-                <TabsContent value="create-order" className="mt-0">
-                  <OrderForm />
-                </TabsContent>
-              </CardContent>
-            </Card>
-          </Tabs>
-        </div>
-      </OrderProvider>
-    </InventoryProvider>
+
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="border-b">
+                <TabsList className="bg-transparent -mb-px">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="stock-levels">Stock Levels</TabsTrigger>
+                  <TabsTrigger value="add-item">Add Item</TabsTrigger>
+                  <TabsTrigger value="receipts">Stock Receipt</TabsTrigger>
+                  <TabsTrigger value="transfers">Transfer Stock</TabsTrigger>
+                  <TabsTrigger value="usage">Usage Reports</TabsTrigger>
+                  <TabsTrigger value="vendors">Vendors</TabsTrigger>
+                  <TabsTrigger value="orders">Orders</TabsTrigger>
+                  <TabsTrigger value="create-order">Create Order</TabsTrigger>
+                </TabsList>
+              </div>
+              
+              <Card className="mt-6 border-t-0 rounded-t-none">
+                <CardContent className="pt-6">
+                  <TabsContent value="overview" className="mt-0">
+                    <InventoryOverview />
+                  </TabsContent>
+                  
+                  <TabsContent value="stock-levels" className="mt-0">
+                    <StockLevels />
+                  </TabsContent>
+                  
+                  <TabsContent value="add-item" className="mt-0">
+                    <AddItem />
+                  </TabsContent>
+                  
+                  <TabsContent value="receipts" className="mt-0">
+                    <StockReceipt />
+                  </TabsContent>
+                  
+                  <TabsContent value="transfers" className="mt-0">
+                    <StockTransfer />
+                  </TabsContent>
+                  
+                  <TabsContent value="usage" className="mt-0">
+                    <InventoryUsage />
+                  </TabsContent>
+                  
+                  <TabsContent value="vendors" className="mt-0">
+                    <VendorsList />
+                  </TabsContent>
+                  
+                  <TabsContent value="orders" className="mt-0">
+                    <OrderList />
+                  </TabsContent>
+                  
+                  <TabsContent value="create-order" className="mt-0">
+                    <OrderForm />
+                  </TabsContent>
+                </CardContent>
+              </Card>
+            </Tabs>
+          </div>
+        </OrderProvider>
+      </InventoryProvider>
+    </InventoryErrorBoundary>
   );
 };
 

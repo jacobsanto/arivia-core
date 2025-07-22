@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { toast } from "@/hooks/use-toast";
 
 // Define the shape of our context data
 interface InventoryContextType {
@@ -54,28 +55,45 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  // Use localStorage to persist data
+  // Use localStorage to persist data with error handling
   useEffect(() => {
-    // Load from localStorage on first render
-    const savedCategories = localStorage.getItem('inventoryCategories');
-    const savedUnits = localStorage.getItem('inventoryUnits');
-    
-    if (savedCategories) {
-      setCategories(JSON.parse(savedCategories));
-    }
-    
-    if (savedUnits) {
-      setUnits(JSON.parse(savedUnits));
+    try {
+      // Load from localStorage on first render
+      const savedCategories = localStorage.getItem('inventoryCategories');
+      const savedUnits = localStorage.getItem('inventoryUnits');
+      
+      if (savedCategories) {
+        setCategories(JSON.parse(savedCategories));
+      }
+      
+      if (savedUnits) {
+        setUnits(JSON.parse(savedUnits));
+      }
+    } catch (error) {
+      console.error('Failed to load inventory data from localStorage:', error);
+      toast({
+        title: "Storage Error",
+        description: "Failed to load saved inventory settings. Using defaults.",
+        variant: "destructive",
+      });
     }
   }, []);
 
   useEffect(() => {
-    // Save to localStorage whenever data changes
-    localStorage.setItem('inventoryCategories', JSON.stringify(categories));
+    try {
+      // Save to localStorage whenever data changes
+      localStorage.setItem('inventoryCategories', JSON.stringify(categories));
+    } catch (error) {
+      console.error('Failed to save categories to localStorage:', error);
+    }
   }, [categories]);
 
   useEffect(() => {
-    localStorage.setItem('inventoryUnits', JSON.stringify(units));
+    try {
+      localStorage.setItem('inventoryUnits', JSON.stringify(units));
+    } catch (error) {
+      console.error('Failed to save units to localStorage:', error);
+    }
   }, [units]);
 
   return (

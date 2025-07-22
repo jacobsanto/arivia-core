@@ -8,6 +8,7 @@ import ConnectionAlerts from "@/components/chat/status/ConnectionAlerts";
 import { useTeamChat } from "@/hooks/chat/useTeamChat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { TeamChatErrorBoundary } from "@/components/error-boundaries/TeamChatErrorBoundary";
 
 const TeamChat = () => {
   const isMobile = useIsMobile();
@@ -140,38 +141,40 @@ const TeamChat = () => {
   ]);
 
   return (
-    <div className="h-[calc(100vh-10rem)] flex flex-col">
-      <div className="mb-4">
-        <h1 className="text-3xl font-bold tracking-tight">Team Chat</h1>
-        <p className="text-muted-foreground">
-          Communicate in real-time with your team members.
-        </p>
-      </div>
-      
-      {ConnectionAlertsComponent}
-      
-      <div className="flex flex-1 gap-4 h-full">
-        {/* Mobile Sidebar Toggle */}
-        {isMobile && (
-          <div className="md:hidden absolute top-4 right-4 z-20">
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={toggleSidebar}
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
+    <TeamChatErrorBoundary>
+      <div className="h-[calc(100vh-10rem)] flex flex-col">
+        <div className="mb-4">
+          <h1 className="text-3xl font-bold tracking-tight">Team Chat</h1>
+          <p className="text-muted-foreground">
+            Communicate in real-time with your team members.
+          </p>
+        </div>
         
-        {/* Sidebar */}
-        {SidebarComponent}
+        {ConnectionAlertsComponent}
         
-        {/* Chat Area */}
-        {ChatAreaComponent}
+        <div className="flex flex-1 gap-4 h-full">
+          {/* Mobile Sidebar Toggle */}
+          {isMobile && (
+            <div className="md:hidden absolute top-4 right-4 z-20">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                onClick={toggleSidebar}
+                aria-label="Toggle sidebar"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </div>
+          )}
+          
+          {/* Sidebar */}
+          {SidebarComponent}
+          
+          {/* Chat Area */}
+          {ChatAreaComponent}
+        </div>
       </div>
-    </div>
+    </TeamChatErrorBoundary>
   );
 };
 
