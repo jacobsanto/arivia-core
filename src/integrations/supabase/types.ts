@@ -1949,48 +1949,7 @@ export type Database = {
       }
     }
     Views: {
-      integration_health_summary: {
-        Row: {
-          health_status: string | null
-          is_rate_limited: boolean | null
-          last_synced: string | null
-          provider: string | null
-          remaining_requests: number | null
-          request_count: number | null
-          status: string | null
-        }
-        Insert: {
-          health_status?: never
-          is_rate_limited?: boolean | null
-          last_synced?: string | null
-          provider?: string | null
-          remaining_requests?: number | null
-          request_count?: number | null
-          status?: string | null
-        }
-        Update: {
-          health_status?: never
-          is_rate_limited?: boolean | null
-          last_synced?: string | null
-          provider?: string | null
-          remaining_requests?: number | null
-          request_count?: number | null
-          status?: string | null
-        }
-        Relationships: []
-      }
-      performance_summary: {
-        Row: {
-          avg_execution_time: number | null
-          hour: string | null
-          max_execution_time: number | null
-          p95_execution_time: number | null
-          query_count: number | null
-          query_type: string | null
-          table_name: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       backup_all_settings: {
