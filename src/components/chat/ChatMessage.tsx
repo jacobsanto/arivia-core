@@ -5,7 +5,6 @@ import MessageContent from "./message/MessageContent";
 import MessageAvatar from "./message/MessageAvatar";
 import MessageTimestamp from "./message/MessageTimestamp";
 import { useMessageHover } from "@/hooks/chat/useMessageHover";
-import { motion } from "framer-motion";
 
 interface ChatMessageProps {
   message: Message;
@@ -62,14 +61,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   };
 
   return (
-    <motion.div
-      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"}`}
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      layout="position"
-      layoutId={`message-${message.id}`}
+    <div
+      className={`flex ${message.isCurrentUser ? "justify-end" : "justify-start"} transition-opacity duration-200`}
     >
       <div
         className={`flex max-w-[80%] ${
@@ -102,7 +95,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

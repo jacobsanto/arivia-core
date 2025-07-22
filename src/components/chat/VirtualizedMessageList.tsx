@@ -37,7 +37,12 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = Rea
     }
   }, [messages.length]);
 
-  // Memoize the message renderer to prevent unnecessary re-renders
+  // Create a stable onAddReaction function with correct parameter order
+  const handleAddReaction = useCallback((messageId: string, emoji: string) => {
+    addReaction(messageId, emoji);
+  }, [addReaction]);
+
+  // Memoize the message renderer with minimal dependencies
   const renderMessage = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
     const message = messages[index];
     
@@ -55,12 +60,12 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = Rea
             setReactionMessageId={setReactionMessageId}
             showEmojiPicker={showEmojiPicker}
             setShowEmojiPicker={setShowEmojiPicker}
-            onAddReaction={(emoji) => addReaction(message.id, emoji)}
+            onAddReaction={handleAddReaction}
           />
         </div>
       </div>
     );
-  }, [messages, emojis, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker, addReaction]);
+  }, [messages, emojis, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker, handleAddReaction]);
 
   const memoizedEmptyState = useMemo(() => (
     <div className="flex-1 flex items-center justify-center">

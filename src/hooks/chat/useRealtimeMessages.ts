@@ -21,7 +21,7 @@ export function useRealtimeMessages({
   const { user } = useUser();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isMountedRef = useRef(true);
-  const subscriptionKey = useRef<string>('');
+  const subscriptionKeyRef = useRef<string>('');
 
   const cleanupSubscription = useCallback(() => {
     if (channelRef.current) {
@@ -30,10 +30,20 @@ export function useRealtimeMessages({
     }
   }, []);
 
+  // Stabilize the message update function
+  const updateMessages = useCallback((newMessage: Message) => {
+    setMessages(prev => {
+      // Prevent duplicate messages
+      if (prev.some(msg => msg.id === newMessage.id)) {
+        return prev;
+      }
+      return [...prev, newMessage];
+    });
+  }, [setMessages]);
+
   useEffect(() => {
     isMountedRef.current = true;
     
-    // Always proceed with subscription setup, but handle empty recipientId gracefully
     if (!user) {
       cleanupSubscription();
       return;
@@ -48,14 +58,14 @@ export function useRealtimeMessages({
     const newSubscriptionKey = `${chatType}-${recipientId}-${user.id}`;
     
     // Don't recreate subscription if key hasn't changed
-    if (subscriptionKey.current === newSubscriptionKey && channelRef.current) {
+    if (subscriptionKeyRef.current === newSubscriptionKey && channelRef.current) {
       return;
     }
 
     // Clean up previous subscription
     cleanupSubscription();
     
-    subscriptionKey.current = newSubscriptionKey;
+    subscriptionKeyRef.current = newSubscriptionKey;
     const table = chatType === 'general' ? 'chat_messages' : 'direct_messages';
     const column = chatType === 'general' ? 'channel_id' : 'recipient_id';
     const channelName = `chat-${newSubscriptionKey}`;
@@ -90,12 +100,7 @@ export function useRealtimeMessages({
             attachments: payload.new.attachments
           };
           
-          setMessages(prev => {
-            if (prev.some(msg => msg.id === newMessage.id)) {
-              return prev;
-            }
-            return [...prev, newMessage];
-          });
+          updateMessages(newMessage);
         } catch (error) {
           console.warn("Could not fetch sender details", error);
         }
@@ -111,7 +116,7 @@ export function useRealtimeMessages({
       isMountedRef.current = false;
       cleanupSubscription();
     };
-  }, [user, recipientId, chatType, setMessages, cleanupSubscription]);
+  }, [user, recipientId, chatType, updateMessages, cleanupSubscription]);
 
   // Cleanup on unmount
   useEffect(() => {
