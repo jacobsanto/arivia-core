@@ -61,15 +61,15 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchCleaningActions = async () => {
     try {
-      // Try to query the cleaning_actions table
-      const response = await supabase
-        .from('cleaning_actions' as any)
+      const { data, error } = await supabase
+        .from('cleaning_actions')
         .select('*')
         .eq('is_active', true)
         .order('category', { ascending: true });
 
-      if (response.error || !response.data) {
-        console.log('Cleaning actions table not available yet, using fallback data');
+      if (error) {
+        console.log('Cleaning actions table error:', error);
+        // Fallback to default actions
         setActions([
           { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
           { id: '2', action_name: 'full_cleaning', display_name: 'Full Cleaning', estimated_duration: 180, category: 'cleaning', is_active: true },
@@ -77,36 +77,31 @@ export const useRuleBasedCleaningSystem = () => {
           { id: '4', action_name: 'change_sheets', display_name: 'Change Bed Sheets', estimated_duration: 30, category: 'linen', is_active: true },
           { id: '5', action_name: 'towel_refresh', display_name: 'Towel Refresh', estimated_duration: 20, category: 'linen', is_active: true },
         ]);
-      } else {
-        setActions(response.data || []);
+        return;
       }
+      
+      setActions(data || []);
     } catch (err) {
       console.error('Error fetching cleaning actions:', err);
-      setActions([
-        { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
-        { id: '2', action_name: 'full_cleaning', display_name: 'Full Cleaning', estimated_duration: 180, category: 'cleaning', is_active: true },
-        { id: '3', action_name: 'deep_cleaning', display_name: 'Deep Cleaning', estimated_duration: 240, category: 'cleaning', is_active: true },
-        { id: '4', action_name: 'change_sheets', display_name: 'Change Bed Sheets', estimated_duration: 30, category: 'linen', is_active: true },
-        { id: '5', action_name: 'towel_refresh', display_name: 'Towel Refresh', estimated_duration: 20, category: 'linen', is_active: true },
-      ]);
+      setActions([]);
     }
   };
 
   const fetchCleaningRules = async () => {
     try {
-      const response = await supabase
+      const { data, error } = await supabase
         .from('cleaning_rules')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (response.error) {
-        console.error('Error fetching cleaning rules:', response.error);
+      if (error) {
+        console.error('Error fetching cleaning rules:', error);
         setRules([]);
         return;
       }
       
-      // Transform rules with safe property access
-      const transformedRules = (response.data || []).map((rule: any) => {
+      // Transform rules with safe property access and type assertions
+      const transformedRules = (data || []).map((rule: any) => {
         try {
           return {
             id: rule.id,
@@ -118,7 +113,7 @@ export const useRuleBasedCleaningSystem = () => {
             is_active: rule.is_active ?? true,
             created_at: rule.created_at,
             updated_at: rule.updated_at
-          };
+          } as CleaningRule;
         } catch (transformError) {
           console.warn('Error transforming rule:', rule, transformError);
           return {
@@ -131,7 +126,7 @@ export const useRuleBasedCleaningSystem = () => {
             is_active: rule.is_active ?? true,
             created_at: rule.created_at,
             updated_at: rule.updated_at
-          };
+          } as CleaningRule;
         }
       });
       
@@ -149,9 +144,8 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchRuleAssignments = async () => {
     try {
-      // Try to fetch rule assignments, handle gracefully if table doesn't exist
-      const response = await supabase
-        .from('rule_assignments' as any)
+      const { data, error } = await supabase
+        .from('rule_assignments')
         .select(`
           *,
           cleaning_rules(rule_name, stay_length_range)
@@ -159,12 +153,13 @@ export const useRuleBasedCleaningSystem = () => {
         .eq('is_active', true)
         .order('assigned_at', { ascending: false });
 
-      if (response.error || !response.data) {
-        console.log('Rule assignments table not available yet');
+      if (error) {
+        console.log('Rule assignments table error:', error);
         setAssignments([]);
-      } else {
-        setAssignments(response.data || []);
+        return;
       }
+      
+      setAssignments(data || []);
     } catch (err) {
       console.error('Error fetching rule assignments:', err);
       setAssignments([]);
@@ -173,19 +168,19 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchEnhancedTasks = async () => {
     try {
-      const response = await supabase
+      const { data, error } = await supabase
         .from('housekeeping_tasks')
         .select('*')
         .order('due_date', { ascending: true });
 
-      if (response.error) {
-        console.error('Error fetching tasks:', response.error);
+      if (error) {
+        console.error('Error fetching tasks:', error);
         setTasks([]);
         return;
       }
       
       // Transform tasks with safe property access for new columns
-      const transformedTasks = (response.data || []).map((task: any) => {
+      const transformedTasks = (data || []).map((task: any) => {
         try {
           return {
             id: task.id,
@@ -201,7 +196,7 @@ export const useRuleBasedCleaningSystem = () => {
             task_day_number: task.task_day_number || 1,
             checklist: task.checklist || [],
             description: task.description
-          };
+          } as EnhancedHousekeepingTask;
         } catch (transformError) {
           console.warn('Error transforming task:', task, transformError);
           return {
@@ -218,7 +213,7 @@ export const useRuleBasedCleaningSystem = () => {
             task_day_number: 1,
             checklist: [],
             description: undefined
-          };
+          } as EnhancedHousekeepingTask;
         }
       });
       
@@ -236,25 +231,24 @@ export const useRuleBasedCleaningSystem = () => {
 
   const createCleaningRule = async (rule: Omit<CleaningRule, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Direct insert with type assertion
-      const response = await supabase
+      const { data, error } = await supabase
         .from('cleaning_rules')
-        .insert([rule as any])
+        .insert([rule])
         .select()
         .single();
 
-      if (response.error) throw response.error;
+      if (error) throw error;
       
       const transformedRule: CleaningRule = {
-        id: response.data.id || Date.now().toString(),
-        rule_name: response.data.rule_name || rule.rule_name,
-        stay_length_range: response.data.stay_length_range || rule.stay_length_range,
-        actions_by_day: response.data.actions_by_day || rule.actions_by_day,
-        is_global: response.data.is_global ?? rule.is_global,
-        assignable_properties: response.data.assignable_properties || rule.assignable_properties,
-        is_active: response.data.is_active ?? rule.is_active,
-        created_at: response.data.created_at || new Date().toISOString(),
-        updated_at: response.data.updated_at || new Date().toISOString()
+        id: data.id,
+        rule_name: data.rule_name,
+        stay_length_range: data.stay_length_range || rule.stay_length_range,
+        actions_by_day: data.actions_by_day || rule.actions_by_day,
+        is_global: data.is_global ?? rule.is_global,
+        assignable_properties: data.assignable_properties || rule.assignable_properties,
+        is_active: data.is_active ?? rule.is_active,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       
       setRules(prev => [transformedRule, ...prev]);
@@ -277,25 +271,25 @@ export const useRuleBasedCleaningSystem = () => {
 
   const updateCleaningRule = async (id: string, updates: Partial<CleaningRule>) => {
     try {
-      const response = await supabase
+      const { data, error } = await supabase
         .from('cleaning_rules')
-        .update(updates as any)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
 
-      if (response.error) throw response.error;
+      if (error) throw error;
       
       const transformedRule: CleaningRule = {
-        id: response.data.id,
-        rule_name: response.data.rule_name || updates.rule_name || '',
-        stay_length_range: response.data.stay_length_range || updates.stay_length_range || [1, 999],
-        actions_by_day: response.data.actions_by_day || updates.actions_by_day || {},
-        is_global: response.data.is_global ?? updates.is_global ?? true,
-        assignable_properties: response.data.assignable_properties || updates.assignable_properties || [],
-        is_active: response.data.is_active ?? updates.is_active ?? true,
-        created_at: response.data.created_at,
-        updated_at: response.data.updated_at
+        id: data.id,
+        rule_name: data.rule_name,
+        stay_length_range: data.stay_length_range || updates.stay_length_range || [1, 999],
+        actions_by_day: data.actions_by_day || updates.actions_by_day || {},
+        is_global: data.is_global ?? updates.is_global ?? true,
+        assignable_properties: data.assignable_properties || updates.assignable_properties || [],
+        is_active: data.is_active ?? updates.is_active ?? true,
+        created_at: data.created_at,
+        updated_at: data.updated_at
       };
       
       setRules(prev => prev.map(r => r.id === id ? transformedRule : r));
@@ -318,12 +312,12 @@ export const useRuleBasedCleaningSystem = () => {
 
   const deleteCleaningRule = async (id: string) => {
     try {
-      const response = await supabase
+      const { error } = await supabase
         .from('cleaning_rules')
         .delete()
         .eq('id', id);
 
-      if (response.error) throw response.error;
+      if (error) throw error;
       
       setRules(prev => prev.filter(r => r.id !== id));
       toast({
@@ -345,14 +339,25 @@ export const useRuleBasedCleaningSystem = () => {
 
   const assignRuleToProperties = async (ruleId: string, propertyIds: string[]) => {
     try {
-      // Fallback: update the rule's assignable_properties
-      const response = await supabase
-        .from('cleaning_rules')
-        .update({ assignable_properties: propertyIds } as any)
-        .eq('id', ruleId);
+      // First, remove existing assignments for this rule
+      await supabase
+        .from('rule_assignments')
+        .delete()
+        .eq('rule_id', ruleId);
 
-      if (response.error) {
-        console.log('Using fallback assignment method');
+      // Then create new assignments
+      if (propertyIds.length > 0) {
+        const assignments = propertyIds.map(propertyId => ({
+          rule_id: ruleId,
+          property_id: propertyId,
+          assigned_by: (await supabase.auth.getUser()).data.user?.id
+        }));
+
+        const { error } = await supabase
+          .from('rule_assignments')
+          .insert(assignments);
+
+        if (error) throw error;
       }
 
       await fetchRuleAssignments();
@@ -361,7 +366,7 @@ export const useRuleBasedCleaningSystem = () => {
         description: `Rule assigned to ${propertyIds.length} properties`,
       });
 
-      return response.data;
+      return true;
     } catch (err) {
       console.error('Error assigning rule:', err);
       toast({
@@ -375,32 +380,29 @@ export const useRuleBasedCleaningSystem = () => {
 
   const updateTaskActions = async (taskId: string, additionalActions: string[]) => {
     try {
-      // Use type assertion to avoid conflicts with missing columns
-      const updateData = { additional_actions: additionalActions } as any;
-      
-      const response = await supabase
+      const { data, error } = await supabase
         .from('housekeeping_tasks')
-        .update(updateData)
+        .update({ additional_actions: additionalActions })
         .eq('id', taskId)
         .select()
         .single();
 
-      if (response.error) throw response.error;
+      if (error) throw error;
       
       const transformedTask: EnhancedHousekeepingTask = {
-        id: response.data.id,
-        listing_id: response.data.listing_id,
-        booking_id: response.data.booking_id,
-        due_date: response.data.due_date,
-        task_type: response.data.task_type,
-        status: response.data.status,
-        assigned_to: response.data.assigned_to,
-        default_actions: response.data.default_actions || [],
-        additional_actions: response.data.additional_actions || additionalActions,
-        source_rule_id: response.data.source_rule_id,
-        task_day_number: response.data.task_day_number || 1,
-        checklist: response.data.checklist || [],
-        description: response.data.description
+        id: data.id,
+        listing_id: data.listing_id,
+        booking_id: data.booking_id,
+        due_date: data.due_date,
+        task_type: data.task_type,
+        status: data.status,
+        assigned_to: data.assigned_to,
+        default_actions: data.default_actions || [],
+        additional_actions: data.additional_actions || [],
+        source_rule_id: data.source_rule_id,
+        task_day_number: data.task_day_number || 1,
+        checklist: data.checklist || [],
+        description: data.description
       };
       
       setTasks(prev => prev.map(t => t.id === taskId ? transformedTask : t));

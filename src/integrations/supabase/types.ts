@@ -220,46 +220,94 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaning_actions: {
+        Row: {
+          action_name: string
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string
+          estimated_duration: number | null
+          id: string
+          is_active: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          action_name: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          action_name?: string
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cleaning_rules: {
         Row: {
+          actions_by_day: Json | null
+          assignable_properties: string[] | null
           config_id: string
           created_at: string
           id: string
           is_active: boolean
+          is_global: boolean | null
           is_template: boolean | null
           max_nights: number
           min_nights: number
           rule_description: string | null
           rule_name: string
           rule_version: number | null
+          stay_length_range: number[] | null
           template_id: string | null
           updated_at: string
         }
         Insert: {
+          actions_by_day?: Json | null
+          assignable_properties?: string[] | null
           config_id: string
           created_at?: string
           id?: string
           is_active?: boolean
+          is_global?: boolean | null
           is_template?: boolean | null
           max_nights?: number
           min_nights?: number
           rule_description?: string | null
           rule_name: string
           rule_version?: number | null
+          stay_length_range?: number[] | null
           template_id?: string | null
           updated_at?: string
         }
         Update: {
+          actions_by_day?: Json | null
+          assignable_properties?: string[] | null
           config_id?: string
           created_at?: string
           id?: string
           is_active?: boolean
+          is_global?: boolean | null
           is_template?: boolean | null
           max_nights?: number
           min_nights?: number
           rule_description?: string | null
           rule_name?: string
           rule_version?: number | null
+          stay_length_range?: number[] | null
           template_id?: string | null
           updated_at?: string
         }
@@ -699,35 +747,53 @@ export type Database = {
       }
       housekeeping_tasks: {
         Row: {
+          additional_actions: Json | null
           assigned_to: string | null
           booking_id: string
+          checklist: Json | null
           created_at: string
+          default_actions: Json | null
+          description: string | null
           due_date: string
           id: string
           listing_id: string
+          source_rule_id: string | null
           status: string
+          task_day_number: number | null
           task_type: string
           updated_at: string
         }
         Insert: {
+          additional_actions?: Json | null
           assigned_to?: string | null
           booking_id: string
+          checklist?: Json | null
           created_at?: string
+          default_actions?: Json | null
+          description?: string | null
           due_date: string
           id?: string
           listing_id: string
+          source_rule_id?: string | null
           status?: string
+          task_day_number?: number | null
           task_type: string
           updated_at?: string
         }
         Update: {
+          additional_actions?: Json | null
           assigned_to?: string | null
           booking_id?: string
+          checklist?: Json | null
           created_at?: string
+          default_actions?: Json | null
+          description?: string | null
           due_date?: string
           id?: string
           listing_id?: string
+          source_rule_id?: string | null
           status?: string
+          task_day_number?: number | null
           task_type?: string
           updated_at?: string
         }
@@ -744,6 +810,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_source_rule_id_fkey"
+            columns: ["source_rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
             referencedColumns: ["id"]
           },
         ]
@@ -1460,6 +1533,48 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "rule_actions_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rule_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          is_active: boolean | null
+          property_id: string
+          rule_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          property_id: string
+          rule_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          property_id?: string
+          rule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rule_assignments_assigned_by_fkey"
+            columns: ["assigned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rule_assignments_rule_id_fkey"
             columns: ["rule_id"]
             isOneToOne: false
             referencedRelation: "cleaning_rules"
