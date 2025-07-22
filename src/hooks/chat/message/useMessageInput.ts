@@ -1,20 +1,16 @@
 
-import { useState } from "react";
-import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
+import { useState, useCallback } from 'react';
 
 export function useMessageInput(chatId: string) {
-  const [messageInput, setMessageInput] = useState("");
-  const { handleTyping, clearTyping } = useTypingIndicator(chatId);
+  const [messageInput, setMessageInput] = useState('');
 
-  const handleChangeMessage = (value: string) => {
-    setMessageInput(value);
-    handleTyping();
-  };
+  const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageInput(e.target.value);
+  }, []);
 
-  const clearMessageInput = () => {
-    setMessageInput("");
-    clearTyping();
-  };
+  const clearMessageInput = useCallback(() => {
+    setMessageInput('');
+  }, []);
 
   return {
     messageInput,

@@ -1,17 +1,21 @@
 
-import { useState } from "react";
+import { useState, useCallback } from 'react';
 
 export function useEmojiPicker() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const toggleEmojiPicker = () => {
-    setShowEmojiPicker(!showEmojiPicker);
-  };
+  const toggleEmojiPicker = useCallback(() => {
+    setShowEmojiPicker(prev => !prev);
+  }, []);
 
-  const handleEmojiSelect = (emoji: string, setMessageInput: (value: string | ((prev: string) => string)) => void) => {
-    setMessageInput((prev: string) => prev + emoji);
+  const handleEmojiSelect = useCallback((emoji: string, handleChangeMessage: (e: any) => void) => {
+    // Simulate adding emoji to message input
+    const syntheticEvent = {
+      target: { value: emoji }
+    };
+    handleChangeMessage(syntheticEvent);
     setShowEmojiPicker(false);
-  };
+  }, []);
 
   return {
     showEmojiPicker,

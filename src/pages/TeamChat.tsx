@@ -9,10 +9,12 @@ import { useTeamChat } from "@/hooks/chat/useTeamChat";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { TeamChatErrorBoundary } from "@/components/error-boundaries/TeamChatErrorBoundary";
 
-const TeamChat = () => {
+const TeamChat = React.memo(() => {
   const isMobile = useIsMobile();
+  const teamChatData = useTeamChat();
+
+  // Destructure with stable references
   const {
-    // State
     activeChat,
     activeTab,
     sidebarOpen,
@@ -33,8 +35,6 @@ const TeamChat = () => {
     fileInputRef,
     imageInputRef,
     showMessageEmojiPicker,
-
-    // Actions
     setActiveTab,
     toggleSidebar,
     handleSelectChat,
@@ -51,10 +51,10 @@ const TeamChat = () => {
     removeAttachment,
     toggleMessageEmojiPicker,
     handleEmojiSelect,
-  } = useTeamChat();
+  } = teamChatData;
 
-  // Memoize child components to prevent unnecessary rerenders
-  const ConnectionAlertsComponent = useMemo(() => (
+  // Stable memoized components
+  const connectionAlerts = useMemo(() => (
     <ConnectionAlerts 
       isConnected={isConnected} 
       loadError={loadError} 
@@ -63,8 +63,7 @@ const TeamChat = () => {
     />
   ), [isConnected, loadError, errors, removeError]);
 
-  // Memoize Sidebar component
-  const SidebarComponent = useMemo(() => (
+  const sidebar = useMemo(() => (
     <ChatSidebar
       channels={channels}
       directMessages={directMessages}
@@ -77,8 +76,7 @@ const TeamChat = () => {
     />
   ), [channels, directMessages, activeChat, activeTab, setActiveTab, handleSelectChat, sidebarOpen, toggleSidebar]);
 
-  // Memoize Enhanced ChatArea component
-  const ChatAreaComponent = useMemo(() => (
+  const chatArea = useMemo(() => (
     <EnhancedChatArea
       activeChat={activeChat}
       activeChatType={activeTab === 'channels' ? 'channel' : 'direct'}
@@ -129,10 +127,9 @@ const TeamChat = () => {
           </p>
         </div>
         
-        {ConnectionAlertsComponent}
+        {connectionAlerts}
         
         <div className="flex flex-1 gap-4 h-full">
-          {/* Mobile Sidebar Toggle */}
           {isMobile && (
             <div className="md:hidden absolute top-4 right-4 z-20">
               <Button 
@@ -146,15 +143,14 @@ const TeamChat = () => {
             </div>
           )}
           
-          {/* Sidebar */}
-          {SidebarComponent}
-          
-          {/* Chat Area */}
-          {ChatAreaComponent}
+          {sidebar}
+          {chatArea}
         </div>
       </div>
     </TeamChatErrorBoundary>
   );
-};
+});
 
-export default React.memo(TeamChat);
+TeamChat.displayName = 'TeamChat';
+
+export default TeamChat;

@@ -1,16 +1,7 @@
-
-import { useState, useRef } from "react";
-import { v4 as uuidv4 } from "uuid";
-
-export interface Attachment {
-  id: string;
-  file: File;
-  type: string;
-  preview: string;
-}
+import { useState, useRef } from 'react';
 
 export function useAttachments() {
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
@@ -22,41 +13,51 @@ export function useAttachments() {
     imageInputRef.current?.click();
   };
 
-  const handleFileSelect = (files: FileList) => {
-    const newAttachments = Array.from(files).map(file => ({
-      id: uuidv4(),
-      file,
-      type: file.type,
-      preview: URL.createObjectURL(file)
-    }));
-    
-    setAttachments(prev => [...prev, ...newAttachments]);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newAttachments = Array.from(files).map(file => ({
+        id: `file-${Date.now()}-${Math.random()}`,
+        type: file.type,
+        name: file.name,
+        size: file.size,
+        url: URL.createObjectURL(file),
+        file: file
+      }));
+      setAttachments(prev => [...prev, ...newAttachments]);
+    }
   };
 
-  const handleImageSelect = (files: FileList) => {
-    const newAttachments = Array.from(files).map(file => ({
-      id: uuidv4(),
-      file,
-      type: file.type,
-      preview: URL.createObjectURL(file)
-    }));
-    
-    setAttachments(prev => [...prev, ...newAttachments]);
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const newAttachments = Array.from(files).map(file => ({
+        id: `image-${Date.now()}-${Math.random()}`,
+        type: file.type,
+        name: file.name,
+        size: file.size,
+        url: URL.createObjectURL(file),
+        file: file
+      }));
+      setAttachments(prev => [...prev, ...newAttachments]);
+    }
   };
 
   const removeAttachment = (id: string) => {
     setAttachments(prev => {
-      const attachment = prev.find(a => a.id === id);
-      if (attachment) {
-        URL.revokeObjectURL(attachment.preview);
+      const attachment = prev.find(att => att.id === id);
+      if (attachment && attachment.url) {
+        URL.revokeObjectURL(attachment.url);
       }
-      return prev.filter(a => a.id !== id);
+      return prev.filter(att => att.id !== id);
     });
   };
 
   const clearAttachments = () => {
     attachments.forEach(attachment => {
-      URL.revokeObjectURL(attachment.preview);
+      if (attachment.url) {
+        URL.revokeObjectURL(attachment.url);
+      }
     });
     setAttachments([]);
   };

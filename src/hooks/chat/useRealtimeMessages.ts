@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
@@ -21,33 +21,38 @@ export function useRealtimeMessages({
   const { user } = useUser();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isMountedRef = useRef(true);
-  const lastMessageIdRef = useRef<string | null>(null);
+  const subscriptionKey = useRef<string>('');
 
-  useEffect(() => {
-    // Set the mounted flag
-    isMountedRef.current = true;
-    
-    // Don't set up subscriptions unless we have a user and recipient
-    if (!user || !recipientId) return;
-
-    // Record the ID of the last message to prevent duplicates
-    if (messages.length > 0) {
-      lastMessageIdRef.current = messages[messages.length - 1].id;
-    }
-    
-    // Clean up previous subscription if it exists
+  const cleanupSubscription = useCallback(() => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
+  }, []);
 
+  useEffect(() => {
+    isMountedRef.current = true;
+    
+    if (!user || !recipientId) {
+      cleanupSubscription();
+      return;
+    }
+
+    const newSubscriptionKey = `${chatType}-${recipientId}-${user.id}`;
+    
+    // Don't recreate subscription if key hasn't changed
+    if (subscriptionKey.current === newSubscriptionKey && channelRef.current) {
+      return;
+    }
+
+    // Clean up previous subscription
+    cleanupSubscription();
+    
+    subscriptionKey.current = newSubscriptionKey;
     const table = chatType === 'general' ? 'chat_messages' : 'direct_messages';
     const column = chatType === 'general' ? 'channel_id' : 'recipient_id';
-    const channelName = `chat-${chatType}-${recipientId}`;
+    const channelName = `chat-${newSubscriptionKey}`;
     
-    console.log(`Setting up realtime subscription for ${channelName}`);
-    
-    // Create a new channel with a stable configuration
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { 
@@ -56,28 +61,15 @@ export function useRealtimeMessages({
         table,
         filter: `${column}=eq.${recipientId}`
       }, async (payload) => {
-        // Don't proceed if component is unmounted
-        if (!isMountedRef.current) {
-          console.log("Component unmounted, ignoring message update");
-          return;
-        }
-        
-        // Don't show messages from ourselves (we already added them)
-        const senderId = payload.new.sender_id;
-        if (senderId === user.id) return;
-        
-        // Prevent duplicate messages
-        if (lastMessageIdRef.current === payload.new.id) {
-          console.log("Duplicate message detected, skipping", payload.new.id);
+        if (!isMountedRef.current || payload.new.sender_id === user.id) {
           return;
         }
         
         try {
-          // Get sender details
           const { data: senderData } = await supabase
             .from('profiles')
             .select('name, avatar')
-            .eq('id', senderId)
+            .eq('id', payload.new.sender_id)
             .maybeSingle();
             
           const newMessage: Message = {
@@ -91,12 +83,7 @@ export function useRealtimeMessages({
             attachments: payload.new.attachments
           };
           
-          // Update the last message ID
-          lastMessageIdRef.current = newMessage.id;
-          
-          // Use a functional update to ensure we're working with the latest state
           setMessages(prev => {
-            // Check if we already have this message (prevent duplicates)
             if (prev.some(msg => msg.id === newMessage.id)) {
               return prev;
             }
@@ -107,30 +94,23 @@ export function useRealtimeMessages({
         }
       });
 
-    // Subscribe and store the channel reference
     channel.subscribe((status: any) => {
-      // Convert the string status to a type-safe comparison
-      if (status === 'SUBSCRIBED') {
-        if (isMountedRef.current) {
-          channelRef.current = channel;
-          console.log(`Successfully subscribed to ${channelName}`);
-        } else {
-          // Clean up if component unmounted during subscription
-          supabase.removeChannel(channel);
-        }
-      } else if (status !== 'SUBSCRIBED' && status !== 'CLOSED') {
-        console.warn(`Failed to subscribe to ${channelName}:`, status);
+      if (status === 'SUBSCRIBED' && isMountedRef.current) {
+        channelRef.current = channel;
       }
     });
       
-    // Clean up on unmount or when dependencies change
     return () => {
-      console.log(`Cleaning up subscription for ${channelName}`);
       isMountedRef.current = false;
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
+      cleanupSubscription();
     };
-  }, [user, recipientId, chatType, setMessages]);
+  }, [user, recipientId, chatType, setMessages, cleanupSubscription]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+      cleanupSubscription();
+    };
+  }, [cleanupSubscription]);
 }
