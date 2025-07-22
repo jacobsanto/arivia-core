@@ -7,7 +7,7 @@ import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface UseRealtimeMessagesProps {
   chatType: 'general' | 'direct';
-  recipientId?: string;
+  recipientId: string;
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
@@ -33,7 +33,14 @@ export function useRealtimeMessages({
   useEffect(() => {
     isMountedRef.current = true;
     
-    if (!user || !recipientId) {
+    // Always proceed with subscription setup, but handle empty recipientId gracefully
+    if (!user) {
+      cleanupSubscription();
+      return;
+    }
+
+    // For direct messages, we need a recipientId
+    if (chatType === 'direct' && !recipientId) {
       cleanupSubscription();
       return;
     }

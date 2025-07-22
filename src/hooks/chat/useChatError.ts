@@ -1,98 +1,43 @@
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useState, useCallback } from 'react';
 
-export type ErrorType = 'loading' | 'sending' | 'reaction' | 'connection' | 'offline' | 'general';
-
-export interface ChatError {
+interface ChatError {
   id: string;
-  type: ErrorType;
+  type: 'connection' | 'general' | 'loading';
   message: string;
-  timestamp: string;
-  retry?: () => Promise<void>;
+  timestamp: number;
 }
 
 export function useChatError() {
   const [errors, setErrors] = useState<ChatError[]>([]);
-  
-  // Clear old errors (older than 5 minutes)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-      setErrors(prev => prev.filter(error => error.timestamp > fiveMinutesAgo));
-    }, 60 * 1000);
-    
-    return () => clearInterval(interval);
-  }, []);
-  
-  const addError = (type: ErrorType, message: string, retry?: () => Promise<void>) => {
-    const newError: ChatError = {
+
+  const addError = useCallback((type: ChatError['type'], message: string) => {
+    const error: ChatError = {
       id: `${type}-${Date.now()}`,
       type,
       message,
-      timestamp: new Date().toISOString(),
-      retry
+      timestamp: Date.now()
     };
     
-    setErrors(prev => [...prev, newError]);
-    
-    toast.error(getErrorTitle(type), {
-      description: message,
-      action: retry ? {
-        label: "Retry",
-        onClick: () => handleRetry(newError.id)
-      } : undefined
+    setErrors(prev => {
+      // Remove existing errors of the same type to prevent duplicates
+      const filtered = prev.filter(err => err.type !== type);
+      return [...filtered, error];
     });
-    
-    return newError.id;
-  };
-  
-  const removeError = (id: string) => {
-    setErrors(prev => prev.filter(error => error.id !== id));
-  };
-  
-  const getErrorTitle = (type: ErrorType) => {
-    switch (type) {
-      case 'loading': return 'Failed to load messages';
-      case 'sending': return 'Failed to send message';
-      case 'reaction': return 'Failed to add reaction';
-      case 'connection': return 'Connection error';
-      case 'offline': return 'You are offline';
-      case 'general': 
-      default: return 'Error';
-    }
-  };
-  
-  const handleRetry = async (id: string) => {
-    const error = errors.find(err => err.id === id);
-    
-    if (error?.retry) {
-      try {
-        toast.loading("Retrying...");
-        await error.retry();
-        removeError(id);
-        toast.success("Retry successful");
-      } catch (retryError) {
-        toast.error("Retry failed", {
-          description: retryError instanceof Error ? retryError.message : "Unknown error"
-        });
-      }
-    }
-  };
-  
+  }, []);
+
+  const removeError = useCallback((errorId: string) => {
+    setErrors(prev => prev.filter(err => err.id !== errorId));
+  }, []);
+
+  const clearErrors = useCallback(() => {
+    setErrors([]);
+  }, []);
+
   return {
     errors,
     addError,
     removeError,
-    getRecentError: (type?: ErrorType) => {
-      if (type) {
-        return errors.filter(error => error.type === type).sort((a, b) => 
-          b.timestamp.localeCompare(a.timestamp)
-        )[0] || null;
-      }
-      return errors.sort((a, b) => 
-        b.timestamp.localeCompare(a.timestamp)
-      )[0] || null;
-    }
+    clearErrors
   };
 }

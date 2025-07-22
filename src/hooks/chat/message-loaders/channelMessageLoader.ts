@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../../useChatTypes";
 
@@ -30,7 +31,9 @@ export async function loadChannelMessages(user: any, setIsOffline: (offline: boo
       attachments: []
     }));
   } catch (error) {
+    console.error('Channel message loading failed:', error);
     setIsOffline(true);
-    throw error;
+    // Return empty array instead of throwing to prevent cascade failures
+    return [];
   }
 }

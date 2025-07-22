@@ -24,8 +24,8 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     });
   }
   
-  // Set up realtime message subscriptions - always call hook
-  useRealtimeMessages({ chatType, recipientId, messages, setMessages });
+  // Set up realtime message subscriptions - always call hook to avoid conditional hook calls
+  useRealtimeMessages({ chatType, recipientId: recipientId || '', messages, setMessages });
   
   // Simple typing status - avoid complex hook dependencies
   const [typingStatus, setTypingStatus] = useState<string[]>([]);

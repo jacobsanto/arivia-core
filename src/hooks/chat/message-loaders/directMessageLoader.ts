@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../../useChatTypes";
 
@@ -9,7 +10,7 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
       .from('direct_messages')
       .select(`
         *,
-        sender:profiles(id, name, avatar)
+        sender:profiles!sender_id(id, name, avatar)
       `)
       .or(`and(sender_id.eq.${user.id},recipient_id.eq.${recipientId}),and(sender_id.eq.${recipientId},recipient_id.eq.${user.id})`)
       .order('created_at', { ascending: true })
@@ -31,7 +32,9 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
       attachments: []
     }));
   } catch (error) {
+    console.error('Direct message loading failed:', error);
     setIsOffline(true);
-    throw error;
+    // Return empty array instead of throwing to prevent cascade failures
+    return [];
   }
 }

@@ -2,7 +2,6 @@
 import { useState, useCallback } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
 import { useChatError } from "@/hooks/chat/useChatError";
@@ -89,7 +88,7 @@ export function useTeamChat() {
     sendMessage();
   }, [sendMessage]);
 
-  // Fix the event handling - pass the value, not the event object
+  // Fix the event handling - pass the correct event type
   const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
     handleTyping();
