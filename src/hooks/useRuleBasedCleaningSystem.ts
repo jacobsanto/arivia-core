@@ -61,19 +61,14 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchCleaningActions = async () => {
     try {
-      // Use raw SQL query to avoid type conflicts
-      const { data: actionsData, error: actionsError } = await supabase
-        .rpc('get_system_health')
-        .then(() => 
-          supabase
-            .from('cleaning_actions' as any)
-            .select('*')
-            .eq('is_active', true)
-            .order('category', { ascending: true })
-        )
-        .catch(() => ({ data: null, error: { message: 'Table not found' } }));
+      // Try to query the cleaning_actions table
+      const response = await supabase
+        .from('cleaning_actions' as any)
+        .select('*')
+        .eq('is_active', true)
+        .order('category', { ascending: true });
 
-      if (actionsError || !actionsData) {
+      if (response.error || !response.data) {
         console.log('Cleaning actions table not available yet, using fallback data');
         setActions([
           { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
@@ -83,7 +78,7 @@ export const useRuleBasedCleaningSystem = () => {
           { id: '5', action_name: 'towel_refresh', display_name: 'Towel Refresh', estimated_duration: 20, category: 'linen', is_active: true },
         ]);
       } else {
-        setActions(actionsData || []);
+        setActions(response.data || []);
       }
     } catch (err) {
       console.error('Error fetching cleaning actions:', err);
@@ -99,35 +94,19 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchCleaningRules = async () => {
     try {
-      // Check if new schema exists by attempting to query
-      const { data, error } = await supabase
-        .from('cleaning_rules')
-        .select('*')
-        .limit(1)
-        .single()
-        .then(result => ({ data: [result.data], error: result.error }))
-        .catch(() => ({ data: null, error: { message: 'Schema mismatch' } }));
-
-      if (error && !data) {
-        console.log('New cleaning rules schema not available, using fallback');
-        setRules([]);
-        return;
-      }
-
-      // If we can query, get all rules but handle missing columns gracefully
-      const { data: allRules, error: allError } = await supabase
+      const response = await supabase
         .from('cleaning_rules')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (allError) {
-        console.error('Error fetching cleaning rules:', allError);
+      if (response.error) {
+        console.error('Error fetching cleaning rules:', response.error);
         setRules([]);
         return;
       }
       
       // Transform rules with safe property access
-      const transformedRules = (allRules || []).map((rule: any) => {
+      const transformedRules = (response.data || []).map((rule: any) => {
         try {
           return {
             id: rule.id,
@@ -171,25 +150,20 @@ export const useRuleBasedCleaningSystem = () => {
   const fetchRuleAssignments = async () => {
     try {
       // Try to fetch rule assignments, handle gracefully if table doesn't exist
-      const { data, error } = await supabase
-        .rpc('get_system_health')
-        .then(() => 
-          supabase
-            .from('rule_assignments' as any)
-            .select(`
-              *,
-              cleaning_rules(rule_name, stay_length_range)
-            `)
-            .eq('is_active', true)
-            .order('assigned_at', { ascending: false })
-        )
-        .catch(() => ({ data: null, error: { message: 'Table not found' } }));
+      const response = await supabase
+        .from('rule_assignments' as any)
+        .select(`
+          *,
+          cleaning_rules(rule_name, stay_length_range)
+        `)
+        .eq('is_active', true)
+        .order('assigned_at', { ascending: false });
 
-      if (error || !data) {
+      if (response.error || !response.data) {
         console.log('Rule assignments table not available yet');
         setAssignments([]);
       } else {
-        setAssignments(data || []);
+        setAssignments(response.data || []);
       }
     } catch (err) {
       console.error('Error fetching rule assignments:', err);
@@ -199,19 +173,19 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchEnhancedTasks = async () => {
     try {
-      const { data, error } = await supabase
+      const response = await supabase
         .from('housekeeping_tasks')
         .select('*')
         .order('due_date', { ascending: true });
 
-      if (error) {
-        console.error('Error fetching tasks:', error);
+      if (response.error) {
+        console.error('Error fetching tasks:', response.error);
         setTasks([]);
         return;
       }
       
       // Transform tasks with safe property access for new columns
-      const transformedTasks = (data || []).map((task: any) => {
+      const transformedTasks = (response.data || []).map((task: any) => {
         try {
           return {
             id: task.id,
@@ -262,37 +236,25 @@ export const useRuleBasedCleaningSystem = () => {
 
   const createCleaningRule = async (rule: Omit<CleaningRule, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Use raw SQL to avoid type conflicts
-      const { data, error } = await supabase.rpc('create_cleaning_rule', {
-        rule_data: {
-          rule_name: rule.rule_name,
-          stay_length_range: rule.stay_length_range,
-          actions_by_day: rule.actions_by_day,
-          is_global: rule.is_global,
-          assignable_properties: rule.assignable_properties,
-          is_active: rule.is_active
-        }
-      }).catch(async () => {
-        // Fallback: try direct insert with type assertion
-        return await supabase
-          .from('cleaning_rules')
-          .insert([rule as any])
-          .select()
-          .single();
-      });
+      // Direct insert with type assertion
+      const response = await supabase
+        .from('cleaning_rules')
+        .insert([rule as any])
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (response.error) throw response.error;
       
       const transformedRule: CleaningRule = {
-        id: data.id || Date.now().toString(),
-        rule_name: data.rule_name || rule.rule_name,
-        stay_length_range: data.stay_length_range || rule.stay_length_range,
-        actions_by_day: data.actions_by_day || rule.actions_by_day,
-        is_global: data.is_global ?? rule.is_global,
-        assignable_properties: data.assignable_properties || rule.assignable_properties,
-        is_active: data.is_active ?? rule.is_active,
-        created_at: data.created_at || new Date().toISOString(),
-        updated_at: data.updated_at || new Date().toISOString()
+        id: response.data.id || Date.now().toString(),
+        rule_name: response.data.rule_name || rule.rule_name,
+        stay_length_range: response.data.stay_length_range || rule.stay_length_range,
+        actions_by_day: response.data.actions_by_day || rule.actions_by_day,
+        is_global: response.data.is_global ?? rule.is_global,
+        assignable_properties: response.data.assignable_properties || rule.assignable_properties,
+        is_active: response.data.is_active ?? rule.is_active,
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString()
       };
       
       setRules(prev => [transformedRule, ...prev]);
@@ -315,26 +277,25 @@ export const useRuleBasedCleaningSystem = () => {
 
   const updateCleaningRule = async (id: string, updates: Partial<CleaningRule>) => {
     try {
-      // Use raw SQL or direct update with type assertion
-      const { data, error } = await supabase
+      const response = await supabase
         .from('cleaning_rules')
         .update(updates as any)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (response.error) throw response.error;
       
       const transformedRule: CleaningRule = {
-        id: data.id,
-        rule_name: data.rule_name || updates.rule_name || '',
-        stay_length_range: data.stay_length_range || updates.stay_length_range || [1, 999],
-        actions_by_day: data.actions_by_day || updates.actions_by_day || {},
-        is_global: data.is_global ?? updates.is_global ?? true,
-        assignable_properties: data.assignable_properties || updates.assignable_properties || [],
-        is_active: data.is_active ?? updates.is_active ?? true,
-        created_at: data.created_at,
-        updated_at: data.updated_at
+        id: response.data.id,
+        rule_name: response.data.rule_name || updates.rule_name || '',
+        stay_length_range: response.data.stay_length_range || updates.stay_length_range || [1, 999],
+        actions_by_day: response.data.actions_by_day || updates.actions_by_day || {},
+        is_global: response.data.is_global ?? updates.is_global ?? true,
+        assignable_properties: response.data.assignable_properties || updates.assignable_properties || [],
+        is_active: response.data.is_active ?? updates.is_active ?? true,
+        created_at: response.data.created_at,
+        updated_at: response.data.updated_at
       };
       
       setRules(prev => prev.map(r => r.id === id ? transformedRule : r));
@@ -357,12 +318,12 @@ export const useRuleBasedCleaningSystem = () => {
 
   const deleteCleaningRule = async (id: string) => {
     try {
-      const { error } = await supabase
+      const response = await supabase
         .from('cleaning_rules')
         .delete()
         .eq('id', id);
 
-      if (error) throw error;
+      if (response.error) throw response.error;
       
       setRules(prev => prev.filter(r => r.id !== id));
       toast({
@@ -384,25 +345,13 @@ export const useRuleBasedCleaningSystem = () => {
 
   const assignRuleToProperties = async (ruleId: string, propertyIds: string[]) => {
     try {
-      const assignments = propertyIds.map(propertyId => ({
-        rule_id: ruleId,
-        property_id: propertyId,
-        is_active: true,
-        assigned_at: new Date().toISOString()
-      }));
+      // Fallback: update the rule's assignable_properties
+      const response = await supabase
+        .from('cleaning_rules')
+        .update({ assignable_properties: propertyIds } as any)
+        .eq('id', ruleId);
 
-      // Try rule_assignments table first, fallback to updating rule
-      const { data, error } = await supabase
-        .rpc('assign_rule_to_properties', { rule_id: ruleId, property_ids: propertyIds })
-        .catch(async () => {
-          // Fallback: update the rule's assignable_properties
-          return await supabase
-            .from('cleaning_rules')
-            .update({ assignable_properties: propertyIds } as any)
-            .eq('id', ruleId);
-        });
-
-      if (error && !data) {
+      if (response.error) {
         console.log('Using fallback assignment method');
       }
 
@@ -412,7 +361,7 @@ export const useRuleBasedCleaningSystem = () => {
         description: `Rule assigned to ${propertyIds.length} properties`,
       });
 
-      return data;
+      return response.data;
     } catch (err) {
       console.error('Error assigning rule:', err);
       toast({
@@ -429,29 +378,29 @@ export const useRuleBasedCleaningSystem = () => {
       // Use type assertion to avoid conflicts with missing columns
       const updateData = { additional_actions: additionalActions } as any;
       
-      const { data, error } = await supabase
+      const response = await supabase
         .from('housekeeping_tasks')
         .update(updateData)
         .eq('id', taskId)
         .select()
         .single();
 
-      if (error) throw error;
+      if (response.error) throw response.error;
       
       const transformedTask: EnhancedHousekeepingTask = {
-        id: data.id,
-        listing_id: data.listing_id,
-        booking_id: data.booking_id,
-        due_date: data.due_date,
-        task_type: data.task_type,
-        status: data.status,
-        assigned_to: data.assigned_to,
-        default_actions: data.default_actions || [],
-        additional_actions: data.additional_actions || additionalActions,
-        source_rule_id: data.source_rule_id,
-        task_day_number: data.task_day_number || 1,
-        checklist: data.checklist || [],
-        description: data.description
+        id: response.data.id,
+        listing_id: response.data.listing_id,
+        booking_id: response.data.booking_id,
+        due_date: response.data.due_date,
+        task_type: response.data.task_type,
+        status: response.data.status,
+        assigned_to: response.data.assigned_to,
+        default_actions: response.data.default_actions || [],
+        additional_actions: response.data.additional_actions || additionalActions,
+        source_rule_id: response.data.source_rule_id,
+        task_day_number: response.data.task_day_number || 1,
+        checklist: response.data.checklist || [],
+        description: response.data.description
       };
       
       setTasks(prev => prev.map(t => t.id === taskId ? transformedTask : t));
