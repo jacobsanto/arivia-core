@@ -2029,6 +2029,10 @@ export type Database = {
         Args: { user_id?: string }
         Returns: string
       }
+      is_authenticated: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       log_security_event: {
         Args: {
           event_type: string
