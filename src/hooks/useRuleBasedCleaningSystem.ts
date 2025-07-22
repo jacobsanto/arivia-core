@@ -23,6 +23,9 @@ export interface CleaningRule {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  config_id: string;
+  min_nights: number;
+  max_nights: number;
 }
 
 export interface RuleAssignment {
@@ -32,7 +35,10 @@ export interface RuleAssignment {
   assigned_at: string;
   assigned_by?: string;
   is_active: boolean;
-  cleaning_rules?: CleaningRule;
+  cleaning_rules?: {
+    rule_name: string;
+    stay_length_range: number[];
+  };
 }
 
 export interface EnhancedHousekeepingTask {
@@ -50,6 +56,19 @@ export interface EnhancedHousekeepingTask {
   checklist: any[];
   description?: string;
 }
+
+// Type guard functions for safe JSON parsing
+const isStringArray = (value: any): value is string[] => {
+  return Array.isArray(value) && value.every(item => typeof item === 'string');
+};
+
+const isActionsRecord = (value: any): value is Record<string, string[]> => {
+  return value && typeof value === 'object' && !Array.isArray(value);
+};
+
+const isNumberArray = (value: any): value is number[] => {
+  return Array.isArray(value) && value.every(item => typeof item === 'number');
+};
 
 export const useRuleBasedCleaningSystem = () => {
   const [rules, setRules] = useState<CleaningRule[]>([]);
@@ -106,13 +125,16 @@ export const useRuleBasedCleaningSystem = () => {
           return {
             id: rule.id,
             rule_name: rule.rule_name,
-            stay_length_range: rule.stay_length_range || [rule.min_nights || 1, rule.max_nights || 999],
-            actions_by_day: rule.actions_by_day || {},
+            stay_length_range: isNumberArray(rule.stay_length_range) ? rule.stay_length_range : [rule.min_nights || 1, rule.max_nights || 999],
+            actions_by_day: isActionsRecord(rule.actions_by_day) ? rule.actions_by_day : {},
             is_global: rule.is_global ?? true,
-            assignable_properties: rule.assignable_properties || [],
+            assignable_properties: isStringArray(rule.assignable_properties) ? rule.assignable_properties : [],
             is_active: rule.is_active ?? true,
             created_at: rule.created_at,
-            updated_at: rule.updated_at
+            updated_at: rule.updated_at,
+            config_id: rule.config_id || 'default',
+            min_nights: rule.min_nights || 1,
+            max_nights: rule.max_nights || 999
           } as CleaningRule;
         } catch (transformError) {
           console.warn('Error transforming rule:', rule, transformError);
@@ -125,7 +147,10 @@ export const useRuleBasedCleaningSystem = () => {
             assignable_properties: [],
             is_active: rule.is_active ?? true,
             created_at: rule.created_at,
-            updated_at: rule.updated_at
+            updated_at: rule.updated_at,
+            config_id: rule.config_id || 'default',
+            min_nights: rule.min_nights || 1,
+            max_nights: rule.max_nights || 999
           } as CleaningRule;
         }
       });
@@ -147,7 +172,12 @@ export const useRuleBasedCleaningSystem = () => {
       const { data, error } = await supabase
         .from('rule_assignments')
         .select(`
-          *,
+          id,
+          rule_id,
+          property_id,
+          assigned_at,
+          assigned_by,
+          is_active,
           cleaning_rules(rule_name, stay_length_range)
         `)
         .eq('is_active', true)
@@ -159,7 +189,23 @@ export const useRuleBasedCleaningSystem = () => {
         return;
       }
       
-      setAssignments(data || []);
+      // Transform assignments to match interface
+      const transformedAssignments = (data || []).map((assignment: any) => ({
+        id: assignment.id,
+        rule_id: assignment.rule_id,
+        property_id: assignment.property_id,
+        assigned_at: assignment.assigned_at,
+        assigned_by: assignment.assigned_by,
+        is_active: assignment.is_active,
+        cleaning_rules: assignment.cleaning_rules ? {
+          rule_name: assignment.cleaning_rules.rule_name,
+          stay_length_range: isNumberArray(assignment.cleaning_rules.stay_length_range) 
+            ? assignment.cleaning_rules.stay_length_range 
+            : [1, 999]
+        } : undefined
+      }));
+      
+      setAssignments(transformedAssignments);
     } catch (err) {
       console.error('Error fetching rule assignments:', err);
       setAssignments([]);
@@ -190,11 +236,11 @@ export const useRuleBasedCleaningSystem = () => {
             task_type: task.task_type,
             status: task.status,
             assigned_to: task.assigned_to,
-            default_actions: task.default_actions || [],
-            additional_actions: task.additional_actions || [],
+            default_actions: isStringArray(task.default_actions) ? task.default_actions : [],
+            additional_actions: isStringArray(task.additional_actions) ? task.additional_actions : [],
             source_rule_id: task.source_rule_id,
             task_day_number: task.task_day_number || 1,
-            checklist: task.checklist || [],
+            checklist: Array.isArray(task.checklist) ? task.checklist : [],
             description: task.description
           } as EnhancedHousekeepingTask;
         } catch (transformError) {
@@ -233,7 +279,17 @@ export const useRuleBasedCleaningSystem = () => {
     try {
       const { data, error } = await supabase
         .from('cleaning_rules')
-        .insert([rule])
+        .insert([{
+          rule_name: rule.rule_name,
+          config_id: rule.config_id,
+          stay_length_range: rule.stay_length_range,
+          actions_by_day: rule.actions_by_day,
+          is_global: rule.is_global,
+          assignable_properties: rule.assignable_properties,
+          is_active: rule.is_active,
+          min_nights: rule.min_nights,
+          max_nights: rule.max_nights
+        }])
         .select()
         .single();
 
@@ -242,13 +298,16 @@ export const useRuleBasedCleaningSystem = () => {
       const transformedRule: CleaningRule = {
         id: data.id,
         rule_name: data.rule_name,
-        stay_length_range: data.stay_length_range || rule.stay_length_range,
-        actions_by_day: data.actions_by_day || rule.actions_by_day,
+        stay_length_range: isNumberArray(data.stay_length_range) ? data.stay_length_range : rule.stay_length_range,
+        actions_by_day: isActionsRecord(data.actions_by_day) ? data.actions_by_day : rule.actions_by_day,
         is_global: data.is_global ?? rule.is_global,
-        assignable_properties: data.assignable_properties || rule.assignable_properties,
+        assignable_properties: isStringArray(data.assignable_properties) ? data.assignable_properties : rule.assignable_properties,
         is_active: data.is_active ?? rule.is_active,
         created_at: data.created_at,
-        updated_at: data.updated_at
+        updated_at: data.updated_at,
+        config_id: data.config_id,
+        min_nights: data.min_nights || rule.min_nights,
+        max_nights: data.max_nights || rule.max_nights
       };
       
       setRules(prev => [transformedRule, ...prev]);
@@ -283,13 +342,16 @@ export const useRuleBasedCleaningSystem = () => {
       const transformedRule: CleaningRule = {
         id: data.id,
         rule_name: data.rule_name,
-        stay_length_range: data.stay_length_range || updates.stay_length_range || [1, 999],
-        actions_by_day: data.actions_by_day || updates.actions_by_day || {},
+        stay_length_range: isNumberArray(data.stay_length_range) ? data.stay_length_range : updates.stay_length_range || [1, 999],
+        actions_by_day: isActionsRecord(data.actions_by_day) ? data.actions_by_day : updates.actions_by_day || {},
         is_global: data.is_global ?? updates.is_global ?? true,
-        assignable_properties: data.assignable_properties || updates.assignable_properties || [],
+        assignable_properties: isStringArray(data.assignable_properties) ? data.assignable_properties : updates.assignable_properties || [],
         is_active: data.is_active ?? updates.is_active ?? true,
         created_at: data.created_at,
-        updated_at: data.updated_at
+        updated_at: data.updated_at,
+        config_id: data.config_id,
+        min_nights: data.min_nights || 1,
+        max_nights: data.max_nights || 999
       };
       
       setRules(prev => prev.map(r => r.id === id ? transformedRule : r));
@@ -339,6 +401,10 @@ export const useRuleBasedCleaningSystem = () => {
 
   const assignRuleToProperties = async (ruleId: string, propertyIds: string[]) => {
     try {
+      // Get current user first
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData.user?.id;
+
       // First, remove existing assignments for this rule
       await supabase
         .from('rule_assignments')
@@ -350,7 +416,7 @@ export const useRuleBasedCleaningSystem = () => {
         const assignments = propertyIds.map(propertyId => ({
           rule_id: ruleId,
           property_id: propertyId,
-          assigned_by: (await supabase.auth.getUser()).data.user?.id
+          assigned_by: userId
         }));
 
         const { error } = await supabase
@@ -397,11 +463,11 @@ export const useRuleBasedCleaningSystem = () => {
         task_type: data.task_type,
         status: data.status,
         assigned_to: data.assigned_to,
-        default_actions: data.default_actions || [],
-        additional_actions: data.additional_actions || [],
+        default_actions: isStringArray(data.default_actions) ? data.default_actions : [],
+        additional_actions: isStringArray(data.additional_actions) ? data.additional_actions : [],
         source_rule_id: data.source_rule_id,
         task_day_number: data.task_day_number || 1,
-        checklist: data.checklist || [],
+        checklist: Array.isArray(data.checklist) ? data.checklist : [],
         description: data.description
       };
       
