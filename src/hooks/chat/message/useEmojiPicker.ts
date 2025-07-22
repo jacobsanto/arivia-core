@@ -8,12 +8,8 @@ export function useEmojiPicker() {
     setShowEmojiPicker(prev => !prev);
   }, []);
 
-  const handleEmojiSelect = useCallback((emoji: string, handleChangeMessage: (e: any) => void) => {
-    // Simulate adding emoji to message input
-    const syntheticEvent = {
-      target: { value: emoji }
-    };
-    handleChangeMessage(syntheticEvent);
+  const handleEmojiSelect = useCallback((emoji: string, setValue: (value: string) => void) => {
+    setValue(emoji);
     setShowEmojiPicker(false);
   }, []);
 

@@ -1,15 +1,22 @@
 
+import { useCallback } from 'react';
+import { Message } from '@/hooks/useChatTypes';
+import { Attachment } from './useAttachments';
+
 export function useOfflineMessages() {
-  const handleOfflineMessage = (
-    message: any,
+  const handleOfflineMessage = useCallback((
+    message: Message,
     chatType: string,
     recipientId: string,
     userId: string,
-    attachments: any[]
+    attachments: Attachment[]
   ) => {
-    // Store message locally for offline handling
-    console.log('Handling offline message:', message);
-  };
+    // Store offline message for later sync
+    console.log('Storing offline message:', message);
+    // In a real implementation, this would store to localStorage or IndexedDB
+  }, []);
 
-  return { handleOfflineMessage };
+  return {
+    handleOfflineMessage
+  };
 }

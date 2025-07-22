@@ -1,4 +1,5 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
 import { FixedSizeList as List } from 'react-window';
 import { Message } from '@/hooks/useChatTypes';
 import MemoizedMessage from './message/MemoizedMessage';
@@ -16,7 +17,7 @@ interface VirtualizedMessageListProps {
 
 const ITEM_HEIGHT = 80; // Approximate height per message
 
-export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
+export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = React.memo(({
   messages,
   height,
   reactionMessageId,
@@ -36,37 +37,42 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
     }
   }, [messages.length]);
 
-  const renderMessage = useMemo(() => {
-    return ({ index, style }: { index: number; style: React.CSSProperties }) => {
-      const message = messages[index];
-      
-      return (
-        <div style={style}>
-          <div className="px-4 py-2">
-            <MemoizedMessage
-              message={message}
-              emojis={emojis}
-              reactionMessageId={reactionMessageId}
-              setReactionMessageId={setReactionMessageId}
-              showEmojiPicker={showEmojiPicker}
-              setShowEmojiPicker={setShowEmojiPicker}
-              onAddReaction={(emoji) => addReaction(message.id, emoji)}
-            />
-          </div>
-        </div>
-      );
-    };
-  }, [messages, emojis, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker, addReaction]);
-
-  if (messages.length === 0) {
+  // Memoize the message renderer to prevent unnecessary re-renders
+  const renderMessage = useCallback(({ index, style }: { index: number; style: React.CSSProperties }) => {
+    const message = messages[index];
+    
+    if (!message) {
+      return <div style={style} />;
+    }
+    
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center text-muted-foreground">
-          <p className="text-lg font-medium">No messages yet</p>
-          <p className="text-sm">Start the conversation!</p>
+      <div style={style}>
+        <div className="px-4 py-2">
+          <MemoizedMessage
+            message={message}
+            emojis={emojis}
+            reactionMessageId={reactionMessageId}
+            setReactionMessageId={setReactionMessageId}
+            showEmojiPicker={showEmojiPicker}
+            setShowEmojiPicker={setShowEmojiPicker}
+            onAddReaction={(emoji) => addReaction(message.id, emoji)}
+          />
         </div>
       </div>
     );
+  }, [messages, emojis, reactionMessageId, setReactionMessageId, showEmojiPicker, setShowEmojiPicker, addReaction]);
+
+  const memoizedEmptyState = useMemo(() => (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center text-muted-foreground">
+        <p className="text-lg font-medium">No messages yet</p>
+        <p className="text-sm">Start the conversation!</p>
+      </div>
+    </div>
+  ), []);
+
+  if (messages.length === 0) {
+    return memoizedEmptyState;
   }
 
   return (
@@ -85,4 +91,6 @@ export const VirtualizedMessageList: React.FC<VirtualizedMessageListProps> = ({
       </List>
     </div>
   );
-};
+});
+
+VirtualizedMessageList.displayName = 'VirtualizedMessageList';

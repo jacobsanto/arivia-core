@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Message } from "@/hooks/useChatTypes";
 import { useMessageInput } from "./useMessageInput";
 import { useMessageSubmission } from "./useMessageSubmission";
-import { useAttachments } from "./useAttachments";
+import { useAttachments, Attachment } from "./useAttachments";
 import { useEmojiPicker } from "./useEmojiPicker";
 import { useOfflineMessages } from "./useOfflineMessages";
 
@@ -52,7 +52,12 @@ export function useMessageSender({
   const { submitMessage } = useMessageSubmission(chatType, recipientId, messages, setMessages, isOffline);
 
   const handleEmojiSelect = (emoji: string) => {
-    baseHandleEmojiSelect(emoji, handleChangeMessage);
+    baseHandleEmojiSelect(emoji, (value: string) => handleChangeMessage(value));
+  };
+
+  // Create a proper setMessageInput function that accepts string values
+  const setMessageInput = (value: string) => {
+    handleChangeMessage(value);
   };
 
   const sendMessage = async () => {
@@ -78,7 +83,7 @@ export function useMessageSender({
 
   return {
     messageInput,
-    setMessageInput: handleChangeMessage,
+    setMessageInput,
     sendMessage,
     sendError,
     attachments,

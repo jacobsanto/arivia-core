@@ -6,7 +6,6 @@ import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
 import { useChatError } from "@/hooks/chat/useChatError";
-
 import { toast } from "@/hooks/use-toast";
 
 export function useTeamChat() {
@@ -70,7 +69,6 @@ export function useTeamChat() {
     handleEmojiSelect
   } = useChat(chatType, activeChatId);
 
-
   // Handle chat errors with toast notifications
   if (error && errors.length === 0) {
     addError('general', error);
@@ -91,8 +89,9 @@ export function useTeamChat() {
     sendMessage();
   }, [sendMessage]);
 
+  // Fix the event handling - pass the value, not the event object
   const handleChangeMessage = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessageInput(e);
+    setMessageInput(e.target.value);
     handleTyping();
   }, [setMessageInput, handleTyping]);
 
