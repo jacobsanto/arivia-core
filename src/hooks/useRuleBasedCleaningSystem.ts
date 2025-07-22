@@ -60,7 +60,7 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchCleaningActions = async () => {
     try {
-      // First try to fetch from the new cleaning_actions table
+      // Try to fetch from the new cleaning_actions table
       const { data: actionsData, error: actionsError } = await supabase
         .from('cleaning_actions' as any)
         .select('*')
@@ -83,7 +83,13 @@ export const useRuleBasedCleaningSystem = () => {
     } catch (err) {
       console.error('Error fetching cleaning actions:', err);
       // Use fallback actions
-      setActions([]);
+      setActions([
+        { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
+        { id: '2', action_name: 'full_cleaning', display_name: 'Full Cleaning', estimated_duration: 180, category: 'cleaning', is_active: true },
+        { id: '3', action_name: 'deep_cleaning', display_name: 'Deep Cleaning', estimated_duration: 240, category: 'cleaning', is_active: true },
+        { id: '4', action_name: 'change_sheets', display_name: 'Change Bed Sheets', estimated_duration: 30, category: 'linen', is_active: true },
+        { id: '5', action_name: 'towel_refresh', display_name: 'Towel Refresh', estimated_duration: 20, category: 'linen', is_active: true },
+      ]);
     }
   };
 
@@ -96,11 +102,11 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our expected interface
+      // Transform the data to match our expected interface, handling both old and new schema
       const transformedRules = (data || []).map((rule: any) => ({
         id: rule.id,
         rule_name: rule.rule_name,
-        stay_length_range: rule.stay_length_range || [1, 999],
+        stay_length_range: rule.stay_length_range || [rule.min_nights || 1, rule.max_nights || 999],
         actions_by_day: rule.actions_by_day || {},
         is_global: rule.is_global ?? true,
         assignable_properties: rule.assignable_properties || [],
@@ -153,7 +159,7 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our expected interface
+      // Transform the data to match our expected interface, handling both old and new schema
       const transformedTasks = (data || []).map((task: any) => ({
         id: task.id,
         listing_id: task.listing_id,
@@ -191,7 +197,7 @@ export const useRuleBasedCleaningSystem = () => {
           is_global: rule.is_global,
           assignable_properties: rule.assignable_properties,
           is_active: rule.is_active
-        }])
+        } as any])
         .select()
         .single();
 
@@ -238,7 +244,7 @@ export const useRuleBasedCleaningSystem = () => {
           is_global: updates.is_global,
           assignable_properties: updates.assignable_properties,
           is_active: updates.is_active
-        })
+        } as any)
         .eq('id', id)
         .select()
         .single();
@@ -293,7 +299,7 @@ export const useRuleBasedCleaningSystem = () => {
         // Alternative: Update the rule's assignable_properties directly
         const { error: updateError } = await supabase
           .from('cleaning_rules')
-          .update({ assignable_properties: propertyIds })
+          .update({ assignable_properties: propertyIds } as any)
           .eq('id', ruleId);
         
         if (updateError) throw updateError;
@@ -321,7 +327,7 @@ export const useRuleBasedCleaningSystem = () => {
     try {
       const { data, error } = await supabase
         .from('housekeeping_tasks')
-        .update({ additional_actions: additionalActions })
+        .update({ additional_actions: additionalActions } as any)
         .eq('id', taskId)
         .select()
         .single();
