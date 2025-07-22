@@ -10,13 +10,17 @@ import AppearanceSettings from "./sections/AppearanceSettings";
 import EmailSettings from "./sections/EmailSettings";
 import BackupSettings from "./sections/BackupSettings";
 import EnhancedSecuritySettings from "./sections/EnhancedSecuritySettings";
+import UserManagement from "../admin/UserManagement";
+import SecurityMonitoring from "../admin/SecurityMonitoring";
 import SettingsTabContent from "./tabs/SettingsTabContent";
 
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
-  { value: "email", label: "Email", icon: "Mail" as const },
   { value: "security", label: "Security", icon: "Shield" as const },
+  { value: "monitoring", label: "Monitoring", icon: "Activity" as const },
+  { value: "permissions", label: "Permissions", icon: "Key" as const },
+  { value: "email", label: "Email", icon: "Mail" as const },
   { value: "notifications", label: "Notifications", icon: "Bell" as const },
   { value: "integrations", label: "Integrations", icon: "Plug" as const },
   { value: "backup", label: "Backup", icon: "Archive" as const },
@@ -49,6 +53,30 @@ const SystemSettingsTabs = () => {
         title="User Management"
         status={{ status: "configured" }}
       >
+        <UserManagement />
+      </SettingsTabContent>
+
+      <SettingsTabContent
+        value="security"
+        title="Security Settings"
+        status={{ status: "configured" }}
+      >
+        <EnhancedSecuritySettings />
+      </SettingsTabContent>
+
+      <SettingsTabContent
+        value="monitoring"
+        title="Security Monitoring"
+        status={{ status: "configured" }}
+      >
+        <SecurityMonitoring />
+      </SettingsTabContent>
+
+      <SettingsTabContent
+        value="permissions"
+        title="System Permissions"
+        status={{ status: "configured" }}
+      >
         <UserManagementSettings />
       </SettingsTabContent>
 
@@ -58,14 +86,6 @@ const SystemSettingsTabs = () => {
         status={{ status: "not-configured" }}
       >
         <EmailSettings />
-      </SettingsTabContent>
-
-      <SettingsTabContent
-        value="security"
-        title="Security Settings"
-        status={{ status: "configured" }}
-      >
-        <EnhancedSecuritySettings />
       </SettingsTabContent>
 
       <SettingsTabContent

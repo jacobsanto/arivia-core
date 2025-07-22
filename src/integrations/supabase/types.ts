@@ -1331,6 +1331,48 @@ export type Database = {
         }
         Relationships: []
       }
+      security_events: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       settings_audit_log: {
         Row: {
           action: string
@@ -1740,6 +1782,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1923,6 +2001,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      create_user_with_role: {
+        Args: {
+          email: string
+          password: string
+          full_name: string
+          user_role?: string
+        }
+        Returns: Json
+      }
       delete_cleaning_config_safely: {
         Args: { config_uuid: string }
         Returns: Json
@@ -1971,12 +2058,25 @@ export type Database = {
         Args: { start_date?: string; end_date?: string }
         Returns: Json
       }
+      get_security_dashboard: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       get_system_health: {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_user_role_safe: {
         Args: { user_id?: string }
+        Returns: string
+      }
+      log_security_event: {
+        Args: {
+          event_type: string
+          severity?: string
+          target_user_id?: string
+          details?: Json
+        }
         Returns: string
       }
       refresh_performance_views: {
@@ -1994,6 +2094,10 @@ export type Database = {
       scheduled_maintenance: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      update_user_role: {
+        Args: { target_user_id: string; new_role: string }
+        Returns: Json
       }
       validate_settings: {
         Args: { category: string; settings: Json }
