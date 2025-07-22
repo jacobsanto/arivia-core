@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { propertyService } from '@/services/property/property.service';
 import type { Property, PropertyFormData } from '@/types/property.types';
+import { toast } from '@/hooks/use-toast';
 
 // Re-export the Property type
 export type { Property } from '@/types/property.types';
@@ -12,14 +13,25 @@ export const useProperties = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProperties = async () => {
-    setIsLoading(true);
-    setError(null);
-
     try {
+      setIsLoading(true);
+      setError(null);
+
       const data = await propertyService.fetchProperties();
       setProperties(data);
     } catch (err: any) {
-      setError(err.message);
+      const errorMessage = err?.message || 'Failed to load properties';
+      setError(errorMessage);
+      console.error('Properties fetch error:', err);
+      
+      toast({
+        title: "Error Loading Properties",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      
+      // Provide fallback empty array
+      setProperties([]);
     } finally {
       setIsLoading(false);
     }
