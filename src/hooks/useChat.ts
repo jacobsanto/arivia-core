@@ -24,10 +24,8 @@ export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
     });
   }
   
-  // Set up realtime message subscriptions - only if online
-  if (!isOffline) {
-    useRealtimeMessages({ chatType, recipientId, messages, setMessages });
-  }
+  // Set up realtime message subscriptions - always call hook
+  useRealtimeMessages({ chatType, recipientId, messages, setMessages });
   
   // Simple typing status - avoid complex hook dependencies
   const [typingStatus, setTypingStatus] = useState<string[]>([]);

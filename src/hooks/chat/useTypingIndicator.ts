@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useRef } from "react";
 
-export function useTypingIndicator(channelId?: string) {
+export function useTypingIndicator(channelId: string = 'general') {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
