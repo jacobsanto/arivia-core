@@ -198,30 +198,28 @@ export const CleaningConfigPage: React.FC = () => {
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  size="sm" 
+                  size="icon" 
                   onClick={() => handleViewRules(config)}
-                  className="flex items-center gap-1"
+                  title="View Rules"
                 >
-                  <Clock className="h-3 w-3" />
-                  View Rules
+                  <Clock className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline" 
-                  size="sm" 
+                  size="icon" 
                   onClick={() => handleEditConfig(config)}
-                  className="flex items-center gap-1"
+                  title="Edit"
                 >
-                  <Settings className="h-3 w-3" />
-                  Edit
+                  <Settings className="h-4 w-4" />
                 </Button>
                 <Button 
                   variant="outline" 
-                  size="sm"
+                  size="icon"
                   onClick={() => setConfigToDelete(config)}
-                  className="flex items-center gap-1 text-destructive hover:text-destructive"
+                  className="text-destructive hover:text-destructive"
+                  title="Delete"
                 >
-                  <Trash2 className="h-3 w-3" />
-                  Delete
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
             </CardContent>
