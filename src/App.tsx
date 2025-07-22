@@ -24,6 +24,7 @@ import Inventory from "@/pages/Inventory";
 import TeamChat from "@/pages/TeamChat";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
+import SystemHealth from "@/pages/SystemHealth";
 
 import DamageReports from "@/pages/DamageReports";
 import CleaningSettings from "@/pages/CleaningSettings";
@@ -72,7 +73,8 @@ function App() {
                      <Route path="/damage-reports" element={<DamageReports />} />
                     <Route path="/virtual-tours" element={<VirtualTourPage />} />
                     <Route path="/system-admin" element={<SystemAdminPage />} />
-                    <Route path="/optimization" element={<OptimizationPage />} />
+                     <Route path="/optimization" element={<OptimizationPage />} />
+                     <Route path="/system-health" element={<SystemHealth />} />
                     
                     {/* Property details route */}
                     <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
