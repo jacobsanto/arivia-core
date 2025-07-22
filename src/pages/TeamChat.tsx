@@ -3,11 +3,10 @@ import React, { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import ChatSidebar from "@/components/chat/ChatSidebar";
-import ChatArea from "@/components/chat/ChatArea";
+import { EnhancedChatArea } from "@/components/chat/EnhancedChatArea";
 import ConnectionAlerts from "@/components/chat/status/ConnectionAlerts";
 import { useTeamChat } from "@/hooks/chat/useTeamChat";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TeamChatErrorBoundary } from "@/components/error-boundaries/TeamChatErrorBoundary";
 
 const TeamChat = () => {
@@ -78,66 +77,46 @@ const TeamChat = () => {
     />
   ), [channels, directMessages, activeChat, activeTab, setActiveTab, handleSelectChat, sidebarOpen, toggleSidebar]);
 
-  // Memoize ChatArea component (only re-render when key props change)
+  // Memoize Enhanced ChatArea component
   const ChatAreaComponent = useMemo(() => (
-    <ChatArea
+    <EnhancedChatArea
       activeChat={activeChat}
-      activeTab={activeTab}
+      activeChatType={activeTab === 'channels' ? 'channel' : 'direct'}
       messages={messages}
       message={messageInput}
-      typingStatus={typingStatus}
-      handleChangeMessage={handleChangeMessage}
-      handleSendMessage={handleSendMessage}
-      toggleSidebar={toggleSidebar}
+      isLoading={loading}
+      typingUsers={Array.isArray(typingStatus) ? typingStatus : []}
       emojis={emojiSymbols}
-      onAddReaction={(emoji, messageId) => addReaction(emoji, messageId)}
       reactionMessageId={reactionMessageId}
       setReactionMessageId={setReactionMessageId}
       showEmojiPicker={showEmojiPicker}
       setShowEmojiPicker={setShowEmojiPicker}
-      isLoading={loading}
-      isOffline={isOffline}
-      // New props
-      attachments={attachments}
-      fileInputRef={fileInputRef}
-      imageInputRef={imageInputRef}
-      handleFileSelect={handleFileSelect}
-      handleImageSelect={handleImageSelect}
-      handleFileClick={handleFileClick}
-      handleImageClick={handleImageClick}
-      removeAttachment={removeAttachment}
-      showMessageEmojiPicker={showMessageEmojiPicker}
-      toggleMessageEmojiPicker={toggleMessageEmojiPicker}
-      handleEmojiSelect={handleEmojiSelect}
+      onSendMessage={handleSendMessage}
+      onChangeMessage={handleChangeMessage}
+      onEmojiClick={(messageId, emoji) => addReaction(emoji, messageId)}
+      channels={channels}
+      directMessages={directMessages}
+      presenceUsers={[]}
+      toggleSidebar={toggleSidebar}
     />
   ), [
     activeChat, 
-    activeTab, 
+    activeTab,
     messages, 
     messageInput, 
+    loading,
     typingStatus,
-    handleChangeMessage,
-    handleSendMessage,
-    toggleSidebar,
     emojiSymbols,
-    addReaction,
     reactionMessageId,
     setReactionMessageId,
     showEmojiPicker,
     setShowEmojiPicker,
-    loading,
-    isOffline,
-    attachments,
-    fileInputRef,
-    imageInputRef,
-    handleFileSelect,
-    handleImageSelect,
-    handleFileClick,
-    handleImageClick,
-    removeAttachment,
-    showMessageEmojiPicker,
-    toggleMessageEmojiPicker,
-    handleEmojiSelect
+    handleSendMessage,
+    handleChangeMessage,
+    addReaction,
+    channels,
+    directMessages,
+    toggleSidebar
   ]);
 
   return (
