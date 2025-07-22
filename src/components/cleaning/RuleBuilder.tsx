@@ -80,7 +80,10 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
         actions_by_day: actionsByDay,
         is_global: isGlobal,
         assignable_properties: selectedProperties,
-        is_active: true
+        is_active: true,
+        config_id: 'default',
+        min_nights: stayRangeMin,
+        max_nights: stayRangeMax
       };
 
       if (existingRule) {
