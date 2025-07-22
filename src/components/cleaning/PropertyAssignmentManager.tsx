@@ -24,16 +24,17 @@ export const PropertyAssignmentManager: React.FC<PropertyAssignmentManagerProps>
   const { assignRuleToProperties, assignments } = useRuleBasedCleaningSystem();
   const [selectedRule, setSelectedRule] = useState<string>('');
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
     const fetchProperties = async () => {
       try {
         const listings = await guestyService.getGuestyListings();
-        setProperties(listings);
+        setProperties(listings || []);
       } catch (error) {
         console.error('Error fetching properties:', error);
+        setProperties([]);
       }
     };
 
