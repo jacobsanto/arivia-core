@@ -1,11 +1,12 @@
 
 import { useState, useCallback } from 'react';
 
-interface ChatError {
+export interface ChatError {
   id: string;
-  type: 'connection' | 'general' | 'loading';
+  type: 'connection' | 'general' | 'loading' | 'offline' | 'sending' | 'reaction';
   message: string;
   timestamp: number;
+  retry?: () => void;
 }
 
 export function useChatError() {
