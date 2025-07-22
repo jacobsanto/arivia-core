@@ -22,34 +22,22 @@ interface RuleBuilderProps {
 export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSave, existingRule }) => {
   const { actions, rules, createCleaningRule, updateCleaningRule } = useRuleBasedCleaningSystem();
   
-  // Standard global rule names
-  const STANDARD_GLOBAL_RULES = ['SHORT STAY', 'MEDIUM STAY', 'EXTENDED STAY'];
-  
-  // Initialize with proper defaults based on rule type
-  const getInitialRuleName = () => {
-    if (existingRule?.rule_name) return existingRule.rule_name;
-    if (existingRule?.is_global === false) return ''; // Custom rule
-    return 'SHORT STAY'; // Default to first standard rule
+  // Standard global rule configurations
+  const GLOBAL_RULE_CONFIGS = {
+    'SHORT STAY': { min: 1, max: 3, description: 'Short stays (1-3 nights)' },
+    'MEDIUM STAY': { min: 4, max: 7, description: 'Medium stays (4-7 nights)' },
+    'EXTENDED STAY': { min: 8, max: 999, description: 'Extended stays (8+ nights)' }
   };
   
-  const getInitialStayRange = (ruleName: string) => {
-    if (existingRule?.stay_length_range) return existingRule.stay_length_range;
-    
-    switch (ruleName) {
-      case 'SHORT STAY': return [1, 3];
-      case 'MEDIUM STAY': return [4, 7];
-      case 'EXTENDED STAY': return [8, 999];
-      default: return [1, 7];
-    }
-  };
-  
-  const initialRuleName = getInitialRuleName();
-  const initialRange = getInitialStayRange(initialRuleName);
-  
-  const [ruleName, setRuleName] = useState(initialRuleName);
-  const [stayRangeMin, setStayRangeMin] = useState(initialRange[0]);
-  const [stayRangeMax, setStayRangeMax] = useState(initialRange[1]);
+  // Initialize form state
+  const [ruleName, setRuleName] = useState(existingRule?.rule_name || '');
   const [isGlobal, setIsGlobal] = useState(existingRule?.is_global ?? true);
+  const [stayRangeMin, setStayRangeMin] = useState(
+    existingRule?.stay_length_range?.[0] || existingRule?.min_nights || 1
+  );
+  const [stayRangeMax, setStayRangeMax] = useState(
+    existingRule?.stay_length_range?.[1] || existingRule?.max_nights || 7
+  );
   const [actionsByDay, setActionsByDay] = useState<Record<string, string[]>>(existingRule?.actions_by_day || {});
   const [selectedProperties, setSelectedProperties] = useState<string[]>(existingRule?.assignable_properties || []);
   const [properties, setProperties] = useState([]);
@@ -92,11 +80,14 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
     }));
   };
 
-  const handleRuleNameChange = (value: string) => {
+  const handleRuleSelection = (value: string) => {
     setRuleName(value);
-    const newRange = getInitialStayRange(value);
-    setStayRangeMin(newRange[0]);
-    setStayRangeMax(newRange[1]);
+    
+    if (isGlobal && GLOBAL_RULE_CONFIGS[value]) {
+      const config = GLOBAL_RULE_CONFIGS[value];
+      setStayRangeMin(config.min);
+      setStayRangeMax(config.max);
+    }
   };
 
   const handleSave = async () => {
@@ -104,11 +95,11 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
       return;
     }
 
-    // Prevent duplicate global rules
+    // Prevent duplicate global rules (only for new rules)
     if (isGlobal && !existingRule) {
       const existingGlobalRule = rules.find(r => r.rule_name === ruleName && r.is_global);
       if (existingGlobalRule) {
-        alert(`Global rule "${ruleName}" already exists. Please choose a different name.`);
+        alert(`Global rule "${ruleName}" already exists. Please choose a different rule type.`);
         return;
       }
     }
@@ -207,6 +198,8 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
     );
   };
 
+  const isEditingGlobalRule = existingRule && existingRule.is_global;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -225,12 +218,33 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="rule-name">Rule Name</Label>
-                <Input
-                  id="rule-name"
-                  value={ruleName}
-                  onChange={(e) => setRuleName(e.target.value)}
-                  placeholder="e.g., Short Stay (1-3 nights)"
-                />
+                {isGlobal && !isEditingGlobalRule ? (
+                  <Select value={ruleName} onValueChange={handleRuleSelection}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a global rule type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(GLOBAL_RULE_CONFIGS).map(([name, config]) => (
+                        <SelectItem key={name} value={name}>
+                          {name} - {config.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id="rule-name"
+                    value={ruleName}
+                    onChange={(e) => setRuleName(e.target.value)}
+                    placeholder="e.g., Custom Property Rule"
+                    disabled={isEditingGlobalRule}
+                  />
+                )}
+                {isEditingGlobalRule && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Global rule names cannot be modified
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -242,6 +256,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
                     value={stayRangeMin}
                     onChange={(e) => setStayRangeMin(parseInt(e.target.value))}
                     min="1"
+                    disabled={isGlobal && GLOBAL_RULE_CONFIGS[ruleName]}
                   />
                 </div>
                 <div>
@@ -252,17 +267,27 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
                     value={stayRangeMax}
                     onChange={(e) => setStayRangeMax(parseInt(e.target.value))}
                     min="1"
+                    disabled={isGlobal && GLOBAL_RULE_CONFIGS[ruleName]}
                   />
                 </div>
               </div>
+              {isGlobal && GLOBAL_RULE_CONFIGS[ruleName] && (
+                <p className="text-sm text-muted-foreground">
+                  Stay ranges for global rules are predefined and cannot be modified
+                </p>
+              )}
 
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="is-global"
                   checked={isGlobal}
                   onCheckedChange={(checked) => setIsGlobal(checked as boolean)}
+                  disabled={isEditingGlobalRule}
                 />
                 <Label htmlFor="is-global">Apply to all properties (global rule)</Label>
+                {isEditingGlobalRule && (
+                  <span className="text-sm text-muted-foreground">(cannot be changed)</span>
+                )}
               </div>
             </CardContent>
           </Card>
