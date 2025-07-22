@@ -68,16 +68,30 @@ const PerformanceOptimization = () => {
 
   const fetchPerformanceSummary = useCallback(async () => {
     try {
+      // Use query_performance_log instead of the dropped performance_summary view
       const { data, error } = await supabase
-        .from('performance_summary')
+        .from('query_performance_log')
         .select('*')
-        .order('hour', { ascending: false })
-        .limit(24); // Last 24 hours
+        .order('created_at', { ascending: false })
+        .limit(24);
       
       if (error) throw error;
-      setSummary(data || []);
+      
+      // Transform the data to match PerformanceSummary format
+      const transformedData = (data || []).map(item => ({
+        hour: item.created_at,
+        query_type: item.query_type,
+        table_name: item.table_name,
+        query_count: 1, // Default count
+        avg_execution_time: item.execution_time_ms,
+        max_execution_time: item.execution_time_ms,
+        p95_execution_time: item.execution_time_ms
+      }));
+      
+      setSummary(transformedData);
     } catch (error) {
       console.error('Error fetching performance summary:', error);
+      setSummary([]);
     }
   }, []);
 
