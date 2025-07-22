@@ -48,6 +48,7 @@ export interface EnhancedHousekeepingTask {
   source_rule_id?: string;
   task_day_number: number;
   checklist: any[];
+  description?: string;
 }
 
 export const useRuleBasedCleaningSystem = () => {
@@ -60,7 +61,6 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchCleaningActions = async () => {
     try {
-      // Try to fetch from the new cleaning_actions table
       const { data: actionsData, error: actionsError } = await supabase
         .from('cleaning_actions' as any)
         .select('*')
@@ -69,7 +69,6 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (actionsError) {
         console.log('Cleaning actions table not available yet, using fallback data');
-        // Fallback to hardcoded actions if table doesn't exist
         setActions([
           { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
           { id: '2', action_name: 'full_cleaning', display_name: 'Full Cleaning', estimated_duration: 180, category: 'cleaning', is_active: true },
@@ -82,7 +81,6 @@ export const useRuleBasedCleaningSystem = () => {
       }
     } catch (err) {
       console.error('Error fetching cleaning actions:', err);
-      // Use fallback actions
       setActions([
         { id: '1', action_name: 'standard_cleaning', display_name: 'Standard Cleaning', estimated_duration: 90, category: 'cleaning', is_active: true },
         { id: '2', action_name: 'full_cleaning', display_name: 'Full Cleaning', estimated_duration: 180, category: 'cleaning', is_active: true },
@@ -102,7 +100,6 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our expected interface, handling both old and new schema
       const transformedRules = (data || []).map((rule: any) => ({
         id: rule.id,
         rule_name: rule.rule_name,
@@ -128,7 +125,6 @@ export const useRuleBasedCleaningSystem = () => {
 
   const fetchRuleAssignments = async () => {
     try {
-      // Try to fetch from rule_assignments table
       const { data, error } = await supabase
         .from('rule_assignments' as any)
         .select(`
@@ -159,7 +155,6 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (error) throw error;
       
-      // Transform the data to match our expected interface, handling both old and new schema
       const transformedTasks = (data || []).map((task: any) => ({
         id: task.id,
         listing_id: task.listing_id,
@@ -172,7 +167,8 @@ export const useRuleBasedCleaningSystem = () => {
         additional_actions: task.additional_actions || [],
         source_rule_id: task.source_rule_id,
         task_day_number: task.task_day_number || 1,
-        checklist: task.checklist || []
+        checklist: task.checklist || [],
+        description: task.description
       }));
       
       setTasks(transformedTasks);
@@ -281,9 +277,35 @@ export const useRuleBasedCleaningSystem = () => {
     }
   };
 
+  const deleteCleaningRule = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('cleaning_rules')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      setRules(prev => prev.filter(r => r.id !== id));
+      toast({
+        title: "Rule Deleted",
+        description: "Rule has been deleted successfully",
+      });
+      
+      return true;
+    } catch (err) {
+      console.error('Error deleting rule:', err);
+      toast({
+        title: "Error Deleting Rule",
+        description: err instanceof Error ? err.message : 'Failed to delete rule',
+        variant: "destructive",
+      });
+      throw err;
+    }
+  };
+
   const assignRuleToProperties = async (ruleId: string, propertyIds: string[]) => {
     try {
-      // Try to insert into rule_assignments table
       const assignments = propertyIds.map(propertyId => ({
         rule_id: ruleId,
         property_id: propertyId
@@ -296,7 +318,6 @@ export const useRuleBasedCleaningSystem = () => {
 
       if (error) {
         console.log('Rule assignments table not available, using alternative approach');
-        // Alternative: Update the rule's assignable_properties directly
         const { error: updateError } = await supabase
           .from('cleaning_rules')
           .update({ assignable_properties: propertyIds } as any)
@@ -346,7 +367,8 @@ export const useRuleBasedCleaningSystem = () => {
         additional_actions: data.additional_actions || [],
         source_rule_id: data.source_rule_id,
         task_day_number: data.task_day_number || 1,
-        checklist: data.checklist || []
+        checklist: data.checklist || [],
+        description: data.description
       };
       
       setTasks(prev => prev.map(t => t.id === taskId ? transformedTask : t));
@@ -405,6 +427,7 @@ export const useRuleBasedCleaningSystem = () => {
     error,
     createCleaningRule,
     updateCleaningRule,
+    deleteCleaningRule,
     assignRuleToProperties,
     updateTaskActions,
     refetch

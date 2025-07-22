@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +13,22 @@ import {
   Globe,
   Building,
   Calendar,
-  CheckSquare
+  CheckSquare,
+  Trash2
 } from 'lucide-react';
 import { useRuleBasedCleaningSystem } from '@/hooks/useRuleBasedCleaningSystem';
 import { RuleBuilder } from './RuleBuilder';
 import { PropertyAssignmentManager } from './PropertyAssignmentManager';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 export const RuleBasedDashboard = () => {
   const { 
@@ -26,13 +36,15 @@ export const RuleBasedDashboard = () => {
     actions, 
     assignments, 
     tasks, 
-    loading 
+    loading,
+    deleteCleaningRule
   } = useRuleBasedCleaningSystem();
 
   const [activeTab, setActiveTab] = useState('overview');
   const [showRuleBuilder, setShowRuleBuilder] = useState(false);
   const [showPropertyManager, setShowPropertyManager] = useState(false);
   const [selectedRule, setSelectedRule] = useState(null);
+  const [ruleToDelete, setRuleToDelete] = useState(null);
 
   if (loading) {
     return (
@@ -46,6 +58,17 @@ export const RuleBasedDashboard = () => {
   const customRules = rules.filter(r => !r.is_global);
   const activeRules = rules.filter(r => r.is_active);
   const ruleBasedTasks = tasks.filter(t => t.source_rule_id);
+
+  const handleDeleteRule = async () => {
+    if (!ruleToDelete) return;
+    
+    try {
+      await deleteCleaningRule(ruleToDelete.id);
+      setRuleToDelete(null);
+    } catch (error) {
+      console.error('Error deleting rule:', error);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -278,6 +301,13 @@ export const RuleBasedDashboard = () => {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        <Button 
+                          size="icon" 
+                          variant="ghost"
+                          onClick={() => setRuleToDelete(rule)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
@@ -421,6 +451,28 @@ export const RuleBasedDashboard = () => {
         onClose={() => setShowPropertyManager(false)}
         rules={rules}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!ruleToDelete} onOpenChange={() => setRuleToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the rule "{ruleToDelete?.rule_name}". 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteRule}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
