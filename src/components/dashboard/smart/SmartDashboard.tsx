@@ -135,7 +135,7 @@ export const SmartDashboard: React.FC = () => {
             <Settings className="h-4 w-4" />
             Cleaning Settings
           </Button>
-          <Button onClick={() => navigate('/housekeeping')} className="flex items-center gap-2 text-[d1aa7e]">
+          <Button onClick={() => navigate('/housekeeping')} className="flex items-center gap-2 text-[d1aa7e] text-zinc-50">
             <Plus className="h-4 w-4" />
             New Task
           </Button>
