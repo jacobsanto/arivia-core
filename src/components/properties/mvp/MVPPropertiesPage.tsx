@@ -52,7 +52,7 @@ export const MVPPropertiesPage: React.FC = () => {
           
           <div className="flex items-center gap-2">
             <BookingSyncButton onSyncComplete={handleSyncComplete} label="Sync from Guesty" />
-            <Button onClick={() => refetch()} className="bg-[d1aa7e] text-zinc-50">
+            <Button onClick={() => refetch()} className="text-zinc-50 bg-[d1aa7e] bg-[#d0a97d]">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
