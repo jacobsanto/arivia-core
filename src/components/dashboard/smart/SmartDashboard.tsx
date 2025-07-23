@@ -6,14 +6,12 @@ import { Calendar, Clock, Home, AlertTriangle, Settings, Plus } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-
 interface DashboardStats {
   totalProperties: number;
   pendingTasks: number;
   todayTasks: number;
   criticalIssues: number;
 }
-
 export const SmartDashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats>({
     totalProperties: 0,
@@ -22,51 +20,45 @@ export const SmartDashboard: React.FC = () => {
     criticalIssues: 0
   });
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const {
+    toast
+  } = useToast();
   const navigate = useNavigate();
-
   useEffect(() => {
     fetchDashboardData();
   }, []);
-
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
 
       // Fetch properties
-      const { data: properties, error: propertiesError } = await supabase
-        .from('guesty_listings')
-        .select('id')
-        .eq('is_deleted', false);
-
+      const {
+        data: properties,
+        error: propertiesError
+      } = await supabase.from('guesty_listings').select('id').eq('is_deleted', false);
       if (propertiesError) throw propertiesError;
 
       // Fetch pending tasks
-      const { data: pendingTasks, error: pendingError } = await supabase
-        .from('housekeeping_tasks')
-        .select('id')
-        .eq('status', 'pending');
-
+      const {
+        data: pendingTasks,
+        error: pendingError
+      } = await supabase.from('housekeeping_tasks').select('id').eq('status', 'pending');
       if (pendingError) throw pendingError;
 
       // Fetch today's tasks
       const today = new Date().toISOString().split('T')[0];
-      const { data: todayTasks, error: todayError } = await supabase
-        .from('housekeeping_tasks')
-        .select('id')
-        .eq('due_date', today);
-
+      const {
+        data: todayTasks,
+        error: todayError
+      } = await supabase.from('housekeeping_tasks').select('id').eq('due_date', today);
       if (todayError) throw todayError;
 
       // Fetch maintenance tasks
-      const { data: maintenanceTasks, error: maintenanceError } = await supabase
-        .from('maintenance_tasks')
-        .select('id')
-        .eq('priority', 'high')
-        .eq('status', 'pending');
-
+      const {
+        data: maintenanceTasks,
+        error: maintenanceError
+      } = await supabase.from('maintenance_tasks').select('id').eq('priority', 'high').eq('status', 'pending');
       if (maintenanceError) throw maintenanceError;
-
       setStats({
         totalProperties: properties?.length || 0,
         pendingTasks: pendingTasks?.length || 0,
@@ -84,41 +76,33 @@ export const SmartDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-
-  const statsCards = [
-    {
-      title: "Total Properties",
-      value: stats.totalProperties,
-      icon: <Home className="h-5 w-5" />,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Pending Tasks",
-      value: stats.pendingTasks,
-      icon: <Clock className="h-5 w-5" />,
-      color: "text-yellow-600",
-      bgColor: "bg-yellow-50"
-    },
-    {
-      title: "Today's Tasks",
-      value: stats.todayTasks,
-      icon: <Calendar className="h-5 w-5" />,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Critical Issues",
-      value: stats.criticalIssues,
-      icon: <AlertTriangle className="h-5 w-5" />,
-      color: "text-red-600",
-      bgColor: "bg-red-50"
-    }
-  ];
-
+  const statsCards = [{
+    title: "Total Properties",
+    value: stats.totalProperties,
+    icon: <Home className="h-5 w-5" />,
+    color: "text-blue-600",
+    bgColor: "bg-blue-50"
+  }, {
+    title: "Pending Tasks",
+    value: stats.pendingTasks,
+    icon: <Clock className="h-5 w-5" />,
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-50"
+  }, {
+    title: "Today's Tasks",
+    value: stats.todayTasks,
+    icon: <Calendar className="h-5 w-5" />,
+    color: "text-green-600",
+    bgColor: "bg-green-50"
+  }, {
+    title: "Critical Issues",
+    value: stats.criticalIssues,
+    icon: <AlertTriangle className="h-5 w-5" />,
+    color: "text-red-600",
+    bgColor: "bg-red-50"
+  }];
   if (loading) {
-    return (
-      <div className="space-y-6">
+    return <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Operations Dashboard</h1>
@@ -127,23 +111,18 @@ export const SmartDashboard: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
+          {[1, 2, 3, 4].map(i => <Card key={i} className="animate-pulse">
               <CardHeader>
                 <div className="h-4 bg-muted rounded w-3/4"></div>
               </CardHeader>
               <CardContent>
                 <div className="h-8 bg-muted rounded w-1/2"></div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="space-y-6">
+  return <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Operations Dashboard</h1>
@@ -152,15 +131,11 @@ export const SmartDashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={() => navigate('/cleaning-settings')}
-            variant="outline"
-            className="flex items-center gap-2"
-          >
+          <Button onClick={() => navigate('/cleaning-settings')} variant="outline" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
             Cleaning Settings
           </Button>
-          <Button onClick={() => navigate('/housekeeping')} className="flex items-center gap-2">
+          <Button onClick={() => navigate('/housekeeping')} className="flex items-center gap-2 text-[d1aa7e]">
             <Plus className="h-4 w-4" />
             New Task
           </Button>
@@ -169,8 +144,7 @@ export const SmartDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {statsCards.map((stat, index) => (
-          <Card key={index} className="hover:shadow-md transition-shadow">
+        {statsCards.map((stat, index) => <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
               <div className={`p-2 rounded-full ${stat.bgColor}`}>
@@ -180,8 +154,7 @@ export const SmartDashboard: React.FC = () => {
             <CardContent>
               <div className="text-2xl font-bold">{stat.value}</div>
             </CardContent>
-          </Card>
-        ))}
+          </Card>)}
       </div>
 
       {/* Quick Actions */}
@@ -231,6 +204,5 @@ export const SmartDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-    </div>
-  );
+    </div>;
 };
