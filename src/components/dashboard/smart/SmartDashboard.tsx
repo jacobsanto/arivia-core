@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,34 +31,25 @@ export const SmartDashboard: React.FC = () => {
     try {
       setLoading(true);
 
-      // Fetch properties
-      const {
-        data: properties,
-        error: propertiesError
-      } = await supabase.from('guesty_listings').select('id').eq('is_deleted', false);
-      if (propertiesError) throw propertiesError;
-
-      // Fetch pending tasks
-      const {
-        data: pendingTasks,
-        error: pendingError
-      } = await supabase.from('housekeeping_tasks').select('id').eq('status', 'pending');
-      if (pendingError) throw pendingError;
-
-      // Fetch today's tasks
       const today = new Date().toISOString().split('T')[0];
-      const {
-        data: todayTasks,
-        error: todayError
-      } = await supabase.from('housekeeping_tasks').select('id').eq('due_date', today);
-      if (todayError) throw todayError;
 
-      // Fetch maintenance tasks
-      const {
-        data: maintenanceTasks,
-        error: maintenanceError
-      } = await supabase.from('maintenance_tasks').select('id').eq('priority', 'high').eq('status', 'pending');
+      const [
+        { data: properties, error: propertiesError },
+        { data: pendingTasks, error: pendingError },
+        { data: todayTasks, error: todayError },
+        { data: maintenanceTasks, error: maintenanceError }
+      ] = await Promise.all([
+        supabase.from('guesty_listings').select('id').eq('is_deleted', false),
+        supabase.from('housekeeping_tasks').select('id').eq('status', 'pending'),
+        supabase.from('housekeeping_tasks').select('id').eq('due_date', today),
+        supabase.from('maintenance_tasks').select('id').eq('priority', 'high').eq('status', 'pending')
+      ]);
+
+      if (propertiesError) throw propertiesError;
+      if (pendingError) throw pendingError;
+      if (todayError) throw todayError;
       if (maintenanceError) throw maintenanceError;
+
       setStats({
         totalProperties: properties?.length || 0,
         pendingTasks: pendingTasks?.length || 0,
@@ -76,7 +67,7 @@ export const SmartDashboard: React.FC = () => {
       setLoading(false);
     }
   };
-  const statsCards = [{
+  const statsCards = useMemo(() => [{
     title: "Total Properties",
     value: stats.totalProperties,
     icon: <Home className="h-5 w-5" />,
@@ -100,7 +91,7 @@ export const SmartDashboard: React.FC = () => {
     icon: <AlertTriangle className="h-5 w-5" />,
     color: "text-red-600",
     bgColor: "bg-red-50"
-  }];
+  }], [stats]);
   if (loading) {
     return <div className="space-y-6">
         <div className="flex items-center justify-between">
