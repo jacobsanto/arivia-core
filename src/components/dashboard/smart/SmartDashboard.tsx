@@ -6,6 +6,7 @@ import { Calendar, Clock, Home, AlertTriangle, Settings, Plus } from "lucide-rea
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 interface DashboardStats {
   totalProperties: number;
   pendingTasks: number;
@@ -20,6 +21,7 @@ export const SmartDashboard: React.FC = () => {
     criticalIssues: 0
   });
   const [loading, setLoading] = useState(true);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const {
     toast
   } = useToast();
@@ -135,7 +137,7 @@ export const SmartDashboard: React.FC = () => {
             <Settings className="h-4 w-4" />
             Cleaning Settings
           </Button>
-          <Button onClick={() => navigate('/housekeeping')} className="flex items-center gap-2 text-[d1aa7e] text-zinc-50">
+          <Button onClick={() => setIsTaskDialogOpen(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             New Task
           </Button>
@@ -204,5 +206,10 @@ export const SmartDashboard: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      <TaskCreationDialog 
+        isOpen={isTaskDialogOpen}
+        onOpenChange={setIsTaskDialogOpen}
+      />
     </div>;
 };

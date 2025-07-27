@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle, Clock, AlertTriangle, Calendar, User, MapPin } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, Calendar, User, MapPin, Plus } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { CreateMaintenanceTaskDialog } from "@/components/maintenance/CreateMaintenanceTaskDialog";
+import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
 
 export const MVPTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("housekeeping");
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: housekeepingTasks } = useQuery({
@@ -187,14 +189,22 @@ export const MVPTaskManagement: React.FC = () => {
           
           <TabsContent value="housekeeping" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Housekeeping Tasks</CardTitle>
+                <Button 
+                  onClick={() => setIsCreateTaskOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Housekeeping Task
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {housekeepingTasks?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>No housekeeping tasks found</p>
+                      <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
                     </div>
                   ) : (
                     housekeepingTasks?.map((task) => (
@@ -235,6 +245,12 @@ export const MVPTaskManagement: React.FC = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <TaskCreationDialog 
+          isOpen={isCreateTaskOpen}
+          onOpenChange={setIsCreateTaskOpen}
+          defaultTab="housekeeping"
+        />
       </div>
     </>
   );
