@@ -39,17 +39,18 @@ const MaintenanceSchedule = ({ form }: MaintenanceScheduleProps) => {
         render={({ field }) => (
           <FormItem>
             <FormLabel>Assignee</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value || "select-assignee"}>
+            <Select onValueChange={field.onChange} value={field.value || ""}>
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select assignee" />
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="select-assignee" disabled>Select assignee</SelectItem>
-                <SelectItem value="Alex Chen">Alex Chen</SelectItem>
-                <SelectItem value="Maria Kowalska">Maria Kowalska</SelectItem>
-                <SelectItem value="Stefan Müller">Stefan Müller</SelectItem>
+                <SelectItem value="" disabled>Select assignee</SelectItem>
+                <SelectItem value="System Admin">System Admin</SelectItem>
+                <SelectItem value="Property Manager">Property Manager</SelectItem>
+                <SelectItem value="Maintenance Staff">Maintenance Staff</SelectItem>
+                <SelectItem value="Unassigned">Unassigned</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

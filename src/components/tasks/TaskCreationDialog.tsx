@@ -38,25 +38,33 @@ export const TaskCreationDialog: React.FC<TaskCreationDialogProps> = ({
 
   const handleMaintenanceSubmit = async (data: any) => {
     try {
-      // Get the first available property listing_id from Guesty
-      const { data: listings } = await supabase
-        .from('guesty_listings')
+      // Get property ID from the properties table using the selected property name
+      const { data: properties } = await supabase
+        .from('properties')
         .select('id')
+        .eq('name', data.property)
         .limit(1);
       
-      const listingId = listings?.[0]?.id || 'manual-task';
+      const propertyId = properties?.[0]?.id;
+      
+      if (!propertyId) {
+        throw new Error('Selected property not found');
+      }
+      
+      // For now, store assignee as text since we don't have proper user profiles set up
+      const assigneeText = data.assignee || 'Unassigned';
       
       // Create the maintenance task in database
       const { data: newTask, error } = await supabase
         .from('maintenance_tasks')
         .insert({
-          property_id: listingId,
+          property_id: propertyId,
           title: data.title,
           description: data.description,
-          priority: data.priority,
+          priority: data.priority.toLowerCase(),
           status: 'pending',
           due_date: data.dueDate,
-          assigned_to: data.assignee,
+          assigned_to: null, // Store as null for now, can be updated when user management is improved
           location: data.location,
           required_tools: data.requiredTools || ''
         })
