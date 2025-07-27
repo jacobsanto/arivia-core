@@ -6,12 +6,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle, Clock, AlertTriangle, Calendar, User, MapPin } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
+import { CreateMaintenanceTaskDialog } from "@/components/maintenance/CreateMaintenanceTaskDialog";
+import { toastService } from "@/services/toast";
 
 export const MVPTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("housekeeping");
+  const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: housekeepingTasks } = useQuery({
     queryKey: ['housekeeping-tasks'],
@@ -50,6 +54,42 @@ export const MVPTaskManagement: React.FC = () => {
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const handleStartTask = async (taskId: string, type: 'housekeeping' | 'maintenance') => {
+    try {
+      const table = type === 'housekeeping' ? 'housekeeping_tasks' : 'maintenance_tasks';
+      const { error } = await supabase
+        .from(table)
+        .update({ status: 'in_progress' })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: [`${type}-tasks`] });
+      toastService.success('Task started successfully!');
+    } catch (error) {
+      console.error('Error starting task:', error);
+      toastService.error('Failed to start task');
+    }
+  };
+
+  const handleCompleteTask = async (taskId: string, type: 'housekeeping' | 'maintenance') => {
+    try {
+      const table = type === 'housekeeping' ? 'housekeeping_tasks' : 'maintenance_tasks';
+      const { error } = await supabase
+        .from(table)
+        .update({ status: 'done' })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: [`${type}-tasks`] });
+      toastService.success('Task completed successfully!');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toastService.error('Failed to complete task');
     }
   };
 
@@ -102,12 +142,19 @@ export const MVPTaskManagement: React.FC = () => {
             
             <div className="flex items-center space-x-2">
               {task.status === 'pending' && (
-                <Button size="sm" variant="outline">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => handleStartTask(task.id, type)}
+                >
                   Start Task
                 </Button>
               )}
               {task.status === 'in_progress' && (
-                <Button size="sm">
+                <Button 
+                  size="sm"
+                  onClick={() => handleCompleteTask(task.id, type)}
+                >
                   Complete
                 </Button>
               )}
@@ -161,14 +208,22 @@ export const MVPTaskManagement: React.FC = () => {
           
           <TabsContent value="maintenance" className="space-y-4">
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Maintenance Tasks</CardTitle>
+                <CreateMaintenanceTaskDialog
+                  isOpen={isCreateMaintenanceOpen}
+                  onOpenChange={setIsCreateMaintenanceOpen}
+                  onTaskCreated={() => {
+                    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
+                  }}
+                />
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {maintenanceTasks?.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       <p>No maintenance tasks found</p>
+                      <p className="text-sm mt-2">Click "Add Maintenance Task" to create your first task</p>
                     </div>
                   ) : (
                     maintenanceTasks?.map((task) => (
