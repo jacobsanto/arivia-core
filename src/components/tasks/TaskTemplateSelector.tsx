@@ -21,7 +21,7 @@ const TaskTemplateSelector = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Housekeeping");
   
-  const { templates } = useChecklistTemplates();
+  const { templates, loading } = useChecklistTemplates();
   
   // Filter templates by search and category
   const filteredTemplates = templates.filter(template => {
@@ -97,7 +97,14 @@ const TaskTemplateSelector = ({
             </div>
             
             <div className="max-h-[400px] overflow-y-auto space-y-2">
-              {filteredTemplates.length === 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p>Loading templates...</p>
+                  </div>
+                </div>
+              ) : filteredTemplates.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   No matching templates found
                 </div>

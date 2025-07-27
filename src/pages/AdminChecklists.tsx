@@ -23,6 +23,7 @@ const AdminChecklists = () => {
 
   const {
     filteredTemplates,
+    loading,
     categoryFilter,
     setCategoryFilter,
     searchQuery,
@@ -137,13 +138,22 @@ const AdminChecklists = () => {
           />
           
           {/* Grid of templates */}
-          <ChecklistTemplateGrid
-            templates={filteredTemplates}
-            onEdit={handleEditClick}
-            onDelete={handleDeleteClick}
-            onDuplicate={handleDuplicateTemplate}
-            onUse={handleUseTemplate}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Loading checklist templates...</p>
+              </div>
+            </div>
+          ) : (
+            <ChecklistTemplateGrid
+              templates={filteredTemplates}
+              onEdit={handleEditClick}
+              onDelete={handleDeleteClick}
+              onDuplicate={handleDuplicateTemplate}
+              onUse={handleUseTemplate}
+            />
+          )}
         </div>
       </div>
       

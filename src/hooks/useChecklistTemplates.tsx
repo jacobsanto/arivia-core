@@ -1,14 +1,32 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChecklistTemplate, ChecklistTemplateFormValues } from "../types/checklistTypes";
-import { initialChecklistTemplates } from "../data/checklistTemplateData";
 import { toastService } from "@/services/toast";
-import { v4 as uuidv4 } from "uuid";
+import { checklistTemplatesService } from "@/services/checklistTemplates.service";
 
 export const useChecklistTemplates = () => {
-  const [templates, setTemplates] = useState<ChecklistTemplate[]>(initialChecklistTemplates);
+  const [templates, setTemplates] = useState<ChecklistTemplate[]>([]);
+  const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Load templates from database
+  useEffect(() => {
+    const loadTemplates = async () => {
+      try {
+        setLoading(true);
+        const data = await checklistTemplatesService.getTemplates();
+        setTemplates(data);
+      } catch (error) {
+        console.error('Error loading templates:', error);
+        toastService.error('Failed to load checklist templates');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadTemplates();
+  }, []);
 
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = 
@@ -24,58 +42,45 @@ export const useChecklistTemplates = () => {
     return templates.filter(template => template.category === category);
   };
 
-  const handleCreateTemplate = (data: ChecklistTemplateFormValues) => {
-    // Generate a new unique ID
-    const newId = uuidv4();
-
-    const newTemplate: ChecklistTemplate = {
-      id: newId,
-      name: data.name,
-      description: data.description,
-      category: data.category,
-      items: data.items.map((item, index) => ({ 
-        id: index + 1, 
-        title: item.title, 
-        completed: false 
-      })),
-      createdBy: "Admin", // In a real app, this would be the current user
-      createdAt: new Date().toISOString(),
-      isDefault: false
-    };
-    
-    setTemplates([...templates, newTemplate]);
-    toastService.success(`Checklist template "${data.name}" created successfully!`);
+  const handleCreateTemplate = async (data: ChecklistTemplateFormValues) => {
+    try {
+      const newTemplate = await checklistTemplatesService.createTemplate(data);
+      if (newTemplate) {
+        setTemplates([...templates, newTemplate]);
+        toastService.success(`Checklist template "${data.name}" created successfully!`);
+      }
+    } catch (error) {
+      console.error('Error creating template:', error);
+      toastService.error('Failed to create checklist template');
+    }
   };
 
-  const handleEditTemplate = (data: ChecklistTemplateFormValues) => {
+  const handleEditTemplate = async (data: ChecklistTemplateFormValues) => {
     if (!data.id) return;
     
-    const templateToEdit = templates.find(t => t.id === data.id);
-    if (!templateToEdit) return;
-    
-    const updatedTemplate = {
-      ...templateToEdit,
-      name: data.name,
-      description: data.description,
-      category: data.category,
-      items: data.items.map((item, index) => ({ 
-        id: index + 1, 
-        title: item.title, 
-        completed: false 
-      })),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setTemplates(templates.map(t => 
-      t.id === templateToEdit.id ? updatedTemplate : t
-    ));
-    
-    toastService.success(`Checklist template "${data.name}" updated successfully!`);
+    try {
+      const updatedTemplate = await checklistTemplatesService.updateTemplate(data);
+      if (updatedTemplate) {
+        setTemplates(templates.map(t => 
+          t.id === updatedTemplate.id ? updatedTemplate : t
+        ));
+        toastService.success(`Checklist template "${data.name}" updated successfully!`);
+      }
+    } catch (error) {
+      console.error('Error updating template:', error);
+      toastService.error('Failed to update checklist template');
+    }
   };
 
-  const handleDeleteTemplate = (templateId: string) => {
-    setTemplates(templates.filter(t => t.id !== templateId));
-    toastService.success("Checklist template deleted successfully!");
+  const handleDeleteTemplate = async (templateId: string) => {
+    try {
+      await checklistTemplatesService.deleteTemplate(templateId);
+      setTemplates(templates.filter(t => t.id !== templateId));
+      toastService.success("Checklist template deleted successfully!");
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toastService.error('Failed to delete checklist template');
+    }
   };
 
   const getTemplateById = (id: string) => {
@@ -85,6 +90,7 @@ export const useChecklistTemplates = () => {
   return {
     templates,
     filteredTemplates,
+    loading,
     categoryFilter,
     setCategoryFilter,
     searchQuery,

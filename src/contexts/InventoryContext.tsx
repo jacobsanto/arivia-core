@@ -1,32 +1,26 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/hooks/use-toast";
+import { inventoryService, InventoryCategory } from '@/services/inventory.service';
 
 // Define the shape of our context data
 interface InventoryContextType {
   categories: string[];
+  categoryObjects: InventoryCategory[];
   addCategory: (category: string) => void;
   units: string[];
   addUnit: (unit: string) => void;
+  loading: boolean;
 }
 
 // Initial default values
 const defaultInventoryContext: InventoryContextType = {
-  categories: [
-    "Office Supplies",
-    "Paper Products",
-    "Cleaning Supplies",
-    "Guest Amenities",
-    "Toiletries",
-    "Kitchen Supplies",
-    "Electronics",
-    "Furniture",
-    "Linens",
-    "Safety Equipment"
-  ],
+  categories: [],
+  categoryObjects: [],
   addCategory: () => {},
   units: ["Each", "Box", "Case", "Roll", "Pack", "Gallon", "Bottle", "Dozen"],
   addUnit: () => {},
+  loading: true,
 };
 
 // Create the context
@@ -37,14 +31,53 @@ export const useInventory = () => useContext(InventoryContext);
 
 // Provider component
 export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Initialize state with default values
-  const [categories, setCategories] = useState<string[]>(defaultInventoryContext.categories);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [categoryObjects, setCategoryObjects] = useState<InventoryCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [units, setUnits] = useState<string[]>(defaultInventoryContext.units);
 
+  // Load categories from database
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setLoading(true);
+        const data = await inventoryService.getCategories();
+        setCategoryObjects(data);
+        setCategories(data.map(cat => cat.name));
+      } catch (error) {
+        console.error('Error loading categories:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load inventory categories",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadCategories();
+  }, []);
+
   // Add a new category if it doesn't already exist
-  const addCategory = (category: string) => {
+  const addCategory = async (category: string) => {
     if (!categories.includes(category)) {
-      setCategories(prev => [...prev, category]);
+      try {
+        const newCategory = await inventoryService.createCategory(category);
+        if (newCategory) {
+          const newCategories = [...categories, category];
+          const newCategoryObjects = [...categoryObjects, newCategory];
+          setCategories(newCategories);
+          setCategoryObjects(newCategoryObjects);
+        }
+      } catch (error) {
+        console.error('Error creating category:', error);
+        toast({
+          title: "Error",
+          description: "Failed to create category",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -55,38 +88,17 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  // Use localStorage to persist data with error handling
+  // Use localStorage to persist units only (categories are now in database)
   useEffect(() => {
     try {
-      // Load from localStorage on first render
-      const savedCategories = localStorage.getItem('inventoryCategories');
       const savedUnits = localStorage.getItem('inventoryUnits');
-      
-      if (savedCategories) {
-        setCategories(JSON.parse(savedCategories));
-      }
-      
       if (savedUnits) {
         setUnits(JSON.parse(savedUnits));
       }
     } catch (error) {
-      console.error('Failed to load inventory data from localStorage:', error);
-      toast({
-        title: "Storage Error",
-        description: "Failed to load saved inventory settings. Using defaults.",
-        variant: "destructive",
-      });
+      console.error('Failed to load units from localStorage:', error);
     }
   }, []);
-
-  useEffect(() => {
-    try {
-      // Save to localStorage whenever data changes
-      localStorage.setItem('inventoryCategories', JSON.stringify(categories));
-    } catch (error) {
-      console.error('Failed to save categories to localStorage:', error);
-    }
-  }, [categories]);
 
   useEffect(() => {
     try {
@@ -97,7 +109,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
   }, [units]);
 
   return (
-    <InventoryContext.Provider value={{ categories, addCategory, units, addUnit }}>
+    <InventoryContext.Provider value={{ categories, categoryObjects, addCategory, units, addUnit, loading }}>
       {children}
     </InventoryContext.Provider>
   );

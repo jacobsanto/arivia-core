@@ -11,6 +11,7 @@ import StockFormNotes from "./forms/StockFormNotes";
 import StockFormSubmitButton from "./forms/StockFormSubmitButton";
 import { useInventory } from "@/contexts/InventoryContext";
 import ItemFormVendors from "./forms/ItemFormVendors";
+import { inventoryService } from "@/services/inventory.service";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Item name must be at least 2 characters." }),
@@ -27,7 +28,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const AddItem = () => {
   // Use the shared inventory context
-  const { categories, units } = useInventory();
+  const { categories, categoryObjects, units, loading } = useInventory();
 
   const methods = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,14 +57,47 @@ const AddItem = () => {
     return () => subscription.unsubscribe();
   }, [methods]);
 
-  function onSubmit(values: FormValues) {
-    console.log(values);
-    toast({
-      title: "Item Added Successfully",
-      description: `${values.name} has been added to inventory with ${values.vendorIds.length} vendor(s).`,
-    });
-    methods.reset();
-    setSelectedCategory("");
+  async function onSubmit(values: FormValues) {
+    try {
+      const categoryObject = categoryObjects.find(cat => cat.name === values.category);
+      if (!categoryObject) {
+        throw new Error('Category not found');
+      }
+
+      await inventoryService.createItem({
+        name: values.name,
+        description: values.notes,
+        category_id: categoryObject.id,
+        unit: values.unit,
+        min_quantity: values.minLevel,
+        item_code: values.itemCode
+      });
+
+      toast({
+        title: "Item Added Successfully",
+        description: `${values.name} has been added to inventory.`,
+      });
+      methods.reset();
+      setSelectedCategory("");
+    } catch (error) {
+      console.error('Error adding item:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to inventory",
+        variant: "destructive",
+      });
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading inventory categories...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
