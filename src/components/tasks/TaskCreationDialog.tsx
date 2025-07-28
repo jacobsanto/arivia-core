@@ -51,8 +51,8 @@ export const TaskCreationDialog: React.FC<TaskCreationDialogProps> = ({
         throw new Error('Selected property not found');
       }
       
-      // For now, store assignee as text since we don't have proper user profiles set up
-      const assigneeText = data.assignee || 'Unassigned';
+      // Handle assignee - if it's 'unassigned' or empty, store as null, otherwise store the user ID
+      const assignedToId = (data.assignee && data.assignee !== 'unassigned') ? data.assignee : null;
       
       // Create the maintenance task in database
       const { data: newTask, error } = await supabase
@@ -64,7 +64,7 @@ export const TaskCreationDialog: React.FC<TaskCreationDialogProps> = ({
           priority: data.priority.toLowerCase(),
           status: 'pending',
           due_date: data.dueDate,
-          assigned_to: null, // Store as null for now, can be updated when user management is improved
+          assigned_to: assignedToId,
           location: data.location,
           required_tools: data.requiredTools || ''
         })

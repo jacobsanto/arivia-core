@@ -11,12 +11,16 @@ import {
 } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import { MaintenanceFormValues } from "./types";
+import { useUsers } from "@/hooks/useUsers";
 
 interface MaintenanceScheduleProps {
   form: UseFormReturn<MaintenanceFormValues>;
 }
 
 const MaintenanceSchedule = ({ form }: MaintenanceScheduleProps) => {
+  const { getAssignableUsers, isLoading: usersLoading } = useUsers();
+  const assignableUsers = getAssignableUsers('maintenance');
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
@@ -47,10 +51,15 @@ const MaintenanceSchedule = ({ form }: MaintenanceScheduleProps) => {
               </FormControl>
               <SelectContent>
                 <SelectItem value="" disabled>Select assignee</SelectItem>
-                <SelectItem value="System Admin">System Admin</SelectItem>
-                <SelectItem value="Property Manager">Property Manager</SelectItem>
-                <SelectItem value="Maintenance Staff">Maintenance Staff</SelectItem>
-                <SelectItem value="Unassigned">Unassigned</SelectItem>
+                <SelectItem value="unassigned">Unassigned</SelectItem>
+                {!usersLoading && assignableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} ({user.role.replace('_', ' ')})
+                  </SelectItem>
+                ))}
+                {usersLoading && (
+                  <SelectItem value="" disabled>Loading users...</SelectItem>
+                )}
               </SelectContent>
             </Select>
             <FormMessage />

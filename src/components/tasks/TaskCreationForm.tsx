@@ -32,6 +32,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getCleaningChecklist, generateCleaningSchedule } from "@/utils/cleaningChecklists";
 import TaskTemplateSelector from "./TaskTemplateSelector";
 import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
+import { useUsers } from "@/hooks/useUsers";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const taskFormSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
@@ -51,21 +54,9 @@ const taskFormSchema = z.object({
 
 type TaskFormValues = z.infer<typeof taskFormSchema>;
 
-const propertyOptions = [
-  { label: "Villa Caldera", value: "Villa Caldera" },
-  { label: "Villa Azure", value: "Villa Azure" },
-  { label: "Villa Sunset", value: "Villa Sunset" },
-  { label: "Villa Oceana", value: "Villa Oceana" },
-  { label: "Villa Paradiso", value: "Villa Paradiso" },
-];
+// Property options are now loaded dynamically
 
-const staffOptions = [
-  { label: "Maria Kowalska", value: "Maria Kowalska" },
-  { label: "Alex Chen", value: "Alex Chen" },
-  { label: "Stefan Müller", value: "Stefan Müller" },
-  { label: "Ana Rodriguez", value: "Ana Rodriguez" },
-  { label: "Thomas Lindberg", value: "Thomas Lindberg" },
-];
+// Staff options are now loaded dynamically from useUsers hook
 
 interface TaskCreationFormProps {
   onSubmit: (data: any) => void;
@@ -84,6 +75,23 @@ const TaskCreationForm = ({
   const [cleaningType, setCleaningType] = useState<string>("Standard");
   const [scheduledCleanings, setScheduledCleanings] = useState<string[]>([]);
   const [cleaningTypes, setCleaningTypes] = useState<string[]>([]);
+  
+  const { getAssignableUsers, isLoading: usersLoading } = useUsers();
+  const assignableUsers = getAssignableUsers('housekeeping');
+
+  // Fetch properties for selection
+  const { data: properties, isLoading: propertiesLoading } = useQuery({
+    queryKey: ['properties'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskFormSchema),
@@ -170,11 +178,14 @@ const TaskCreationForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {propertyOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                    {!propertiesLoading && properties?.map((property) => (
+                      <SelectItem key={property.id} value={property.name}>
+                        {property.name}
                       </SelectItem>
                     ))}
+                    {propertiesLoading && (
+                      <SelectItem value="" disabled>Loading properties...</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -264,11 +275,15 @@ const TaskCreationForm = ({
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {staffOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                    {!usersLoading && assignableUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.name} ({user.role.replace('_', ' ')})
                       </SelectItem>
                     ))}
+                    {usersLoading && (
+                      <SelectItem value="" disabled>Loading users...</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
                 <FormMessage />

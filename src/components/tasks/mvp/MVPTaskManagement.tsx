@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { CreateMaintenanceTaskDialog } from "@/components/maintenance/CreateMaintenanceTaskDialog";
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export const MVPTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("housekeeping");
@@ -128,12 +129,16 @@ export const MVPTaskManagement: React.FC = () => {
                 <Calendar className="h-3 w-3 mr-1" />
                 {format(new Date(task.due_date), 'MMM dd, yyyy')}
               </div>
-              {task.assigned_to && (
-                <div className="flex items-center">
-                  <User className="h-3 w-3 mr-1" />
-                  Assigned
-                </div>
-              )}
+              <div className="flex items-center">
+                <UserAvatar 
+                  userId={task.assigned_to} 
+                  showName={false} 
+                  size="sm" 
+                />
+                <span className="ml-2">
+                  {task.assigned_to ? 'Assigned' : 'Unassigned'}
+                </span>
+              </div>
               {task.listing_id && (
                 <div className="flex items-center">
                   <MapPin className="h-3 w-3 mr-1" />
