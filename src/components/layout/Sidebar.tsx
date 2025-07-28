@@ -29,7 +29,7 @@ const Sidebar = () => {
           <div className="w-24 h-24 rounded-full overflow-hidden mb-3">
             <AvatarDisplay user={user} size="md" />
           </div>
-          <p className="font-semibold text-base">{user.name}</p>
+          <p className="font-semibold text-base text-justify">{user.name}</p>
           <span className="text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1 font-semibold text-sm">
             {user.role.replace('_', ' ')}
           </span>
