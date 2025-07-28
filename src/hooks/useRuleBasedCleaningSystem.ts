@@ -277,11 +277,21 @@ export const useRuleBasedCleaningSystem = () => {
 
   const createCleaningRule = async (rule: Omit<CleaningRule, 'id' | 'created_at' | 'updated_at'>) => {
     try {
+      // Use first available config_id or create a fallback
+      let configId = rule.config_id;
+      if (!configId) {
+        const { data: configData } = await supabase
+          .from('property_cleaning_configs')
+          .select('id')
+          .limit(1);
+        configId = configData?.[0]?.id || crypto.randomUUID();
+      }
+
       const { data, error } = await supabase
         .from('cleaning_rules')
         .insert([{
           rule_name: rule.rule_name,
-          config_id: rule.config_id,
+          config_id: configId,
           stay_length_range: rule.stay_length_range,
           actions_by_day: rule.actions_by_day,
           is_global: rule.is_global,

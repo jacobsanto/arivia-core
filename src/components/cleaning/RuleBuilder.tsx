@@ -37,6 +37,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [newDayNumber, setNewDayNumber] = useState(1);
 
   // Load form data when rule changes
   useEffect(() => {
@@ -133,6 +134,38 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
     });
   };
 
+  const addNewDay = () => {
+    if (newDayNumber < 1 || newDayNumber > 365) {
+      toast({
+        title: "Invalid Day",
+        description: "Day must be between 1 and 365",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const dayKey = newDayNumber.toString();
+    if (actionsByDay[dayKey]) {
+      toast({
+        title: "Day Already Exists",
+        description: `Day ${newDayNumber} is already configured`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setActionsByDay(prev => ({ ...prev, [dayKey]: [] }));
+    setNewDayNumber(prev => prev + 1); // Auto-increment for next day
+  };
+
+  const removeDay = (day: string) => {
+    setActionsByDay(prev => {
+      const newActions = { ...prev };
+      delete newActions[day];
+      return newActions;
+    });
+  };
+
   const addActionToDay = (day: string, actionName: string) => {
     setActionsByDay(prev => ({
       ...prev,
@@ -177,7 +210,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
         is_global: isGlobal,
         assignable_properties: selectedProperties,
         is_active: true,
-        config_id: 'default',
+        config_id: existingRule?.config_id || undefined, // Don't set config_id for new rules, let DB handle it
         min_nights: stayRangeMin,
         max_nights: stayRangeMax
       };
@@ -256,8 +289,16 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
 
     return (
       <Card key={day}>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-sm">Day {day}</CardTitle>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => removeDay(day)}
+            className="h-6 w-6 p-0"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Add Action Dropdown */}
@@ -423,30 +464,26 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="flex gap-2 mb-4">
+                <div className="flex gap-2 mb-4 items-end">
+                  <div className="flex-1">
+                    <Label htmlFor="newDayNumber">Add Day</Label>
+                    <Input
+                      id="newDayNumber"
+                      type="number"
+                      min="1"
+                      max="365"
+                      value={newDayNumber}
+                      onChange={(e) => setNewDayNumber(parseInt(e.target.value) || 1)}
+                      className="w-20"
+                    />
+                  </div>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setActionsByDay(prev => ({ ...prev, '1': [] }))}
+                    onClick={addNewDay}
                   >
-                    Add Day 1
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setActionsByDay(prev => ({ ...prev, [stayRangeMax.toString()]: [] }))}
-                  >
-                    Add Final Day
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      const midDay = Math.floor(stayRangeMax / 2).toString();
-                      setActionsByDay(prev => ({ ...prev, [midDay]: [] }));
-                    }}
-                  >
-                    Add Mid-Stay
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Day {newDayNumber}
                   </Button>
                 </div>
 
