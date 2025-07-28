@@ -38,6 +38,7 @@ import AdminUsers from "@/pages/AdminUsers";
 import AdminPermissions from "@/pages/AdminPermissions";
 import AdminSettings from "@/pages/AdminSettings";
 import AdminChecklists from "@/pages/AdminChecklists";
+import EnhancedTasks from "@/pages/EnhancedTasks";
 
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
                     <Route path="/profile" element={<UserProfile />} />
                     <Route path="/housekeeping" element={<Housekeeping />} />
                     <Route path="/maintenance" element={<Maintenance />} />
+                    <Route path="/tasks/enhanced" element={<EnhancedTasks />} />
                     <Route path="/properties" element={<Properties />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/team-chat" element={<TeamChat />} />
