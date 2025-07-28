@@ -30,6 +30,14 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
     return `${url}?t=${Date.now()}`; // Force cache invalidation
   }, [user?.avatar]);
   const displayName = user?.name || "User";
-  return;
+  
+  return (
+    <Avatar className={`${sizeClasses[size]} ${className}`}>
+      <AvatarImage src={avatarUrl} alt={displayName} />
+      <AvatarFallback className="bg-muted">
+        {getInitials(displayName)}
+      </AvatarFallback>
+    </Avatar>
+  );
 };
 export default AvatarDisplay;
