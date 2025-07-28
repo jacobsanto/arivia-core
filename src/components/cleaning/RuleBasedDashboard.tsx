@@ -31,13 +31,14 @@ import {
 } from '@/components/ui/alert-dialog';
 
 export const RuleBasedDashboard = () => {
-  const { 
-    rules, 
-    actions, 
-    assignments, 
-    tasks, 
+  const {
+    rules,
+    actions,
+    assignments,
+    tasks,
     loading,
-    deleteCleaningRule
+    deleteCleaningRule,
+    refetch
   } = useRuleBasedCleaningSystem();
 
   const [activeTab, setActiveTab] = useState('overview');
