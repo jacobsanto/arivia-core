@@ -19,6 +19,7 @@ import {
 import { useRuleBasedCleaningSystem } from '@/hooks/useRuleBasedCleaningSystem';
 import { RuleBuilder } from './RuleBuilder';
 import { PropertyAssignmentManager } from './PropertyAssignmentManager';
+import { ActionManager } from './ActionManager';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -157,11 +158,12 @@ export const RuleBasedDashboard = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
+        <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="rules">Rules</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
-          <TabsTrigger value="actions">Action Catalog</TabsTrigger>
+          <TabsTrigger value="actions">Actions</TabsTrigger>
+          <TabsTrigger value="manage-actions">Manage Actions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -428,8 +430,24 @@ export const RuleBasedDashboard = () => {
                   </CardContent>
                 </Card>
               ))}
+              {actions.length === 0 && (
+                <Card>
+                  <CardContent className="text-center py-8">
+                    <p className="text-muted-foreground">No actions found. Go to "Manage Actions" to create some.</p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
+        </TabsContent>
+
+        <TabsContent value="manage-actions">
+          <ActionManager
+            actions={actions}
+            onActionCreated={() => refetch()}
+            onActionUpdated={() => refetch()}
+            onActionDeleted={() => refetch()}
+          />
         </TabsContent>
       </Tabs>
 

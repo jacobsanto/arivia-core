@@ -1,54 +1,50 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, X, Save, Calendar } from 'lucide-react';
-import { useRuleBasedCleaningSystem, CleaningAction } from '@/hooks/useRuleBasedCleaningSystem';
-import { guestyService } from '@/services/guesty/guesty.service';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
+import { CleaningRule, useRuleBasedCleaningSystem } from '@/hooks/useRuleBasedCleaningSystem';
+import { guestyListingsService } from '@/services/guesty/guestyListings.service';
+import { Trash2, Plus } from 'lucide-react';
 
 interface RuleBuilderProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
-  existingRule?: any;
+  existingRule?: CleaningRule | null;
 }
 
-export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSave, existingRule }) => {
-  const { actions, rules, createCleaningRule, updateCleaningRule, assignRuleToProperties } = useRuleBasedCleaningSystem();
+export const RuleBuilder: React.FC<RuleBuilderProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  existingRule
+}) => {
+  const { actions, createCleaningRule, updateCleaningRule, assignRuleToProperties } = useRuleBasedCleaningSystem();
   
-  // Standard global rule configurations
-  const GLOBAL_RULE_CONFIGS = {
-    'SHORT STAY': { min: 1, max: 3, description: 'Short stays (1-3 nights)' },
-    'MEDIUM STAY': { min: 4, max: 7, description: 'Medium stays (4-7 nights)' },
-    'EXTENDED STAY': { min: 8, max: 999, description: 'Extended stays (8+ nights)' }
-  };
-  
-  // Initialize form state
-  const [ruleName, setRuleName] = useState(existingRule?.rule_name || '');
-  const [isGlobal, setIsGlobal] = useState(existingRule?.is_global ?? true);
-  const [stayRangeMin, setStayRangeMin] = useState(
-    existingRule?.stay_length_range?.[0] || existingRule?.min_nights || 1
-  );
-  const [stayRangeMax, setStayRangeMax] = useState(
-    existingRule?.stay_length_range?.[1] || existingRule?.max_nights || 7
-  );
-  const [actionsByDay, setActionsByDay] = useState<Record<string, string[]>>(existingRule?.actions_by_day || {});
-  const [selectedProperties, setSelectedProperties] = useState<string[]>(existingRule?.assignable_properties || []);
+  // Form state
+  const [ruleName, setRuleName] = useState('');
+  const [isGlobal, setIsGlobal] = useState(true);
+  const [stayRangeMin, setStayRangeMin] = useState(1);
+  const [stayRangeMax, setStayRangeMax] = useState(7);
+  const [actionsByDay, setActionsByDay] = useState<Record<string, string[]>>({});
+  const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Initialize form with existing rule data when rule changes
-  React.useEffect(() => {
+  // Load form data when rule changes
+  useEffect(() => {
     if (existingRule) {
       setRuleName(existingRule.rule_name);
-      setIsGlobal(existingRule.is_global ?? true);
-      setStayRangeMin(existingRule.stay_length_range?.[0] || existingRule.min_nights || 1);
-      setStayRangeMax(existingRule.stay_length_range?.[1] || existingRule.max_nights || 7);
+      setIsGlobal(existingRule.is_global);
+      setStayRangeMin(existingRule.min_nights);
+      setStayRangeMax(existingRule.max_nights);
       setActionsByDay(existingRule.actions_by_day || {});
       setSelectedProperties(existingRule.assignable_properties || []);
     } else {
@@ -60,84 +56,95 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
       setActionsByDay({});
       setSelectedProperties([]);
     }
-  }, [existingRule]);
-  const [properties, setProperties] = useState([]);
-  const [loading, setLoading] = useState(false);
+  }, [existingRule, isOpen]);
 
-  React.useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const listings = await guestyService.getGuestyListings();
-        setProperties(listings);
-      } catch (error) {
-        console.error('Error fetching properties:', error);
-      }
-    };
-
+  // Load properties when dialog opens
+  useEffect(() => {
     if (isOpen) {
-      fetchProperties();
+      loadProperties();
     }
   }, [isOpen]);
 
-  const actionsByCategory = actions.reduce((acc, action) => {
-    if (!acc[action.category]) acc[action.category] = [];
-    acc[action.category].push(action);
-    return acc;
-  }, {} as Record<string, CleaningAction[]>);
-
-  const addActionToDay = (day: number, actionName: string) => {
-    const dayKey = day.toString();
-    setActionsByDay(prev => ({
-      ...prev,
-      [dayKey]: [...(prev[dayKey] || []), actionName]
-    }));
-  };
-
-  const removeActionFromDay = (day: number, actionName: string) => {
-    const dayKey = day.toString();
-    setActionsByDay(prev => ({
-      ...prev,
-      [dayKey]: (prev[dayKey] || []).filter(a => a !== actionName)
-    }));
-  };
-
-  const handleRuleSelection = (value: string) => {
-    setRuleName(value);
-    
-    if (isGlobal && GLOBAL_RULE_CONFIGS[value]) {
-      const config = GLOBAL_RULE_CONFIGS[value];
-      setStayRangeMin(config.min);
-      setStayRangeMax(config.max);
-      
-      // Auto-populate default actions based on rule type
-      const defaultActions = getDefaultActionsForRule(value, config.min, config.max);
-      setActionsByDay(defaultActions);
+  const loadProperties = async () => {
+    try {
+      const data = await guestyListingsService.getGuestyListings();
+      setProperties(data);
+    } catch (error) {
+      console.error('Error loading properties:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load properties",
+        variant: "destructive",
+      });
     }
   };
 
-  const getDefaultActionsForRule = (ruleName: string, minNights: number, maxNights: number) => {
+  const getDefaultActionsForRule = (ruleType: string, stayLength: number): Record<string, string[]> => {
     const defaults: Record<string, string[]> = {};
     
-    switch (ruleName) {
-      case 'SHORT STAY':
-        defaults['1'] = ['standard_cleaning']; // Check-in day
-        if (maxNights >= 2) defaults[maxNights.toString()] = ['standard_cleaning']; // Check-out day
-        break;
-      case 'MEDIUM STAY':
-        defaults['1'] = ['standard_cleaning']; // Check-in day
-        if (maxNights >= 4) defaults['3'] = ['change_sheets', 'towel_refresh']; // Mid-stay refresh
-        defaults[maxNights.toString()] = ['full_cleaning']; // Check-out day
-        break;
-      case 'EXTENDED STAY':
-        defaults['1'] = ['standard_cleaning']; // Check-in day
-        defaults['3'] = ['change_sheets', 'towel_refresh']; // First refresh
-        defaults['5'] = ['full_cleaning']; // Mid-stay cleaning
-        defaults['7'] = ['change_sheets', 'towel_refresh']; // Second refresh
-        defaults[Math.min(maxNights, 10).toString()] = ['deep_cleaning']; // Final deep clean
-        break;
+    // Get available actions by category
+    const cleaningActions = actions.filter(a => a.category === 'cleaning').map(a => a.action_name);
+    const linenActions = actions.filter(a => a.category === 'linen').map(a => a.action_name);
+    const inspectionActions = actions.filter(a => a.category === 'inspection').map(a => a.action_name);
+    
+    if (ruleType.toLowerCase().includes('short')) {
+      defaults['1'] = [...cleaningActions.slice(0, 2)]; // Basic cleaning actions
+    } else if (ruleType.toLowerCase().includes('medium')) {
+      defaults['1'] = [...cleaningActions.slice(0, 2)];
+      defaults[Math.floor(stayLength / 2).toString()] = [...linenActions.slice(0, 1)]; // Mid-stay linen change
+      defaults[stayLength.toString()] = [...cleaningActions.slice(0, 1)]; // Final cleaning
+    } else if (ruleType.toLowerCase().includes('extended')) {
+      defaults['1'] = [...cleaningActions.slice(0, 2)];
+      defaults['3'] = [...linenActions.slice(0, 2)];
+      defaults['7'] = [...cleaningActions, ...inspectionActions.slice(0, 1)];
     }
     
     return defaults;
+  };
+
+  const addDefaultActions = () => {
+    if (actions.length === 0) {
+      toast({
+        title: "No Actions Available",
+        description: "Please create some cleaning actions first",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const defaults = getDefaultActionsForRule(ruleName, stayRangeMax);
+    if (Object.keys(defaults).length === 0) {
+      toast({
+        title: "No Default Actions",
+        description: "No default actions available for this rule type",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setActionsByDay(prev => ({
+      ...prev,
+      ...defaults
+    }));
+    
+    toast({
+      title: "Default Actions Added",
+      description: `Added default actions for ${ruleName}`,
+    });
+  };
+
+  const addActionToDay = (day: string, actionName: string) => {
+    setActionsByDay(prev => ({
+      ...prev,
+      [day]: [...(prev[day] || []), actionName]
+    }));
+  };
+
+  const removeActionFromDay = (day: string, actionIndex: number) => {
+    setActionsByDay(prev => ({
+      ...prev,
+      [day]: (prev[day] || []).filter((_, index) => index !== actionIndex)
+    }));
   };
 
   const handleSave = async () => {
@@ -161,19 +168,6 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
       return;
     }
 
-    // Prevent duplicate global rules (only for new rules)
-    if (isGlobal && !existingRule) {
-      const existingGlobalRule = rules.find(r => r.rule_name === ruleName && r.is_global);
-      if (existingGlobalRule) {
-        toast({
-          title: "Duplicate Rule",
-          description: `Global rule "${ruleName}" already exists. Please choose a different rule type.`,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
     setLoading(true);
     try {
       const ruleData = {
@@ -191,30 +185,62 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
       let savedRule;
       if (existingRule) {
         savedRule = await updateCleaningRule(existingRule.id, ruleData);
+        toast({
+          title: "Rule Updated",
+          description: `"${ruleName}" has been updated successfully`,
+        });
       } else {
         savedRule = await createCleaningRule(ruleData);
+        toast({
+          title: "Rule Created",
+          description: `"${ruleName}" has been created successfully`,
+        });
       }
 
-      // If it's a global rule, assign to all properties
+      // Handle assignments
       if (isGlobal && savedRule) {
         try {
-          const listings = await guestyService.getGuestyListings();
-          const propertyIds = listings.map(listing => listing.id);
+          const allProperties = await guestyListingsService.getGuestyListings();
+          const propertyIds = allProperties.map(p => p.id);
+          
           if (propertyIds.length > 0) {
             await assignRuleToProperties(savedRule.id, propertyIds);
+            toast({
+              title: "Global Rule Assignment",
+              description: `Rule automatically assigned to ${propertyIds.length} properties`,
+            });
           }
         } catch (assignError) {
-          console.warn('Could not auto-assign global rule to properties:', assignError);
+          console.error('Error auto-assigning global rule:', assignError);
+          toast({
+            title: "Assignment Warning",
+            description: "Rule created but auto-assignment failed. Please assign manually.",
+            variant: "destructive",
+          });
+        }
+      } else if (!isGlobal && selectedProperties.length > 0 && savedRule) {
+        try {
+          await assignRuleToProperties(savedRule.id, selectedProperties);
+          toast({
+            title: "Rule Assignment",
+            description: `Rule assigned to ${selectedProperties.length} selected properties`,
+          });
+        } catch (assignError) {
+          console.error('Error assigning rule to properties:', assignError);
+          toast({
+            title: "Assignment Warning",
+            description: "Rule created but property assignment failed.",
+            variant: "destructive",
+          });
         }
       }
 
       onSave();
-      onClose();
-    } catch (error) {
-      console.error('Error saving rule:', error);
+    } catch (err) {
+      console.error('Error saving rule:', err);
       toast({
         title: "Error Saving Rule",
-        description: error instanceof Error ? error.message : 'Failed to save rule',
+        description: err instanceof Error ? err.message : 'Failed to save rule',
         variant: "destructive",
       });
     } finally {
@@ -222,72 +248,66 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
     }
   };
 
-  const renderDayActions = (day: number) => {
-    const dayKey = day.toString();
-    const dayActions = actionsByDay[dayKey] || [];
+  const renderDayActions = (day: string) => {
+    const dayActions = actionsByDay[day] || [];
+    const availableActions = actions.filter(action => 
+      !dayActions.includes(action.action_name)
+    );
 
     return (
-      <Card key={day} className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            <Label className="font-medium">Day {day}</Label>
-          </div>
-          <Select onValueChange={(value) => addActionToDay(day, value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Add action" />
+      <Card key={day}>
+        <CardHeader>
+          <CardTitle className="text-sm">Day {day}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Add Action Dropdown */}
+          <Select onValueChange={(actionName) => addActionToDay(day, actionName)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Add action..." />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(actionsByCategory).map(([category, categoryActions]) => (
-                <div key={category}>
-                  <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase">
-                    {category}
-                  </div>
-                  {categoryActions.map(action => (
-                    <SelectItem 
-                      key={action.action_name} 
-                      value={action.action_name}
-                      disabled={dayActions.includes(action.action_name)}
-                    >
-                      {action.display_name}
-                    </SelectItem>
-                  ))}
-                </div>
+              {availableActions.map((action) => (
+                <SelectItem key={action.id} value={action.action_name}>
+                  {action.display_name} ({action.category})
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-        
-        <div className="space-y-2">
-          {dayActions.map(actionName => {
-            const action = actions.find(a => a.action_name === actionName);
-            return (
-              <div key={actionName} className="flex items-center justify-between bg-muted/50 p-2 rounded">
-                <div>
-                  <span className="font-medium">{action?.display_name}</span>
-                  <span className="text-sm text-muted-foreground ml-2">
-                    ({action?.estimated_duration}min)
-                  </span>
+
+          {/* Current Actions */}
+          <div className="space-y-2">
+            {dayActions.map((actionName, index) => {
+              const action = actions.find(a => a.action_name === actionName);
+              return (
+                <div key={index} className="flex items-center justify-between p-2 bg-muted rounded">
+                  <div>
+                    <span className="text-sm font-medium">
+                      {action?.display_name || actionName}
+                    </span>
+                    {action && (
+                      <Badge variant="outline" className="ml-2 text-xs">
+                        {action.category}
+                      </Badge>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => removeActionFromDay(day, index)}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => removeActionFromDay(day, actionName)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            );
-          })}
-          {dayActions.length === 0 && (
-            <p className="text-sm text-muted-foreground italic">No actions scheduled for this day</p>
-          )}
-        </div>
+              );
+            })}
+            {dayActions.length === 0 && (
+              <p className="text-sm text-muted-foreground">No actions scheduled</p>
+            )}
+          </div>
+        </CardContent>
       </Card>
     );
   };
-
-  const isEditingGlobalRule = existingRule && existingRule.is_global;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -296,110 +316,78 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
           <DialogTitle>
             {existingRule ? 'Edit Cleaning Rule' : 'Create New Cleaning Rule'}
           </DialogTitle>
+          <DialogDescription>
+            Configure a cleaning rule with day-based action scheduling
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Basic Information */}
+          {/* Rule Configuration */}
           <Card>
             <CardHeader>
               <CardTitle>Rule Configuration</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="rule-name">Rule Name</Label>
-                {isGlobal && !isEditingGlobalRule ? (
-                  <div className="space-y-2">
-                    <Select value={ruleName} onValueChange={handleRuleSelection}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a global rule type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(GLOBAL_RULE_CONFIGS).map(([name, config]) => (
-                          <SelectItem key={name} value={name}>
-                            {name} - {config.description}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {ruleName && (
-                      <p className="text-xs text-muted-foreground">
-                        Default actions will be auto-populated. You can customize them below.
-                      </p>
-                    )}
-                  </div>
-                ) : (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="ruleName">Rule Name</Label>
                   <Input
-                    id="rule-name"
+                    id="ruleName"
                     value={ruleName}
                     onChange={(e) => setRuleName(e.target.value)}
-                    placeholder="e.g., Custom Property Rule"
-                    disabled={isEditingGlobalRule}
+                    placeholder="e.g., Short Stay (1-3 nights)"
                   />
-                )}
-                {isEditingGlobalRule && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Global rule names cannot be modified, but actions can be customized
-                  </p>
-                )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="isGlobal"
+                    checked={isGlobal}
+                    onCheckedChange={(checked) => setIsGlobal(checked === true)}
+                  />
+                  <Label htmlFor="isGlobal">Global Rule (applies to all properties)</Label>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="min-nights">Minimum Nights</Label>
+                  <Label htmlFor="stayRangeMin">Minimum Nights</Label>
                   <Input
-                    id="min-nights"
+                    id="stayRangeMin"
                     type="number"
-                    value={stayRangeMin}
-                    onChange={(e) => setStayRangeMin(parseInt(e.target.value))}
                     min="1"
-                    disabled={isGlobal && GLOBAL_RULE_CONFIGS[ruleName]}
+                    value={stayRangeMin}
+                    onChange={(e) => setStayRangeMin(parseInt(e.target.value) || 1)}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="max-nights">Maximum Nights</Label>
+                  <Label htmlFor="stayRangeMax">Maximum Nights</Label>
                   <Input
-                    id="max-nights"
+                    id="stayRangeMax"
                     type="number"
+                    min={stayRangeMin}
                     value={stayRangeMax}
-                    onChange={(e) => setStayRangeMax(parseInt(e.target.value))}
-                    min="1"
-                    disabled={isGlobal && GLOBAL_RULE_CONFIGS[ruleName]}
+                    onChange={(e) => setStayRangeMax(parseInt(e.target.value) || 999)}
                   />
                 </div>
-              </div>
-              {isGlobal && GLOBAL_RULE_CONFIGS[ruleName] && (
-                <p className="text-sm text-muted-foreground">
-                  Stay ranges for global rules are predefined and cannot be modified
-                </p>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="is-global"
-                  checked={isGlobal}
-                  onCheckedChange={(checked) => setIsGlobal(checked as boolean)}
-                  disabled={isEditingGlobalRule}
-                />
-                <Label htmlFor="is-global">Apply to all properties (global rule)</Label>
-                {isEditingGlobalRule && (
-                  <span className="text-sm text-muted-foreground">(cannot be changed)</span>
-                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Property Assignment */}
+          {/* Property Assignment - Only show for custom rules */}
           {!isGlobal && (
             <Card>
               <CardHeader>
                 <CardTitle>Property Assignment</CardTitle>
+                <CardDescription>
+                  Select which properties this rule should apply to
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                  {properties.map(property => (
+                  {properties.map((property) => (
                     <div key={property.id} className="flex items-center space-x-2">
                       <Checkbox
-                        id={`property-${property.id}`}
+                        id={property.id}
                         checked={selectedProperties.includes(property.id)}
                         onCheckedChange={(checked) => {
                           if (checked) {
@@ -409,7 +397,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
                           }
                         }}
                       />
-                      <Label htmlFor={`property-${property.id}`} className="text-sm">
+                      <Label htmlFor={property.id} className="text-sm">
                         {property.title}
                       </Label>
                     </div>
@@ -419,57 +407,70 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
             </Card>
           )}
 
-          {/* Actions by Day */}
+          {/* Cleaning Actions by Day */}
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
                 <CardTitle>Cleaning Actions by Day</CardTitle>
-                {isGlobal && !Object.keys(actionsByDay).length && ruleName && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      const config = GLOBAL_RULE_CONFIGS[ruleName];
-                      if (config) {
-                        const defaultActions = getDefaultActionsForRule(ruleName, config.min, config.max);
-                        setActionsByDay(defaultActions);
-                      }
-                    }}
-                  >
-                    Add Default Actions
-                  </Button>
-                )}
+                <CardDescription>
+                  Schedule specific actions for each day of the stay
+                </CardDescription>
               </div>
+              <Button variant="outline" onClick={addDefaultActions} disabled={actions.length === 0}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Default Actions
+              </Button>
             </CardHeader>
             <CardContent>
-              <div className="mb-4">
-                <p className="text-sm text-muted-foreground">
-                  Configure cleaning actions for each day of the stay. Day 1 = Check-in day, final day = Check-out day.
-                </p>
-              </div>
-              <div className="grid gap-4">
-                {Array.from({ length: Math.min(stayRangeMax, 10) }, (_, i) => i + 1).map(day => 
-                  renderDayActions(day)
-                )}
-              </div>
-              {Object.keys(actionsByDay).length === 0 && (
-                <div className="text-center p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-                  <p className="text-muted-foreground">
-                    No actions configured yet. {isGlobal && ruleName ? 'Click "Add Default Actions" above or add actions manually.' : 'Add actions for each day above.'}
-                  </p>
+              <div className="space-y-4">
+                <div className="flex gap-2 mb-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setActionsByDay(prev => ({ ...prev, '1': [] }))}
+                  >
+                    Add Day 1
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setActionsByDay(prev => ({ ...prev, [stayRangeMax.toString()]: [] }))}
+                  >
+                    Add Final Day
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const midDay = Math.floor(stayRangeMax / 2).toString();
+                      setActionsByDay(prev => ({ ...prev, [midDay]: [] }));
+                    }}
+                  >
+                    Add Mid-Stay
+                  </Button>
                 </div>
-              )}
+
+                <div className="grid gap-4">
+                  {Object.keys(actionsByDay).sort((a, b) => parseInt(a) - parseInt(b)).map(day => 
+                    renderDayActions(day)
+                  )}
+                  {Object.keys(actionsByDay).length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      No actions configured. Use "Add Default Actions" or add days manually.
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading || !ruleName.trim()}>
-            <Save className="h-4 w-4 mr-2" />
-            {loading ? 'Saving...' : 'Save Rule'}
+          <Button onClick={handleSave} disabled={loading}>
+            {loading ? 'Saving...' : (existingRule ? 'Update Rule' : 'Create Rule')}
           </Button>
         </DialogFooter>
       </DialogContent>
