@@ -499,6 +499,99 @@ export const useRuleBasedCleaningSystem = () => {
     }
   };
 
+  const createCleaningAction = async (actionData: Omit<CleaningAction, 'id'>) => {
+    try {
+      const { data, error } = await supabase
+        .from('cleaning_actions')
+        .insert([actionData])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setActions(prev => [...prev, data]);
+      toast({
+        title: "Action Created",
+        description: `Action "${actionData.display_name}" has been created successfully`,
+      });
+      
+      return data;
+    } catch (error) {
+      console.error('Error creating cleaning action:', error);
+      toast({
+        title: "Error Creating Action",
+        description: error instanceof Error ? error.message : 'Failed to create action',
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const updateCleaningAction = async (actionData: CleaningAction) => {
+    try {
+      const { error } = await supabase
+        .from('cleaning_actions')
+        .update({
+          action_name: actionData.action_name,
+          display_name: actionData.display_name,
+          description: actionData.description,
+          category: actionData.category,
+          estimated_duration: actionData.estimated_duration,
+          is_active: actionData.is_active,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', actionData.id);
+
+      if (error) throw error;
+
+      setActions(prev => prev.map(action => 
+        action.id === actionData.id ? actionData : action
+      ));
+      
+      toast({
+        title: "Action Updated",
+        description: `Action "${actionData.display_name}" has been updated successfully`,
+      });
+      
+      return actionData;
+    } catch (error) {
+      console.error('Error updating cleaning action:', error);
+      toast({
+        title: "Error Updating Action",
+        description: error instanceof Error ? error.message : 'Failed to update action',
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
+  const deleteCleaningAction = async (actionId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cleaning_actions')
+        .update({ is_active: false })
+        .eq('id', actionId);
+
+      if (error) throw error;
+
+      setActions(prev => prev.filter(action => action.id !== actionId));
+      toast({
+        title: "Action Deleted",
+        description: "Action has been deleted successfully",
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting cleaning action:', error);
+      toast({
+        title: "Error Deleting Action",
+        description: error instanceof Error ? error.message : 'Failed to delete action',
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   useEffect(() => {
     const fetchAllData = async () => {
       setLoading(true);
@@ -540,6 +633,9 @@ export const useRuleBasedCleaningSystem = () => {
     deleteCleaningRule,
     assignRuleToProperties,
     updateTaskActions,
+    createCleaningAction,
+    updateCleaningAction,
+    deleteCleaningAction,
     refetch
   };
 };

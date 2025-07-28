@@ -39,7 +39,10 @@ export const RuleBasedDashboard = () => {
     tasks,
     loading,
     deleteCleaningRule,
-    refetch
+    refetch,
+    createCleaningAction,
+    updateCleaningAction,
+    deleteCleaningAction
   } = useRuleBasedCleaningSystem();
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -158,12 +161,11 @@ export const RuleBasedDashboard = () => {
 
       {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-4 w-full">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="rules">Rules</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="actions">Actions</TabsTrigger>
-          <TabsTrigger value="manage-actions">Manage Actions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -400,53 +402,11 @@ export const RuleBasedDashboard = () => {
         </TabsContent>
 
         <TabsContent value="actions">
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Cleaning Action Catalog</h3>
-            
-            <div className="grid gap-4">
-              {Object.entries(actions.reduce((acc, action) => {
-                if (!acc[action.category]) acc[action.category] = [];
-                acc[action.category].push(action);
-                return acc;
-              }, {} as Record<string, typeof actions>)).map(([category, categoryActions]) => (
-                <Card key={category}>
-                  <CardHeader>
-                    <CardTitle className="capitalize">{category} Actions</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {categoryActions.map(action => (
-                        <div key={action.id} className="flex items-center justify-between p-3 border rounded">
-                          <div>
-                            <p className="font-medium">{action.display_name}</p>
-                            <p className="text-sm text-muted-foreground">{action.description}</p>
-                          </div>
-                          <Badge variant="outline">
-                            {action.estimated_duration}min
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-              {actions.length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <p className="text-muted-foreground">No actions found. Go to "Manage Actions" to create some.</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="manage-actions">
-          <ActionManager
+          <ActionManager 
             actions={actions}
-            onActionCreated={() => refetch()}
-            onActionUpdated={() => refetch()}
-            onActionDeleted={() => refetch()}
+            onActionCreated={createCleaningAction}
+            onActionUpdated={updateCleaningAction}
+            onActionDeleted={deleteCleaningAction}
           />
         </TabsContent>
       </Tabs>
