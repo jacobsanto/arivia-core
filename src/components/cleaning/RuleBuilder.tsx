@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X, Save, Calendar } from 'lucide-react';
 import { useRuleBasedCleaningSystem, CleaningAction } from '@/hooks/useRuleBasedCleaningSystem';
 import { guestyService } from '@/services/guesty/guesty.service';
+import { toast } from '@/hooks/use-toast';
 
 interface RuleBuilderProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ interface RuleBuilderProps {
 }
 
 export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSave, existingRule }) => {
-  const { actions, rules, createCleaningRule, updateCleaningRule } = useRuleBasedCleaningSystem();
+  const { actions, rules, createCleaningRule, updateCleaningRule, assignRuleToProperties } = useRuleBasedCleaningSystem();
   
   // Standard global rule configurations
   const GLOBAL_RULE_CONFIGS = {
@@ -40,6 +41,26 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
   );
   const [actionsByDay, setActionsByDay] = useState<Record<string, string[]>>(existingRule?.actions_by_day || {});
   const [selectedProperties, setSelectedProperties] = useState<string[]>(existingRule?.assignable_properties || []);
+
+  // Initialize form with existing rule data when rule changes
+  React.useEffect(() => {
+    if (existingRule) {
+      setRuleName(existingRule.rule_name);
+      setIsGlobal(existingRule.is_global ?? true);
+      setStayRangeMin(existingRule.stay_length_range?.[0] || existingRule.min_nights || 1);
+      setStayRangeMax(existingRule.stay_length_range?.[1] || existingRule.max_nights || 7);
+      setActionsByDay(existingRule.actions_by_day || {});
+      setSelectedProperties(existingRule.assignable_properties || []);
+    } else {
+      // Reset form for new rule
+      setRuleName('');
+      setIsGlobal(true);
+      setStayRangeMin(1);
+      setStayRangeMax(7);
+      setActionsByDay({});
+      setSelectedProperties([]);
+    }
+  }, [existingRule]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -87,11 +108,56 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
       const config = GLOBAL_RULE_CONFIGS[value];
       setStayRangeMin(config.min);
       setStayRangeMax(config.max);
+      
+      // Auto-populate default actions based on rule type
+      const defaultActions = getDefaultActionsForRule(value, config.min, config.max);
+      setActionsByDay(defaultActions);
     }
+  };
+
+  const getDefaultActionsForRule = (ruleName: string, minNights: number, maxNights: number) => {
+    const defaults: Record<string, string[]> = {};
+    
+    switch (ruleName) {
+      case 'SHORT STAY':
+        defaults['1'] = ['standard_cleaning']; // Check-in day
+        if (maxNights >= 2) defaults[maxNights.toString()] = ['standard_cleaning']; // Check-out day
+        break;
+      case 'MEDIUM STAY':
+        defaults['1'] = ['standard_cleaning']; // Check-in day
+        if (maxNights >= 4) defaults['3'] = ['change_sheets', 'towel_refresh']; // Mid-stay refresh
+        defaults[maxNights.toString()] = ['full_cleaning']; // Check-out day
+        break;
+      case 'EXTENDED STAY':
+        defaults['1'] = ['standard_cleaning']; // Check-in day
+        defaults['3'] = ['change_sheets', 'towel_refresh']; // First refresh
+        defaults['5'] = ['full_cleaning']; // Mid-stay cleaning
+        defaults['7'] = ['change_sheets', 'towel_refresh']; // Second refresh
+        defaults[Math.min(maxNights, 10).toString()] = ['deep_cleaning']; // Final deep clean
+        break;
+    }
+    
+    return defaults;
   };
 
   const handleSave = async () => {
     if (!ruleName.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Rule name is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if actions are configured
+    const hasActions = Object.values(actionsByDay).some(dayActions => dayActions.length > 0);
+    if (!hasActions) {
+      toast({
+        title: "Validation Error",
+        description: "Please configure at least one action for this rule",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -99,7 +165,11 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
     if (isGlobal && !existingRule) {
       const existingGlobalRule = rules.find(r => r.rule_name === ruleName && r.is_global);
       if (existingGlobalRule) {
-        alert(`Global rule "${ruleName}" already exists. Please choose a different rule type.`);
+        toast({
+          title: "Duplicate Rule",
+          description: `Global rule "${ruleName}" already exists. Please choose a different rule type.`,
+          variant: "destructive",
+        });
         return;
       }
     }
@@ -118,16 +188,35 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
         max_nights: stayRangeMax
       };
 
+      let savedRule;
       if (existingRule) {
-        await updateCleaningRule(existingRule.id, ruleData);
+        savedRule = await updateCleaningRule(existingRule.id, ruleData);
       } else {
-        await createCleaningRule(ruleData);
+        savedRule = await createCleaningRule(ruleData);
+      }
+
+      // If it's a global rule, assign to all properties
+      if (isGlobal && savedRule) {
+        try {
+          const listings = await guestyService.getGuestyListings();
+          const propertyIds = listings.map(listing => listing.id);
+          if (propertyIds.length > 0) {
+            await assignRuleToProperties(savedRule.id, propertyIds);
+          }
+        } catch (assignError) {
+          console.warn('Could not auto-assign global rule to properties:', assignError);
+        }
       }
 
       onSave();
       onClose();
     } catch (error) {
       console.error('Error saving rule:', error);
+      toast({
+        title: "Error Saving Rule",
+        description: error instanceof Error ? error.message : 'Failed to save rule',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -219,18 +308,25 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
               <div>
                 <Label htmlFor="rule-name">Rule Name</Label>
                 {isGlobal && !isEditingGlobalRule ? (
-                  <Select value={ruleName} onValueChange={handleRuleSelection}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a global rule type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(GLOBAL_RULE_CONFIGS).map(([name, config]) => (
-                        <SelectItem key={name} value={name}>
-                          {name} - {config.description}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-2">
+                    <Select value={ruleName} onValueChange={handleRuleSelection}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a global rule type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(GLOBAL_RULE_CONFIGS).map(([name, config]) => (
+                          <SelectItem key={name} value={name}>
+                            {name} - {config.description}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {ruleName && (
+                      <p className="text-xs text-muted-foreground">
+                        Default actions will be auto-populated. You can customize them below.
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <Input
                     id="rule-name"
@@ -242,7 +338,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
                 )}
                 {isEditingGlobalRule && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Global rule names cannot be modified
+                    Global rule names cannot be modified, but actions can be customized
                   </p>
                 )}
               </div>
@@ -326,14 +422,43 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({ isOpen, onClose, onSav
           {/* Actions by Day */}
           <Card>
             <CardHeader>
-              <CardTitle>Cleaning Actions by Day</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle>Cleaning Actions by Day</CardTitle>
+                {isGlobal && !Object.keys(actionsByDay).length && ruleName && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const config = GLOBAL_RULE_CONFIGS[ruleName];
+                      if (config) {
+                        const defaultActions = getDefaultActionsForRule(ruleName, config.min, config.max);
+                        setActionsByDay(defaultActions);
+                      }
+                    }}
+                  >
+                    Add Default Actions
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Configure cleaning actions for each day of the stay. Day 1 = Check-in day, final day = Check-out day.
+                </p>
+              </div>
               <div className="grid gap-4">
-                {Array.from({ length: Math.min(stayRangeMax, 7) }, (_, i) => i + 1).map(day => 
+                {Array.from({ length: Math.min(stayRangeMax, 10) }, (_, i) => i + 1).map(day => 
                   renderDayActions(day)
                 )}
               </div>
+              {Object.keys(actionsByDay).length === 0 && (
+                <div className="text-center p-4 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                  <p className="text-muted-foreground">
+                    No actions configured yet. {isGlobal && ruleName ? 'Click "Add Default Actions" above or add actions manually.' : 'Add actions for each day above.'}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
