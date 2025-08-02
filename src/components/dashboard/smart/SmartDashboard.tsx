@@ -36,16 +36,15 @@ export const SmartDashboard: React.FC = () => {
     try {
       const { error } = await supabase
         .from('damage_reports')
-        .insert([{
+        .insert({
           title: data.title,
           description: data.description,
           property_id: data.property_id,
           damage_date: data.damage_date,
           estimated_cost: data.estimated_cost,
-          assigned_to: data.assigned_to,
           status: 'pending',
-          created_by: user?.id
-        }]);
+          reported_by: user?.id || ''
+        });
 
       if (error) throw error;
 
