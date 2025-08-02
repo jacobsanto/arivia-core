@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
 
 // Import task components
 import TaskHeader from "@/components/tasks/TaskHeader";
@@ -9,6 +10,7 @@ import TaskDetail from "@/components/tasks/TaskDetail";
 import TaskCreationForm from "@/components/tasks/TaskCreationForm";
 import TaskFilters from "@/components/tasks/TaskFilters";
 import { useTasks } from "@/hooks/useTasks";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
 
 const Tasks = () => {
   const {
@@ -80,6 +82,14 @@ const Tasks = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <FloatingActionButton
+        actions={[{
+          icon: <Plus className="h-5 w-5" />,
+          label: "Create Task",
+          onClick: () => setIsCreateTaskOpen(true)
+        }]}
+      />
     </div>
   );
 };
