@@ -34,13 +34,13 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
   }
 
   const positionClasses = {
-    "bottom-right": "bottom-20 right-4 md:bottom-4",
-    "bottom-left": "bottom-20 left-4 md:bottom-4"
+    "bottom-right": "bottom-24 right-4 md:bottom-4",
+    "bottom-left": "bottom-24 left-4 md:bottom-4"
   }
 
   return (
     <div className={cn(
-      "fixed z-40 flex flex-col items-end gap-3",
+      "fixed z-60 flex flex-col items-end gap-3",
       positionClasses[position],
       className
     )}>
@@ -53,7 +53,7 @@ export const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({
               className="flex items-center gap-3 animate-slide-in-from-bottom"
               style={{ animationDelay: `${index * 50}ms` }}
             >
-              <span className="bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap opacity-0 animate-fade-in">
+              <span className="bg-black/80 text-white px-2 py-1 rounded text-sm whitespace-nowrap animate-fade-in">
                 {action.label}
               </span>
               <Button

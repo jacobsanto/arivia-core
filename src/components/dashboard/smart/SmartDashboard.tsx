@@ -281,20 +281,22 @@ export const SmartDashboard: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      <FloatingActionButton
-        actions={[
-          {
-            icon: <Plus className="h-5 w-5" />,
-            label: "Create Task",
-            onClick: () => setIsTaskDialogOpen(true)
-          },
-          ...(user?.role === "administrator" || user?.role === "property_manager" ? [{
-            icon: <FileWarning className="h-5 w-5" />,
-            label: "Damage Report", 
-            onClick: () => setIsDamageReportDialogOpen(true),
-            variant: "destructive" as const
-          }] : [])
-        ]}
-      />
+      {user && (
+        <FloatingActionButton
+          actions={[
+            {
+              icon: <Plus className="h-5 w-5" />,
+              label: "Create Task",
+              onClick: () => setIsTaskDialogOpen(true)
+            },
+            ...(user.role === "administrator" || user.role === "property_manager" ? [{
+              icon: <FileWarning className="h-5 w-5" />,
+              label: "Damage Report", 
+              onClick: () => setIsDamageReportDialogOpen(true),
+              variant: "destructive" as const
+            }] : [])
+          ]}
+        />
+      )}
     </div>;
 };
