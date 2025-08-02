@@ -11,6 +11,17 @@ import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { useUser } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DamageReportForm from "@/components/damage/DamageReportForm";
+import { damageService } from "@/services/damage/damage.service";
+
+interface DamageReportFormValues {
+  title: string;
+  description: string;
+  property_id: string;
+  damage_date: Date;
+  estimated_cost?: number;
+  media: File[];
+  assigned_to: string;
+}
 interface DashboardStats {
   totalProperties: number;
   pendingTasks: number;
@@ -32,27 +43,36 @@ export const SmartDashboard: React.FC = () => {
   } = useToast();
   const navigate = useNavigate();
   const { user } = useUser();
-  const handleCreateDamageReport = async (data: any) => {
+  const handleCreateDamageReport = async (data: DamageReportFormValues) => {
     try {
-      const { error } = await supabase
-        .from('damage_reports')
-        .insert({
-          title: data.title,
-          description: data.description,
-          property_id: data.property_id,
-          damage_date: data.damage_date,
-          estimated_cost: data.estimated_cost,
-          status: 'pending',
-          reported_by: user?.id || ''
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Damage report created successfully",
+      const newReport = await damageService.createDamageReport({
+        title: data.title,
+        description: data.description,
+        property_id: data.property_id,
+        damage_date: data.damage_date.toISOString(),
+        estimated_cost: data.estimated_cost,
+        assigned_to: data.assigned_to,
+        status: 'pending',
+        reported_by: user?.id || ''
       });
-      setIsDamageReportDialogOpen(false);
+
+      if (newReport) {
+        if (data.media?.length) {
+          for (const file of data.media) {
+            await damageService.uploadMedia(
+              file,
+              newReport.id,
+              file.type.startsWith('image/') ? 'photo' : 'video'
+            );
+          }
+        }
+        
+        toast({
+          title: "Success",
+          description: "Damage report created successfully",
+        });
+        setIsDamageReportDialogOpen(false);
+      }
     } catch (error) {
       console.error('Error creating damage report:', error);
       toast({
@@ -104,14 +124,14 @@ export const SmartDashboard: React.FC = () => {
         todayTasks: todayTasks?.length || 0,
         criticalIssues: maintenanceTasks?.length || 0
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",
         variant: "destructive"
       });
-    } finally {
+    }finally {
       setLoading(false);
     }
   };
