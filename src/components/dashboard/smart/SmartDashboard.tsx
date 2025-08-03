@@ -2,11 +2,26 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Home, AlertTriangle, Settings, Plus } from "lucide-react";
+import { Calendar, Clock, Home, AlertTriangle, Settings, Plus, FileWarning } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
+import { useUser } from "@/contexts/UserContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import DamageReportForm from "@/components/damage/DamageReportForm";
+import { damageService } from "@/services/damage/damage.service";
+
+interface DamageReportFormValues {
+  title: string;
+  description: string;
+  property_id: string;
+  damage_date: Date;
+  estimated_cost?: number;
+  media: File[];
+  assigned_to: string;
+}
 interface DashboardStats {
   totalProperties: number;
   pendingTasks: number;
@@ -22,10 +37,52 @@ export const SmartDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
+  const [isDamageReportDialogOpen, setIsDamageReportDialogOpen] = useState(false);
   const {
     toast
   } = useToast();
   const navigate = useNavigate();
+  const { user } = useUser();
+  const handleCreateDamageReport = async (data: DamageReportFormValues) => {
+    try {
+      const newReport = await damageService.createDamageReport({
+        title: data.title,
+        description: data.description,
+        property_id: data.property_id,
+        damage_date: data.damage_date.toISOString(),
+        estimated_cost: data.estimated_cost,
+        assigned_to: data.assigned_to,
+        status: 'pending',
+        reported_by: user?.id || ''
+      });
+
+      if (newReport) {
+        if (data.media?.length) {
+          for (const file of data.media) {
+            await damageService.uploadMedia(
+              file,
+              newReport.id,
+              file.type.startsWith('image/') ? 'photo' : 'video'
+            );
+          }
+        }
+        
+        toast({
+          title: "Success",
+          description: "Damage report created successfully",
+        });
+        setIsDamageReportDialogOpen(false);
+      }
+    } catch (error) {
+      console.error('Error creating damage report:', error);
+      toast({
+        title: "Error", 
+        description: "Failed to create damage report",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -58,14 +115,14 @@ export const SmartDashboard: React.FC = () => {
         todayTasks: todayTasks?.length || 0,
         criticalIssues: maintenanceTasks?.length || 0
       });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",
         variant: "destructive"
       });
-    } finally {
+    }finally {
       setLoading(false);
     }
   };
@@ -202,5 +259,35 @@ export const SmartDashboard: React.FC = () => {
         isOpen={isTaskDialogOpen}
         onOpenChange={setIsTaskDialogOpen}
       />
+
+      <Dialog open={isDamageReportDialogOpen} onOpenChange={setIsDamageReportDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Create Damage Report</DialogTitle>
+          </DialogHeader>
+          <DamageReportForm 
+            onSubmit={handleCreateDamageReport}
+            onCancel={() => setIsDamageReportDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {user && (
+        <FloatingActionButton
+          actions={[
+            {
+              icon: <Plus className="h-5 w-5" />,
+              label: "Create Task",
+              onClick: () => setIsTaskDialogOpen(true)
+            },
+            ...(user.role === "administrator" || user.role === "property_manager" ? [{
+              icon: <FileWarning className="h-5 w-5" />,
+              label: "Damage Report", 
+              onClick: () => setIsDamageReportDialogOpen(true),
+              variant: "destructive" as const
+            }] : [])
+          ]}
+        />
+      )}
     </div>;
 };
