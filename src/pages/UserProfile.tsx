@@ -12,6 +12,7 @@ import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useProfileTabs } from "@/components/profile/ProfileTabDefinitions";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { UserProfileErrorBoundary } from "@/components/error-boundaries/UserProfileErrorBoundary";
 
 const UserProfile = () => {
   const { user } = useUser();
@@ -39,7 +40,8 @@ const UserProfile = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <UserProfileErrorBoundary>
+      <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">My Profile</h1>
 
       <div className="relative">
@@ -107,6 +109,7 @@ const UserProfile = () => {
         )}
       </div>
     </div>
+    </UserProfileErrorBoundary>
   );
 };
 

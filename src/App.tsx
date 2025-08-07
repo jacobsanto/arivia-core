@@ -6,6 +6,8 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { DevModeProvider } from "@/contexts/DevModeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
+import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
+import { SkipLink } from "@/components/accessibility/SkipLink";
 import { DevModePanel } from "@/components/dev/DevModePanel";
 import { DevModeStatusBar } from "@/components/dev/DevModeStatusBar";
 
@@ -44,10 +46,12 @@ function App() {
   return (
     <MVPErrorBoundary>
       <HelmetProvider>
-        <ToastProvider>
-          <DevModeProvider>
-            <AuthProvider>
-              <Router>
+        <AccessibilityProvider>
+          <ToastProvider>
+            <DevModeProvider>
+              <AuthProvider>
+                <Router>
+                  <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <DevModeStatusBar />
                 <Routes>
                   {/* Login route - doesn't use the unified layout */}
@@ -92,10 +96,11 @@ function App() {
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
                 <DevModePanel />
-              </Router>
-            </AuthProvider>
-          </DevModeProvider>
-        </ToastProvider>
+                </Router>
+              </AuthProvider>
+            </DevModeProvider>
+          </ToastProvider>
+        </AccessibilityProvider>
       </HelmetProvider>
     </MVPErrorBoundary>
   );
