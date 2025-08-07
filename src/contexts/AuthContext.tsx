@@ -4,6 +4,7 @@ import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
 import { useDevMode } from "@/contexts/DevModeContext";
+import { logger } from "@/services/logger";
 
 interface AuthContextType {
   user: User | null;
@@ -35,11 +36,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshAuthState = async () => {
     try {
-      console.log('🔐 Refreshing auth state...');
+      logger.debug('AuthContext', 'Refreshing auth state');
       
       // Check if dev mode is active and should bypass auth
       if (devMode?.isDevMode && devMode.settings.bypassAuth) {
-        console.log('🔧 Dev mode active, using mock authentication');
+        logger.debug('AuthContext', 'Dev mode active, using mock authentication');
         
         // Use mock user if available, otherwise create a default dev user
         const mockUser = devMode.currentMockUser || {
@@ -50,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatar: "/placeholder.svg"
         };
         
-        console.log('🔧 Setting mock user:', mockUser.name, mockUser.role);
+        logger.debug('AuthContext', 'Setting mock user', { name: mockUser.name, role: mockUser.role });
         
         setUser(mockUser);
         setSession({
@@ -73,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      console.log('🔐 Using real Supabase authentication');
+      logger.debug('AuthContext', 'Using real Supabase authentication');
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       
@@ -97,15 +98,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
             customPermissions: profile.custom_permissions as Record<string, boolean> || {}
           };
-          console.log('🔐 Real user loaded:', newUser.name, newUser.role);
+          logger.debug('AuthContext', 'Real user loaded', { name: newUser.name, role: newUser.role });
           setUser(newUser);
         }
       } else {
-        console.log('🔐 No session found');
+        logger.debug('AuthContext', 'No session found');
         setUser(null);
       }
     } catch (err) {
-      console.error("Error refreshing auth state:", err);
+      logger.error('AuthContext', 'Error refreshing auth state', { error: err });
       const errorMessage = err instanceof Error ? err.message : 'Authentication error';
       setError(errorMessage);
       toastService.error("Authentication error", {
@@ -120,11 +121,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("🔐 Auth state change event:", event);
+        logger.debug('AuthContext', 'Auth state change event', { event });
         
         // If dev mode is active and bypassing auth, ignore auth state changes
         if (devMode?.isDevMode && devMode.settings.bypassAuth) {
-          console.log('🔧 Ignoring auth state change due to dev mode');
+          logger.debug('AuthContext', 'Ignoring auth state change due to dev mode');
           return;
         }
         

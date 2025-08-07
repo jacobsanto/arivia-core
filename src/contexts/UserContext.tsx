@@ -23,6 +23,7 @@ import {
 } from "@/types/auth/permissions";
 import { checkFeatureAccess } from "@/services/auth/permissionService";
 import { updatePermissions } from "./auth/operations/permissionOperations";
+import { logger } from "@/services/logger";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -58,7 +59,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listen for mock user changes to force updates
   useEffect(() => {
     const handleMockUserUpdate = () => {
-      console.log('🔧 UserContext: Mock user state update event received');
+      logger.debug('UserContext', 'Mock user state update event received');
       setMockUserUpdateTrigger(prev => prev + 1);
     };
 
@@ -72,14 +73,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getCurrentUser = (): User | null => {
     // In dev mode with mock users enabled, prioritize mock user
     if (devMode?.isDevMode && devMode.settings.enableMockUsers && devMode.currentMockUser) {
-      console.log('🔧 UserContext: Using mock user:', devMode.currentMockUser.name, devMode.currentMockUser.role);
+      logger.debug('UserContext', 'Using mock user', { 
+        name: devMode.currentMockUser.name, 
+        role: devMode.currentMockUser.role 
+      });
       return devMode.currentMockUser;
     }
     
     // Otherwise use auth user or fallback user
     const selectedUser = authUser || user;
     if (selectedUser) {
-      console.log('🔧 UserContext: Using real user:', selectedUser.name, selectedUser.role);
+      logger.debug('UserContext', 'Using real user', { 
+        name: selectedUser.name, 
+        role: selectedUser.role 
+      });
     }
     return selectedUser;
   };
@@ -91,13 +98,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Log user changes for debugging
   useEffect(() => {
-    console.log('🔧 UserContext: Current user changed:', currentUser ? `${currentUser.name} (${currentUser.role})` : 'null');
+    logger.debug('UserContext', 'Current user changed', { 
+      user: currentUser ? `${currentUser.name} (${currentUser.role})` : 'null' 
+    });
   }, [currentUser?.id, currentUser?.role, mockUserUpdateTrigger]);
 
   const handleRefreshProfile = async () => {
     // Don't refresh profile for mock users
     if (devMode?.isDevMode && devMode.settings.enableMockUsers && devMode.currentMockUser) {
-      console.log('🔧 UserContext: Skipping profile refresh for mock user');
+      logger.debug('UserContext', 'Skipping profile refresh for mock user');
       return true;
     }
     
@@ -129,7 +138,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleHasFeatureAccess = (featureKey: string) => {
     const result = checkFeatureAccess(currentUser, featureKey);
-    console.log('🔧 UserContext: Feature access check:', featureKey, result, 'for user:', currentUser?.name, currentUser?.role);
+    logger.debug('UserContext', 'Feature access check', { 
+      featureKey, 
+      result, 
+      user: currentUser?.name, 
+      role: currentUser?.role 
+    });
     return result;
   };
 

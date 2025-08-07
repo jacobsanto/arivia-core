@@ -9,6 +9,7 @@ import {
   hasPermissionWithAllRoles, 
   getAllPermissionKeys 
 } from '@/types/auth';
+import { logger } from '@/services/logger';
 
 interface PermissionsReturn {
   canAccess: (featureKey: string) => boolean;
@@ -40,7 +41,7 @@ export const usePermissions = (): PermissionsReturn => {
   
   useEffect(() => {
     const handleMockUserUpdate = () => {
-      console.log('🔧 usePermissions: Mock user update, recalculating permissions');
+      logger.debug('usePermissions', 'Mock user update, recalculating permissions');
       setUpdateTrigger(prev => prev + 1);
     };
 
@@ -53,7 +54,10 @@ export const usePermissions = (): PermissionsReturn => {
   // Get the effective user (prioritizing mock user in dev mode)
   const getEffectiveUser = () => {
     if (devMode?.isDevMode && devMode.settings.enableMockUsers && devMode.currentMockUser) {
-      console.log('🔧 usePermissions: Using mock user for permissions:', devMode.currentMockUser.name, devMode.currentMockUser.role);
+      logger.debug('usePermissions', 'Using mock user for permissions', { 
+        name: devMode.currentMockUser.name, 
+        role: devMode.currentMockUser.role 
+      });
       return devMode.currentMockUser;
     }
     return user;
@@ -64,33 +68,37 @@ export const usePermissions = (): PermissionsReturn => {
   // Check if user has access to a specific feature
   const canAccess = (featureKey: string): boolean => {
     if (!effectiveUser) {
-      console.log('🔧 usePermissions: No effective user, denying access to:', featureKey);
+      logger.debug('usePermissions', 'No effective user, denying access', { featureKey });
       return false;
     }
     
     // Superadmin always has access to everything
     if (effectiveUser.role === "superadmin") {
-      console.log('🔧 usePermissions: Superadmin access granted for:', featureKey);
+      logger.debug('usePermissions', 'Superadmin access granted', { featureKey });
       return true;
     }
     
     // Check custom permissions first if they exist
     if (effectiveUser.customPermissions && effectiveUser.customPermissions[featureKey] !== undefined) {
       const hasCustomAccess = effectiveUser.customPermissions[featureKey];
-      console.log('🔧 usePermissions: Custom permission for', featureKey, ':', hasCustomAccess);
+      logger.debug('usePermissions', 'Custom permission check', { featureKey, hasAccess: hasCustomAccess });
       return hasCustomAccess;
     }
     
     // Check if feature exists in permissions
     const permission = FEATURE_PERMISSIONS[featureKey];
     if (!permission) {
-      console.log('🔧 usePermissions: Feature not found:', featureKey);
+      logger.debug('usePermissions', 'Feature not found', { featureKey });
       return false;
     }
     
     // Check if user's role is in the allowed roles, including secondary roles
     const hasAccess = hasPermissionWithAllRoles(effectiveUser.role, effectiveUser.secondaryRoles, permission.allowedRoles);
-    console.log('🔧 usePermissions: Role-based access for', featureKey, ':', hasAccess, 'user role:', effectiveUser.role);
+    logger.debug('usePermissions', 'Role-based access check', { 
+      featureKey, 
+      hasAccess, 
+      userRole: effectiveUser.role 
+    });
     return hasAccess;
   };
 
