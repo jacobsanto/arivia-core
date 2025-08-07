@@ -39,9 +39,7 @@ const UseTemplateDialog = ({
             toast.success("Template selected. Create a new maintenance task to use it.");
           }}>
               <span className="text-lg mb-2">Maintenance Task</span>
-              <span className="text-xs text-muted-foreground text-center">
-                Create a maintenance task with this checklist
-              </span>
+              <span className="text-xs text-muted-foreground text-center"> Create with this checklist</span>
             </Button>
           </div>
         </div>
