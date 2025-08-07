@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   FormField,
@@ -10,60 +9,62 @@ import {
 import { useFormContext } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
+import { useInventory } from "@/contexts/InventoryContext";
 
 interface ItemFormVendorsProps {
   selectedCategory: string;
 }
 
-interface Vendor {
-  id: string;
-  name: string;
-  categories: string[];
-}
-
-// Sample vendors data - in a real app, we'd get this from API/context
-const vendors: Vendor[] = [
-  {
-    id: "1",
-    name: "Office Supplies Co.",
-    categories: ["Office Supplies", "Paper Products", "Kitchen Supplies", "Linens & Towels"],
-  },
-  {
-    id: "2",
-    name: "Cleaning Solutions Inc.",
-    categories: ["Cleaning Supplies"],
-  },
-  {
-    id: "3",
-    name: "Hospitality Essentials",
-    categories: ["Guest Amenities", "Toiletries", "Bathroom Supplies", "Linens & Towels"],
-  },
-];
-
 const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) => {
   const { control, setValue, watch } = useFormContext();
+  const { categoryObjects } = useInventory();
   const selectedVendors = watch("vendorIds") || [];
   
-  // Filter vendors by category
-  const [filteredVendors, setFilteredVendors] = useState<Vendor[]>(vendors);
+  const [vendors, setVendors] = useState<VendorWithCategoryNames[]>([]);
+  const [filteredVendors, setFilteredVendors] = useState<VendorWithCategoryNames[]>([]);
+  const [loading, setLoading] = useState(true);
   
+  // Load vendors from database
   useEffect(() => {
-    if (selectedCategory) {
-      const filtered = vendors.filter(vendor => 
-        vendor.categories.includes(selectedCategory)
-      );
-      setFilteredVendors(filtered);
-      
-      // Remove any selected vendors that don't support this category
-      const filteredIds = filtered.map(v => v.id);
-      const validSelectedVendors = selectedVendors.filter(id => filteredIds.includes(id));
-      if (validSelectedVendors.length !== selectedVendors.length) {
-        setValue("vendorIds", validSelectedVendors);
+    const loadVendors = async () => {
+      try {
+        setLoading(true);
+        const vendorData = await vendorService.getVendors();
+        setVendors(vendorData);
+      } catch (error) {
+        console.error('Error loading vendors:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadVendors();
+  }, []);
+  
+  // Filter vendors by selected category
+  useEffect(() => {
+    if (selectedCategory && vendors.length > 0) {
+      const selectedCategoryObj = categoryObjects.find(cat => cat.name === selectedCategory);
+      if (selectedCategoryObj) {
+        const filtered = vendors.filter(vendor => 
+          vendor.categories.includes(selectedCategoryObj.id)
+        );
+        setFilteredVendors(filtered);
+        
+        // Remove any selected vendors that don't support this category
+        const filteredIds = filtered.map(v => v.id);
+        const validSelectedVendors = selectedVendors.filter(id => filteredIds.includes(id));
+        if (validSelectedVendors.length !== selectedVendors.length) {
+          setValue("vendorIds", validSelectedVendors);
+        }
+      } else {
+        setFilteredVendors([]);
       }
     } else {
       setFilteredVendors(vendors);
     }
-  }, [selectedCategory, selectedVendors, setValue]);
+  }, [selectedCategory, vendors, categoryObjects, selectedVendors, setValue]);
   
   const handleVendorToggle = (vendorId: string, checked: boolean) => {
     const updatedVendors = checked
@@ -73,6 +74,14 @@ const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) =
     setValue("vendorIds", updatedVendors, { shouldValidate: true });
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="text-sm text-muted-foreground">Loading vendors...</div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <FormField
@@ -80,7 +89,7 @@ const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) =
         name="vendorIds"
         render={() => (
           <FormItem>
-            <FormLabel>Vendors</FormLabel>
+            <FormLabel>Vendors (Optional)</FormLabel>
             <FormControl>
               <div className="space-y-4">
                 {selectedCategory && (
@@ -91,7 +100,10 @@ const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) =
                 )}
                 {filteredVendors.length === 0 ? (
                   <div className="text-sm text-amber-500">
-                    No vendors available for this category. Please select a different category or add a new vendor.
+                    {selectedCategory 
+                      ? "No vendors available for this category. You can still create the item without vendors."
+                      : "No vendors available. You can still create the item without vendors."
+                    }
                   </div>
                 ) : (
                   filteredVendors.map(vendor => (
@@ -106,9 +118,16 @@ const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) =
                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
                         {vendor.name}
-                        <span className="text-xs text-muted-foreground ml-2">
-                          ({vendor.categories.join(", ")})
-                        </span>
+                        {vendor.contact_person && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            Contact: {vendor.contact_person}
+                          </span>
+                        )}
+                        {vendor.category_names && vendor.category_names.length > 0 && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            ({vendor.category_names.join(", ")})
+                          </span>
+                        )}
                       </label>
                     </div>
                   ))
