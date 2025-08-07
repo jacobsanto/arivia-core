@@ -24,6 +24,7 @@ import {
 import { checkFeatureAccess } from "@/services/auth/permissionService";
 import { updatePermissions } from "./auth/operations/permissionOperations";
 import { logger } from "@/services/logger";
+import { profileRefreshLimiter } from "@/services/profileRefreshLimiter";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -110,8 +111,20 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     
+    // Check if refresh is allowed (rate limiting)
+    if (currentUser && !profileRefreshLimiter.canRefresh(currentUser.id)) {
+      const status = profileRefreshLimiter.getRefreshStatus(currentUser.id);
+      logger.debug('UserContext', 'Profile refresh rate limited', { 
+        userId: currentUser.id,
+        nextAllowedTime: status.nextAllowedTime 
+      });
+      return false; // Don't refresh, but don't fail
+    }
+    
     const success = await refreshUserProfile();
-    if (success) {
+    if (success && currentUser) {
+      // Record successful refresh
+      profileRefreshLimiter.recordRefresh(currentUser.id);
       // Also refresh auth state to ensure consistency
       await refreshAuthState();
     }
