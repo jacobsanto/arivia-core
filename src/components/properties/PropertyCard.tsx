@@ -21,6 +21,7 @@ import { MoreHorizontal, Users } from "lucide-react";
 import { useProperties } from "@/hooks/useProperties";
 import { assignmentService, type AssignableUser } from "@/services/property/assignment.service";
 import type { Property } from "@/types/property.types";
+import { resolveSignedUrl } from "@/utils/storageUrls";
 
 interface PropertyCardProps {
   property: Property;
@@ -50,6 +51,7 @@ const PropertyCard = ({
   const [currentBooking, setCurrentBooking] = useState<any>(null);
   const [nextBooking, setNextBooking] = useState<any>(null);
   const [assignedUsers, setAssignedUsers] = useState<AssignableUser[]>([]);
+  const [imageSrc, setImageSrc] = useState<string>(property.imageUrl || "/placeholder.svg");
   const { getPropertyBookings } = useProperties();
 
   useEffect(() => {
@@ -84,11 +86,21 @@ const PropertyCard = ({
     fetchData();
   }, [property.id, property.assigned_users]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const resolved = await resolveSignedUrl(property.imageUrl || "/placeholder.svg");
+      if (!cancelled) setImageSrc(resolved);
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [property.imageUrl]);
+
   return (
     <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
       <div className="relative h-48 overflow-hidden">
         <img
-          src={property.imageUrl}
+          src={imageSrc}
           alt={property.name}
           className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-300"
         />

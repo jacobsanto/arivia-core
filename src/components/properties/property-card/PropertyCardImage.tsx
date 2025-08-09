@@ -1,7 +1,8 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { UnifiedProperty } from "@/types/property.types";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { resolveSignedUrl } from "@/utils/storageUrls";
 
 // Utility to extract srcset/sizes for responsive images
 function getImageSources(property: UnifiedProperty) {
@@ -35,27 +36,40 @@ interface PropertyCardImageProps {
 export const PropertyCardImage = ({ property }: PropertyCardImageProps) => {
   const [imgError, setImgError] = useState(false);
   const { src, srcSet, sizes, fallback, thumbnail } = getImageSources(property);
+  const [signedThumb, setSignedThumb] = useState<string>(thumbnail);
+  const [signedSrc, setSignedSrc] = useState<string>(src);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      const t = await resolveSignedUrl(thumbnail);
+      const s = await resolveSignedUrl(src);
+      if (!cancelled) {
+        setSignedThumb(t);
+        setSignedSrc(s);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [thumbnail, src]);
 
   return (
     <div className="relative overflow-hidden">
       <AspectRatio ratio={16/9} className="bg-slate-100">
         <img
-          src={imgError ? fallback : thumbnail}
-          srcSet={!imgError ? srcSet : undefined}
-          sizes={!imgError ? sizes : undefined}
-          data-highres={src}
+          src={imgError ? fallback : signedThumb}
           loading="lazy"
           alt={property.name}
           className="w-full h-full object-cover hover-scale transition-transform duration-300"
           onError={() => setImgError(true)}
           onLoad={e => {
             // Progressive: as soon as high-res loads, switch src
-            if (e.currentTarget.src !== src && !imgError) {
+            if (e.currentTarget.src !== signedSrc && !imgError) {
               const highImg = new window.Image();
               highImg.onload = () => {
-                if (!imgError) e.currentTarget.src = src;
+                if (!imgError) e.currentTarget.src = signedSrc;
               };
-              highImg.src = src;
+              highImg.src = signedSrc;
             }
           }}
           style={{ background: "#f1f1f1" }}
