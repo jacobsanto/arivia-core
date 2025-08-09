@@ -16,6 +16,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<boolean>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -280,28 +281,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signOut = async () => {
-    try {
-      await supabase.auth.signOut({ scope: 'local' });
-      toastService.success("Signed out");
-    } catch (err) {
-      toastService.error("Failed to sign out", { description: err instanceof Error ? err.message : "" });
-    } finally {
-      window.location.href = "/login";
-    }
-  };
+const signOut = async () => {
+  try {
+    await supabase.auth.signOut({ scope: 'local' });
+    toastService.success("Signed out");
+  } catch (err) {
+    toastService.error("Failed to sign out", { description: err instanceof Error ? err.message : "" });
+  } finally {
+    window.location.href = "/login";
+  }
+};
 
-  const value = {
-    user,
-    session,
-    isLoading,
-    isAuthenticated: !!user && !!session,
-    error,
-    refreshAuthState,
-    signIn,
-    signUp,
-    signOut
-  };
+const resetPassword = async (email: string) => {
+  try {
+    const redirectUrl = `${window.location.origin}/reset-password`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+    if (error) throw error;
+    toastService.success("Reset Email Sent", { description: "Check your email for reset instructions." });
+  } catch (err) {
+    toastService.error("Reset Failed", { description: err instanceof Error ? err.message : "" });
+    throw err;
+  }
+};
+
+const value = {
+  user,
+  session,
+  isLoading,
+  isAuthenticated: !!user && !!session,
+  error,
+  refreshAuthState,
+  signIn,
+  signUp,
+  signOut,
+  resetPassword
+};
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
