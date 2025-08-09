@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
 // Import task components
@@ -9,6 +10,8 @@ import TaskList from "@/components/tasks/TaskList";
 import TaskDetail from "@/components/tasks/TaskDetail";
 import TaskCreationForm from "@/components/tasks/TaskCreationForm";
 import TaskFilters from "@/components/tasks/TaskFilters";
+import GenericTaskListView from "@/components/tasks/views/GenericTaskListView";
+import GenericTaskAgendaView from "@/components/tasks/views/GenericTaskAgendaView";
 import { useTasks } from "@/hooks/useTasks";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
 
@@ -34,6 +37,8 @@ const Tasks = () => {
     handlePhotoUpload,
   } = useTasks();
 
+  const [viewMode, setViewMode] = React.useState<'card' | 'list' | 'agenda'>('card');
+
   return (
     <div className="space-y-6">
       <TaskHeader onCreateTask={() => setIsCreateTaskOpen(true)} />
@@ -54,10 +59,19 @@ const Tasks = () => {
         onTypeFilter={setTypeFilter}
       />
 
-      <TaskList
-        tasks={filteredTasks}
-        onOpenTask={handleOpenTask}
-      />
+      <div className="flex justify-end gap-2">
+        <Button size="sm" variant={viewMode === 'card' ? 'default' : 'outline'} onClick={() => setViewMode('card')}>Card</Button>
+        <Button size="sm" variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')}>List</Button>
+        <Button size="sm" variant={viewMode === 'agenda' ? 'default' : 'outline'} onClick={() => setViewMode('agenda')}>Agenda</Button>
+      </div>
+
+      {viewMode === 'card' ? (
+        <TaskList tasks={filteredTasks} onOpenTask={handleOpenTask} />
+      ) : viewMode === 'list' ? (
+        <GenericTaskListView tasks={filteredTasks} onOpenTask={handleOpenTask} />
+      ) : (
+        <GenericTaskAgendaView tasks={filteredTasks} onOpenTask={handleOpenTask} />
+      )}
 
       {/* Task Detail Modal */}
       {selectedTask && (
