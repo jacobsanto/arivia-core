@@ -1,10 +1,12 @@
 
 import React from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useProperties } from "@/hooks/useProperties";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,8 +27,35 @@ interface DamageReportFormProps {
   onCancel: () => void;
 }
 
+// Validation schema for Damage Report
+const damageReportSchema = z.object({
+  title: z.string().min(3, 'Title is required'),
+  description: z.string().min(5, 'Please add a short description').optional(),
+  property_id: z.string().min(1, 'Select a property'),
+  damage_date: z.preprocess((val) => (typeof val === 'string' ? new Date(val) : val), z.date({ required_error: 'Select date' })),
+  estimated_cost: z.preprocess((val) => {
+    if (val === '' || val === null || typeof val === 'undefined') return undefined;
+    const num = typeof val === 'string' ? Number(val) : val as number;
+    return isNaN(Number(num)) ? undefined : Number(num);
+  }, z.number().nonnegative().optional()),
+  media: z.any().array().optional(),
+  assigned_to: z.string().optional()
+});
+
 const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel }) => {
-  const form = useForm<DamageReportFormValues>();
+  const form = useForm<DamageReportFormValues>({
+    resolver: zodResolver(damageReportSchema),
+    mode: 'onChange',
+    defaultValues: {
+      title: '',
+      description: '',
+      property_id: '',
+      damage_date: new Date(),
+      estimated_cost: undefined,
+      media: [],
+      assigned_to: ''
+    }
+  });
   const { properties } = useProperties();
   const { registeredUsers } = useUsers();
 
@@ -42,6 +71,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
               <FormControl>
                 <Input {...field} placeholder="Brief description of the damage" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -71,12 +101,11 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
               <FormItem>
                 <FormLabel>Property</FormLabel>
                 <FormControl>
-                  <Select onValueChange={field.onChange} value={field.value || "select-property"}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a property" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="select-property" disabled>Select a property</SelectItem>
                       {properties.map(property => (
                         <SelectItem key={property.id} value={property.id}>
                           {property.name}
@@ -85,6 +114,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
                     </SelectContent>
                   </Select>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -95,14 +125,13 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Person to Resolve</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || "select-person"}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select person to resolve" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="select-person" disabled>Select a person</SelectItem>
                     {registeredUsers.map((user) => (
                       <SelectItem key={user.id} value={user.id}>
                         {user.name || user.email}
@@ -122,12 +151,13 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             <FormItem>
               <FormLabel>Date of Damage</FormLabel>
               <FormControl>
-                <Input 
-                  type="datetime-local" 
-                  {...field} 
+                <Input
+                  type="datetime-local"
                   value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
+                  onChange={(e) => field.onChange(new Date(e.target.value))}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -139,7 +169,13 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             <FormItem>
               <FormLabel>Estimated Cost (if known)</FormLabel>
               <FormControl>
-                <Input {...field} type="number" step="0.01" placeholder="Enter estimated cost" />
+                <Input
+                  type="number"
+                  step="0.01"
+                  placeholder="Enter estimated cost"
+                  value={field.value ?? ''}
+                  onChange={(e) => field.onChange(e.target.value === '' ? undefined : Number(e.target.value))}
+                />
               </FormControl>
             </FormItem>
           )}
@@ -150,7 +186,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           <FileUpload
             onChange={(files) => {
               const filesArray = Array.from(files);
-              form.setValue('media', filesArray);
+              form.setValue('media', filesArray, { shouldValidate: true });
             }}
             accept="image/*,video/*"
             multiple
@@ -164,7 +200,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           <Button type="button" variant="outline" onClick={onCancel}>
             Cancel
           </Button>
-          <Button type="submit">Create Report</Button>
+          <Button type="submit" disabled={!form.formState.isValid}>Create Report</Button>
         </div>
       </form>
     </Form>

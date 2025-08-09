@@ -35,11 +35,27 @@ export const BookingSyncButton: React.FC<BookingSyncButtonProps> = ({
     }
   };
   const hasPartialSuccess = failedListings.length > 0;
-  return <div className="relative">
-      
-      
-      {hasPartialSuccess && !isSyncing && <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs h-5 min-w-5 flex items-center justify-center">
+  return (
+    <div className="relative inline-block">
+      <Button
+        variant={variant}
+        size={size}
+        className={className}
+        onClick={handleSync}
+        disabled={isSyncing}
+      >
+        {isSyncing ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <Calendar className="mr-2 h-4 w-4" />
+        )}
+        {label}
+      </Button>
+      {hasPartialSuccess && !isSyncing && (
+        <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs h-5 min-w-5 flex items-center justify-center">
           {failedListings.length}
-        </Badge>}
-    </div>;
+        </Badge>
+      )}
+    </div>
+  );
 };
