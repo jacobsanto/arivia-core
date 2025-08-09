@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
@@ -41,6 +41,16 @@ const AdminChecklists = lazy(() => import("@/pages/AdminChecklists"));
 const EnhancedTasks = lazy(() => import("@/pages/EnhancedTasks"));
 
 function App() {
+  // Prefetch high-traffic routes to avoid visible loading on navigation
+  useEffect(() => {
+    void Promise.all([
+      import("@/pages/Dashboard"),
+      import("@/pages/Properties"),
+      import("@/pages/Inventory"),
+      import("@/pages/TeamChat"),
+    ]);
+  }, []);
+
   return (
     <MVPErrorBoundary>
       <HelmetProvider>
@@ -51,7 +61,7 @@ function App() {
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <DevModeStatusBar />
-                  <Suspense fallback={<div className="p-6 text-muted-foreground">Loading…</div>}>
+                  <Suspense fallback={null}>
                     <Routes>
                       {/* Login route - doesn't use the unified layout */}
                       <Route path="/login" element={<Login />} />
