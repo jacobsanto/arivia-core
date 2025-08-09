@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthProvider';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Building } from 'lucide-react';
 import { toastService } from '@/services/toast/toast.service';
 
 export const EnhancedAuthPage: React.FC = () => {
-  const { signIn, signUp, resetPassword, loading, user } = useAuth();
+  const { signIn, signUp, resetPassword, isLoading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -50,10 +50,11 @@ export const EnhancedAuthPage: React.FC = () => {
       return;
     }
 
-    const { error } = await signIn(formData.email, formData.password);
-    
-    if (!error) {
+    try {
+      await signIn(formData.email, formData.password);
       navigate(from, { replace: true });
+    } catch (err) {
+      // Errors are handled in AuthContext toast
     }
   };
 
@@ -81,15 +82,9 @@ export const EnhancedAuthPage: React.FC = () => {
       return;
     }
 
-    const userData = {
-      name: formData.name,
-      phone: formData.phone,
-      role: formData.role
-    };
 
-    const { error } = await signUp(formData.email, formData.password, userData);
-    
-    if (!error) {
+    const ok = await signUp(formData.email, formData.password, formData.name, formData.role as any);
+    if (ok) {
       setActiveTab('signin');
       setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
     }
@@ -175,8 +170,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Signing In...' : 'Sign In'}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </form>
 
@@ -280,8 +275,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
               </TabsContent>
@@ -305,8 +300,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? 'Sending Reset Email...' : 'Send Reset Email'}
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? 'Sending Reset Email...' : 'Send Reset Email'}
                   </Button>
                 </form>
               </TabsContent>
