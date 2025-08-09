@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { signUpFormSchema, SignUpFormValues } from "@/lib/validation/auth-schema";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { SecurityEnhancements } from "./SecurityEnhancements";
@@ -22,7 +22,7 @@ interface SignUpFormProps {
 const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
-  const { signup } = useUser();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
 
   const form = useForm<SignUpFormValues>({
@@ -39,7 +39,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      await signup(values.email, values.password, values.name, values.role);
+      await signUp(values.email, values.password, values.name, values.role);
       // Show success message for email confirmation
       setShowSecurityInfo(true);
     } catch (error: any) {

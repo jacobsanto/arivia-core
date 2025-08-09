@@ -3,19 +3,16 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Camera, Monitor, Zap, BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 const Sidebar = () => {
-  const {
-    user,
-    logout
-  } = useUser();
+  const { user, signOut } = useAuth();
   const {
     canAccess
   } = usePermissions();
   const handleLogout = () => {
-    logout();
+    signOut();
   };
   if (!user) return null;
   const isSuperAdmin = user.role === "superadmin";

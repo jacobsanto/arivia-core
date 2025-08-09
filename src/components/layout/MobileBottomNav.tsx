@@ -1,7 +1,7 @@
 import React from "react";
 import { Home, Menu, BedDouble, Package, Wrench, FileWarning } from "lucide-react";
 import NavItem from "./NavItem";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 interface MobileBottomNavProps {
   onOpenMenu: () => void;
@@ -9,9 +9,7 @@ interface MobileBottomNavProps {
 const MobileBottomNav = ({
   onOpenMenu
 }: MobileBottomNavProps) => {
-  const {
-    user
-  } = useUser();
+  const { user } = useAuth();
   const {
     canAccess
   } = usePermissions();
