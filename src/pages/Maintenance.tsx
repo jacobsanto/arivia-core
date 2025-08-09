@@ -1,12 +1,18 @@
 
 import React from "react";
-import { MVPTaskManagement } from "@/components/tasks/mvp/MVPTaskManagement";
+import { Helmet } from "react-helmet-async";
+import MaintenanceDashboardContainer from "@/components/maintenance/MaintenanceDashboardContainer";
 import { MaintenanceErrorBoundary } from "@/components/error-boundaries/MaintenanceErrorBoundary";
 
 const Maintenance: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
-      <MVPTaskManagement />
+      <Helmet>
+        <title>Maintenance Tasks Dashboard | Arivia Villas</title>
+        <meta name="description" content="Manage property maintenance tasks, track progress, and view reports." />
+        <link rel="canonical" href="/maintenance" />
+      </Helmet>
+      <MaintenanceDashboardContainer />
     </MaintenanceErrorBoundary>
   );
 };
