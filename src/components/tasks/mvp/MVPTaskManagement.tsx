@@ -319,8 +319,8 @@ export const MVPTaskManagement: React.FC = () => {
                           </div>
                         </div>
                       ));
-                    })()
-                  )
+                     })()
+                   )}
                 </div>
               </CardContent>
             </Card>
@@ -404,8 +404,8 @@ export const MVPTaskManagement: React.FC = () => {
                           </div>
                         </div>
                       ));
-                    })()
-                  )
+                     })()
+                   )}
                 </div>
               </CardContent>
             </Card>
