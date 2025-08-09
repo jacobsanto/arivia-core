@@ -31,7 +31,7 @@ const UnifiedLayout = () => {
         
         <ScrollArea className="flex-1" orientation="vertical">
           <main id="main-content" className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`} role="main">
-            <div className="max-w-full mx-auto">
+            <div key={location.pathname} className="max-w-full mx-auto animate-fade-in">
               <Outlet />
             </div>
           </main>

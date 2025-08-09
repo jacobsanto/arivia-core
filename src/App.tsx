@@ -16,14 +16,14 @@ import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Pages (lazy-loaded)
+import Login from "@/pages/Login";
+import TeamChat from "@/pages/TeamChat";
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Login = lazy(() => import("@/pages/Login"));
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
 const Maintenance = lazy(() => import("@/pages/Maintenance"));
 const Housekeeping = lazy(() => import("@/pages/Housekeeping"));
 const Properties = lazy(() => import("@/pages/Properties"));
 const Inventory = lazy(() => import("@/pages/Inventory"));
-const TeamChat = lazy(() => import("@/pages/TeamChat"));
 const Analytics = lazy(() => import("@/pages/Analytics"));
 const Reports = lazy(() => import("@/pages/Reports"));
 const SystemHealth = lazy(() => import("@/pages/SystemHealth"));
