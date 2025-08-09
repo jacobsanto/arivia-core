@@ -12,6 +12,8 @@ import { InfoIcon } from "lucide-react";
 
 const StockLevels = () => {
   const [location, setLocation] = useState("all");
+  const [search, setSearch] = useState("");
+  const isMobile = useIsMobile();
   // Load items
   const { data: items = [] } = useQuery({
     queryKey: ["inventory-items"],
