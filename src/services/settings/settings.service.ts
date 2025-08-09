@@ -1,6 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+
+
+// Simple in-memory cache and in-flight deduping for settings
+const SETTINGS_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const settingsCache = new Map<SettingsCategory, { data: Record<string, any>; ts: number }>();
+const inFlightSettings = new Map<SettingsCategory, Promise<Record<string, any>>>();
 
 export type SettingsCategory = 
   | 'general' 
@@ -23,32 +28,47 @@ export interface SystemSettings {
 
 export const settingsService = {
   async getSettings(category: SettingsCategory): Promise<Record<string, any>> {
-    try {
-      console.log(`Fetching settings for category: ${category}`);
-      const { data, error } = await supabase
-        .from('system_settings')
-        .select('*')
-        .eq('category', category)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching settings:', error);
-        throw error;
-      }
-
-      if (data?.settings) {
-        console.log(`Settings retrieved for ${category}:`, data.settings);
-      } else {
-        console.log(`No settings found for ${category}, using defaults`);
-      }
-
-      return data?.settings ? 
-        (typeof data.settings === 'object' ? data.settings : { value: data.settings }) : 
-        {};
-    } catch (error: any) {
-      console.error('Failed to fetch settings:', error.message);
-      throw error;
+    // Return fresh cache when available
+    const cached = settingsCache.get(category);
+    const now = Date.now();
+    if (cached && now - cached.ts < SETTINGS_TTL_MS) {
+      return cached.data;
     }
+
+    // Deduplicate concurrent requests
+    const inflight = inFlightSettings.get(category);
+    if (inflight) return inflight;
+
+    const fetchPromise = (async () => {
+      try {
+        console.log(`Fetching settings for category: ${category}`);
+        const { data, error } = await supabase
+          .from('system_settings')
+          .select('settings')
+          .eq('category', category)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching settings:', error);
+          throw error;
+        }
+
+        const result = data?.settings
+          ? (typeof data.settings === 'object' ? data.settings : { value: data.settings })
+          : {};
+
+        settingsCache.set(category, { data: result, ts: Date.now() });
+        return result;
+      } catch (error: any) {
+        console.error('Failed to fetch settings:', error?.message || error);
+        throw error;
+      } finally {
+        inFlightSettings.delete(category);
+      }
+    })();
+
+    inFlightSettings.set(category, fetchPromise);
+    return fetchPromise;
   },
 
   async saveSettings(category: SettingsCategory, settings: Record<string, any>): Promise<boolean> {
@@ -100,6 +120,9 @@ export const settingsService = {
 
       // Update local storage cache for offline support
       localStorage.setItem(`settings_${category}`, JSON.stringify(settings));
+      // Update memory cache and clear in-flight
+      settingsCache.set(category, { data: settings, ts: Date.now() });
+      inFlightSettings.delete(category);
       console.log(`Settings for ${category} saved successfully`);
 
       return true;
