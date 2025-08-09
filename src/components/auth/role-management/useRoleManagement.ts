@@ -1,5 +1,5 @@
 
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { User } from "@/types/auth";
 import { useExpandedUsers } from "./hooks/useExpandedUsers";
 import { useRoleActions } from "./hooks/useRoleActions";

@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
-
+import { useUserState } from "@/contexts/hooks";
+import { updateUserProfile } from "@/contexts/auth/operations/profileOperations";
 interface UserTableRowProps {
   user: User;
   currentUser: User | null;
@@ -23,7 +23,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
-  const { updateProfile } = useUser();
+  const { user: authUser, setUser } = useUserState();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
