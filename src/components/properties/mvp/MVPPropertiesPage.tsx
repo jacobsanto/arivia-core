@@ -4,11 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Filter, RefreshCw, Building, MapPin, Eye } from "lucide-react";
+import { Search, Plus, RefreshCw, Building, MapPin, Eye, Trash2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { BookingSyncButton } from "@/components/properties/listing-details/BookingSyncButton";
+import { AddPropertyDialog } from "@/components/properties/AddPropertyDialog";
+import { toast } from "sonner";
 export const MVPPropertiesPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -27,16 +28,30 @@ export const MVPPropertiesPage: React.FC = () => {
       if (filterStatus !== 'all') {
         query = query.eq('status', filterStatus);
       }
-      const {
-        data
-      } = await query.order('created_at', {
-        ascending: false
-      });
+      const { data } = await query.order('created_at', { ascending: false });
       return data || [];
     }
   });
-  const handleSyncComplete = () => {
-    refetch();
+
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const {
+    data: manualProperties,
+    isLoading: isLoadingManual,
+    refetch: refetchManual
+  } = useQuery({
+    queryKey: ['manual-properties'],
+    queryFn: async () => {
+      const { data } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+      return data || [];
+    }
+  });
+
+  const handleRefresh = () => { refetch(); refetchManual(); };
+  const handlePropertyAdded = () => { refetchManual(); };
+  const handleDeleteImported = async (id: string) => {
+    if (!confirm('Delete this imported property? This action cannot be undone.')) return;
+    const { error } = await supabase.from('guesty_listings').delete().eq('id', id);
+    if (error) { toast.error('Failed to delete property'); } else { toast.success('Property deleted'); refetch(); }
   };
   return <>
       <Helmet>
@@ -51,8 +66,11 @@ export const MVPPropertiesPage: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <BookingSyncButton onSyncComplete={handleSyncComplete} label="Sync from Guesty" />
-            <Button onClick={() => refetch()} className="text-zinc-50 bg-[d1aa7e] bg-[#d0a97d]">
+            <Button onClick={() => setIsAddOpen(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Property
+            </Button>
+            <Button onClick={handleRefresh} variant="outline">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
@@ -90,9 +108,14 @@ export const MVPPropertiesPage: React.FC = () => {
                 <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No properties found</h3>
                 <p className="text-muted-foreground mb-4">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Sync your properties from Guesty to get started'}
+                  {searchTerm ? 'Try adjusting your search terms' : 'Start by adding a property manually'}
                 </p>
-                {!searchTerm && <BookingSyncButton onSyncComplete={handleSyncComplete} label="Sync Properties from Guesty" />}
+                {!searchTerm && (
+                  <Button onClick={() => setIsAddOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Property
+                  </Button>
+                )}
               </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {properties?.map(property => <Card key={property.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <div onClick={() => navigate(`/properties/listings/${property.id}`)}>
@@ -121,13 +144,22 @@ export const MVPPropertiesPage: React.FC = () => {
                           <span className="text-sm text-muted-foreground">
                             {property.property_type || 'Property'}
                           </span>
-                          <Button variant="ghost" size="sm" onClick={e => {
-                      e.stopPropagation();
-                      navigate(`/properties/listings/${property.id}`);
-                    }}>
-                            <Eye className="h-4 w-4 mr-1" />
-                            View Details
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" onClick={e => {
+                              e.stopPropagation();
+                              navigate(`/properties/listings/${property.id}`);
+                            }}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              View Details
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={e => {
+                              e.stopPropagation();
+                              handleDeleteImported(property.id);
+                            }}>
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </div>
@@ -135,6 +167,44 @@ export const MVPPropertiesPage: React.FC = () => {
               </div>}
           </CardContent>
         </Card>
+
+        {manualProperties && manualProperties.length > 0 && (
+          <div className="space-y-4 mt-6">
+            <h2 className="text-xl font-semibold">Manual Properties</h2>
+            {isLoadingManual ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-48 bg-muted rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {manualProperties?.map((p: any) => (
+                  <Card key={p.id} className="hover:shadow-lg transition-shadow">
+                    {p.image_url && (
+                      <div className="aspect-video overflow-hidden rounded-t-lg">
+                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold text-foreground truncate pr-2">{p.name}</h3>
+                        <Badge variant={p.status === 'active' ? 'default' : 'secondary'} className="text-xs">
+                          {p.status}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground truncate">{p.address}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <AddPropertyDialog open={isAddOpen} onOpenChange={setIsAddOpen} onCreated={handlePropertyAdded} />
       </div>
     </>;
-};
+  };
