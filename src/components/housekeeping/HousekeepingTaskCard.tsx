@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { cva } from "class-variance-authority";
@@ -7,72 +6,48 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Check, User, Info, Edit } from "lucide-react";
 import { TaskCardProps } from "@/types/housekeepingTypes";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 const statusStyles = cva("", {
   variants: {
     status: {
       pending: "bg-yellow-100 text-yellow-800 border-yellow-300",
       "in-progress": "bg-blue-100 text-blue-800 border-blue-300",
-      done: "bg-green-100 text-green-800 border-green-300",
-    },
+      done: "bg-green-100 text-green-800 border-green-300"
+    }
   },
   defaultVariants: {
-    status: "pending",
-  },
+    status: "pending"
+  }
 });
-
 const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
   task,
   onStatusChange,
   onAssignTask,
-  cleaningDefinitions,
+  cleaningDefinitions
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAssigningStaff, setIsAssigningStaff] = useState(false);
   const [staffName, setStaffName] = useState(task.assigned_to || "");
-  
+
   // Format due date
-  const formattedDate = 
-    task.due_date ? 
-    format(new Date(task.due_date), 'MMM d, yyyy') : 
-    'No date set';
-  
+  const formattedDate = task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : 'No date set';
   const handleStatusUpdate = async (newStatus: string) => {
     if (newStatus !== task.status) {
       await onStatusChange(task.id, newStatus);
     }
   };
-  
   const handleAssignTask = async () => {
     if (staffName && staffName !== task.assigned_to) {
       await onAssignTask(task.id, staffName);
       setIsAssigningStaff(false);
     }
   };
-
-  return (
-    <Card className={`transition-all shadow hover:shadow-md mb-3 border-l-4 ${statusStyles({ status: task.status as any })}`}>
-      <CardHeader className="py-3 px-4">
+  return <Card className={`transition-all shadow hover:shadow-md mb-3 border-l-4 ${statusStyles({
+    status: task.status as any
+  })}`}>
+      <CardHeader className="py-3 px-4 bg-zinc-50">
         <div className="flex justify-between items-start">
           <TooltipProvider>
             <Tooltip>
@@ -81,9 +56,7 @@ const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
                   <Badge variant="outline" className="font-medium">
                     {task.task_type}
                   </Badge>
-                  {cleaningDefinitions[task.task_type] && (
-                    <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
+                  {cleaningDefinitions[task.task_type] && <Info className="h-3.5 w-3.5 text-muted-foreground" />}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -94,17 +67,13 @@ const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
             </Tooltip>
           </TooltipProvider>
           
-          <Badge variant={
-            task.status === 'pending' ? 'outline' : 
-            task.status === 'in-progress' ? 'secondary' : 
-            'success'
-          }>
+          <Badge variant={task.status === 'pending' ? 'outline' : task.status === 'in-progress' ? 'secondary' : 'success'}>
             {task.status}
           </Badge>
         </div>
       </CardHeader>
       
-      <CardContent className="py-2 px-4">
+      <CardContent className="py-2 px-4 bg-indigo-50">
         <div className="space-y-2">
           <div>
             <div className="font-semibold">{task.listing_id}</div>
@@ -125,21 +94,15 @@ const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
                   <Button variant="outline" size="sm" className="h-7">Actions</Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  {task.status !== 'done' && (
-                    <DropdownMenuItem onClick={() => handleStatusUpdate('done')}>
+                  {task.status !== 'done' && <DropdownMenuItem onClick={() => handleStatusUpdate('done')}>
                       Mark as Done
-                    </DropdownMenuItem>
-                  )}
-                  {task.status === 'pending' && (
-                    <DropdownMenuItem onClick={() => handleStatusUpdate('in-progress')}>
+                    </DropdownMenuItem>}
+                  {task.status === 'pending' && <DropdownMenuItem onClick={() => handleStatusUpdate('in-progress')}>
                       Start Task
-                    </DropdownMenuItem>
-                  )}
-                  {task.status === 'in-progress' && (
-                    <DropdownMenuItem onClick={() => handleStatusUpdate('pending')}>
+                    </DropdownMenuItem>}
+                  {task.status === 'in-progress' && <DropdownMenuItem onClick={() => handleStatusUpdate('pending')}>
                       Move to Pending
-                    </DropdownMenuItem>
-                  )}
+                    </DropdownMenuItem>}
                   <DropdownMenuItem onClick={() => setIsAssigningStaff(true)}>
                     Assign Staff
                   </DropdownMenuItem>
@@ -166,13 +129,7 @@ const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
           <div className="mt-4 space-y-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Staff Name</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border rounded-md" 
-                value={staffName} 
-                onChange={(e) => setStaffName(e.target.value)}
-                placeholder="Enter staff name"
-              />
+              <input type="text" className="w-full p-2 border rounded-md" value={staffName} onChange={e => setStaffName(e.target.value)} placeholder="Enter staff name" />
             </div>
             
             <div className="flex justify-end gap-2">
@@ -222,31 +179,25 @@ const HousekeepingTaskCard: React.FC<TaskCardProps> = ({
               </div>
             </div>
             
-            {cleaningDefinitions[task.task_type] && (
-              <div>
+            {cleaningDefinitions[task.task_type] && <div>
                 <h4 className="text-sm font-medium text-muted-foreground mb-1">Description</h4>
                 <p className="text-sm p-3 bg-muted rounded-md">{cleaningDefinitions[task.task_type]}</p>
-              </div>
-            )}
+              </div>}
             
             <div className="flex justify-end gap-2 pt-2">
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Close
               </Button>
-              {task.status !== 'done' && (
-                <Button onClick={() => {
-                  handleStatusUpdate('done');
-                  setIsDialogOpen(false);
-                }}>
+              {task.status !== 'done' && <Button onClick={() => {
+              handleStatusUpdate('done');
+              setIsDialogOpen(false);
+            }}>
                   Mark as Done
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
-  );
+    </Card>;
 };
-
 export default HousekeepingTaskCard;
