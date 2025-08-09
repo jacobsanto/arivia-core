@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Plug, RefreshCw, CheckCircle, AlertTriangle, Settings, Globe } from 'lucide-react';
-import { GuestyIntegration } from './GuestyIntegration';
-import { PaymentIntegrations } from './PaymentIntegrations';
 import { CommunicationIntegrations } from './CommunicationIntegrations';
 import { MarketplaceIntegrations } from './MarketplaceIntegrations';
 
@@ -47,24 +45,34 @@ export const ThirdPartyIntegrationsDashboard = () => {
 
   const connectedIntegrations = [
     {
-      name: "Guesty",
+      name: "Tokeet PMS",
       category: "Property Management",
-      status: "connected",
-      lastSync: "2 minutes ago",
-      health: 98,
+      status: "available",
+      lastSync: "Never",
+      health: 0,
       dataTypes: ["Bookings", "Listings", "Guests"],
-      apiCalls: "8.2K",
-      description: "Primary property management system"
+      apiCalls: "0",
+      description: "Connect your Tokeet PMS to sync operations"
     },
     {
-      name: "Stripe",
-      category: "Payments",
+      name: "Advance CM PMS",
+      category: "Property Management",
+      status: "available",
+      lastSync: "Never",
+      health: 0,
+      dataTypes: ["Bookings", "Listings", "Guests"],
+      apiCalls: "0",
+      description: "Connect Advance CM PMS for unified ops"
+    },
+    {
+      name: "Google Workspace",
+      category: "Productivity",
       status: "connected",
-      lastSync: "5 minutes ago",
-      health: 100,
-      dataTypes: ["Payments", "Refunds", "Fees"],
-      apiCalls: "1.8K",
-      description: "Payment processing platform"
+      lastSync: "10 minutes ago",
+      health: 98,
+      dataTypes: ["Gmail", "Drive", "Sheets", "Docs", "Calendar"],
+      apiCalls: "340",
+      description: "Team email, files and calendars"
     },
     {
       name: "WhatsApp Business",
@@ -75,37 +83,6 @@ export const ThirdPartyIntegrationsDashboard = () => {
       dataTypes: ["Messages", "Media", "Status"],
       apiCalls: "2.1K",
       description: "Guest communication channel"
-    },
-    {
-      name: "Google Calendar",
-      category: "Calendar",
-      status: "connected",
-      lastSync: "10 minutes ago",
-      health: 92,
-      dataTypes: ["Events", "Availability"],
-      apiCalls: "340",
-      description: "Calendar synchronization"
-    },
-    {
-      name: "QuickBooks",
-      category: "Accounting",
-      status: "error",
-      lastSync: "2 hours ago",
-      health: 45,
-      dataTypes: ["Invoices", "Expenses"],
-      apiCalls: "120",
-      description: "Financial data management",
-      error: "API key expired"
-    },
-    {
-      name: "Mailchimp",
-      category: "Marketing",
-      status: "disconnected",
-      lastSync: "Never",
-      health: 0,
-      dataTypes: ["Campaigns", "Contacts"],
-      apiCalls: "0",
-      description: "Email marketing automation"
     }
   ];
 
@@ -254,7 +231,7 @@ export const ThirdPartyIntegrationsDashboard = () => {
                 <span>75%</span>
               </div>
               <Progress value={75} className="w-full" />
-              <p className="text-xs text-muted-foreground">Currently syncing: Guesty bookings data</p>
+              <p className="text-xs text-muted-foreground">Currently syncing integrations...</p>
             </div>
           </CardContent>
         </Card>
@@ -288,9 +265,6 @@ export const ThirdPartyIntegrationsDashboard = () => {
                     <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
                       <span>Last sync: {integration.lastSync}</span>
                       <span>API calls: {integration.apiCalls}</span>
-                      {integration.error && (
-                        <span className="text-destructive">Error: {integration.error}</span>
-                      )}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
                       {integration.dataTypes.map((type, idx) => (
@@ -358,21 +332,11 @@ export const ThirdPartyIntegrationsDashboard = () => {
       </div>
 
       {/* Integration Details Tabs */}
-      <Tabs defaultValue="guesty" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="guesty">Guesty</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
+      <Tabs defaultValue="marketplace" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="communication">Communication</TabsTrigger>
           <TabsTrigger value="marketplace">Marketplace</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="guesty" className="space-y-4">
-          <GuestyIntegration />
-        </TabsContent>
-
-        <TabsContent value="payments" className="space-y-4">
-          <PaymentIntegrations />
-        </TabsContent>
 
         <TabsContent value="communication" className="space-y-4">
           <CommunicationIntegrations />

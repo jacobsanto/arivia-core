@@ -62,12 +62,12 @@ const SystemMonitoring = () => {
       uptime: 99.8
     },
     {
-      id: 'guesty',
-      name: 'Guesty Integration',
-      status: 'warning',
-      responseTime: 180,
+      id: 'pms',
+      name: 'PMS Integrations',
+      status: 'healthy',
+      responseTime: 120,
       lastCheck: new Date(),
-      uptime: 98.5
+      uptime: 99.2
     },
     {
       id: 'storage',

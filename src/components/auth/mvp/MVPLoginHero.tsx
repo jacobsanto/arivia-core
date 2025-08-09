@@ -13,7 +13,7 @@ export const MVPLoginHero: React.FC = () => {
     {
       icon: Calendar,
       title: "Booking Integration",
-      description: "Seamless integration with Guesty and other booking platforms"
+      description: "Seamless integration with PMS (Tokeet, Advance CM) and Google Workspace"
     },
     {
       icon: Users,
@@ -23,7 +23,7 @@ export const MVPLoginHero: React.FC = () => {
     {
       icon: BarChart3,
       title: "Analytics & Reports",
-      description: "Track performance and generate detailed financial reports"
+      description: "Track performance and generate detailed operational reports"
     },
     {
       icon: CheckCircle,

@@ -91,9 +91,6 @@ const IntegrationsMarketplace: React.FC = () => {
         </div>
       )}
 
-      <div className="text-xs text-muted-foreground">
-        Note: Guesty appears here as a connector only; the legacy Guesty integration (UI and backend sync) has been removed.
-      </div>
     </div>
   );
 };
