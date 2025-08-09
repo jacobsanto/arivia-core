@@ -23,7 +23,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
-  const { user: authUser, setUser } = useUserState();
+  const { setUser } = useUserState();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
@@ -54,10 +54,15 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
     try {
       // Call the updateProfile function from UserContext
       // This will handle both the database update and local state updates
-      const success = await updateProfile(user.id, {
-        role: selectedRole,
-        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
-      });
+      const success = await updateUserProfile(
+        user.id,
+        {
+          role: selectedRole,
+          secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+        },
+        setUser,
+        currentUser
+      );
       
       if (success) {
         setIsEditing(false);

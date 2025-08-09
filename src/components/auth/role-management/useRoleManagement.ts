@@ -9,7 +9,7 @@ import { useUserData } from "./hooks/useUserData";
 export const useRoleManagement = () => {
   // Get user data and loading state
   const { users, isLoading } = useUserData();
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useAuth();
   
   // Get role actions functionality
   const roleActions = useRoleActions();
