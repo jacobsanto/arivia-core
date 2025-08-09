@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +18,7 @@ export const MVPTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("housekeeping");
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [showTodayOnly, setShowTodayOnly] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: housekeepingTasks } = useQuery({
@@ -41,6 +42,28 @@ export const MVPTaskManagement: React.FC = () => {
       return data || [];
     }
   });
+
+  // Realtime: invalidate queries on DB changes
+  useEffect(() => {
+    const hk = supabase
+      .channel('rt-housekeeping')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'housekeeping_tasks' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      })
+      .subscribe();
+
+    const mt = supabase
+      .channel('rt-maintenance')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'maintenance_tasks' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(hk);
+      supabase.removeChannel(mt);
+    };
+  }, [queryClient]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -196,13 +219,29 @@ export const MVPTaskManagement: React.FC = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Housekeeping Tasks</CardTitle>
-                <Button 
-                  onClick={() => setIsCreateTaskOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Housekeeping Task
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant={showTodayOnly ? 'outline' : 'default'}
+                    onClick={() => setShowTodayOnly(false)}
+                    size="sm"
+                  >
+                    All
+                  </Button>
+                  <Button 
+                    variant={showTodayOnly ? 'default' : 'outline'}
+                    onClick={() => setShowTodayOnly(true)}
+                    size="sm"
+                  >
+                    Due Today
+                  </Button>
+                  <Button 
+                    onClick={() => setIsCreateTaskOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Housekeeping Task
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -212,7 +251,18 @@ export const MVPTaskManagement: React.FC = () => {
                       <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
                     </div>
                   ) : (
-                    housekeepingTasks?.map((task) => (
+                    (showTodayOnly
+                      ? (housekeepingTasks || []).filter((t) => {
+                          const d = new Date(t.due_date);
+                          const today = new Date();
+                          return (
+                            d.getFullYear() === today.getFullYear() &&
+                            d.getMonth() === today.getMonth() &&
+                            d.getDate() === today.getDate()
+                          );
+                        })
+                      : (housekeepingTasks || [])
+                    ).map((task) => (
                       <TaskCard key={task.id} task={task} type="housekeeping" />
                     ))
                   )}
