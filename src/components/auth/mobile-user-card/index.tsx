@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { User, UserRole } from "@/types/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
+import { useUserState } from "@/contexts/hooks";
+import { updateUserProfile } from "@/contexts/auth/operations/profileOperations";
 import UserCardHeader from "./UserCardHeader";
 import UserCardContent from "./UserCardContent";
 import UserCardFooter from "./UserCardFooter";
@@ -26,7 +27,7 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
   isExpanded,
   toggleExpand
 }) => {
-  const { updateProfile } = useUser();
+  const { setUser } = useUserState();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
@@ -55,11 +56,15 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
     
     setIsSaving(true);
     try {
-      // Call the updateProfile function from UserContext
-      const success = await updateProfile(user.id, {
-        role: selectedRole,
-        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
-      });
+      const success = await updateUserProfile(
+        user.id,
+        {
+          role: selectedRole,
+          secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+        },
+        setUser,
+        currentUser
+      );
       
       if (success) {
         setIsEditing(false);

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, Trash2 } from "lucide-react";
@@ -15,7 +15,7 @@ import { useRoleManagement } from "./role-management/useRoleManagement";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("roles");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
