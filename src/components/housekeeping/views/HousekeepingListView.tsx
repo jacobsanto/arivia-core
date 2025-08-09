@@ -10,6 +10,7 @@ interface Props {
   tasks: Task[];
   onStatusChange: (taskId: string, newStatus: string) => Promise<void>;
   onAssignTask: (taskId: string, staffMember: string) => Promise<void>;
+  cleaningDefinitions?: Record<string, string>;
 }
 
 const statusBadge = (status: Task["status"]) => {

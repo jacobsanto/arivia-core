@@ -171,32 +171,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [devMode?.isDevMode, devMode?.settings.bypassAuth, devMode?.currentMockUser]);
+  }, []);  // Remove devMode dependencies that cause infinite loops
 
-  // Update user when mock user changes in dev mode
+  // Update user when mock user changes in dev mode - debounced to prevent loops
   useEffect(() => {
     if (devMode?.isDevMode && devMode.settings.bypassAuth && devMode.currentMockUser) {
-      console.log('🔧 Mock user changed, updating auth state:', devMode.currentMockUser.name, devMode.currentMockUser.role);
-      setUser(devMode.currentMockUser);
+      const timeoutId = setTimeout(() => {
+        console.log('🔧 Mock user changed, updating auth state:', devMode.currentMockUser.name, devMode.currentMockUser.role);
+        setUser(devMode.currentMockUser);
+        
+        // Create a mock session for the new user
+        setSession({
+          access_token: 'dev-token',
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: 'dev-refresh',
+          user: {
+            id: devMode.currentMockUser.id,
+            email: devMode.currentMockUser.email,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            aud: 'authenticated',
+            app_metadata: {},
+            user_metadata: { name: devMode.currentMockUser.name, role: devMode.currentMockUser.role }
+          }
+        } as Session);
+      }, 100); // Small delay to prevent rapid updates
       
-      // Create a mock session for the new user
-      setSession({
-        access_token: 'dev-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        refresh_token: 'dev-refresh',
-        user: {
-          id: devMode.currentMockUser.id,
-          email: devMode.currentMockUser.email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          aud: 'authenticated',
-          app_metadata: {},
-          user_metadata: { name: devMode.currentMockUser.name, role: devMode.currentMockUser.role }
-        }
-      } as Session);
+      return () => clearTimeout(timeoutId);
     }
-  }, [devMode?.currentMockUser, devMode?.isDevMode, devMode?.settings.bypassAuth]);
+  }, [devMode?.currentMockUser?.id]); // Only depend on user ID, not the entire object
 
   // Listen for mock user changes from other components
   useEffect(() => {

@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useDevMode } from '@/contexts/DevModeContext';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { 
   FEATURE_PERMISSIONS, 
   OFFLINE_CAPABILITIES, 
@@ -122,10 +122,10 @@ export const usePermissions = (): PermissionsReturn => {
     });
 
     return permissions;
-  }, [effectiveUser?.id, effectiveUser?.role, effectiveUser?.customPermissions, updateTrigger]);
+  }, [effectiveUser?.id, effectiveUser?.role, updateTrigger]); // Simplified dependencies
   
   // Check if user has access to a specific feature
-  const canAccess = (featureKey: string): boolean => {
+  const canAccess = useCallback((featureKey: string): boolean => {
     if (!effectiveUser) {
       logger.debug('usePermissions', 'No effective user, denying access', { featureKey });
       return false;
@@ -163,7 +163,7 @@ export const usePermissions = (): PermissionsReturn => {
     
     // Check if user's role is in the allowed roles, including secondary roles
     return hasPermissionWithAllRoles(effectiveUser.role, effectiveUser.secondaryRoles, permission.allowedRoles);
-  };
+  }, [effectiveUser?.id, effectiveUser?.role, permissionCalculations]); // Close useCallback
 
   // Get all permission keys with their status for the current user
   const getAllPermissionsList = () => {
