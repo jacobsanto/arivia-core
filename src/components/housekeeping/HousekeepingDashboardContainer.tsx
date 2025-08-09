@@ -28,6 +28,8 @@ const HousekeepingDashboardContainer = () => {
 
   const isMobile = useIsMobile();
 
+  const [viewMode, setViewMode] = React.useState<'kanban' | 'card' | 'list' | 'agenda'>('kanban');
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -36,7 +38,7 @@ const HousekeepingDashboardContainer = () => {
     );
   }
 
-  const [viewMode, setViewMode] = React.useState<'kanban' | 'card' | 'list' | 'agenda'>('kanban');
+  // viewMode state moved above loading guard
 
   return (
     <div className="container mx-auto px-4 pb-20">
