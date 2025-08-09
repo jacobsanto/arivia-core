@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
+import { logger } from '@/services/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -88,11 +89,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           });
 
         if (insertError) {
-          console.error('Error creating profile:', insertError);
+          logger.error('Error creating profile', insertError);
         }
       }
     } catch (error) {
-      console.error('Error ensuring user profile:', error);
+      logger.error('Error ensuring user profile', error);
     }
   };
 
@@ -117,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Sign in error:', error);
+      logger.error('Sign in error', error);
       return { error };
     } finally {
       setLoading(false);
@@ -151,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Sign up error:', error);
+      logger.error('Sign up error', error);
       return { error };
     } finally {
       setLoading(false);
@@ -176,7 +177,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Sign out error:', error);
+      logger.error('Sign out error', error);
       return { error };
     } finally {
       setLoading(false);
@@ -204,7 +205,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { error: null };
     } catch (error) {
-      console.error('Password reset error:', error);
+      logger.error('Password reset error', error);
       return { error };
     }
   };
