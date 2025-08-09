@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { Search, Plus, UserPlus, Mail, Phone, Settings, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -174,12 +175,7 @@ export const MVPUserManagement: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <Avatar className="h-12 w-12">
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback>
-                              {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
+                          <AvatarDisplay user={user as any} size="sm" />
                           
                           <div>
                             <h3 className="font-semibold text-foreground">{user.name}</h3>

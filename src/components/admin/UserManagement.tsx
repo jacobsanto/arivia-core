@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/dialog';
 import { CreateUserDialog } from './users/CreateUserDialog';
 import { Separator } from '@/components/ui/separator';
+import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
 interface User {
   id: string;
@@ -285,15 +286,7 @@ const UserManagement = () => {
             {filteredUsers.map((user) => (
               <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    {user.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full" />
-                    ) : (
-                      <span className="text-sm font-medium">
-                        {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                      </span>
-                    )}
-                  </div>
+                  <AvatarDisplay user={user as any} size="sm" />
                   
                   <div>
                     <div className="flex items-center gap-2">

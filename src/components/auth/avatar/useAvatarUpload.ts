@@ -61,29 +61,30 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         throw new Error(`Upload failed: ${error.message}`);
       }
 
-      const { data: publicUrlData } = supabase.storage
+      // Generate a signed URL for immediate display
+      const { data: signed } = await supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .createSignedUrl(filePath, 60 * 60); // 1 hour
       
-      if (publicUrlData?.publicUrl) {
-        // Update avatar in database and local state
-        await updateAvatar(userId, publicUrlData.publicUrl, users, setUsers, setUser, currentUser);
-        
-        // Update local state
-        setAvatarUrl(publicUrlData.publicUrl);
-        previousAvatarRef.current = publicUrlData.publicUrl;
+      const signedUrl = signed?.signedUrl || "/placeholder.svg";
+      
+      // Store the file path in DB (not the signed URL which expires)
+      await updateAvatar(userId, filePath, users, setUsers, setUser, currentUser);
+      
+      // Update local state
+      setAvatarUrl(signedUrl);
+      previousAvatarRef.current = signedUrl;
 
-        // Notify parent component
-        if (onAvatarChange) {
-          onAvatarChange(publicUrlData.publicUrl);
-        }
-
-        // Refresh profile to update all components
-        await refreshUserProfile();
-        
-        toast.success("Avatar updated successfully");
-        setIsDialogOpen(false);
+      // Notify parent component
+      if (onAvatarChange) {
+        onAvatarChange(signedUrl);
       }
+
+      // Refresh profile to update all components
+      await refreshUserProfile();
+      
+      toast.success("Avatar updated successfully");
+      setIsDialogOpen(false);
     } catch (error) {
       logger.error("Error uploading avatar", error);
       toast.error("Failed to upload avatar", {

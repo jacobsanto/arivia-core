@@ -1,6 +1,7 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 interface AvatarDisplayProps {
   user: User | {
     name: string;
@@ -23,17 +24,40 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   size = "md",
   className = ""
 }) => {
-  const avatarUrl = useMemo(() => {
-    if (!user) return "/placeholder.svg";
-    const url = user.avatar || "/placeholder.svg";
-    if (!url || url.includes('placeholder.svg')) return url;
-    return `${url}?t=${Date.now()}`; // Force cache invalidation
-  }, [user?.avatar]);
+  const [signedUrl, setSignedUrl] = useState<string>("/placeholder.svg");
+
   const displayName = user?.name || "User";
+  const rawAvatar = user?.avatar || "/placeholder.svg";
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadUrl = async () => {
+      if (!rawAvatar || rawAvatar.includes('placeholder.svg')) {
+        if (isMounted) setSignedUrl("/placeholder.svg");
+        return;
+      }
+      // If it's an http(s) URL, use as-is
+      if (/^https?:\/\//i.test(rawAvatar)) {
+        if (isMounted) setSignedUrl(`${rawAvatar}`);
+        return;
+      }
+      // Otherwise treat as storage path in the avatars bucket
+      try {
+        const { data } = await supabase.storage
+          .from('avatars')
+          .createSignedUrl(rawAvatar, 60 * 60);
+        if (isMounted) setSignedUrl(data?.signedUrl || "/placeholder.svg");
+      } catch {
+        if (isMounted) setSignedUrl("/placeholder.svg");
+      }
+    };
+    loadUrl();
+    return () => { isMounted = false; };
+  }, [rawAvatar]);
   
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
-      <AvatarImage src={avatarUrl} alt={displayName} />
+      <AvatarImage src={signedUrl} alt={displayName} />
       <AvatarFallback className="bg-muted">
         {getInitials(displayName)}
       </AvatarFallback>
