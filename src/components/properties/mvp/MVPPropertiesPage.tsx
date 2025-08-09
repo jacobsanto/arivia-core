@@ -17,6 +17,7 @@ export const MVPPropertiesPage: React.FC = () => {
   const {
     data: properties,
     isLoading,
+    isFetching: isFetchingImported,
     refetch
   } = useQuery({
     queryKey: ['properties-list', searchTerm, filterStatus],
@@ -37,6 +38,7 @@ export const MVPPropertiesPage: React.FC = () => {
   const {
     data: manualProperties,
     isLoading: isLoadingManual,
+    isFetching: isFetchingManual,
     refetch: refetchManual
   } = useQuery({
     queryKey: ['manual-properties'],
@@ -46,6 +48,7 @@ export const MVPPropertiesPage: React.FC = () => {
     }
   });
 
+  const isRefreshing = isFetchingImported || isFetchingManual;
   const handleRefresh = () => { refetch(); refetchManual(); };
   const handlePropertyAdded = () => { refetchManual(); };
   const handleDeleteImported = async (id: string) => {
@@ -70,9 +73,9 @@ export const MVPPropertiesPage: React.FC = () => {
               <Plus className="h-4 w-4 mr-2" />
               Add Property
             </Button>
-            <Button onClick={handleRefresh} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+            <Button onClick={handleRefresh} variant="outline" disabled={isRefreshing}>
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
         </div>
