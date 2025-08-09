@@ -6,7 +6,9 @@ import HousekeepingHeader from "./HousekeepingHeader";
 import HousekeepingFilters from "./HousekeepingFilters";
 import HousekeepingKanban from "./HousekeepingKanban";
 import HousekeepingMobileView from "./HousekeepingMobileView";
-
+import HousekeepingTaskCard from "./HousekeepingTaskCard";
+import HousekeepingListView from "./views/HousekeepingListView";
+import HousekeepingAgendaView from "./views/HousekeepingAgendaView";
 const HousekeepingDashboardContainer = () => {
   const {
     tasks,
@@ -34,9 +36,11 @@ const HousekeepingDashboardContainer = () => {
     );
   }
 
+  const [viewMode, setViewMode] = React.useState<'kanban' | 'card' | 'list' | 'agenda'>('kanban');
+
   return (
     <div className="container mx-auto px-4 pb-20">
-      <HousekeepingHeader />
+      <HousekeepingHeader viewMode={viewMode} onViewModeChange={setViewMode} />
       
       <div className="mb-6">
         <HousekeepingFilters 
@@ -61,12 +65,39 @@ const HousekeepingDashboardContainer = () => {
       ) : (
         <>
           {!isMobile && (
-            <HousekeepingKanban 
-              tasks={tasks}
-              onStatusChange={handleTaskStatusUpdate}
-              onAssignTask={handleAssignTask}
-              cleaningDefinitions={cleaningDefinitions}
-            />
+            <>
+              {viewMode === 'kanban' && (
+                <HousekeepingKanban 
+                  tasks={tasks}
+                  onStatusChange={handleTaskStatusUpdate}
+                  onAssignTask={handleAssignTask}
+                  cleaningDefinitions={cleaningDefinitions}
+                />
+              )}
+              {viewMode === 'card' && (
+                <div className="grid grid-cols-1 gap-3">
+                  {tasks.map((task) => (
+                    <HousekeepingTaskCard
+                      key={task.id}
+                      task={task}
+                      onStatusChange={handleTaskStatusUpdate}
+                      onAssignTask={handleAssignTask}
+                      cleaningDefinitions={cleaningDefinitions}
+                    />
+                  ))}
+                </div>
+              )}
+              {viewMode === 'list' && (
+                <HousekeepingListView
+                  tasks={tasks}
+                  onStatusChange={handleTaskStatusUpdate}
+                  onAssignTask={handleAssignTask}
+                />
+              )}
+              {viewMode === 'agenda' && (
+                <HousekeepingAgendaView tasks={tasks} />
+              )}
+            </>
           )}
           
           {isMobile && (
