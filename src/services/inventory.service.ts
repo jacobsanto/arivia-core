@@ -77,5 +77,65 @@ export const inventoryService = {
     }
     
     return data;
+  },
+
+  // Inventory usage APIs
+  async recordInventoryUsage(usage: {
+    date?: string;
+    item: string;
+    category: string;
+    quantity: number;
+    property: string;
+    reported_by: string;
+  }): Promise<boolean> {
+    const { error } = await supabase
+      .from('inventory_usage')
+      .insert({
+        date: usage.date,
+        item: usage.item,
+        category: usage.category,
+        quantity: usage.quantity,
+        property: usage.property,
+        reported_by: usage.reported_by,
+      });
+    
+    if (error) {
+      console.error('Error recording inventory usage:', error);
+      return false;
+    }
+    return true;
+  },
+
+  async getInventoryUsageHistory(): Promise<Array<{
+    id: string;
+    date: string;
+    item: string;
+    category: string;
+    quantity: number;
+    property: string;
+    reported_by: string;
+  }>> {
+    const { data, error } = await supabase
+      .from('inventory_usage')
+      .select('*')
+      .order('date', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching inventory usage history:', error);
+      return [];
+    }
+    return (data || []) as any;
+  },
+
+  async getUniqueLocations(): Promise<string[]> {
+    // Until locations are modeled in DB, return a static list used in UI
+    return [
+      'main',
+      'villa_caldera',
+      'villa_oceana',
+      'villa_azure',
+      'villa_sunset',
+      'villa_paradiso'
+    ];
   }
 };

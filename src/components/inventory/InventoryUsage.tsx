@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,8 +14,20 @@ const InventoryUsage = () => {
   const [period, setPeriod] = useState("week");
   const [property, setProperty] = useState("all");
 
-  // TODO: Replace with real inventory usage data from service
-  const filteredData: any[] = [];
+  const { data: usage = [] } = useQuery({
+    queryKey: ["inventory-usage"],
+    queryFn: () => inventoryService.getInventoryUsageHistory(),
+    refetchInterval: 30000,
+  });
+
+  const filteredData = usage.filter((u: any) => {
+    const matchesProperty = property === "all" || u.property === property;
+    const days = period === "week" ? 7 : period === "month" ? 30 : 90;
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+    const dateOk = u.date ? new Date(u.date) >= threshold : true;
+    return matchesProperty && dateOk;
+  });
 
   return (
     <div className="space-y-6">
@@ -90,7 +103,7 @@ const InventoryUsage = () => {
                           <Badge variant="outline">{item.category}</Badge>
                         </TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell>{item.reportedBy}</TableCell>
+                        <TableCell>{item.reported_by}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
