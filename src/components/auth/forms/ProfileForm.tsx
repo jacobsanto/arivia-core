@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { User, UserRole } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
-import { useUser } from "@/contexts/UserContext";
+import { useUserState } from "@/contexts/hooks";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -29,7 +29,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onCancel, 
   onSubmit 
 }) => {
-  const { refreshProfile } = useUser();
+  const { refreshUserProfile } = useUserState();
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -49,7 +49,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   };
 
   const handleAvatarChange = async () => {
-    await refreshProfile();
+    await refreshUserProfile();
   };
 
   return (

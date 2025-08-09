@@ -1,9 +1,11 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserState } from "@/contexts/hooks";
 import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { updateAvatar } from "@/contexts/auth/userAuthOperations";
 
 interface UseAvatarUploadProps {
   user: User;
@@ -11,7 +13,8 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { updateUserAvatar, refreshProfile } = useUser();
+  const { user: currentUser } = useAuth();
+  const { users, setUsers, setUser, refreshUserProfile } = useUserState();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -61,8 +64,8 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         .getPublicUrl(filePath);
       
       if (publicUrlData?.publicUrl) {
-        // Update avatar in database
-        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        // Update avatar in database and local state
+        await updateAvatar(userId, publicUrlData.publicUrl, users, setUsers, setUser, currentUser);
         
         // Update local state
         setAvatarUrl(publicUrlData.publicUrl);
@@ -74,7 +77,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         }
 
         // Refresh profile to update all components
-        await refreshProfile();
+        await refreshUserProfile();
         
         toast.success("Avatar updated successfully");
         setIsDialogOpen(false);

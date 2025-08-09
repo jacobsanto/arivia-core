@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserState } from "@/contexts/hooks";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
@@ -10,12 +11,14 @@ import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { updateUserProfile } from "@/contexts/auth/userAuthOperations";
 
 const UserInformation = () => {
-  const { user, updateProfile, refreshProfile } = useUser();
+  const { user: currentUser } = useAuth();
+  const { setUser, refreshUserProfile } = useUserState();
   const [isEditing, setIsEditing] = useState(false);
   const isMobile = useIsMobile();
-  const isSuperAdmin = user?.role === "superadmin";
+  const isSuperAdmin = currentUser?.role === "superadmin";
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -26,20 +29,25 @@ const UserInformation = () => {
   };
 
   const handleFormSubmit = async (data: { name: string; email: string; phone?: string }) => {
-    if (!user) return;
+    if (!currentUser) return;
     
     try {
-      const result = await updateProfile(user.id, {
-        name: data.name,
-        email: data.email,
-        phone: data.phone
-      });
+      const result = await updateUserProfile(
+        currentUser.id,
+        {
+          name: data.name,
+          email: data.email,
+          phone: data.phone
+        },
+        setUser,
+        currentUser
+      );
       
       if (result) {
         toast.success("Profile updated successfully");
         setIsEditing(false);
         // Ensure profile is refreshed after successful update
-        await refreshProfile();
+        await refreshUserProfile();
       }
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -49,7 +57,7 @@ const UserInformation = () => {
     }
   };
 
-  if (!user) {
+  if (!currentUser) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -75,14 +83,14 @@ const UserInformation = () => {
       <CardContent>
         {isEditing ? (
           <ProfileForm 
-            user={user} 
+            user={currentUser} 
             onCancel={handleFormCancel}
             onSubmit={handleFormSubmit}
           />
         ) : (
           <div className="space-y-6">
-            <UserProfileInfo user={user} />
-            <AccountDetails user={user} />
+            <UserProfileInfo user={currentUser} />
+            <AccountDetails user={currentUser} />
             {isSuperAdmin && <SuperAdminInfo />}
           </div>
         )}
