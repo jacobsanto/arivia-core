@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
 import { DirectMessage } from "@/components/chat/ChatSidebar";
@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (userId: string) => "online" | "offline" | "away") {
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
-  const { user } = useUser();
+  const { user } = useAuth();
 
   useEffect(() => {
     async function loadUsers() {

@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DamageReport } from "@/services/damage/damage.service";
 import { format } from "date-fns";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DamageReportListProps {
   reports: DamageReport[];
@@ -31,7 +31,7 @@ const getStatusColor = (status: string) => {
 };
 
 const DamageReportList: React.FC<DamageReportListProps> = ({ reports, onOpenReport }) => {
-  const { user } = useUser();
+  const { user } = useAuth();
 
   if (reports.length === 0) {
     return (

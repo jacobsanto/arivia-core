@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plus, BedDouble, BarChart } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 interface TaskHeaderProps {
   onCreateTask: () => void;
   onViewReports?: () => void;
@@ -10,9 +10,7 @@ const TaskHeader = ({
   onCreateTask,
   onViewReports
 }: TaskHeaderProps) => {
-  const {
-    user
-  } = useUser();
+  const { user } = useAuth();
   const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
   return <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>

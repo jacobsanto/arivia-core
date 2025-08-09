@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DamageReport, damageService } from '@/services/damage/damage.service';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { toast as useToast } from '@/hooks/use-toast';
@@ -14,7 +14,7 @@ export const useDamageReports = () => {
   const [isCreateReportOpen, setIsCreateReportOpen] = useState(false);
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const loadReports = useCallback(async () => {
     const loadedReports = await damageService.getDamageReports();

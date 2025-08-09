@@ -2,7 +2,7 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
@@ -17,7 +17,7 @@ import UseTemplateDialog from "@/components/admin/checklists/dialogs/UseTemplate
 import TemplateFormDialog from "@/components/admin/checklists/dialogs/TemplateFormDialog";
 
 const AdminChecklists = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
 

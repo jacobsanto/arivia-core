@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import UserInformation from "@/components/auth/UserInformation";
 import SecurityActivity from "@/components/auth/SecurityActivity";
@@ -15,7 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { UserProfileErrorBoundary } from "@/components/error-boundaries/UserProfileErrorBoundary";
 
 const UserProfile = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { canAccess } = usePermissions();
   const [activeTab, setActiveTab] = useState("info");
   const tabsRef = useRef(null);

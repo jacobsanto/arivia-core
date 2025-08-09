@@ -1,5 +1,5 @@
 
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { useEffect, useState, useMemo } from 'react';
 import { 
@@ -25,7 +25,7 @@ interface PermissionsReturn {
 }
 
 export const usePermissions = (): PermissionsReturn => {
-  const { user, hasFeatureAccess } = useUser();
+  const { user } = useAuth();
   
   // Get dev mode context safely
   const devMode = (() => {
