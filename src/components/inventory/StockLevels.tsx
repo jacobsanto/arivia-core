@@ -14,11 +14,8 @@ const StockLevels = () => {
   const [search, setSearch] = useState("");
   const isMobile = useIsMobile();
 
-  const filteredItems = inventoryData.filter(item => {
-    const matchesSearch = item.name?.toLowerCase().includes(search.toLowerCase());
-    const matchesLocation = location === "all" || item.location === location;
-    return matchesSearch && matchesLocation;
-  });
+  // TODO: Replace with real inventory stock data from service
+  const filteredItems: any[] = [];
 
   const getStockStatusBadge = (current: number, min: number) => {
     if (current === 0) {

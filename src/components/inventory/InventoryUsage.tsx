@@ -13,11 +13,8 @@ const InventoryUsage = () => {
   const [period, setPeriod] = useState("week");
   const [property, setProperty] = useState("all");
 
-  // Filter data based on selected period and property
-  const filteredData = inventoryUsageData.filter(item => {
-    const matchesProperty = property === "all" || item.property === property;
-    return matchesProperty;
-  });
+  // TODO: Replace with real inventory usage data from service
+  const filteredData: any[] = [];
 
   return (
     <div className="space-y-6">
