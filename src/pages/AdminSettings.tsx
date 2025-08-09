@@ -11,6 +11,7 @@ import { useSwipe } from "@/hooks/use-swipe";
 import SystemSettingsTabs from "@/components/settings/SystemSettingsTabs";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import OfflineIndicator from "@/components/layout/OfflineIndicator";
 
 const AdminSettings = () => {
   const { user } = useAuth();
@@ -91,6 +92,10 @@ const AdminSettings = () => {
               />
             </div>
           </div>
+        </div>
+        
+        <div className="max-w-full">
+          <OfflineIndicator />
         </div>
         
         <div className="max-w-full">

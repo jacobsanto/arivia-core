@@ -15,6 +15,9 @@ export function useSystemSettings<T extends Record<string, any>>(
   const mountedRef = useRef(true);
   const maxRetries = 3;
   const savedDataRef = useRef<T | null>(null);
+  // Deduplicate toasts so users don't see repeated messages
+  const offlineCacheToastShownRef = useRef(false);
+  const defaultFallbackToastShownRef = useRef(false);
 
   // Watch online status
   useEffect(() => {
@@ -93,22 +96,34 @@ export function useSystemSettings<T extends Record<string, any>>(
           try {
             const parsed = JSON.parse(cachedData) as T;
             setSettings({ ...defaultValues, ...parsed });
-            toast.info("Using cached settings", {
-              description: "Could not connect to server"
-            });
+            if (!offlineCacheToastShownRef.current) {
+              toast.info("Using cached settings", {
+                description: "Could not connect to server",
+                id: `settings-cache-${category}`
+              });
+              offlineCacheToastShownRef.current = true;
+            }
           } catch (e) {
             // If we can't parse the cached data, use defaults
             setSettings(defaultValues);
-            toast.error("Failed to load settings", {
-              description: "Using default values"
-            });
+            if (!defaultFallbackToastShownRef.current) {
+              toast.error("Failed to load settings", {
+                description: "Using default values",
+                id: `settings-defaults-${category}`
+              });
+              defaultFallbackToastShownRef.current = true;
+            }
           }
         } else {
           // Set default values in case of error with no cache
           setSettings(defaultValues);
-          toast.error("Failed to load settings", {
-            description: "Using default values"
-          });
+          if (!defaultFallbackToastShownRef.current) {
+            toast.error("Failed to load settings", {
+              description: "Using default values",
+              id: `settings-defaults-${category}`
+            });
+            defaultFallbackToastShownRef.current = true;
+          }
         }
         
         // If we're online but failed to load, retry
