@@ -76,21 +76,21 @@ export const damageService = {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: signed } = await supabase.storage
         .from('damage-reports')
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 60 * 60); // 1 hour
 
       const { error: dbError } = await supabase
         .from('damage_report_media')
         .insert({
           report_id: reportId,
           media_type: type,
-          url: publicUrl,
+          url: fileName, // store storage path, not public URL
           uploaded_by: (await supabase.auth.getUser()).data.user?.id
         });
 
       if (dbError) throw dbError;
-      return publicUrl;
+      return signed?.signedUrl || null;
     } catch (error: any) {
       console.error('Error uploading media:', error);
       toast.error('Failed to upload media');

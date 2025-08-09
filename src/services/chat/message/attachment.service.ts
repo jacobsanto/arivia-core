@@ -45,16 +45,17 @@ export async function uploadAttachments(
         continue;
       }
       
-      // Get public URL for the uploaded file
-      const { data: { publicUrl } } = supabase
+      // Generate a signed URL for immediate access (not stored)
+      const { data: signed } = await supabase
         .storage
         .from('chat-attachments')
-        .getPublicUrl(filePath);
-        
+        .createSignedUrl(filePath, 60 * 60); // 1 hour
+      
+      // Store the storage path (not public URL)
       uploadedAttachments.push({
         id: attachment.id,
         type: attachment.type,
-        url: publicUrl,
+        url: filePath, // store path; renderer will sign when displaying
         name: attachment.name
       });
     } catch (error) {
