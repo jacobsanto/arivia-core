@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Camera, Monitor, Zap, BarChart3, FileText } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -47,7 +47,7 @@ const Sidebar = () => {
         
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         
-        <SidebarLink to="/virtual-tours" icon={<Camera size={20} />} label="3D Virtual Tours" />
+        
         
         {canAccess("viewReports") && <>
             <SidebarLink to="/analytics" icon={<BarChart3 size={20} />} label="Analytics" />
