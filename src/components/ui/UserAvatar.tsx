@@ -1,6 +1,7 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUsers } from "@/hooks/useUsers";
+import { useSignedUrl } from "@/hooks/useSignedUrl";
 
 interface UserAvatarProps {
   userId: string | null;
@@ -36,11 +37,12 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   }
 
   const initials = user.name.split(' ').map(n => n[0]).join('').toUpperCase();
+  const { url: signedUrl } = useSignedUrl(user.avatar, { fallbackBucket: 'User Avatars', expiresInSeconds: 60 * 60 });
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
       <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={user.avatar} alt={user.name} />
+        <AvatarImage src={signedUrl} alt={user.name} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       {showName && (

@@ -49,7 +49,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
       const filePath = `${userId}/${fileName}`;
       
       const { data, error } = await supabase.storage
-        .from('avatars')
+        .from('User Avatars')
         .upload(filePath, file, {
           upsert: true,
           contentType: file.type,
@@ -61,9 +61,8 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         throw new Error(`Upload failed: ${error.message}`);
       }
 
-      // Generate a signed URL for immediate display
       const { data: signed } = await supabase.storage
-        .from('avatars')
+        .from('User Avatars')
         .createSignedUrl(filePath, 60 * 60); // 1 hour
       
       const signedUrl = signed?.signedUrl || "/placeholder.svg";

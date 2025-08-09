@@ -4,7 +4,7 @@ import { Message } from "@/hooks/useChatTypes";
 import EmojiPicker from "../emoji/EmojiPicker";
 import MessageReactions from "../emoji/MessageReactions";
 import { Paperclip } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { resolveSignedUrl } from "@/utils/storageUrls";
 
 interface MessageContentProps {
   message: Message;
@@ -47,12 +47,10 @@ const MessageContent: React.FC<MessageContentProps> = ({
           results[att.id] = url;
           continue;
         }
-        // Otherwise treat as storage path in chat-attachments bucket
+        // Otherwise treat as storage path; sign via utility with fallback bucket
         try {
-          const { data } = await supabase.storage
-            .from('chat-attachments')
-            .createSignedUrl(url, 60 * 60);
-          if (data?.signedUrl) results[att.id] = data.signedUrl;
+          const signed = await resolveSignedUrl(url, 'chat-attachments', 60 * 60);
+          if (signed) results[att.id] = signed;
         } catch {
           // ignore
         }
