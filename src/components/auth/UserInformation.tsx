@@ -12,6 +12,8 @@ import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { updateUserProfile } from "@/contexts/auth/userAuthOperations";
+import { logger } from "@/services/logger";
+
 
 const UserInformation = () => {
   const { user: currentUser } = useAuth();
@@ -50,7 +52,7 @@ const UserInformation = () => {
         await refreshUserProfile();
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile", error);
       toast.error("Failed to update profile", {
         description: "Please try again later"
       });

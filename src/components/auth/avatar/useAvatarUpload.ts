@@ -6,6 +6,8 @@ import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { updateAvatar } from "@/contexts/auth/userAuthOperations";
+import { logger } from "@/services/logger";
+
 
 interface UseAvatarUploadProps {
   user: User;
@@ -55,7 +57,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         });
       
       if (error) {
-        console.error("Storage error:", error);
+        logger.error("Storage error", error);
         throw new Error(`Upload failed: ${error.message}`);
       }
 
@@ -83,7 +85,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         setIsDialogOpen(false);
       }
     } catch (error) {
-      console.error("Error uploading avatar:", error);
+      logger.error("Error uploading avatar", error);
       toast.error("Failed to upload avatar", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

@@ -8,6 +8,8 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "
 import { User, UserRole } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { useUserState } from "@/contexts/hooks";
+import { logger } from "@/services/logger";
+
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -44,7 +46,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     try {
       await onSubmit(data);
     } catch (error) {
-      console.error("Error in form submission:", error);
+      logger.error("Error in form submission", error);
     }
   };
 
