@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText } from "lucide-react";
@@ -84,7 +84,7 @@ interface SidebarLinkProps {
   label: string;
   disabled?: boolean;
 }
-const SidebarLink = ({
+const SidebarLink = memo(({
   to,
   icon,
   label,
@@ -102,5 +102,5 @@ const SidebarLink = ({
       <span className="mr-3">{icon}</span>
       <span className="font-normal text-base">{label}</span>
     </NavLink>;
-};
-export default Sidebar;
+});
+export default memo(Sidebar);
