@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Mail, Lock, Eye, EyeOff, AlertCircle, User } from "lucide-react";
 
 interface MVPLoginFormProps {
@@ -17,7 +17,7 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useUser();
+  const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +25,7 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
     setError("");
 
     try {
-      await login(email, password);
+      await signIn(email, password);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {
@@ -39,7 +39,7 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
     setError("");
     
     try {
-      await login(devEmail, devPassword);
+      await signIn(devEmail, devPassword);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Quick login failed.");
     } finally {

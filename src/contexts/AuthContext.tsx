@@ -13,6 +13,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   error: string | null;
   refreshAuthState: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string, role?: UserRole) => Promise<boolean>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -231,13 +234,73 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [devMode?.isDevMode, devMode?.settings.bypassAuth]);
 
+  // Auth operations
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      await refreshAuthState();
+      toastService.success("Signed in", { description: "Welcome back" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed";
+      toastService.error("Login failed", { description: message });
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (
+    email: string,
+    password: string,
+    fullName: string,
+    role: UserRole = "property_manager"
+  ): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: { name: fullName, role }
+        }
+      });
+      if (error) throw error;
+      toastService.success("Account created", { description: "Please check your email to complete signup" });
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Signup failed";
+      toastService.error("Signup failed", { description: message });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await supabase.auth.signOut({ scope: 'local' });
+      toastService.success("Signed out");
+    } catch (err) {
+      toastService.error("Failed to sign out", { description: err instanceof Error ? err.message : "" });
+    } finally {
+      window.location.href = "/login";
+    }
+  };
+
   const value = {
     user,
     session,
     isLoading,
     isAuthenticated: !!user && !!session,
     error,
-    refreshAuthState
+    refreshAuthState,
+    signIn,
+    signUp,
+    signOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
