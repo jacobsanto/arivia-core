@@ -5,7 +5,7 @@ import SwipeableTabs from "@/components/ui/swipeable-tabs";
 import GeneralSettings from "./sections/GeneralSettings";
 import UserManagementSettings from "./sections/UserManagementSettings";
 import NotificationSettings from "./sections/NotificationSettings";
-import IntegrationSettings from "./sections/integration/IntegrationSettings";
+// import IntegrationSettings from "./sections/integration/IntegrationSettings";
 import AppearanceSettings from "./sections/AppearanceSettings";
 import EmailSettings from "./sections/EmailSettings";
 import BackupSettings from "./sections/BackupSettings";
@@ -101,7 +101,7 @@ const SystemSettingsTabs = () => {
         title="Integration Settings"
         status={{ status: "not-configured" }}
       >
-        <IntegrationSettings />
+        <div className="p-4 text-center text-muted-foreground">Integrations coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent

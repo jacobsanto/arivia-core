@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Users, Building } from 'lucide-react';
 import { useRuleBasedCleaningSystem, CleaningRule } from '@/hooks/useRuleBasedCleaningSystem';
-import { guestyService } from '@/services/guesty/guesty.service';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PropertyAssignmentManagerProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ export const PropertyAssignmentManager: React.FC<PropertyAssignmentManagerProps>
   React.useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const listings = await guestyService.getGuestyListings();
+        const { data: listings } = await supabase.from('properties').select('*');
         setProperties(listings || []);
       } catch (error) {
         console.error('Error fetching properties:', error);

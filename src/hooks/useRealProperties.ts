@@ -1,14 +1,28 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { centralizedPropertyService, PropertyOption } from '@/services/property/centralizedProperty.service';
+import { supabase } from '@/integrations/supabase/client';
+
+export interface PropertyOption {
+  id: string;
+  name: string;
+  address?: string;
+  status?: string;
+}
 
 export const useRealProperties = () => {
   const { data: properties, isLoading, error, refetch } = useQuery<PropertyOption[], Error>({
     queryKey: ['real-properties'],
-    queryFn: centralizedPropertyService.getAllProperties,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime)
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
   });
 
   return {
@@ -22,7 +36,18 @@ export const useRealProperties = () => {
 export const useRealProperty = (propertyId: string | null) => {
   const { data: property, isLoading, error } = useQuery<PropertyOption | null, Error>({
     queryKey: ['real-property', propertyId],
-    queryFn: () => propertyId ? centralizedPropertyService.getPropertyById(propertyId) : Promise.resolve(null),
+    queryFn: async () => {
+      if (!propertyId) return null;
+      
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
     enabled: !!propertyId,
     staleTime: 5 * 60 * 1000,
   });
