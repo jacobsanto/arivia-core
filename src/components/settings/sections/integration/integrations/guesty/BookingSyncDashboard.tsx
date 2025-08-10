@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CalendarIcon, BarChart3 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useBookingSync } from '@/hooks/useBookingSync';
-import { BookingSyncButton } from '@/components/properties/listing-details/BookingSyncButton';
+// removed Button
 import { Progress } from '@/components/ui/progress';
 
 const BookingSyncDashboard = () => {
@@ -77,14 +77,9 @@ const BookingSyncDashboard = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-medium mb-1">Synchronize Bookings</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Sync all reservations from Guesty for active properties
+              <p className="text-sm text-muted-foreground">
+                Manual Guesty sync is disabled.
               </p>
-              <BookingSyncButton 
-                variant="default"
-                onSyncComplete={() => refetch()}
-              />
             </div>
             
             {latestSync && (
