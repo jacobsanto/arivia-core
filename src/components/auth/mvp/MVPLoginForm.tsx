@@ -33,15 +33,22 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
     }
   };
 
-  // Quick login handler for development accounts
-  const handleQuickLogin = async (devEmail: string, devPassword: string) => {
+  // Development mode check - only show dev accounts in development
+  const isDevelopment = process.env.NODE_ENV === 'development' || window.location.hostname === 'localhost';
+  
+  const handleQuickLogin = async (email: string) => {
+    if (!isDevelopment) return;
+    
     setIsLoading(true);
     setError("");
+    setEmail(email);
     
+    // In development, just populate the email field - user still needs to enter password
     try {
-      await signIn(devEmail, devPassword);
+      // No auto-login, just help with email
+      setEmail(email);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Quick login failed.");
+      setError(err instanceof Error ? err.message : "Development helper failed.");
     } finally {
       setIsLoading(false);
     }
@@ -61,44 +68,47 @@ export const MVPLoginForm: React.FC<MVPLoginFormProps> = ({ onSwitchToSignUp }) 
         </Alert>
       )}
 
-      {/* Development Quick Login */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <User className="h-4 w-4 text-orange-600" />
-            <span className="text-sm font-medium text-orange-800">Development Quick Login</span>
-          </div>
-          <div className="grid grid-cols-1 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("superadmin@ariviavillas.com", "superadmin123")}
-              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
-            >
-              Super Admin
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("admin@ariviavillas.com", "admin123")}
-              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
-            >
-              Administrator
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={isLoading}
-              onClick={() => handleQuickLogin("manager@ariviavillas.com", "manager123")}
-              className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
-            >
-              Property Manager
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Development Email Helper - Only in Development */}
+      {isDevelopment && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <User className="h-4 w-4 text-orange-600" />
+              <span className="text-sm font-medium text-orange-800">Development Email Helper</span>
+            </div>
+            <p className="text-xs text-orange-700 mb-2">Click to populate email field (you still need to enter the password)</p>
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin("superadmin@ariviavillas.com")}
+                className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+              >
+                Super Admin Email
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin("admin@ariviavillas.com")}
+                className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+              >
+                Administrator Email
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isLoading}
+                onClick={() => handleQuickLogin("manager@ariviavillas.com")}
+                className="text-xs border-orange-300 text-orange-800 hover:bg-orange-100"
+              >
+                Property Manager Email
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
