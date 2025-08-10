@@ -531,13 +531,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "configuration_assignments_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "guesty_listings"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "configuration_assignments_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
@@ -745,134 +738,6 @@ export type Database = {
         }
         Relationships: []
       }
-      guesty_api_usage: {
-        Row: {
-          endpoint: string
-          id: string
-          rate_limit: number
-          remaining: number
-          reset: string
-          timestamp: string
-        }
-        Insert: {
-          endpoint: string
-          id?: string
-          rate_limit: number
-          remaining: number
-          reset: string
-          timestamp?: string
-        }
-        Update: {
-          endpoint?: string
-          id?: string
-          rate_limit?: number
-          remaining?: number
-          reset?: string
-          timestamp?: string
-        }
-        Relationships: []
-      }
-      guesty_bookings: {
-        Row: {
-          check_in: string
-          check_out: string
-          created_at: string | null
-          guest_email: string | null
-          guest_name: string | null
-          id: string
-          last_synced: string | null
-          listing_id: string
-          raw_data: Json | null
-          status: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          check_in: string
-          check_out: string
-          created_at?: string | null
-          guest_email?: string | null
-          guest_name?: string | null
-          id: string
-          last_synced?: string | null
-          listing_id: string
-          raw_data?: Json | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          check_in?: string
-          check_out?: string
-          created_at?: string | null
-          guest_email?: string | null
-          guest_name?: string | null
-          id?: string
-          last_synced?: string | null
-          listing_id?: string
-          raw_data?: Json | null
-          status?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guesty_bookings_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "guesty_listings"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      guesty_listings: {
-        Row: {
-          address: Json | null
-          created_at: string | null
-          first_synced_at: string | null
-          highres_url: string | null
-          id: string
-          is_deleted: boolean | null
-          last_synced: string | null
-          property_type: string | null
-          raw_data: Json | null
-          status: string | null
-          sync_status: string | null
-          thumbnail_url: string | null
-          title: string
-          updated_at: string | null
-        }
-        Insert: {
-          address?: Json | null
-          created_at?: string | null
-          first_synced_at?: string | null
-          highres_url?: string | null
-          id: string
-          is_deleted?: boolean | null
-          last_synced?: string | null
-          property_type?: string | null
-          raw_data?: Json | null
-          status?: string | null
-          sync_status?: string | null
-          thumbnail_url?: string | null
-          title: string
-          updated_at?: string | null
-        }
-        Update: {
-          address?: Json | null
-          created_at?: string | null
-          first_synced_at?: string | null
-          highres_url?: string | null
-          id?: string
-          is_deleted?: boolean | null
-          last_synced?: string | null
-          property_type?: string | null
-          raw_data?: Json | null
-          status?: string | null
-          sync_status?: string | null
-          thumbnail_url?: string | null
-          title?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       housekeeping_tasks: {
         Row: {
           additional_actions: Json | null
@@ -926,20 +791,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "housekeeping_tasks_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "guesty_bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "housekeeping_tasks_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "guesty_listings"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "housekeeping_tasks_source_rule_id_fkey"
             columns: ["source_rule_id"]
@@ -1536,15 +1387,7 @@ export type Database = {
           listing_id?: string
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "property_cleaning_configs_listing_id_fkey"
-            columns: ["listing_id"]
-            isOneToOne: false
-            referencedRelation: "guesty_listings"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       query_performance_log: {
         Row: {
@@ -2594,18 +2437,6 @@ export type Database = {
       evaluate_rule_conditions: {
         Args: { rule_uuid: string; booking_data: Json }
         Returns: boolean
-      }
-      generate_cleaning_tasks_from_config: {
-        Args: {
-          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
-        }
-        Returns: undefined
-      }
-      generate_housekeeping_tasks_for_booking: {
-        Args: {
-          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
-        }
-        Returns: undefined
       }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
