@@ -53,7 +53,14 @@ const defaultConnectionStatus: ConnectionStatus = {
 const DevModeContext = createContext<DevModeContextType | undefined>(undefined);
 
 export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isDevMode, setIsDevMode] = useState<boolean>(false);
+  const [isDevMode, setIsDevMode] = useState<boolean>(() => {
+    try {
+      const storedDevMode = localStorage.getItem('arivia-dev-mode');
+      return (import.meta.env.DEV) || storedDevMode === 'true';
+    } catch {
+      return import.meta.env.DEV;
+    }
+  });
   const [settings, setSettings] = useState<DevModeSettings>(defaultSettings);
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>(defaultConnectionStatus);
   const [currentMockUser, setCurrentMockUser] = useState<User | null>(null);
@@ -90,6 +97,18 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
       } catch (error) {
         logger.warn('DevModeProvider', 'Failed to parse mock user', { error });
       }
+    } else if (import.meta.env.DEV) {
+      // Seed a default admin mock user in development
+      const defaultAdmin = {
+        id: 'dev-admin',
+        email: 'iakovos@ariviagroup.com',
+        name: 'Iakovos (Dev Admin)',
+        role: 'administrator' as UserRole,
+        avatar: '/placeholder.svg'
+      } as User;
+      setCurrentMockUser(defaultAdmin);
+      localStorage.setItem('arivia-mock-user', JSON.stringify(defaultAdmin));
+      logger.debug('DevModeProvider', 'Seeded default admin mock user for development');
     }
   }, []);
 

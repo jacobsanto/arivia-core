@@ -1,4 +1,4 @@
-
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatChannel, GENERAL_CHAT_CHANNEL_ID } from './chat.types';

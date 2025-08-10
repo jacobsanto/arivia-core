@@ -39,6 +39,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // Development build: always allow access
+  if (import.meta.env.DEV) {
+    return <>{children}</>;
+  }
+
   // If dev mode is active and bypassing auth, allow access
   if (devMode?.isDevMode && devMode.settings.bypassAuth) {
     return <>{children}</>;

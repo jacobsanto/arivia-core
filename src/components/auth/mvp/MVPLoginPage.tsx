@@ -78,23 +78,21 @@ export const MVPLoginPage: React.FC = () => {
                 </div>}
             </div>
 
-            {/* Auth Tabs */}
+            {/* Dev Notice Card */}
             <Card className="shadow-lg">
               <CardContent className="p-6">
-                <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "signin" | "signup")}>
-                  <TabsList className="grid w-full grid-cols-2 mb-6">
-                    <TabsTrigger value="signin">Sign In</TabsTrigger>
-                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="signin">
-                    <MVPLoginForm onSwitchToSignUp={() => setActiveTab("signup")} />
-                  </TabsContent>
-                  
-                  <TabsContent value="signup">
-                    <MVPSignUpForm onSwitchToSignIn={() => setActiveTab("signin")} />
-                  </TabsContent>
-                </Tabs>
+                <div className="space-y-4 text-center">
+                  <h2 className="text-xl font-semibold">Development Mode</h2>
+                  <p className="text-muted-foreground">
+                    Authentication is disabled in development. Using admin: iakovos@ariviagroup.com
+                  </p>
+                  <button
+                    onClick={() => navigate("/dashboard")}
+                    className="w-full bg-primary text-primary-foreground py-2 px-4 rounded transition-colors"
+                  >
+                    Enter app
+                  </button>
+                </div>
               </CardContent>
             </Card>
 
