@@ -68,6 +68,12 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (storedDevMode === 'true') {
       logger.debug('DevModeProvider', 'Enabling dev mode from localStorage');
       setIsDevMode(true);
+    } else if (storedDevMode === null) {
+      const isLocalhost = typeof window !== 'undefined' && ['localhost','127.0.0.1','::1'].includes(window.location.hostname);
+      if (isLocalhost) {
+        logger.debug('DevModeProvider', 'Defaulting dev mode ON for localhost');
+        setIsDevMode(true);
+      }
     }
     
     if (storedSettings) {

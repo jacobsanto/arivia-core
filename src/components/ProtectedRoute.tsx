@@ -24,6 +24,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   })();
 
+  // Temporary debug log in dev mode
+  if (devMode?.isDevMode) {
+    // eslint-disable-next-line no-console
+    console.debug('ProtectedRoute', {
+      path: location.pathname,
+      isLoading,
+      isAuthenticated,
+      bypassAuth: devMode.settings.bypassAuth,
+    });
+  }
+
   // Dev bypass first for smooth DX
   if (devMode?.isDevMode && devMode.settings.bypassAuth) {
     return <>{children}</>;

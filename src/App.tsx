@@ -10,6 +10,7 @@ import { AccessibilityProvider } from "@/components/accessibility/AccessibilityP
 import { SkipLink } from "@/components/accessibility/SkipLink";
 import { DevModePanel } from "@/components/dev/DevModePanel";
 import { DevModeStatusBar } from "@/components/dev/DevModeStatusBar";
+import { Loader2 } from "lucide-react";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
@@ -62,8 +63,15 @@ function App() {
               <AuthProvider>
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
-                <DevModeStatusBar />
-                  <Suspense fallback={null}>
+                  <DevModeStatusBar />
+                  <Suspense fallback={
+                    <div className="flex h-screen w-full items-center justify-center bg-background">
+                      <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                        <p className="text-muted-foreground">Loading app...</p>
+                      </div>
+                    </div>
+                  }>
                     <Routes>
                       {/* Login route - doesn't use the unified layout */}
                       <Route path="/login" element={<Login />} />
