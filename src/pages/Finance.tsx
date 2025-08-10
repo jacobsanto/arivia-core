@@ -4,6 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RotateCcw, Loader2, Wrench, Package, BarChart3, FileWarning } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +18,9 @@ const Finance: React.FC = () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["finance-damage-mtd"] }),
         queryClient.invalidateQueries({ queryKey: ["finance-inventory-mtd"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-properties"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-damage-by-property"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-inventory-by-property"] }),
         queryClient.invalidateQueries({ queryKey: ["inventory-items"] }),
         queryClient.invalidateQueries({ queryKey: ["inventory-usage"] }),
       ]);
@@ -62,6 +66,54 @@ const Finance: React.FC = () => {
   });
 
   const formatCurrency = (n: number) => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string>('all');
+
+  const { data: properties } = useQuery({
+    queryKey: ["finance-properties"],
+    queryFn: async () => {
+      const { data } = await supabase.from('properties').select('id, name').order('name');
+      return data || [];
+    },
+    staleTime: 60_000,
+  });
+
+  const selectedPropertyName = selectedPropertyId === 'all'
+    ? null
+    : (properties || []).find((p: any) => p.id === selectedPropertyId)?.name || null;
+
+  const { data: damageByProperty } = useQuery({
+    queryKey: ["finance-damage-by-property", selectedPropertyId, startOfMonthISO],
+    queryFn: async () => {
+      if (selectedPropertyId === 'all') return { total: 0 };
+      let q = supabase
+        .from('damage_reports')
+        .select('final_cost, estimated_cost, property_id, created_at')
+        .gte('created_at', startOfMonthISO)
+        .eq('property_id', selectedPropertyId);
+      const { data } = await q;
+      const total = (data || []).reduce((sum: number, r: any) => sum + ((r.final_cost ?? r.estimated_cost) || 0), 0);
+      return { total };
+    },
+    enabled: selectedPropertyId !== 'all',
+    refetchInterval: 30000,
+  });
+
+  const { data: invByProperty } = useQuery({
+    queryKey: ["finance-inventory-by-property", selectedPropertyName, startOfMonthISO],
+    queryFn: async () => {
+      if (!selectedPropertyName) return { totalQty: 0 };
+      const { data } = await supabase
+        .from('inventory_usage')
+        .select('quantity, property, date')
+        .gte('date', startOfMonthISO)
+        .eq('property', selectedPropertyName);
+      const totalQty = (data || []).reduce((sum: number, r: any) => sum + (r.quantity || 0), 0);
+      return { totalQty };
+    },
+    enabled: !!selectedPropertyName,
+    refetchInterval: 30000,
+  });
 
 
   return (
@@ -117,33 +169,43 @@ const Finance: React.FC = () => {
           </Card>
         </section>
 
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5" /> Damage Repair Costs</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Track repair estimates, approved costs, and pending invoices from damage reports.</p>
-            </CardContent>
-          </Card>
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Per‑Villa Breakdown</h2>
+            <div className="w-60">
+              <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select villa" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Villas</SelectItem>
+                  {(properties || []).map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Package className="h-5 w-5" /> Inventory Spend & Stock Valuation</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Monitor purchase spend, unit costs, and current stock valuation.</p>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="hover:shadow-md">
+              <CardContent className="p-6">
+                <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                  <Wrench className="h-4 w-4" /> Damage Cost (MTD)
+                </div>
+                <div className="text-2xl font-bold">{selectedPropertyId === 'all' ? '—' : formatCurrency(damageByProperty?.total || 0)}</div>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Damage vs Inventory Cost Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Compare monthly damage costs vs. inventory usage costs.</p>
-            </CardContent>
-          </Card>
+            <Card className="hover:shadow-md">
+              <CardContent className="p-6">
+                <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
+                  <Package className="h-4 w-4" /> Inventory Usage (MTD qty)
+                </div>
+                <div className="text-2xl font-bold">{selectedPropertyId === 'all' ? '—' : (invByProperty?.totalQty || 0)}</div>
+              </CardContent>
+            </Card>
+          </div>
         </section>
       </main>
     </>
