@@ -2503,6 +2503,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      require_authenticated: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       reset_demo_data: {
         Args: Record<PropertyKey, never>
         Returns: undefined
