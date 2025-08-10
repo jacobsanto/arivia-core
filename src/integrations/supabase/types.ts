@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: string
+          integration_id: string
+          request_body: Json | null
+          request_headers: Json | null
+          request_method: string
+          request_url: string
+          response_body: Json | null
+          response_headers: Json | null
+          response_status: number | null
+          response_time_ms: number | null
+          retry_count: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_id: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_method: string
+          request_url: string
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          retry_count?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          integration_id?: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          request_method?: string
+          request_url?: string
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          retry_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_logs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "external_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -617,6 +673,78 @@ export type Database = {
         }
         Relationships: []
       }
+      external_integrations: {
+        Row: {
+          api_endpoint: string | null
+          auth_method: string | null
+          category: string
+          config: Json | null
+          created_at: string | null
+          created_by: string | null
+          credentials: Json | null
+          health_score: number | null
+          id: string
+          integration_type: string
+          is_active: boolean | null
+          last_error: string | null
+          last_sync: string | null
+          name: string
+          provider: string
+          rate_limit_per_hour: number | null
+          retry_attempts: number | null
+          status: string
+          timeout_seconds: number | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          api_endpoint?: string | null
+          auth_method?: string | null
+          category?: string
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          credentials?: Json | null
+          health_score?: number | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_error?: string | null
+          last_sync?: string | null
+          name: string
+          provider: string
+          rate_limit_per_hour?: number | null
+          retry_attempts?: number | null
+          status?: string
+          timeout_seconds?: number | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          api_endpoint?: string | null
+          auth_method?: string | null
+          category?: string
+          config?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          credentials?: Json | null
+          health_score?: number | null
+          id?: string
+          integration_type?: string
+          is_active?: boolean | null
+          last_error?: string | null
+          last_sync?: string | null
+          name?: string
+          provider?: string
+          rate_limit_per_hour?: number | null
+          retry_attempts?: number | null
+          status?: string
+          timeout_seconds?: number | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       guesty_api_usage: {
         Row: {
           endpoint: string
@@ -820,6 +948,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      integration_configs: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          documentation_url: string | null
+          estimated_setup_time: string | null
+          id: string
+          is_active: boolean | null
+          logo_url: string | null
+          name: string
+          optional_fields: Json | null
+          provider: string
+          rate_limits: Json | null
+          required_fields: Json | null
+          setup_difficulty: string | null
+          supported_operations: Json | null
+          updated_at: string | null
+          webhook_events: Json | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          documentation_url?: string | null
+          estimated_setup_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          optional_fields?: Json | null
+          provider: string
+          rate_limits?: Json | null
+          required_fields?: Json | null
+          setup_difficulty?: string | null
+          supported_operations?: Json | null
+          updated_at?: string | null
+          webhook_events?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          documentation_url?: string | null
+          estimated_setup_time?: string | null
+          id?: string
+          is_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          optional_fields?: Json | null
+          provider?: string
+          rate_limits?: Json | null
+          required_fields?: Json | null
+          setup_difficulty?: string | null
+          supported_operations?: Json | null
+          updated_at?: string | null
+          webhook_events?: Json | null
+        }
+        Relationships: []
       }
       integration_health: {
         Row: {
@@ -2281,6 +2469,65 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string | null
+          endpoint_url: string
+          events: Json | null
+          headers: Json | null
+          id: string
+          integration_id: string
+          last_received: string | null
+          last_successful: string | null
+          secret_key: string | null
+          status: string | null
+          total_errors: number | null
+          total_received: number | null
+          updated_at: string | null
+          verification_token: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          endpoint_url: string
+          events?: Json | null
+          headers?: Json | null
+          id?: string
+          integration_id: string
+          last_received?: string | null
+          last_successful?: string | null
+          secret_key?: string | null
+          status?: string | null
+          total_errors?: number | null
+          total_received?: number | null
+          updated_at?: string | null
+          verification_token?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          endpoint_url?: string
+          events?: Json | null
+          headers?: Json | null
+          id?: string
+          integration_id?: string
+          last_received?: string | null
+          last_successful?: string | null
+          secret_key?: string | null
+          status?: string | null
+          total_errors?: number | null
+          total_received?: number | null
+          updated_at?: string | null
+          verification_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "external_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_health: {
         Row: {

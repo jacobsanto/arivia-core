@@ -21,7 +21,7 @@ const Sidebar = () => {
   const isSuperAdmin = user.role === "superadmin";
   const isAdmin = user.role === "administrator";
   const isPropertyManager = user.role === "property_manager";
-  return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
+  return <div className="hidden md:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       
       
       <div className="flex items-center justify-center mb-6 my-[10px] py-0">

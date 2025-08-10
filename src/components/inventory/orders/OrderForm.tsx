@@ -15,7 +15,7 @@ import OrderItemList from "./OrderItemList";
 import OrderFormVendor from "./OrderFormVendor";
 import { OrderStatus } from "./OrderUtils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getItemsByVendor } from "@/data/inventoryData";
+import { orderService } from "@/services/order.service";
 
 const formSchema = z.object({
   vendorId: z.string().min(1, { message: "Please select a vendor." }),
@@ -72,7 +72,7 @@ const OrderForm = () => {
     return () => subscription.unsubscribe();
   }, [methods]);
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
     if (!canCreateOrders) {
       toast({
         title: "Permission Denied",
@@ -85,14 +85,14 @@ const OrderForm = () => {
     setIsSubmitting(true);
     
     // Get item names for display
-    const itemsWithNames = values.items.map(item => {
-      const vendorItems = getItemsByVendor(values.vendorId);
+    const itemsWithNames = await Promise.all(values.items.map(async item => {
+      const vendorItems = await orderService.getItemsByVendor(values.vendorId);
       const foundItem = vendorItems.find(vendorItem => vendorItem.id === item.itemId);
       return {
         ...item,
         name: foundItem?.name || "Unknown Item"
       };
-    });
+    }));
     
     // Create order object
     const orderData = {
@@ -164,7 +164,7 @@ const OrderForm = () => {
         <FormProvider {...methods}>
           <Form {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto">
-              <OrderFormVendor />
+              <OrderFormVendor selectedVendorId={selectedVendorId} setSelectedVendorId={setSelectedVendorId} />
               
               <div className="space-y-4">
                 <OrderItemList 

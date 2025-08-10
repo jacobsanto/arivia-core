@@ -1,11 +1,12 @@
 
 import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { inventoryUsageData } from "@/data/inventoryData";
+import { inventoryService } from "@/services/inventory.service";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
@@ -13,10 +14,19 @@ const InventoryUsage = () => {
   const [period, setPeriod] = useState("week");
   const [property, setProperty] = useState("all");
 
-  // Filter data based on selected period and property
-  const filteredData = inventoryUsageData.filter(item => {
-    const matchesProperty = property === "all" || item.property === property;
-    return matchesProperty;
+  const { data: usage = [] } = useQuery({
+    queryKey: ["inventory-usage"],
+    queryFn: () => inventoryService.getInventoryUsageHistory(),
+    refetchInterval: 30000,
+  });
+
+  const filteredData = usage.filter((u: any) => {
+    const matchesProperty = property === "all" || u.property === property;
+    const days = period === "week" ? 7 : period === "month" ? 30 : 90;
+    const threshold = new Date();
+    threshold.setDate(threshold.getDate() - days);
+    const dateOk = u.date ? new Date(u.date) >= threshold : true;
+    return matchesProperty && dateOk;
   });
 
   return (
@@ -93,7 +103,7 @@ const InventoryUsage = () => {
                           <Badge variant="outline">{item.category}</Badge>
                         </TableCell>
                         <TableCell className="text-right">{item.quantity}</TableCell>
-                        <TableCell>{item.reportedBy}</TableCell>
+                        <TableCell>{item.reported_by}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
