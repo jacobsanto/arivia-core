@@ -6,7 +6,7 @@ import { useTaskActions } from "./housekeeping/useTaskActions";
 import { toast } from '@/hooks/use-toast';
 
 export const useHousekeepingTasks = () => {
-  const { tasks, loading, taskTypeOptions, staffOptions } = useTaskFetching();
+  const { tasks, loading, taskTypeOptions, staffOptions, refetch } = useTaskFetching();
   const { cleaningDefinitions } = useCleaningDefinitions();
   const {
     filteredTasks,
@@ -32,6 +32,7 @@ export const useHousekeepingTasks = () => {
     staffOptions,
     cleaningDefinitions,
     handleTaskStatusUpdate,
-    handleAssignTask
+    handleAssignTask,
+    refetch
   };
 };

@@ -23,12 +23,14 @@ const HousekeepingDashboardContainer = () => {
     staffOptions,
     cleaningDefinitions,
     handleTaskStatusUpdate,
-    handleAssignTask
+    handleAssignTask,
+    refetch
   } = useHousekeepingTasks();
 
   const isMobile = useIsMobile();
 
   const [viewMode, setViewMode] = React.useState<'kanban' | 'card' | 'list' | 'agenda'>('kanban');
+  const [refreshing, setRefreshing] = React.useState(false);
 
   if (loading) {
     return (
@@ -42,7 +44,19 @@ const HousekeepingDashboardContainer = () => {
 
   return (
     <div className="container mx-auto px-4 pb-20">
-      <HousekeepingHeader viewMode={viewMode} onViewModeChange={setViewMode} />
+      <HousekeepingHeader 
+        viewMode={viewMode} 
+        onViewModeChange={setViewMode}
+        refreshing={refreshing}
+        onRefresh={async () => {
+          try {
+            setRefreshing(true);
+            await refetch();
+          } finally {
+            setRefreshing(false);
+          }
+        }}
+      />
       
       <div className="mb-6">
         <HousekeepingFilters 

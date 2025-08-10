@@ -1,14 +1,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, LayoutGrid, List, Rows4, Plus } from "lucide-react";
+import { CalendarClock, LayoutGrid, List, Rows4, Plus, RotateCcw, Loader2 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
 interface Props {
   viewMode: 'kanban' | 'card' | 'list' | 'agenda';
   onViewModeChange: (mode: Props['viewMode']) => void;
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
-const HousekeepingHeader: React.FC<Props> = ({ viewMode, onViewModeChange }) => {
+const HousekeepingHeader: React.FC<Props> = ({ viewMode, onViewModeChange, refreshing = false, onRefresh }) => {
   const getVariant = (mode: Props['viewMode']) => (viewMode === mode ? 'default' : 'outline');
 
   return (
@@ -57,6 +59,14 @@ const HousekeepingHeader: React.FC<Props> = ({ viewMode, onViewModeChange }) => 
               <CalendarClock className="h-4 w-4 mr-1" /> Agenda
             </Button>
           </div>
+          <Button variant="outline" size="sm" className="flex items-center gap-2" onClick={onRefresh} disabled={refreshing}>
+            {refreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RotateCcw className="h-4 w-4" />
+            )}
+            <span>{refreshing ? 'Refreshing' : 'Refresh'}</span>
+          </Button>
           <Button variant="default" size="sm" className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
             <span>Create Task</span>
