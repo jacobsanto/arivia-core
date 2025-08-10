@@ -5,6 +5,7 @@ import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RotateCcw, Loader2, Wrench, Package, BarChart3, FileWarning } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -114,7 +115,59 @@ const Finance: React.FC = () => {
     enabled: !!selectedPropertyName,
     refetchInterval: 30000,
   });
+  const { data: dmgAll = [] } = useQuery({
+    queryKey: ["finance-damage-mtd-all", startOfMonthISO],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('damage_reports')
+        .select('property_id, final_cost, estimated_cost, created_at')
+        .gte('created_at', startOfMonthISO);
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
 
+  const damageTotalsById = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    (dmgAll as any[]).forEach((r: any) => {
+      const id = r.property_id as string | null;
+      if (!id) return;
+      const cost = (r.final_cost ?? r.estimated_cost ?? 0) as number;
+      map[id] = (map[id] || 0) + cost;
+    });
+    return map;
+  }, [dmgAll]);
+
+  const { data: invAll = [] } = useQuery({
+    queryKey: ["finance-inventory-mtd-all", startOfMonthISO],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('inventory_usage')
+        .select('property, quantity, date')
+        .gte('date', startOfMonthISO);
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
+
+  const invTotalsByName = React.useMemo(() => {
+    const map: Record<string, number> = {};
+    (invAll as any[]).forEach((r: any) => {
+      const name = r.property as string | null;
+      if (!name) return;
+      map[name] = (map[name] || 0) + (r.quantity || 0);
+    });
+    return map;
+  }, [invAll]);
+
+  const villaRows = React.useMemo(() => {
+    return (properties || []).map((p: any) => ({
+      id: p.id,
+      name: p.name,
+      damage: damageTotalsById[p.id] || 0,
+      invQty: invTotalsByName[p.name] || 0,
+    }));
+  }, [properties, damageTotalsById, invTotalsByName]);
 
   return (
     <>
@@ -206,6 +259,32 @@ const Finance: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </section>
+
+        <section className="space-y-4">
+          <h2 className="text-lg font-semibold">All Villas (MTD)</h2>
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Villa</TableHead>
+                    <TableHead className="text-right">Damage Cost (EUR)</TableHead>
+                    <TableHead className="text-right">Inventory Usage (qty)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(villaRows || []).map((row: any) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(row.damage)}</TableCell>
+                      <TableCell className="text-right">{row.invQty}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </section>
       </main>
     </>
