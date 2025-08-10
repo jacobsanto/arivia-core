@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BookingSyncButton } from "./BookingSyncButton";
 
 interface BookingsEmptyStateProps {
   onSync: () => void;
@@ -17,9 +17,10 @@ const BookingsEmptyState: React.FC<BookingsEmptyStateProps> = ({ onSync, isSynci
       <p className="text-muted-foreground mb-4">
         This property doesn't have any bookings yet.
       </p>
-      <Button onClick={onSync} variant="outline" disabled={isSyncing}>
-        {isSyncing ? 'Refreshing…' : 'Refresh'}
-      </Button>
+      <BookingSyncButton 
+        variant="default" 
+        onSyncComplete={onSync}
+      />
     </CardContent>
   </Card>
 );

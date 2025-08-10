@@ -1,12 +1,12 @@
 
 import React from "react";
-import HousekeepingDashboardContainer from "@/components/housekeeping/HousekeepingDashboardContainer";
+import { MVPTaskManagement } from "@/components/tasks/mvp/MVPTaskManagement";
 import { HousekeepingErrorBoundary } from "@/components/error-boundaries/HousekeepingErrorBoundary";
 
 const Housekeeping: React.FC = () => {
   return (
     <HousekeepingErrorBoundary>
-      <HousekeepingDashboardContainer />
+      <MVPTaskManagement />
     </HousekeepingErrorBoundary>
   );
 };

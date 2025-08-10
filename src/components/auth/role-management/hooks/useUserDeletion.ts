@@ -1,11 +1,11 @@
 
 import { useState } from "react";
 import { User } from "@/types/auth";
-import { useUserState } from "@/contexts/hooks";
-import { removeUser } from "@/contexts/auth/operations/userOperations";
+import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
+
 export const useUserDeletion = () => {
-  const { user: currentUser, users, setUsers } = useUserState();
+  const { deleteUser } = useUser();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
@@ -20,8 +20,8 @@ export const useUserDeletion = () => {
       setIsDeleting(true);
       console.log("Starting delete operation for user:", userToDelete.id);
       
-// Use operations to delete user and update state
-      const result = await removeUser(currentUser, users, setUsers, userToDelete.id);
+      // Call the deleteUser function from the context
+      const result = await deleteUser(userToDelete.id);
       
       if (result) {
         console.log("User deleted successfully");
@@ -56,7 +56,7 @@ export const useUserDeletion = () => {
       for (const user of usersToDelete) {
         try {
           console.log(`Attempting to delete user: ${user.id} (${user.name})`);
-          const result = await removeUser(currentUser, users, setUsers, user.id);
+          const result = await deleteUser(user.id);
           if (result) {
             successCount++;
           } else {

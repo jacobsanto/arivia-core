@@ -24,22 +24,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
   })();
 
-  // Temporary debug log in dev mode
-  if (devMode?.isDevMode) {
-    // eslint-disable-next-line no-console
-    console.debug('ProtectedRoute', {
-      path: location.pathname,
-      isLoading,
-      isAuthenticated,
-      bypassAuth: devMode.settings.bypassAuth,
-    });
-  }
-
-  // Dev bypass first for smooth DX
-  if (devMode?.isDevMode && devMode.settings.bypassAuth) {
-    return <>{children}</>;
-  }
-
   // Show loading state while authentication is being determined
   if (isLoading) {
     return (
@@ -47,9 +31,17 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
           <p className="text-muted-foreground">Verifying authentication...</p>
+          {devMode?.isDevMode && (
+            <p className="text-xs text-orange-600">Development Mode Active</p>
+          )}
         </div>
       </div>
     );
+  }
+
+  // If dev mode is active and bypassing auth, allow access
+  if (devMode?.isDevMode && devMode.settings.bypassAuth) {
+    return <>{children}</>;
   }
 
   // If not authenticated, redirect to login page

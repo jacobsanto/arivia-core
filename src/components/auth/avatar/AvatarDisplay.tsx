@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { User } from "@/types/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSignedUrl } from "@/hooks/useSignedUrl";
-
 interface AvatarDisplayProps {
   user: User | {
     name: string;
@@ -25,14 +23,17 @@ const AvatarDisplay: React.FC<AvatarDisplayProps> = ({
   size = "md",
   className = ""
 }) => {
+  const avatarUrl = useMemo(() => {
+    if (!user) return "/placeholder.svg";
+    const url = user.avatar || "/placeholder.svg";
+    if (!url || url.includes('placeholder.svg')) return url;
+    return `${url}?t=${Date.now()}`; // Force cache invalidation
+  }, [user?.avatar]);
   const displayName = user?.name || "User";
-  const rawAvatar = user?.avatar || "/placeholder.svg";
-  const { url: signedUrl } = useSignedUrl(rawAvatar, { fallbackBucket: 'User Avatars', expiresInSeconds: 60 * 60 });
-
   
   return (
     <Avatar className={`${sizeClasses[size]} ${className}`}>
-      <AvatarImage src={signedUrl} alt={displayName} />
+      <AvatarImage src={avatarUrl} alt={displayName} />
       <AvatarFallback className="bg-muted">
         {getInitials(displayName)}
       </AvatarFallback>

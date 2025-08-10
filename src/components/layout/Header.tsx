@@ -3,7 +3,7 @@ import { Bell, MessageSquare, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -18,7 +18,11 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   onMobileMenuToggle
 }) => {
-  const { user, signOut, refreshAuthState } = useAuth();
+  const {
+    user,
+    logout,
+    refreshProfile
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isDevMode } = useDevMode();
@@ -27,18 +31,20 @@ const Header: React.FC<HeaderProps> = ({
     if (!user) return;
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
-        refreshAuthState().then(() => {
-          console.log("Profile automatically refreshed");
+        refreshProfile().then(updated => {
+          if (updated) {
+            console.log("Profile automatically refreshed");
+          }
         });
       }
     }, 5 * 60 * 1000); // 5 minutes
 
-    refreshAuthState();
+    refreshProfile();
     return () => clearInterval(intervalId);
-  }, [user, refreshAuthState]);
+  }, [user, refreshProfile]);
 
   const handleLogout = () => {
-    signOut();
+    logout();
     navigate("/login");
   };
 
@@ -46,8 +52,9 @@ const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
+          {isMobile}
           
-          <Link to="/dashboard" className="flex items-center">
+          <Link to="/" className="flex items-center">
             <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-12 md:h-10 invert brightness-0 filter" />
           </Link>
         </div>
@@ -111,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuItem onClick={() => navigate("/settings")}>
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => refreshAuthState()}>
+              <DropdownMenuItem onClick={() => refreshProfile()}>
                 <span className="flex items-center">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   <span>Refresh Profile</span>

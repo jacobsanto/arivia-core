@@ -1,13 +1,9 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserState } from "@/contexts/hooks";
+import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { updateAvatar } from "@/contexts/auth/userAuthOperations";
-import { logger } from "@/services/logger";
-
 
 interface UseAvatarUploadProps {
   user: User;
@@ -15,8 +11,7 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { user: currentUser } = useAuth();
-  const { users, setUsers, setUser, refreshUserProfile } = useUserState();
+  const { updateUserAvatar, refreshProfile } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -49,7 +44,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
       const filePath = `${userId}/${fileName}`;
       
       const { data, error } = await supabase.storage
-        .from('User Avatars')
+        .from('avatars')
         .upload(filePath, file, {
           upsert: true,
           contentType: file.type,
@@ -57,35 +52,35 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         });
       
       if (error) {
-        logger.error("Storage error", error);
+        console.error("Storage error:", error);
         throw new Error(`Upload failed: ${error.message}`);
       }
 
-      const { data: signed } = await supabase.storage
-        .from('User Avatars')
-        .createSignedUrl(filePath, 60 * 60); // 1 hour
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
       
-      const signedUrl = signed?.signedUrl || "/placeholder.svg";
-      
-      // Store the file path in DB (not the signed URL which expires)
-      await updateAvatar(userId, filePath, users, setUsers, setUser, currentUser);
-      
-      // Update local state
-      setAvatarUrl(signedUrl);
-      previousAvatarRef.current = signedUrl;
+      if (publicUrlData?.publicUrl) {
+        // Update avatar in database
+        await updateUserAvatar(userId, publicUrlData.publicUrl);
+        
+        // Update local state
+        setAvatarUrl(publicUrlData.publicUrl);
+        previousAvatarRef.current = publicUrlData.publicUrl;
 
-      // Notify parent component
-      if (onAvatarChange) {
-        onAvatarChange(signedUrl);
+        // Notify parent component
+        if (onAvatarChange) {
+          onAvatarChange(publicUrlData.publicUrl);
+        }
+
+        // Refresh profile to update all components
+        await refreshProfile();
+        
+        toast.success("Avatar updated successfully");
+        setIsDialogOpen(false);
       }
-
-      // Refresh profile to update all components
-      await refreshUserProfile();
-      
-      toast.success("Avatar updated successfully");
-      setIsDialogOpen(false);
     } catch (error) {
-      logger.error("Error uploading avatar", error);
+      console.error("Error uploading avatar:", error);
       toast.error("Failed to upload avatar", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

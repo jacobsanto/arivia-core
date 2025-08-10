@@ -227,10 +227,7 @@ export const UnifiedCleaningDashboard = () => {
                       <Button size="icon" variant="ghost" onClick={() => testRule(rule.id, {})}>
                         <Play className="h-4 w-4" />
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => {
-                        setSelectedTemplate(rule);
-                        setShowLogicBuilder(true);
-                      }}>
+                      <Button size="icon" variant="ghost">
                         <Settings className="h-4 w-4" />
                       </Button>
                     </div>

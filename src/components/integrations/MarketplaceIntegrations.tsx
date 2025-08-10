@@ -15,16 +15,6 @@ export const MarketplaceIntegrations = () => {
   const [vrboEnabled, setVrboEnabled] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
 
-  const connectMarketplace = (marketplaceName: string) => {
-    console.log(`Connecting to ${marketplaceName}...`);
-    // Here you would implement the actual connection logic
-  };
-
-  const configureMarketplace = (marketplaceName: string) => {
-    console.log(`Configuring ${marketplaceName}...`);
-    // Here you would implement the configuration logic
-  };
-
   const marketplaces = [
     {
       name: "Airbnb",
@@ -86,12 +76,12 @@ export const MarketplaceIntegrations = () => {
       avgStay: "4.2 nights"
     },
     {
-      channel: "Property Platform",
-      bookings: 0,
-      revenue: "€0", 
-      commission: "€0",
-      conversion: "0%",
-      avgStay: "0 nights"
+      channel: "Guesty Platform",
+      bookings: 762,
+      revenue: "€142,000", 
+      commission: "€4,260",
+      conversion: "8.7%",
+      avgStay: "3.8 nights"
     },
     {
       channel: "Potential Airbnb",
@@ -196,6 +186,9 @@ export const MarketplaceIntegrations = () => {
     }
   };
 
+  const connectMarketplace = (marketplace: string) => {
+    console.log('Connecting to marketplace:', marketplace);
+  };
 
   const optimizeListing = (property: string) => {
     console.log('Optimizing listing for:', property);
@@ -277,7 +270,7 @@ export const MarketplaceIntegrations = () => {
                       Coming Soon
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => configureMarketplace(marketplace.name)}>
+                    <Button size="sm" variant="outline">
                       Configure
                     </Button>
                   )}

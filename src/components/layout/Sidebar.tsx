@@ -1,24 +1,27 @@
-import React, { memo } from "react";
+import React from "react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText, DollarSign } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Camera, Monitor, Zap, BarChart3, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 const Sidebar = () => {
-  const { user, signOut } = useAuth();
+  const {
+    user,
+    logout
+  } = useUser();
   const {
     canAccess
   } = usePermissions();
   const handleLogout = () => {
-    signOut();
+    logout();
   };
   if (!user) return null;
   const isSuperAdmin = user.role === "superadmin";
   const isAdmin = user.role === "administrator";
   const isPropertyManager = user.role === "property_manager";
-  return <div className="hidden md:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
+  return <div className="hidden lg:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg">
       
       
       <div className="flex items-center justify-center mb-6 my-[10px] py-0">
@@ -47,12 +50,11 @@ const Sidebar = () => {
         
         <SidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" />
         
-        
+        <SidebarLink to="/virtual-tours" icon={<Camera size={20} />} label="3D Virtual Tours" />
         
         {canAccess("viewReports") && <>
             <SidebarLink to="/analytics" icon={<BarChart3 size={20} />} label="Analytics" />
             <SidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" />
-            <SidebarLink to="/finance" icon={<DollarSign size={20} />} label="Finance" />
             <SidebarLink to="/cleaning-settings" icon={<Settings size={20} />} label="Cleaning Settings" />
           </>}
         
@@ -85,7 +87,7 @@ interface SidebarLinkProps {
   label: string;
   disabled?: boolean;
 }
-const SidebarLink = memo(({
+const SidebarLink = ({
   to,
   icon,
   label,
@@ -103,5 +105,5 @@ const SidebarLink = memo(({
       <span className="mr-3">{icon}</span>
       <span className="font-normal text-base">{label}</span>
     </NavLink>;
-});
-export default memo(Sidebar);
+};
+export default Sidebar;

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Phone } from "lucide-react";
 
 interface MVPSignUpFormProps {
@@ -24,7 +24,7 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signUp } = useAuth();
+  const { signup } = useUser();
 
   const roles = [
     { value: 'property_manager', label: 'Property Manager' },
@@ -51,7 +51,7 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
     }
 
     try {
-      await signUp(formData.email, formData.password, formData.name, formData.role as any);
+      await signup(formData.email, formData.password, formData.name, formData.role as any);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
     } finally {

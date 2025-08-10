@@ -9,16 +9,15 @@ import { DataVisualization } from './DataVisualization';
 import { ScheduledReports } from './ScheduledReports';
 import { ExportCenter } from './ExportCenter';
 import { useOperationalAnalytics } from '@/hooks/useOperationalAnalytics';
-import { ExportDropdown } from '@/components/tasks/reporting/buttons/ExportDropdown';
-import { getDateRangeForTimeFilter, getDateRangeDescription, formatDateRangeDisplay, TimeFilter } from '@/utils/dateRangeUtils';
 
 export const AdvancedReportingDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
   
-  // Date filter state and computed range
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>('last30');
-  const dateRange = getDateRangeForTimeFilter(timeFilter);
-  
+  // Set up date range for analytics (last 30 days)
+  const dateRange = {
+    from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    to: new Date(),
+  };
   
   const { metrics, loading } = useOperationalAnalytics(dateRange);
 
@@ -125,54 +124,23 @@ export const AdvancedReportingDashboard = () => {
     }
   ];
 
-  const exportData = loading || !metrics ? [] : [
-    { Metric: 'Housekeeping Tasks', Total: metrics.housekeeping.totalTasks, 'Completion Rate (%)': metrics.housekeeping.completionRate },
-    { Metric: 'Maintenance Tasks', Total: metrics.maintenance.totalTasks, 'Urgent Tasks': metrics.maintenance.urgentTasks, 'Avg Response (hrs)': metrics.maintenance.avgResponseTime },
-    { Metric: 'Active Properties', Total: metrics.properties.activeProperties, 'Damage Reports': metrics.properties.damageReports },
-    { Metric: 'Inventory Usage', Total: metrics.inventory.totalUsage, 'Low Stock Items': metrics.inventory.lowStockItems },
-  ];
-  const exportTitle = `Operational Analytics – ${getDateRangeDescription(timeFilter)}`;
-  const exportFilename = `operational-analytics_${timeFilter}_${formatDateRangeDisplay(dateRange.from, dateRange.to).replace(/[\\/]/g, '-')}`;
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-3">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-3xl font-bold text-foreground">Operational Analytics</h2>
-            <p className="text-muted-foreground">Real-time insights into housekeeping, maintenance, and property operations</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter Reports
-            </Button>
-            <Button>
-              <FileText className="h-4 w-4 mr-2" />
-              New Report
-            </Button>
-          </div>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold text-foreground">Operational Analytics</h2>
+          <p className="text-muted-foreground">Real-time insights into housekeeping, maintenance, and property operations</p>
         </div>
-
-        {/* Time Filters and Export */}
-        <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 mr-2" />
-            <span>
-              {getDateRangeDescription(timeFilter)} · {formatDateRangeDisplay(dateRange.from, dateRange.to)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex gap-2">
-              <Button variant={timeFilter === 'mtd' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('mtd')}>MTD</Button>
-              <Button variant={timeFilter === 'last30' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('last30')}>30D</Button>
-              <Button variant={timeFilter === 'qtd' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('qtd')}>QTD</Button>
-              <Button variant={timeFilter === 'ytd' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('ytd')}>YTD</Button>
-              <Button variant={timeFilter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('all')}>All</Button>
-            </div>
-            <ExportDropdown data={exportData} filename={exportFilename} reportTitle={exportTitle} />
-          </div>
+        <div className="flex gap-2">
+          <Button variant="outline">
+            <Filter className="h-4 w-4 mr-2" />
+            Filter Reports
+          </Button>
+          <Button>
+            <FileText className="h-4 w-4 mr-2" />
+            New Report
+          </Button>
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import DamageReportHeader from "@/components/damage/DamageReportHeader";
 import DamageReportList from "@/components/damage/DamageReportList";
 import DamageReportDetail from "@/components/damage/DamageReportDetail";
@@ -33,7 +33,7 @@ const DamageReports = () => {
   } = useDamageReports();
 
   const [viewMode, setViewMode] = useState<"list" | "stats">("list");
-  const { user } = useAuth();
+  const { user } = useUser();
 
   return (
     <DamageReportsErrorBoundary>

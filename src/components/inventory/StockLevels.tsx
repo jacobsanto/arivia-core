@@ -1,11 +1,10 @@
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { inventoryService } from "@/services/inventory.service";
+import { inventoryData } from "@/data/inventoryData";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
@@ -14,27 +13,12 @@ const StockLevels = () => {
   const [location, setLocation] = useState("all");
   const [search, setSearch] = useState("");
   const isMobile = useIsMobile();
-  // Load items
-  const { data: items = [] } = useQuery({
-    queryKey: ["inventory-items"],
-    queryFn: () => inventoryService.getItems(),
-    refetchInterval: 30000,
-  });
 
-  const filteredItems = items
-    .map((i: any) => ({
-      id: i.id,
-      name: i.name,
-      category: i.category_id,
-      location: "main", // Placeholder until locations are modeled
-      currentStock: 0, // Placeholder until stock levels are modeled
-      minLevel: i.min_quantity ?? 0,
-    }))
-    .filter((item: any) => {
-      const matchesSearch = (item.name || "").toLowerCase().includes(search.toLowerCase());
-      const matchesLocation = location === "all" || item.location === location;
-      return matchesSearch && matchesLocation;
-    });
+  const filteredItems = inventoryData.filter(item => {
+    const matchesSearch = item.name?.toLowerCase().includes(search.toLowerCase());
+    const matchesLocation = location === "all" || item.location === location;
+    return matchesSearch && matchesLocation;
+  });
 
   const getStockStatusBadge = (current: number, min: number) => {
     if (current === 0) {

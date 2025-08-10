@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +18,6 @@ export const MVPTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("housekeeping");
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const [showTodayOnly, setShowTodayOnly] = useState(false);
-  const [viewMode, setViewMode] = useState<'card' | 'list' | 'agenda'>("card");
   const queryClient = useQueryClient();
 
   const { data: housekeepingTasks } = useQuery({
@@ -43,28 +41,6 @@ export const MVPTaskManagement: React.FC = () => {
       return data || [];
     }
   });
-
-  // Realtime: invalidate queries on DB changes
-  useEffect(() => {
-    const hk = supabase
-      .channel('rt-housekeeping')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'housekeeping_tasks' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
-      })
-      .subscribe();
-
-    const mt = supabase
-      .channel('rt-maintenance')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'maintenance_tasks' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(hk);
-      supabase.removeChannel(mt);
-    };
-  }, [queryClient]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -220,34 +196,13 @@ export const MVPTaskManagement: React.FC = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Housekeeping Tasks</CardTitle>
-                <div className="flex items-center gap-2">
-                  <div className="hidden md:flex items-center gap-1 mr-2">
-                    <Button size="sm" variant={viewMode === 'card' ? 'default' : 'outline'} onClick={() => setViewMode('card')}>Card</Button>
-                    <Button size="sm" variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')}>List</Button>
-                    <Button size="sm" variant={viewMode === 'agenda' ? 'default' : 'outline'} onClick={() => setViewMode('agenda')}>Agenda</Button>
-                  </div>
-                  <Button 
-                    variant={showTodayOnly ? 'outline' : 'default'}
-                    onClick={() => setShowTodayOnly(false)}
-                    size="sm"
-                  >
-                    All
-                  </Button>
-                  <Button 
-                    variant={showTodayOnly ? 'default' : 'outline'}
-                    onClick={() => setShowTodayOnly(true)}
-                    size="sm"
-                  >
-                    Due Today
-                  </Button>
-                  <Button 
-                    onClick={() => setIsCreateTaskOpen(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create Housekeeping Task
-                  </Button>
-                </div>
+                <Button 
+                  onClick={() => setIsCreateTaskOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Housekeeping Task
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -257,70 +212,10 @@ export const MVPTaskManagement: React.FC = () => {
                       <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
                     </div>
                   ) : (
-                    (() => {
-                      const list = (showTodayOnly
-                        ? (housekeepingTasks || []).filter((t) => {
-                            const d = new Date(t.due_date);
-                            const today = new Date();
-                            return (
-                              d.getFullYear() === today.getFullYear() &&
-                              d.getMonth() === today.getMonth() &&
-                              d.getDate() === today.getDate()
-                            );
-                          })
-                        : (housekeepingTasks || []));
-
-                      if (viewMode === 'card') {
-                        return list.map((task) => (
-                          <TaskCard key={task.id} task={task} type="housekeeping" />
-                        ));
-                      }
-                      if (viewMode === 'list') {
-                        return list.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between p-3 rounded-md border">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded bg-muted"><Clock className="h-4 w-4" /></div>
-                              <div>
-                                <div className="font-medium">{task.task_type}</div>
-                                <div className="text-sm text-muted-foreground">{task.listing_id}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              {format(new Date(task.due_date), 'MMM d, yyyy')}
-                              <Badge className={getStatusColor(task.status)}>{task.status.replace('_',' ')}</Badge>
-                            </div>
-                          </div>
-                        ));
-                      }
-                      // agenda
-                      const grouped = list.reduce<Record<string, any[]>>((acc, t) => {
-                        const key = t.due_date ? format(new Date(t.due_date), 'yyyy-MM-dd') : 'No date';
-                        acc[key] = acc[key] || [];
-                        acc[key].push(t);
-                        return acc;
-                      }, {});
-                      const ordered = Object.keys(grouped).sort();
-                      return ordered.map((k) => (
-                        <div key={k}>
-                          <div className="mb-2 font-semibold">{k === 'No date' ? 'No date' : format(new Date(k), 'EEEE, MMM d')}</div>
-                          <div className="rounded-md border divide-y">
-                            {grouped[k].map((task) => (
-                              <div key={task.id} className="flex items-center justify-between p-3">
-                                <div>
-                                  <div className="font-medium">{task.task_type}</div>
-                                  <div className="text-sm text-muted-foreground">{task.listing_id}</div>
-                                </div>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  {task.due_date ? format(new Date(task.due_date), 'p') : '--'}
-                                  <Badge className={getStatusColor(task.status)}>{task.status.replace('_',' ')}</Badge>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ));
-                     })()
-                   )}
+                    housekeepingTasks?.map((task) => (
+                      <TaskCard key={task.id} task={task} type="housekeeping" />
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -328,23 +223,16 @@ export const MVPTaskManagement: React.FC = () => {
           
           <TabsContent value="maintenance" className="space-y-4">
             <Card>
-               <CardHeader className="flex flex-row items-center justify-between">
-                 <CardTitle>Maintenance Tasks</CardTitle>
-                 <div className="flex items-center gap-2">
-                   <div className="hidden md:flex items-center gap-1 mr-2">
-                     <Button size="sm" variant={viewMode === 'card' ? 'default' : 'outline'} onClick={() => setViewMode('card')}>Card</Button>
-                     <Button size="sm" variant={viewMode === 'list' ? 'default' : 'outline'} onClick={() => setViewMode('list')}>List</Button>
-                     <Button size="sm" variant={viewMode === 'agenda' ? 'default' : 'outline'} onClick={() => setViewMode('agenda')}>Agenda</Button>
-                   </div>
-                   <CreateMaintenanceTaskDialog
-                     isOpen={isCreateMaintenanceOpen}
-                     onOpenChange={setIsCreateMaintenanceOpen}
-                     onTaskCreated={() => {
-                       queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
-                     }}
-                   />
-                 </div>
-               </CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Maintenance Tasks</CardTitle>
+                <CreateMaintenanceTaskDialog
+                  isOpen={isCreateMaintenanceOpen}
+                  onOpenChange={setIsCreateMaintenanceOpen}
+                  onTaskCreated={() => {
+                    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
+                  }}
+                />
+              </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {maintenanceTasks?.length === 0 ? (
@@ -353,59 +241,10 @@ export const MVPTaskManagement: React.FC = () => {
                       <p className="text-sm mt-2">Click "Add Maintenance Task" to create your first task</p>
                     </div>
                   ) : (
-                    (() => {
-                      const list = maintenanceTasks || [];
-                      if (viewMode === 'card') {
-                        return list.map((task) => (
-                          <TaskCard key={task.id} task={task} type="maintenance" />
-                        ));
-                      }
-                      if (viewMode === 'list') {
-                        return list.map((task) => (
-                          <div key={task.id} className="flex items-center justify-between p-3 rounded-md border">
-                            <div className="flex items-center gap-3">
-                              <div className="p-2 rounded bg-muted"><Clock className="h-4 w-4" /></div>
-                              <div>
-                                <div className="font-medium">{task.title}</div>
-                                {task.description && <div className="text-sm text-muted-foreground">{task.description}</div>}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              {task.due_date ? format(new Date(task.due_date), 'MMM d, yyyy') : 'No date'}
-                              <Badge className={getStatusColor(task.status)}>{task.status.replace('_',' ')}</Badge>
-                            </div>
-                          </div>
-                        ));
-                      }
-                      // agenda
-                      const grouped = list.reduce<Record<string, any[]>>((acc, t) => {
-                        const key = t.due_date ? format(new Date(t.due_date), 'yyyy-MM-dd') : 'No date';
-                        acc[key] = acc[key] || [];
-                        acc[key].push(t);
-                        return acc;
-                      }, {});
-                      const ordered = Object.keys(grouped).sort();
-                      return ordered.map((k) => (
-                        <div key={k}>
-                          <div className="mb-2 font-semibold">{k === 'No date' ? 'No date' : format(new Date(k), 'EEEE, MMM d')}</div>
-                          <div className="rounded-md border divide-y">
-                            {grouped[k].map((task) => (
-                              <div key={task.id} className="flex items-center justify-between p-3">
-                                <div>
-                                  <div className="font-medium">{task.title}</div>
-                                  {task.description && <div className="text-sm text-muted-foreground">{task.description}</div>}
-                                </div>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  {task.due_date ? format(new Date(task.due_date), 'p') : '--'}
-                                  <Badge className={getStatusColor(task.status)}>{task.status.replace('_',' ')}</Badge>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ));
-                     })()
-                   )}
+                    maintenanceTasks?.map((task) => (
+                      <TaskCard key={task.id} task={task} type="maintenance" />
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -11,7 +11,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
-import { logger } from "@/services/logger";
 
 const superAdminSchema = z.object({
   email: z.string().email("Valid email is required"),
@@ -40,7 +39,7 @@ const CreateSuperAdmin: React.FC = () => {
   useEffect(() => {
     const checkForSuperAdmin = async () => {
       try {
-        logger.debug("Checking for existing super admin...");
+        console.log("Checking for existing super admin...");
         setCheckingAdmin(true);
         const { data, error } = await supabase
           .from('profiles')
@@ -49,7 +48,7 @@ const CreateSuperAdmin: React.FC = () => {
           .maybeSingle();
         
         if (error) {
-          logger.error("Error checking for super admin", error);
+          console.error("Error checking for super admin:", error);
           if (error.message.includes("Failed to fetch")) {
             setError("Network error checking for Super Admin");
           }
@@ -57,13 +56,13 @@ const CreateSuperAdmin: React.FC = () => {
         }
         
         if (data) {
-          logger.info("Super admin already exists");
+          console.log("Super admin already exists");
           setSuperAdminExists(true);
         } else {
-          logger.info("No super admin found");
+          console.log("No super admin found");
         }
       } catch (error) {
-        logger.error("Error checking for super admin", error);
+        console.error("Error checking for super admin:", error);
       } finally {
         setCheckingAdmin(false);
       }
@@ -76,10 +75,10 @@ const CreateSuperAdmin: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      logger.info("Creating super admin with:", { email: data.email });
+      console.log("Creating super admin with:", data.email);
       const success = await registerSuperAdmin(data.email, data.password, data.name);
       if (success) {
-        logger.info("Super admin created successfully");
+        console.log("Super admin created successfully");
         // Check again if super admin exists after registration attempt
         const { data: adminData } = await supabase
           .from('profiles')
@@ -93,7 +92,7 @@ const CreateSuperAdmin: React.FC = () => {
         }
       }
     } catch (err) {
-      logger.error("Error creating super admin", err);
+      console.error("Error creating super admin:", err);
       setError(err instanceof Error ? err.message : "Failed to create Super Admin");
       
       // Better error handling for network issues

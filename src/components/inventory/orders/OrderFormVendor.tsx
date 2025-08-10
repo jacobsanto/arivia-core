@@ -1,5 +1,14 @@
-import React, { useState, useEffect } from "react";
-import { Label } from "@/components/ui/label";
+
+import React, { useEffect } from "react";
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useFormContext, useWatch } from "react-hook-form";
 import {
   Select,
   SelectContent,
@@ -8,103 +17,148 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
-import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
+import { useUser } from "@/contexts/UserContext";
 
-interface OrderFormVendorProps {
-  selectedVendorId: string | null;
-  setSelectedVendorId: (vendorId: string) => void;
-}
+// Sample vendor data - in a real app this would come from a database or context
+const vendors = [
+  { 
+    id: "1", 
+    name: "Office Supplies Co.",
+    categories: ["Office Supplies", "Paper Products", "Kitchen Supplies", "Linens & Towels"]
+  },
+  { 
+    id: "2", 
+    name: "Cleaning Solutions Inc.",
+    categories: ["Cleaning Supplies"] 
+  },
+  { 
+    id: "3", 
+    name: "Hospitality Essentials",
+    categories: ["Guest Amenities", "Toiletries", "Bathroom Supplies", "Linens & Towels"]
+  },
+];
 
-const OrderFormVendor: React.FC<OrderFormVendorProps> = ({ 
-  selectedVendorId, 
-  setSelectedVendorId 
-}) => {
-  const { user } = useAuth();
-  const [vendors, setVendors] = useState<VendorWithCategoryNames[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Load vendors from database
+const OrderFormVendor: React.FC = () => {
+  const { control, setValue } = useFormContext();
+  const { user } = useUser();
+  
+  // Auto-populate requestor field with user's name
   useEffect(() => {
-    const loadVendors = async () => {
-      try {
-        setLoading(true);
-        const vendorData = await vendorService.getVendors();
-        setVendors(vendorData);
-      } catch (error) {
-        console.error('Error loading vendors:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadVendors();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        <div className="text-sm text-muted-foreground">Loading vendors...</div>
-      </div>
-    );
-  }
-
-  const selectedVendor = vendors.find(v => v.id === selectedVendorId);
-
+    if (user?.name) {
+      setValue("requestor", user.name);
+    }
+  }, [user, setValue]);
+  
   return (
-    <div className="space-y-4">
-      <div>
-        <Label htmlFor="vendor">Select Vendor</Label>
-        <Select value={selectedVendorId || ""} onValueChange={setSelectedVendorId}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a vendor" />
-          </SelectTrigger>
-          <SelectContent>
-            {vendors.map((vendor) => (
-              <SelectItem key={vendor.id} value={vendor.id}>
-                <div className="flex flex-col">
-                  <span className="font-medium">{vendor.name}</span>
-                  {vendor.contact_person && (
-                    <span className="text-xs text-muted-foreground">
-                      Contact: {vendor.contact_person}
-                    </span>
-                  )}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <FormField
+        control={control}
+        name="vendorId"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Vendor</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a vendor" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                {vendors.map((vendor) => (
+                  <SelectItem key={vendor.id} value={vendor.id}>
+                    <div>
+                      {vendor.name}
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {vendor.categories.map((category, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {category}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="date"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Date</FormLabel>
+            <FormControl>
+              <Input type="date" {...field} />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      
+      <FormField
+        control={control}
+        name="requestor"
+        render={({ field }) => (
+          <FormItem className="md:col-span-2">
+            <FormLabel>Requested By</FormLabel>
+            <FormControl>
+              <Input placeholder="Your name" {...field} readOnly />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
-      {selectedVendor && (
-        <div className="p-4 bg-muted rounded-lg">
-          <h4 className="font-medium mb-2">{selectedVendor.name}</h4>
-          {selectedVendor.contact_person && (
-            <p className="text-sm text-muted-foreground mb-1">
-              Contact: {selectedVendor.contact_person}
-            </p>
-          )}
-          {selectedVendor.email && (
-            <p className="text-sm text-muted-foreground mb-1">
-              Email: {selectedVendor.email}
-            </p>
-          )}
-          {selectedVendor.phone && (
-            <p className="text-sm text-muted-foreground mb-1">
-              Phone: {selectedVendor.phone}
-            </p>
-          )}
-          {selectedVendor.category_names && selectedVendor.category_names.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {selectedVendor.category_names.map((category, index) => (
-                <Badge key={index} variant="secondary" className="text-xs">
-                  {category}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <FormField
+        control={control}
+        name="priority"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Priority</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select priority" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      <FormField
+        control={control}
+        name="department"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Department</FormLabel>
+            <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormControl>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select department" />
+                </SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="housekeeping">Housekeeping</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="general">General</SelectItem>
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
     </div>
   );
 };

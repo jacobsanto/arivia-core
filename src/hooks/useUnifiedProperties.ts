@@ -44,12 +44,15 @@ export const useUnifiedProperties = (searchQuery: string = '') => {
 
   const syncWithGuesty = async () => {
     setIsLoading(true);
-    try {
+    const result = await unifiedPropertyService.syncGuestyProperties();
+    
+    if (result.success) {
+      toast.success(result.message);
       await fetchProperties();
-      toast.success('Properties refreshed');
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast.error(result.message);
     }
+    setIsLoading(false);
   };
 
   const handleSort = (option: SortOption) => {

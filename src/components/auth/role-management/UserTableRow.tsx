@@ -8,8 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
-import { useUserState } from "@/contexts/hooks";
-import { updateUserProfile } from "@/contexts/auth/operations/profileOperations";
+import { useUser } from "@/contexts/UserContext";
+
 interface UserTableRowProps {
   user: User;
   currentUser: User | null;
@@ -23,7 +23,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
-  const { setUser } = useUserState();
+  const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
@@ -54,15 +54,10 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
     try {
       // Call the updateProfile function from UserContext
       // This will handle both the database update and local state updates
-      const success = await updateUserProfile(
-        user.id,
-        {
-          role: selectedRole,
-          secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
-        },
-        setUser,
-        currentUser
-      );
+      const success = await updateProfile(user.id, {
+        role: selectedRole,
+        secondaryRoles: selectedRole === "superadmin" ? selectedSecondaryRoles : undefined
+      });
       
       if (success) {
         setIsEditing(false);

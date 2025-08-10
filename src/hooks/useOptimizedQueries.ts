@@ -1,159 +1,249 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { deduplicateRequest } from '@/utils/authOptimizer';
-import { useEgressMonitor } from '@/hooks/useEgressMonitor';
+import { useCallback } from 'react';
+import { DatabaseConnectionPool, executeOptimizedQuery } from '@/utils/databasePooling';
+import { ServerCache } from '@/utils/cdnOptimization';
 
-// Query key factory for consistent caching
-export const createQueryKey = (entity: string, params?: Record<string, any>) => {
-  const baseKey = [entity];
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        baseKey.push(`${key}:${value}`);
+// Optimized profiles query with caching and connection pooling
+export const useOptimizedProfiles = (filters?: {
+  role?: string;
+  search?: string;
+  limit?: number;
+}) => {
+  return useQuery({
+    queryKey: ['profiles', filters],
+    queryFn: async () => {
+      const cacheKey = `profiles_${JSON.stringify(filters)}`;
+      
+      // Check server cache first
+      const cachedData = ServerCache.get(cacheKey);
+      if (cachedData) return cachedData;
+
+      const pool = DatabaseConnectionPool.getInstance();
+      const connection = await pool.getConnection();
+      
+      let query = connection
+        .from('profiles')
+        .select('id, name, email, role, avatar, created_at')
+        .order('created_at', { ascending: false });
+
+      if (filters?.role) {
+        query = query.eq('role', filters.role);
       }
-    });
-  }
-  return baseKey;
+
+      if (filters?.search) {
+        query = query.or(`name.ilike.%${filters.search}%,email.ilike.%${filters.search}%`);
+      }
+
+      if (filters?.limit) {
+        query = query.limit(filters.limit);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      
+      // Cache the result
+      ServerCache.set(cacheKey, data, 5 * 60 * 1000);
+      
+      return data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 };
 
-// Optimized queries with caching and deduplication
-export const useOptimizedQueries = () => {
-  const { logRequest } = useEgressMonitor();
+// Optimized properties query with selective fields
+export const useOptimizedProperties = (includeDetails = false) => {
+  const selectFields = includeDetails 
+    ? '*'
+    : 'id, name, address, status, image_url, price_per_night, max_guests';
 
-  // Properties query with intelligent caching
-  const useProperties = (searchTerm?: string, filterStatus?: string) => {
-    return useQuery({
-      queryKey: createQueryKey('properties', { searchTerm, filterStatus }),
-      queryFn: async () => {
-        return deduplicateRequest(`properties-${searchTerm}-${filterStatus}`, async () => {
-          let query = supabase.from('properties').select('*');
-          
-          if (searchTerm) {
-            query = query.ilike('name', `%${searchTerm}%`);
-          }
-          if (filterStatus && filterStatus !== 'all') {
-            query = query.eq('status', filterStatus);
-          }
-          
-          const { data, error } = await query.order('created_at', { ascending: false });
-          
-          if (error) {
-            logRequest(100, true);
-            throw error;
-          }
-          
-          logRequest(JSON.stringify(data).length);
-          return data || [];
-        });
-      },
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: (failureCount, error: any) => {
-        // Don't retry auth errors
-        if (error?.code === 'PGRST301' || error?.message?.includes('JWT')) {
-          return false;
-        }
-        return failureCount < 2;
+  return useQuery({
+    queryKey: ['properties', includeDetails],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('properties')
+        .select(selectFields)
+        .eq('status', 'active')
+        .order('name');
+      
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+  });
+};
+
+// Infinite scroll for large datasets
+export const useInfiniteBookings = (listingId?: string, pageSize = 20) => {
+  return useInfiniteQuery({
+    queryKey: ['bookings', 'infinite', listingId],
+    queryFn: async ({ pageParam = 0 }) => {
+      let query = supabase
+        .from('guesty_bookings')
+        .select(`
+          id,
+          check_in,
+          check_out,
+          status,
+          guest_name,
+          guest_email,
+          listing_id
+        `)
+        .order('check_in', { ascending: false })
+        .range(pageParam as number, (pageParam as number) + pageSize - 1);
+
+      if (listingId) {
+        query = query.eq('listing_id', listingId);
       }
-    });
-  };
 
-  // Inventory query with optimized pagination
-  const useInventory = (searchTerm?: string, page: number = 1, limit: number = 20) => {
-    return useQuery({
-      queryKey: createQueryKey('inventory', { searchTerm, page, limit }),
-      queryFn: async () => {
-        return deduplicateRequest(`inventory-${searchTerm}-${page}-${limit}`, async () => {
-          let query = supabase
-            .from('inventory_items')
-            .select('*', { count: 'exact' })
-            .range((page - 1) * limit, page * limit - 1);
-          
-          if (searchTerm) {
-            query = query.ilike('name', `%${searchTerm}%`);
-          }
-          
-          const { data, error, count } = await query.order('created_at', { ascending: false });
-          
-          if (error) {
-            logRequest(100, true);
-            throw error;
-          }
-          
-          logRequest(JSON.stringify(data).length);
-          return { data: data || [], count: count || 0 };
-        });
-      },
-      staleTime: 3 * 60 * 1000, // 3 minutes
-      gcTime: 8 * 60 * 1000, // 8 minutes
-      placeholderData: (previousData) => previousData, // Keep previous page data while loading new page
-    });
-  };
+      const { data, error } = await query;
+      if (error) throw error;
 
-  // Users query with role-based filtering
-  const useUsers = (searchTerm?: string, filterRole?: string) => {
-    return useQuery({
-      queryKey: createQueryKey('users', { searchTerm, filterRole }),
-      queryFn: async () => {
-        return deduplicateRequest(`users-${searchTerm}-${filterRole}`, async () => {
-          let query = supabase.from('profiles').select('*');
-          
-          if (searchTerm) {
-            query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-          }
-          if (filterRole && filterRole !== 'all') {
-            query = query.eq('role', filterRole);
-          }
-          
-          const { data, error } = await query.order('created_at', { ascending: false });
-          
-          if (error) {
-            logRequest(100, true);
-            throw error;
-          }
-          
-          logRequest(JSON.stringify(data).length);
-          return data || [];
-        });
-      },
-      staleTime: 10 * 60 * 1000, // 10 minutes - user data changes less frequently
-      gcTime: 15 * 60 * 1000, // 15 minutes
-      retry: (failureCount, error: any) => {
-        // Don't retry RLS policy errors
-        if (error?.code === '42501' || error?.message?.includes('policy')) {
-          return false;
-        }
-        return failureCount < 2;
+      return {
+        data: data || [],
+        nextPage: (data?.length || 0) === pageSize ? (pageParam as number) + pageSize : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
+// Optimized task queries with aggregation
+export const useOptimizedTasks = (filters?: {
+  status?: string;
+  assignee?: string;
+  dueDate?: string;
+}) => {
+  return useQuery({
+    queryKey: ['tasks', 'optimized', filters],
+    queryFn: async () => {
+      // Get detailed tasks with selective fields
+      let query = supabase
+        .from('housekeeping_tasks')
+        .select(`
+          id,
+          task_type,
+          status,
+          due_date,
+          listing_id,
+          assigned_to
+        `)
+        .order('due_date');
+
+      if (filters?.status) {
+        query = query.eq('status', filters.status);
       }
-    });
-  };
 
-  // System health query with reduced frequency
-  const useSystemHealth = () => {
-    return useQuery({
-      queryKey: ['system-health'],
+      if (filters?.assignee) {
+        query = query.eq('assigned_to', filters.assignee);
+      }
+
+      if (filters?.dueDate) {
+        query = query.gte('due_date', filters.dueDate);
+      }
+
+      const { data: tasks, error: tasksError } = await query.limit(50);
+      if (tasksError) throw tasksError;
+
+      // Calculate summary
+      const summary = {
+        total: tasks?.length || 0,
+        pending: tasks?.filter(t => t.status === 'pending').length || 0,
+        completed: tasks?.filter(t => t.status === 'completed').length || 0,
+        overdue: tasks?.filter(t => 
+          t.status !== 'completed' && 
+          new Date(t.due_date) < new Date()
+        ).length || 0
+      };
+
+      return { summary, tasks: tasks || [] };
+    },
+    staleTime: 1 * 60 * 1000, // 1 minute
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: 30 * 1000, // 30 seconds
+  });
+};
+
+// Background prefetching hook
+export const useBackgroundPrefetch = () => {
+  const queryClient = useQueryClient();
+
+  const prefetchProperties = useCallback(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['properties', false],
       queryFn: async () => {
-        const { data, error } = await supabase.rpc('get_system_health');
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, name, address, status, image_url')
+          .eq('status', 'active');
         
-        if (error) {
-          logRequest(100, true);
-          throw error;
-        }
-        
-        logRequest(JSON.stringify(data).length);
+        if (error) throw error;
         return data;
       },
-      staleTime: 30 * 60 * 1000, // 30 minutes - system health changes slowly
-      gcTime: 60 * 60 * 1000, // 1 hour
-      refetchOnWindowFocus: false, // Don't refetch on window focus
-      refetchOnMount: false, // Don't refetch on mount if data exists
+      staleTime: 30 * 60 * 1000,
     });
-  };
+  }, [queryClient]);
+
+  const prefetchRecentActivity = useCallback(() => {
+    queryClient.prefetchQuery({
+      queryKey: ['activity', 'recent'],
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('audit_logs')
+          .select('table_name, action, created_at')
+          .order('created_at', { ascending: false })
+          .limit(20);
+        
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 1 * 60 * 1000,
+    });
+  }, [queryClient]);
 
   return {
-    useProperties,
-    useInventory,
-    useUsers,
-    useSystemHealth,
+    prefetchProperties,
+    prefetchRecentActivity,
   };
+};
+
+// Smart cache invalidation
+export const useSmartInvalidation = () => {
+  const queryClient = useQueryClient();
+
+  const invalidateRelatedQueries = useCallback((tableName: string, operation: string) => {
+    const invalidationMap: Record<string, string[][]> = {
+      profiles: [
+        ['profiles'],
+        ['users-list'],
+      ],
+      properties: [
+        ['properties'],
+        ['dashboard-metrics'],
+      ],
+      housekeeping_tasks: [
+        ['tasks'],
+        ['dashboard-metrics'],
+        ['recent-activity'],
+      ],
+      guesty_bookings: [
+        ['bookings'],
+        ['dashboard-metrics'],
+        ['financial-reports'],
+      ],
+    };
+
+    const queriesToInvalidate = invalidationMap[tableName] || [];
+    
+    queriesToInvalidate.forEach(queryKey => {
+      queryClient.invalidateQueries({ queryKey });
+    });
+  }, [queryClient]);
+
+  return { invalidateRelatedQueries };
 };

@@ -31,7 +31,7 @@ export const useFetchProfileData = (
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('id, email, name, role, avatar, phone, secondary_roles, custom_permissions, updated_at')
+        .select('*')
         .eq('id', userId)
         .single();
 

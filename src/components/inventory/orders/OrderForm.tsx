@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useOrders } from "@/contexts/OrderContext";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";
@@ -15,7 +15,7 @@ import OrderItemList from "./OrderItemList";
 import OrderFormVendor from "./OrderFormVendor";
 import { OrderStatus } from "./OrderUtils";
 import { Checkbox } from "@/components/ui/checkbox";
-import { orderService } from "@/services/order.service";
+import { getItemsByVendor } from "@/data/inventoryData";
 
 const formSchema = z.object({
   vendorId: z.string().min(1, { message: "Please select a vendor." }),
@@ -37,7 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { canAccess } = usePermissions();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { addOrder } = useOrders();
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   
@@ -72,7 +72,7 @@ const OrderForm = () => {
     return () => subscription.unsubscribe();
   }, [methods]);
 
-  async function onSubmit(values: FormValues) {
+  function onSubmit(values: FormValues) {
     if (!canCreateOrders) {
       toast({
         title: "Permission Denied",
@@ -85,14 +85,14 @@ const OrderForm = () => {
     setIsSubmitting(true);
     
     // Get item names for display
-    const itemsWithNames = await Promise.all(values.items.map(async item => {
-      const vendorItems = await orderService.getItemsByVendor(values.vendorId);
+    const itemsWithNames = values.items.map(item => {
+      const vendorItems = getItemsByVendor(values.vendorId);
       const foundItem = vendorItems.find(vendorItem => vendorItem.id === item.itemId);
       return {
         ...item,
         name: foundItem?.name || "Unknown Item"
       };
-    }));
+    });
     
     // Create order object
     const orderData = {
@@ -164,7 +164,7 @@ const OrderForm = () => {
         <FormProvider {...methods}>
           <Form {...methods}>
             <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-6 max-w-2xl mx-auto">
-              <OrderFormVendor selectedVendorId={selectedVendorId} setSelectedVendorId={setSelectedVendorId} />
+              <OrderFormVendor />
               
               <div className="space-y-4">
                 <OrderItemList 

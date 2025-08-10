@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Shield, Settings, Save, RotateCcw } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +15,7 @@ import { useSystemPermissions } from "@/hooks/useSystemPermissions";
 import SystemPermissionEditor from "@/components/admin/SystemPermissionEditor";
 
 const AdminPermissions = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState("view");

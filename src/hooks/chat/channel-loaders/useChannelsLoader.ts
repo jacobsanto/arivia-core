@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
 import { Channel } from "@/components/chat/ChatSidebar";
@@ -10,7 +10,7 @@ import { FALLBACK_GENERAL_CHANNEL } from "@/services/chat/chat.types";
 export function useChannelsLoader(isConnected: boolean) {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     async function loadChannels() {

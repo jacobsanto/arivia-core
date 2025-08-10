@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MinusCircle, PlusCircle } from "lucide-react";
 import { useFormContext } from "react-hook-form";
 import { useFormArray } from "@/hooks/useFormArray";
-import { orderService } from "@/services/order.service";
+import { getItemsByVendor } from "@/data/inventoryData";
 
 interface OrderItemListProps {
   title: string;
@@ -28,11 +28,8 @@ const OrderItemList: React.FC<OrderItemListProps> = ({ title, selectedVendorId }
   
   // Update available items when vendor changes
   useEffect(() => {
-    const loadItems = async () => {
-      const items = await orderService.getItemsByVendor(selectedVendorId);
-      setAvailableItems(items);
-    };
-    loadItems();
+    const items = getItemsByVendor(selectedVendorId);
+    setAvailableItems(items);
   }, [selectedVendorId]);
   
   return (

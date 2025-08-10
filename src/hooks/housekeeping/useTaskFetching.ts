@@ -11,9 +11,9 @@ export const useTaskFetching = () => {
   const [staffOptions, setStaffOptions] = useState<string[]>([]);
   const { toast } = useToast();
 
-  const fetchTasks = async (showGlobalLoading = false) => {
+  const fetchTasks = async () => {
     try {
-      if (showGlobalLoading) setLoading(true);
+      setLoading(true);
       const { data, error } = await supabase
         .from('housekeeping_tasks')
         .select('*')
@@ -48,12 +48,12 @@ export const useTaskFetching = () => {
         variant: "destructive"
       });
     } finally {
-      if (showGlobalLoading) setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTasks(true);
+    fetchTasks();
     
     const tasksSubscription = supabase
       .channel('housekeeping_tasks_changes')
@@ -61,7 +61,7 @@ export const useTaskFetching = () => {
         event: '*',
         schema: 'public',
         table: 'housekeeping_tasks',
-      }, (_payload) => { fetchTasks(false); })
+      }, fetchTasks)
       .subscribe();
       
     return () => {
@@ -73,7 +73,6 @@ export const useTaskFetching = () => {
     tasks,
     loading,
     taskTypeOptions,
-    staffOptions,
-    refetch: () => fetchTasks(false)
+    staffOptions
   };
 };

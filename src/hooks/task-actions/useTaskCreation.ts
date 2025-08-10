@@ -27,7 +27,7 @@ export const useTaskCreation = (
       
       // Get the first available property listing_id from Guesty
       const { data: listings } = await supabase
-        .from('properties')
+        .from('guesty_listings')
         .select('id')
         .limit(1);
       

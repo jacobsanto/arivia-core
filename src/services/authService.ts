@@ -1,7 +1,6 @@
 
 import { SignUpFormValues } from "@/lib/validation/auth-schema";
 import { toast } from "sonner";
-import { logger } from "@/services/logger";
 
 export const registerUser = async (data: SignUpFormValues, superAdminExists: boolean): Promise<boolean> => {
   try {
@@ -37,7 +36,7 @@ export const registerUser = async (data: SignUpFormValues, superAdminExists: boo
     
     return true;
   } catch (error) {
-    logger.error("Registration error", error);
+    console.error("Registration error:", error);
     toast.error("Registration failed", {
       description: "There was an error creating your account. Please try again.",
     });

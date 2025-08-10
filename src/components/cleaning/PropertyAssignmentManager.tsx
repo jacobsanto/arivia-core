@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Users, Building } from 'lucide-react';
 import { useRuleBasedCleaningSystem, CleaningRule } from '@/hooks/useRuleBasedCleaningSystem';
-import { centralizedPropertyService } from '@/services/property/centralizedProperty.service';
+import { guestyService } from '@/services/guesty/guesty.service';
 
 interface PropertyAssignmentManagerProps {
   isOpen: boolean;
@@ -30,7 +30,7 @@ export const PropertyAssignmentManager: React.FC<PropertyAssignmentManagerProps>
   React.useEffect(() => {
     const fetchProperties = async () => {
       try {
-        const listings = await centralizedPropertyService.getAllProperties();
+        const listings = await guestyService.getGuestyListings();
         setProperties(listings || []);
       } catch (error) {
         console.error('Error fetching properties:', error);

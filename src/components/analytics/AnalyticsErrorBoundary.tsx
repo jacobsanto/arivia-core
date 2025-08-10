@@ -4,7 +4,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, RefreshCw, BarChart3 } from 'lucide-react';
-import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -27,7 +26,7 @@ export class AnalyticsErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('Analytics Error Boundary', error, { component: 'AnalyticsErrorBoundary', errorInfo });
+    console.error('🔧 Analytics Error Boundary:', error, errorInfo);
     this.setState({ error, errorInfo });
   }
 

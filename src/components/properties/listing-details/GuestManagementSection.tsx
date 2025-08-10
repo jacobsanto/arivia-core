@@ -7,7 +7,7 @@ import { MessageSquare, Loader2 } from "lucide-react";
 import { Guest } from "./GuestCard";
 import GroupedGuestLists from "./GroupedGuestLists";
 import { useGuestGroups } from "./GuestGrouping";
-import { useBookingsAndTasks } from '@/hooks/useBookingsAndTasks';
+import { useGuestyBookings } from "./useGuestyBookings";
 
 interface GuestManagementSectionProps {
   listing: any;
@@ -23,7 +23,7 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
   const [sendingGuestId, setSendingGuestId] = useState<string | null>(null);
 
   // Use unified Guesty bookings hook
-  const { bookingsWithTasks, loading: loadingBookings } = useBookingsAndTasks(listing?.id);
+  const { bookingsWithTasks, loading: loadingBookings } = useGuestyBookings(listing?.id);
 
   // Prepare guests array from bookings
   const guests: Guest[] = bookingsWithTasks.map(({ booking }) => {
@@ -49,8 +49,8 @@ const GuestManagementSection: React.FC<GuestManagementSectionProps> = ({
            (guestData && typeof guestData === 'object' && 'fullName' in guestData ? safeString(guestData.fullName) : "Guest"),
       email: guestData && typeof guestData === 'object' && 'email' in guestData ? safeString(guestData.email) : null,
       phone: guestData && typeof guestData === 'object' && 'phone' in guestData ? safeString(guestData.phone) : null,
-      check_in: booking.check_in_date,
-      check_out: booking.check_out_date,
+      check_in: booking.check_in,
+      check_out: booking.check_out,
       isVip: Boolean(
         (rawData && typeof rawData === 'object' && 'is_vip' in rawData ? rawData.is_vip : false) || 
         (rawData && typeof rawData === 'object' && 'vip' in rawData ? rawData.vip : false)

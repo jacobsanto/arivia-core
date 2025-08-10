@@ -1,26 +1,11 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Info, Settings, Store, Link } from "lucide-react";
+import { Info, Settings } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import IntegrationMarketplace from "./integrations/IntegrationMarketplace";
-import IntegrationSetupDialog from "./integrations/IntegrationSetupDialog";
-import ConnectedIntegrationsList from "./integrations/ConnectedIntegrationsList";
+import GuestyIntegration from "./integrations/guesty/GuestyIntegration";
 
 const IntegrationSettings = () => {
-  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
-  const [selectedConfig, setSelectedConfig] = useState(null);
-
-  const handleSetupIntegration = (config: any) => {
-    setSelectedConfig(config);
-    setSetupDialogOpen(true);
-  };
-
-  const handleSetupSuccess = () => {
-    // Optionally switch to connected integrations tab
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -37,10 +22,10 @@ const IntegrationSettings = () => {
                 <Info className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-medium mb-1">Integration Platform</h3>
+                <h3 className="font-medium mb-1">Configuring Integrations</h3>
                 <p className="text-sm text-muted-foreground mb-2">
                   Connect with external services to extend your application's functionality.
-                  Browse our integration marketplace or manage your existing connections.
+                  Currently supporting Guesty for property management integration.
                 </p>
               </div>
             </div>
@@ -48,36 +33,9 @@ const IntegrationSettings = () => {
           
           <Separator />
           
-          <Tabs defaultValue="marketplace" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="marketplace" className="flex items-center gap-2">
-                <Store className="h-4 w-4" />
-                Marketplace
-              </TabsTrigger>
-              <TabsTrigger value="connected" className="flex items-center gap-2">
-                <Link className="h-4 w-4" />
-                Connected
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="marketplace">
-              <IntegrationMarketplace onSetupIntegration={handleSetupIntegration} />
-            </TabsContent>
-            
-            <TabsContent value="connected">
-              <ConnectedIntegrationsList />
-            </TabsContent>
-            
-          </Tabs>
+          <GuestyIntegration />
         </CardContent>
       </Card>
-
-      <IntegrationSetupDialog
-        config={selectedConfig}
-        open={setupDialogOpen}
-        onOpenChange={setSetupDialogOpen}
-        onSuccess={handleSetupSuccess}
-      />
     </div>
   );
 };

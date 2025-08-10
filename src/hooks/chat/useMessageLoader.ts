@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Message } from "../useChatTypes";
 import { loadChannelMessages } from "./message-loaders/channelMessageLoader";
 import { loadDirectMessages } from "./message-loaders/directMessageLoader";
@@ -11,7 +11,7 @@ export function useMessageLoader(chatType: 'general' | 'direct', recipientId?: s
   const [loading, setLoading] = useState(true);
   const [isOffline, setIsOffline] = useState(false);
   const [loadError, setLoadError] = useState<Error | null>(null);
-  const { user } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     // Don't load messages if we don't have a user

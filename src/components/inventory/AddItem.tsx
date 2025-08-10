@@ -20,7 +20,7 @@ const formSchema = z.object({
   unit: z.string().min(1, { message: "Please select a unit." }),
   minLevel: z.coerce.number().min(0, { message: "Minimum level must be 0 or higher." }),
   initialStock: z.coerce.number().min(0, { message: "Initial stock must be 0 or higher." }),
-  vendorIds: z.array(z.string()).optional(),
+  vendorIds: z.array(z.string()).min(1, { message: "Please select at least one vendor." }),
   notes: z.string().optional(),
 });
 

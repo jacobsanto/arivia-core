@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar, User, Users, EuroIcon, ChevronDown, ChevronUp, Mail, Phone, MapPin, Home } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
-import { useBookings } from '@/hooks/useBookings';
+import { useGuestyListingBookings } from '@/hooks/useGuestyListingBookings';
 import { formatDate } from '@/services/dataFormatService';
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,7 @@ interface BookingsSectionProps {
 }
 
 export function BookingsSection({ listingId }: BookingsSectionProps) {
-  const { bookings, isLoading: bookingsLoading } = useBookings(listingId);
+  const { data, isLoading } = useGuestyListingBookings(listingId);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -24,10 +24,10 @@ export function BookingsSection({ listingId }: BookingsSectionProps) {
     try {
       const bookingObj = {
         id: booking.id,
-        property_id: booking.property_id || listingId,
-        listing_id: booking.property_id || listingId,
-        check_in_date: booking.check_in_date,
-        check_out_date: booking.check_out_date,
+        property_id: booking.listing_id,
+        listing_id: booking.listing_id,
+        check_in_date: booking.check_in,
+        check_out_date: booking.check_out,
         guest_name: booking.guest_name || 'Guest',
         ...booking
       };
@@ -45,7 +45,7 @@ export function BookingsSection({ listingId }: BookingsSectionProps) {
     }
   };
   
-  if (bookingsLoading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -53,15 +53,10 @@ export function BookingsSection({ listingId }: BookingsSectionProps) {
     );
   }
   
-  const bookingsList = bookings || [];
-  const stats = {
-    totalBookings: bookingsList.length,
-    confirmedBookings: bookingsList.filter(b => b.status?.toLowerCase() === 'confirmed').length,
-    upcomingBookings: bookingsList.filter(b => new Date(b.check_in_date) > new Date()).length,
-    cancelledBookings: bookingsList.filter(b => b.status?.toLowerCase() === 'cancelled').length
-  };
+  const bookings = data?.bookings || [];
+  const stats = data?.stats;
   
-  if (!bookingsList?.length) {
+  if (!bookings?.length) {
     return (
       <div className="text-center py-8 text-muted-foreground">
         No bookings found for this property
@@ -99,7 +94,7 @@ export function BookingsSection({ listingId }: BookingsSectionProps) {
         </Card>
       )}
       
-      {bookingsList.map((booking) => (
+      {bookings.map((booking) => (
         <BookingCard 
           key={booking.id} 
           booking={booking} 
@@ -119,11 +114,13 @@ function BookingCard({ booking, onGenerateHousekeepingTasks }: BookingCardProps)
   const [isExpanded, setIsExpanded] = useState(false);
   const { toast } = useToast();
   
-  const guestData = {};
-  const guestsCount = booking.num_guests || 1;
-  const moneyData = {};
+  const guestData = booking.raw_data?.guest || {};
+  const guestsCount = 
+    (booking.raw_data?.guests?.adults || 0) + 
+    (booking.raw_data?.guests?.children || 0);
+  const moneyData = booking.raw_data?.money || {};
   
-  const stayDuration = calculateStayDuration(booking.check_in_date, booking.check_out_date);
+  const stayDuration = calculateStayDuration(booking.check_in, booking.check_out);
   
   const getBadgeVariant = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -154,7 +151,7 @@ function BookingCard({ booking, onGenerateHousekeepingTasks }: BookingCardProps)
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2" />
             <span>
-              {formatDate(booking.check_in_date)} - {formatDate(booking.check_out_date)}
+              {formatDate(booking.check_in)} - {formatDate(booking.check_out)}
               <span className="ml-2 text-xs bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded">
                 {stayDuration} {stayDuration === 1 ? 'night' : 'nights'}
               </span>
@@ -168,7 +165,7 @@ function BookingCard({ booking, onGenerateHousekeepingTasks }: BookingCardProps)
           
           <div className="flex items-center">
             <EuroIcon className="h-4 w-4 mr-2" />
-            <span>€{booking.total_price || 0}</span>
+            <span>€{moneyData.netAmount || 0}</span>
           </div>
         </div>
 
@@ -178,22 +175,56 @@ function BookingCard({ booking, onGenerateHousekeepingTasks }: BookingCardProps)
               <div>
                 <h4 className="font-medium mb-2">Guest Information</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {booking.guest_email && (
+                  {guestData.email && (
                     <div className="flex items-center">
                       <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{booking.guest_email}</span>
+                      <span>{guestData.email}</span>
                     </div>
                   )}
-                  {booking.guest_phone && (
+                  {guestData.phone && (
                     <div className="flex items-center">
                       <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <span>{booking.guest_phone}</span>
+                      <span>{guestData.phone}</span>
+                    </div>
+                  )}
+                  {guestData.address && (
+                    <div className="flex items-center">
+                      <MapPin className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{guestData.address}</span>
+                    </div>
+                  )}
+                  {guestData.country && (
+                    <div className="flex items-center">
+                      <Home className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{guestData.country}</span>
                     </div>
                   )}
                 </div>
               </div>
 
               <Separator />
+
+              {booking.raw_data?.checkInTime && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <span className="block text-xs text-muted-foreground">Check-in</span>
+                    <span>{booking.raw_data.checkInTime}</span>
+                  </div>
+                  {booking.raw_data?.checkOutTime && (
+                    <div>
+                      <span className="block text-xs text-muted-foreground">Check-out</span>
+                      <span>{booking.raw_data.checkOutTime}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {booking.raw_data?.note && (
+                <div>
+                  <span className="font-medium">Guest Notes:</span>
+                  <p className="mt-1 text-muted-foreground">{booking.raw_data.note}</p>
+                </div>
+              )}
               
               <div className="flex justify-end pt-2">
                 <Button 

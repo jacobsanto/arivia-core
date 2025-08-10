@@ -30,11 +30,11 @@ const UnifiedLayout = () => {
         <Header onMobileMenuToggle={toggleMobileMenu} />
         
         <ScrollArea className="flex-1" orientation="vertical">
-          <main id="main-content" className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`} role="main">
-            <div key={location.pathname} className="max-w-full mx-auto animate-fade-in">
+          <div className={`p-2 md:p-6 ${isMobile ? 'pb-20' : ''}`}>
+            <div className="max-w-full mx-auto">
               <Outlet />
             </div>
-          </main>
+          </div>
         </ScrollArea>
         
         {/* Mobile navigation - only visible on mobile */}

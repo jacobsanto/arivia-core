@@ -1,128 +1,101 @@
 
-import React, { Suspense, lazy, useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { DevModeProvider } from "@/contexts/DevModeContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
-import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
-import { SkipLink } from "@/components/accessibility/SkipLink";
 import { DevModePanel } from "@/components/dev/DevModePanel";
 import { DevModeStatusBar } from "@/components/dev/DevModeStatusBar";
-import { Loader2 } from "lucide-react";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Pages (lazy-loaded)
+// Pages
+import Dashboard from "@/pages/Dashboard";
 import Login from "@/pages/Login";
+import UserProfile from "@/pages/UserProfile";
+import Maintenance from "@/pages/Maintenance";
+import Housekeeping from "@/pages/Housekeeping";
+import Properties from "@/pages/Properties";
+import Inventory from "@/pages/Inventory";
 import TeamChat from "@/pages/TeamChat";
-const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const UserProfile = lazy(() => import("@/pages/UserProfile"));
-const Maintenance = lazy(() => import("@/pages/Maintenance"));
-const Housekeeping = lazy(() => import("@/pages/Housekeeping"));
-const Properties = lazy(() => import("@/pages/Properties"));
-const Inventory = lazy(() => import("@/pages/Inventory"));
-const Analytics = lazy(() => import("@/pages/Analytics"));
-const Reports = lazy(() => import("@/pages/Reports"));
-const SystemHealth = lazy(() => import("@/pages/SystemHealth"));
-const DamageReports = lazy(() => import("@/pages/DamageReports"));
-const CleaningSettings = lazy(() => import("@/pages/CleaningSettings"));
-const ListingDetails = lazy(() => import("@/pages/ListingDetails"));
-const SystemAdminPage = lazy(() => import("@/pages/SystemAdminPage"));
-const OptimizationPage = lazy(() => import("@/pages/OptimizationPage"));
-const Finance = lazy(() => import("@/pages/Finance"));
-const MonitoringRoutes = lazy(() => import("@/routes/MonitoringRoutes"));
+import Analytics from "@/pages/Analytics";
+import Reports from "@/pages/Reports";
+import SystemHealth from "@/pages/SystemHealth";
 
-// Admin Pages (lazy-loaded)
-const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
-const AdminPermissions = lazy(() => import("@/pages/AdminPermissions"));
-const AdminSettings = lazy(() => import("@/pages/AdminSettings"));
-const AdminChecklists = lazy(() => import("@/pages/AdminChecklists"));
-const EnhancedTasks = lazy(() => import("@/pages/EnhancedTasks"));
+import DamageReports from "@/pages/DamageReports";
+import CleaningSettings from "@/pages/CleaningSettings";
+import ListingDetails from "@/pages/ListingDetails";
+import VirtualTourPage from "@/pages/VirtualTourPage";
+import SystemAdminPage from "@/pages/SystemAdminPage";
+import OptimizationPage from "@/pages/OptimizationPage";
+
+// Admin Pages
+import AdminUsers from "@/pages/AdminUsers";
+import AdminPermissions from "@/pages/AdminPermissions";
+import AdminSettings from "@/pages/AdminSettings";
+import AdminChecklists from "@/pages/AdminChecklists";
+import EnhancedTasks from "@/pages/EnhancedTasks";
 
 function App() {
-  // Prefetch high-traffic routes to avoid visible loading on navigation
-  useEffect(() => {
-    void Promise.all([
-      import("@/pages/Dashboard"),
-      import("@/pages/Properties"),
-      import("@/pages/Inventory"),
-      import("@/pages/TeamChat"),
-    ]);
-  }, []);
-
   return (
     <MVPErrorBoundary>
       <HelmetProvider>
-        <AccessibilityProvider>
-          <ToastProvider>
-            <DevModeProvider>
-              <AuthProvider>
-                <Router>
-                  <SkipLink href="#main-content">Skip to main content</SkipLink>
-                  <DevModeStatusBar />
-                  <Suspense fallback={
-                    <div className="flex h-screen w-full items-center justify-center bg-background">
-                      <div className="flex flex-col items-center gap-4">
-                        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <p className="text-muted-foreground">Loading app...</p>
-                      </div>
-                    </div>
+        <ToastProvider>
+          <DevModeProvider>
+            <AuthProvider>
+              <Router>
+                <DevModeStatusBar />
+                <Routes>
+                  {/* Login route - doesn't use the unified layout */}
+                  <Route path="/login" element={<Login />} />
+                  
+                  {/* Protected routes with UnifiedLayout */}
+                  <Route element={
+                    <ProtectedRoute>
+                      <UnifiedLayout />
+                    </ProtectedRoute>
                   }>
-                    <Routes>
-                      {/* Login route - doesn't use the unified layout */}
-                      <Route path="/login" element={<Login />} />
-                      
-                      {/* Protected routes with UnifiedLayout */}
-                      <Route element={
-                        <ProtectedRoute>
-                          <UnifiedLayout />
-                        </ProtectedRoute>
-                      }>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/profile" element={<UserProfile />} />
-                        <Route path="/housekeeping" element={<Housekeeping />} />
-                        <Route path="/maintenance" element={<Maintenance />} />
-                        <Route path="/tasks/enhanced" element={<EnhancedTasks />} />
-                        <Route path="/properties" element={<Properties />} />
-                        <Route path="/inventory" element={<Inventory />} />
-                        <Route path="/team-chat" element={<TeamChat />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                        <Route path="/reports" element={<Reports />} />
-                        <Route path="/finance" element={<Finance />} />
-                         
-                         <Route path="/cleaning-settings" element={<CleaningSettings />} />
-                         <Route path="/damage-reports" element={<DamageReports />} />
-                        
-                        <Route path="/system-admin" element={<SystemAdminPage />} />
-                         <Route path="/optimization" element={<OptimizationPage />} />
-                         <Route path="/system-health" element={<SystemHealth />} />
-                         <Route path="/monitoring/*" element={<MonitoringRoutes />} />
-                        
-                        {/* Property details route */}
-                        <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
-                        
-                        {/* Admin routes */}
-                        <Route path="/admin/users" element={<AdminUsers />} />
-                        <Route path="/admin/permissions" element={<AdminPermissions />} />
-                        <Route path="/admin/settings" element={<AdminSettings />} />
-                        <Route path="/admin/checklists" element={<AdminChecklists />} />
-                      </Route>
-                      
-                      {/* Catch all route */}
-                      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                    </Routes>
-                  </Suspense>
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/housekeeping" element={<Housekeeping />} />
+                    <Route path="/maintenance" element={<Maintenance />} />
+                    <Route path="/tasks/enhanced" element={<EnhancedTasks />} />
+                    <Route path="/properties" element={<Properties />} />
+                    <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/team-chat" element={<TeamChat />} />
+                    <Route path="/analytics" element={<Analytics />} />
+                    <Route path="/reports" element={<Reports />} />
+                     
+                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
+                     <Route path="/damage-reports" element={<DamageReports />} />
+                    <Route path="/virtual-tours" element={<VirtualTourPage />} />
+                    <Route path="/system-admin" element={<SystemAdminPage />} />
+                     <Route path="/optimization" element={<OptimizationPage />} />
+                     <Route path="/system-health" element={<SystemHealth />} />
+                    
+                    {/* Property details route */}
+                    <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
+                    
+                    {/* Admin routes */}
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/permissions" element={<AdminPermissions />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
+                    <Route path="/admin/checklists" element={<AdminChecklists />} />
+                  </Route>
+                  
+                  {/* Catch all route */}
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
                 <DevModePanel />
-                </Router>
-              </AuthProvider>
-            </DevModeProvider>
-          </ToastProvider>
-        </AccessibilityProvider>
+              </Router>
+            </AuthProvider>
+          </DevModeProvider>
+        </ToastProvider>
       </HelmetProvider>
     </MVPErrorBoundary>
   );

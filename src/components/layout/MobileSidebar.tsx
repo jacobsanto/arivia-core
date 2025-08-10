@@ -1,12 +1,12 @@
 
 
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, DollarSign } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
@@ -16,7 +16,7 @@ interface MobileSidebarProps {
 }
 
 const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useUser();
   const { canAccess } = usePermissions();
 
   if (!user) return null;
@@ -26,9 +26,10 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
   const isPropertyManager = user.role === "property_manager";
 
   const handleLogout = () => {
-    signOut();
+    logout();
     onClose();
   };
+
   const handleLinkClick = () => {
     onClose();
   };
@@ -78,10 +79,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
             
             <MobileSidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" onClick={handleLinkClick} />
             
-            {canAccess("viewReports") && <>
-              <MobileSidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" onClick={handleLinkClick} />
-              <MobileSidebarLink to="/finance" icon={<DollarSign size={20} />} label="Finance" onClick={handleLinkClick} />
-            </>}
+            {canAccess("viewReports") && <MobileSidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" onClick={handleLinkClick} />}
             
             {isSuperAdmin && (
               <div className="pt-2 mt-2 border-t border-sidebar-border">

@@ -1,7 +1,7 @@
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useDevMode } from '@/contexts/DevModeContext';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { 
   FEATURE_PERMISSIONS, 
   OFFLINE_CAPABILITIES, 
@@ -9,8 +9,6 @@ import {
   hasPermissionWithAllRoles, 
   getAllPermissionKeys 
 } from '@/types/auth';
-import { logger } from '@/services/logger';
-import { permissionCache } from '@/services/permissionCache';
 
 interface PermissionsReturn {
   canAccess: (featureKey: string) => boolean;
@@ -25,7 +23,7 @@ interface PermissionsReturn {
 }
 
 export const usePermissions = (): PermissionsReturn => {
-  const { user } = useAuth();
+  const { user, hasFeatureAccess } = useUser();
   
   // Get dev mode context safely
   const devMode = (() => {
@@ -42,7 +40,7 @@ export const usePermissions = (): PermissionsReturn => {
   
   useEffect(() => {
     const handleMockUserUpdate = () => {
-      logger.debug('usePermissions', 'Mock user update, recalculating permissions');
+      console.log('🔧 usePermissions: Mock user update, recalculating permissions');
       setUpdateTrigger(prev => prev + 1);
     };
 
@@ -55,10 +53,7 @@ export const usePermissions = (): PermissionsReturn => {
   // Get the effective user (prioritizing mock user in dev mode)
   const getEffectiveUser = () => {
     if (devMode?.isDevMode && devMode.settings.enableMockUsers && devMode.currentMockUser) {
-      logger.debug('usePermissions', 'Using mock user for permissions', { 
-        name: devMode.currentMockUser.name, 
-        role: devMode.currentMockUser.role 
-      });
+      console.log('🔧 usePermissions: Using mock user for permissions:', devMode.currentMockUser.name, devMode.currentMockUser.role);
       return devMode.currentMockUser;
     }
     return user;
@@ -66,104 +61,38 @@ export const usePermissions = (): PermissionsReturn => {
 
   const effectiveUser = getEffectiveUser();
   
-  // Memoize permission calculations to reduce repeated work
-  const permissionCalculations = useMemo(() => {
-    if (!effectiveUser) {
-      return {};
-    }
-
-    // Check cache first
-    const cacheKey = `${effectiveUser.id}-${effectiveUser.role}`;
-    const cachedPermissions = permissionCache.get(effectiveUser.id, effectiveUser.role);
-    
-    if (cachedPermissions) {
-      return cachedPermissions;
-    }
-
-    // Calculate permissions for all features at once
-    const permissions: Record<string, boolean> = {};
-    const allFeatureKeys = getAllPermissionKeys();
-
-    allFeatureKeys.forEach(featureKey => {
-      // Superadmin always has access to everything
-      if (effectiveUser.role === "superadmin") {
-        permissions[featureKey] = true;
-        return;
-      }
-      
-      // Check custom permissions first if they exist
-      if (effectiveUser.customPermissions && effectiveUser.customPermissions[featureKey] !== undefined) {
-        permissions[featureKey] = effectiveUser.customPermissions[featureKey];
-        return;
-      }
-      
-      // Check if feature exists in permissions
-      const permission = FEATURE_PERMISSIONS[featureKey];
-      if (!permission) {
-        permissions[featureKey] = false;
-        return;
-      }
-      
-      // Check if user's role is in the allowed roles, including secondary roles
-      permissions[featureKey] = hasPermissionWithAllRoles(
-        effectiveUser.role, 
-        effectiveUser.secondaryRoles, 
-        permission.allowedRoles
-      );
-    });
-
-    // Cache the calculated permissions
-    permissionCache.set(effectiveUser.id, effectiveUser.role, permissions);
-    
-    logger.debug('usePermissions', 'Calculated and cached permissions', { 
-      userId: effectiveUser.id, 
-      userRole: effectiveUser.role,
-      permissionCount: Object.keys(permissions).length 
-    });
-
-    return permissions;
-  }, [effectiveUser?.id, effectiveUser?.role, updateTrigger]); // Simplified dependencies
-  
   // Check if user has access to a specific feature
-  const canAccess = useCallback((featureKey: string): boolean => {
+  const canAccess = (featureKey: string): boolean => {
     if (!effectiveUser) {
-      logger.debug('usePermissions', 'No effective user, denying access', { featureKey });
+      console.log('🔧 usePermissions: No effective user, denying access to:', featureKey);
       return false;
     }
     
-    // Use cached/memoized permission if available
-    if (permissionCalculations[featureKey] !== undefined) {
-      const hasAccess = permissionCalculations[featureKey];
-      logger.debug('usePermissions', 'Cached permission check', { 
-        featureKey, 
-        hasAccess, 
-        userRole: effectiveUser.role 
-      });
-      return hasAccess;
-    }
-
-    // Fallback to individual calculation (shouldn't happen often)
-    logger.warn('usePermissions', 'Fallback permission calculation', { featureKey });
-    
     // Superadmin always has access to everything
     if (effectiveUser.role === "superadmin") {
+      console.log('🔧 usePermissions: Superadmin access granted for:', featureKey);
       return true;
     }
     
     // Check custom permissions first if they exist
     if (effectiveUser.customPermissions && effectiveUser.customPermissions[featureKey] !== undefined) {
-      return effectiveUser.customPermissions[featureKey];
+      const hasCustomAccess = effectiveUser.customPermissions[featureKey];
+      console.log('🔧 usePermissions: Custom permission for', featureKey, ':', hasCustomAccess);
+      return hasCustomAccess;
     }
     
     // Check if feature exists in permissions
     const permission = FEATURE_PERMISSIONS[featureKey];
     if (!permission) {
+      console.log('🔧 usePermissions: Feature not found:', featureKey);
       return false;
     }
     
     // Check if user's role is in the allowed roles, including secondary roles
-    return hasPermissionWithAllRoles(effectiveUser.role, effectiveUser.secondaryRoles, permission.allowedRoles);
-  }, [effectiveUser?.id, effectiveUser?.role, permissionCalculations]); // Close useCallback
+    const hasAccess = hasPermissionWithAllRoles(effectiveUser.role, effectiveUser.secondaryRoles, permission.allowedRoles);
+    console.log('🔧 usePermissions: Role-based access for', featureKey, ':', hasAccess, 'user role:', effectiveUser.role);
+    return hasAccess;
+  };
 
   // Get all permission keys with their status for the current user
   const getAllPermissionsList = () => {

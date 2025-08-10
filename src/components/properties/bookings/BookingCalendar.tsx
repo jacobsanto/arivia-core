@@ -20,6 +20,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
     refreshBookings 
   } = useBookings(property.id);
 
+  // Check if this is a Guesty property (non-UUID format)
+  const isGuestyProperty = property.id && 
+    !property.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
   const handleRefresh = async () => {
     await refreshBookings();
@@ -37,6 +40,11 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
             <h1 className="text-xl font-bold">Bookings - {property.name}</h1>
           </div>
           <p className="text-muted-foreground text-sm">{property.address}</p>
+          {isGuestyProperty && (
+            <p className="text-xs text-muted-foreground">
+              Guesty Property ID: {property.id}
+            </p>
+          )}
         </div>
         <div className="flex gap-2">
           <Button 
@@ -65,7 +73,9 @@ const BookingCalendar: React.FC<BookingCalendarProps> = ({ property, onBack }) =
         <div className="text-center py-8 border rounded-md bg-muted/20">
           <p className="text-lg font-medium">No bookings found</p>
           <p className="text-muted-foreground">
-            Add bookings using the button above
+            {isGuestyProperty 
+              ? "Bookings are synced automatically via Guesty." 
+              : "Add bookings using the button above"}
           </p>
         </div>
       ) : (

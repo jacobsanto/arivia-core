@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useUserPresence } from "@/hooks/chat/useUserPresence";
 import { useConnectionStatus } from "./channel-loaders/useConnectionStatus";
 import { useChannelsLoader } from "./channel-loaders/useChannelsLoader";
@@ -16,7 +16,7 @@ export function useChannelAndUsers() {
   const [initialized, setInitialized] = useState(false);
 
   // Hooks
-  const { user } = useAuth();
+  const { user } = useUser();
   const { getUserStatus } = useUserPresence();
   
   // Use our smaller hooks

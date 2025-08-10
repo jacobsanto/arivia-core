@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types/auth';
-import { logger } from '@/services/logger';
 
 interface DevModeSettings {
   bypassAuth: boolean;
@@ -39,7 +38,7 @@ const defaultSettings: DevModeSettings = {
   showPerformanceMetrics: false,
   enableMockUsers: true,
   logLevel: 'info',
-  autoRefreshInterval: 300000 // Changed from 30s to 5 minutes
+  autoRefreshInterval: 30000
 };
 
 const defaultConnectionStatus: ConnectionStatus = {
@@ -59,30 +58,24 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Load dev mode state from localStorage
   useEffect(() => {
-    logger.debug('DevModeProvider', 'Loading dev mode state from localStorage');
+    console.log('🔧 DevModeProvider: Loading dev mode state from localStorage');
     
     const storedDevMode = localStorage.getItem('arivia-dev-mode');
     const storedSettings = localStorage.getItem('arivia-dev-settings');
     const storedMockUser = localStorage.getItem('arivia-mock-user');
     
     if (storedDevMode === 'true') {
-      logger.debug('DevModeProvider', 'Enabling dev mode from localStorage');
+      console.log('🔧 DevModeProvider: Enabling dev mode from localStorage');
       setIsDevMode(true);
-    } else if (storedDevMode === null) {
-      const isLocalhost = typeof window !== 'undefined' && ['localhost','127.0.0.1','::1'].includes(window.location.hostname);
-      if (isLocalhost) {
-        logger.debug('DevModeProvider', 'Defaulting dev mode ON for localhost');
-        setIsDevMode(true);
-      }
     }
     
     if (storedSettings) {
       try {
         const parsedSettings = JSON.parse(storedSettings);
         setSettings({ ...defaultSettings, ...parsedSettings });
-        logger.debug('DevModeProvider', 'Loaded settings', parsedSettings);
+        console.log('🔧 DevModeProvider: Loaded settings:', parsedSettings);
       } catch (error) {
-        logger.warn('DevModeProvider', 'Failed to parse dev mode settings', { error });
+        console.warn('🔧 DevModeProvider: Failed to parse dev mode settings:', error);
       }
     }
 
@@ -90,10 +83,10 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (storedMockUser) {
       try {
         const parsedMockUser = JSON.parse(storedMockUser);
-        logger.debug('DevModeProvider', 'Loading mock user from localStorage', parsedMockUser);
+        console.log('🔧 DevModeProvider: Loading mock user from localStorage:', parsedMockUser);
         setCurrentMockUser(parsedMockUser);
       } catch (error) {
-        logger.warn('DevModeProvider', 'Failed to parse mock user', { error });
+        console.warn('🔧 DevModeProvider: Failed to parse mock user:', error);
       }
     }
   }, []);
@@ -101,13 +94,13 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   // Persist dev mode state
   useEffect(() => {
     localStorage.setItem('arivia-dev-mode', isDevMode.toString());
-    logger.debug('DevModeProvider', 'Persisted dev mode state', { isDevMode });
+    console.log('🔧 DevModeProvider: Persisted dev mode state:', isDevMode);
   }, [isDevMode]);
 
   // Persist settings
   useEffect(() => {
     localStorage.setItem('arivia-dev-settings', JSON.stringify(settings));
-    logger.debug('DevModeProvider: Persisted settings', settings);
+    console.log('🔧 DevModeProvider: Persisted settings:', settings);
   }, [settings]);
 
   // Auto connection check
@@ -122,25 +115,25 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const toggleDevMode = () => {
     const newMode = !isDevMode;
-    logger.debug('DevModeProvider', 'Toggling dev mode', { newMode });
+    console.log('🔧 DevModeProvider: Toggling dev mode:', newMode);
     setIsDevMode(newMode);
     
     // Clear mock user when disabling dev mode
     if (!newMode) {
       setCurrentMockUser(null);
       localStorage.removeItem('arivia-mock-user');
-      logger.debug('DevModeProvider', 'Cleared mock user on dev mode disable');
+      console.log('🔧 DevModeProvider: Cleared mock user on dev mode disable');
     }
   };
 
   const updateSettings = (newSettings: Partial<DevModeSettings>) => {
     const updatedSettings = { ...settings, ...newSettings };
     setSettings(updatedSettings);
-    logger.debug('DevModeProvider', 'Updated settings', newSettings);
+    console.log('🔧 DevModeProvider: Updated settings:', newSettings);
   };
 
   const checkConnection = async (): Promise<void> => {
-    logger.debug('DevModeProvider', 'Starting connection test');
+    console.log('🔧 DevModeProvider: Starting connection test...');
     
     setConnectionStatus(prev => ({
       ...prev,
@@ -162,7 +155,7 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isChecking: false
       };
       
-      logger.debug('DevModeProvider', 'Connection test result', newStatus);
+      console.log('🔧 DevModeProvider: Connection test result:', newStatus);
       setConnectionStatus(newStatus);
     } catch (error) {
       const latency = Date.now() - startTime;
@@ -176,36 +169,36 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
         isChecking: false
       };
       
-      logger.error('DevModeProvider', 'Connection test failed', newStatus);
+      console.error('🔧 DevModeProvider: Connection test failed:', newStatus);
       setConnectionStatus(newStatus);
     }
   };
 
   const setMockUser = (user: User | null) => {
-    logger.debug('DevModeProvider', 'Setting mock user', { user: user ? `${user.name} (${user.role})` : 'null' });
+    console.log('🔧 DevModeProvider: Setting mock user:', user ? `${user.name} (${user.role})` : 'null');
     setCurrentMockUser(user);
     
     if (user) {
       localStorage.setItem('arivia-mock-user', JSON.stringify(user));
-      logger.debug('DevModeProvider', 'Persisted mock user to localStorage');
+      console.log('🔧 DevModeProvider: Persisted mock user to localStorage');
     } else {
       localStorage.removeItem('arivia-mock-user');
-      logger.debug('DevModeProvider', 'Removed mock user from localStorage');
+      console.log('🔧 DevModeProvider: Removed mock user from localStorage');
     }
 
     // Trigger a custom event to notify other components immediately
-    logger.debug('DevModeProvider', 'Dispatching mockUserChanged event');
+    console.log('🔧 DevModeProvider: Dispatching mockUserChanged event');
     window.dispatchEvent(new CustomEvent('mockUserChanged', { detail: user }));
     
     // Force a state update event for React components
     setTimeout(() => {
-      logger.debug('DevModeProvider', 'Dispatching delayed mockUserStateUpdate event');
+      console.log('🔧 DevModeProvider: Dispatching delayed mockUserStateUpdate event');
       window.dispatchEvent(new CustomEvent('mockUserStateUpdate', { detail: user }));
     }, 0);
   };
 
   const resetSettings = () => {
-    logger.debug('DevModeProvider', 'Resetting dev settings to defaults');
+    console.log('🔧 DevModeProvider: Resetting dev settings to defaults');
     setSettings(defaultSettings);
     setCurrentMockUser(null);
     localStorage.removeItem('arivia-mock-user');

@@ -172,9 +172,9 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         try {
           console.log('🔧 Analytics: Fetching property listings...');
           const { data: properties, error: propError } = await supabase
-            .from("properties")
+            .from("guesty_listings")
             .select("*")
-            ;
+            .eq("is_deleted", false);
 
           if (propError) {
             console.error('🔧 Analytics: Properties query error:', propError);

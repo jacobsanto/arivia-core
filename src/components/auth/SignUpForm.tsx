@@ -10,12 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { signUpFormSchema, SignUpFormValues } from "@/lib/validation/auth-schema";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { SecurityEnhancements } from "./SecurityEnhancements";
-import { logger } from "@/services/logger";
-
 
 interface SignUpFormProps {
   isMobile?: boolean;
@@ -24,7 +22,7 @@ interface SignUpFormProps {
 const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showSecurityInfo, setShowSecurityInfo] = useState(false);
-  const { signUp } = useAuth();
+  const { signup } = useUser();
   const navigate = useNavigate();
 
   const form = useForm<SignUpFormValues>({
@@ -41,11 +39,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password, values.name, values.role);
+      await signup(values.email, values.password, values.name, values.role);
       // Show success message for email confirmation
       setShowSecurityInfo(true);
     } catch (error: any) {
-      logger.error("Registration failed", error);
+      console.error("Registration failed:", error);
     } finally {
       setIsLoading(false);
     }

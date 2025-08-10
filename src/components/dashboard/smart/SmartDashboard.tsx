@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DamageReportForm from "@/components/damage/DamageReportForm";
 import { damageService } from "@/services/damage/damage.service";
@@ -42,7 +42,7 @@ export const SmartDashboard: React.FC = () => {
     toast
   } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useUser();
   const handleCreateDamageReport = async (data: DamageReportFormValues) => {
     try {
       const newReport = await damageService.createDamageReport({
@@ -98,7 +98,7 @@ export const SmartDashboard: React.FC = () => {
         { data: todayTasks, error: todayError },
         { data: maintenanceTasks, error: maintenanceError }
       ] = await Promise.all([
-        supabase.from('properties').select('id'),
+        supabase.from('guesty_listings').select('id').eq('is_deleted', false),
         supabase.from('housekeeping_tasks').select('id').eq('status', 'pending'),
         supabase.from('housekeeping_tasks').select('id').eq('due_date', today),
         supabase.from('maintenance_tasks').select('id').eq('priority', 'high').eq('status', 'pending')

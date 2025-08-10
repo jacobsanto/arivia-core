@@ -1,9 +1,7 @@
 
 import React from 'react';
 import { User } from "@/types/auth";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserState } from "@/contexts/hooks";
-import { updatePermissions as updateUserPermissionsOp } from "@/contexts/auth/operations/permissionOperations";
+import { useUser } from "@/contexts/UserContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Shield } from "lucide-react";
@@ -19,15 +17,7 @@ interface PermissionManagementProps {
 }
 
 const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUser }) => {
-  const { user: currentUser } = useAuth();
-  const { users, setUsers, setUser } = useUserState();
-
-  const updateUserPermissions = React.useCallback(
-    (userId: string, permissions: Record<string, boolean>) => {
-      return updateUserPermissionsOp(currentUser, users, setUsers, setUser, userId, permissions);
-    },
-    [currentUser, users, setUsers, setUser]
-  );
+  const { user: currentUser, updateUserPermissions } = useUser();
 
   const {
     permissions,

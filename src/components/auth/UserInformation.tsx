@@ -1,7 +1,6 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUserState } from "@/contexts/hooks";
+import { useUser } from "@/contexts/UserContext";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
@@ -11,16 +10,12 @@ import UserProfileInfo from "./profile/UserProfileInfo";
 import AccountDetails from "./profile/AccountDetails";
 import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { updateUserProfile } from "@/contexts/auth/userAuthOperations";
-import { logger } from "@/services/logger";
-
 
 const UserInformation = () => {
-  const { user: currentUser } = useAuth();
-  const { setUser, refreshUserProfile } = useUserState();
+  const { user, updateProfile, refreshProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const isMobile = useIsMobile();
-  const isSuperAdmin = currentUser?.role === "superadmin";
+  const isSuperAdmin = user?.role === "superadmin";
 
   const handleEditClick = () => {
     setIsEditing(true);
@@ -31,35 +26,30 @@ const UserInformation = () => {
   };
 
   const handleFormSubmit = async (data: { name: string; email: string; phone?: string }) => {
-    if (!currentUser) return;
+    if (!user) return;
     
     try {
-      const result = await updateUserProfile(
-        currentUser.id,
-        {
-          name: data.name,
-          email: data.email,
-          phone: data.phone
-        },
-        setUser,
-        currentUser
-      );
+      const result = await updateProfile(user.id, {
+        name: data.name,
+        email: data.email,
+        phone: data.phone
+      });
       
       if (result) {
         toast.success("Profile updated successfully");
         setIsEditing(false);
         // Ensure profile is refreshed after successful update
-        await refreshUserProfile();
+        await refreshProfile();
       }
     } catch (error) {
-      logger.error("Error updating profile", error);
+      console.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
         description: "Please try again later"
       });
     }
   };
 
-  if (!currentUser) {
+  if (!user) {
     return (
       <Card>
         <CardContent className="pt-6">
@@ -85,14 +75,14 @@ const UserInformation = () => {
       <CardContent>
         {isEditing ? (
           <ProfileForm 
-            user={currentUser} 
+            user={user} 
             onCancel={handleFormCancel}
             onSubmit={handleFormSubmit}
           />
         ) : (
           <div className="space-y-6">
-            <UserProfileInfo user={currentUser} />
-            <AccountDetails user={currentUser} />
+            <UserProfileInfo user={user} />
+            <AccountDetails user={user} />
             {isSuperAdmin && <SuperAdminInfo />}
           </div>
         )}

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, X, AlertCircle } from 'lucide-react';
 import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';
@@ -9,7 +9,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobilePermissionsDisplay from './MobilePermissionsDisplay';
 
 const PermissionsDisplay = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { canAccess, getOfflineCapabilities, getAllPermissionsList } = usePermissions();
   const isMobile = useIsMobile();
   

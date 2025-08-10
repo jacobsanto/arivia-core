@@ -1,7 +1,7 @@
 
 import React, { useRef, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger, SwipeableTabsProvider } from "@/components/ui/tabs";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import UserInformation from "@/components/auth/UserInformation";
 import SecurityActivity from "@/components/auth/SecurityActivity";
@@ -12,10 +12,9 @@ import SwipeIndicators from "@/components/profile/SwipeIndicators";
 import { useProfileTabs } from "@/components/profile/ProfileTabDefinitions";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { UserProfileErrorBoundary } from "@/components/error-boundaries/UserProfileErrorBoundary";
 
 const UserProfile = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { canAccess } = usePermissions();
   const [activeTab, setActiveTab] = useState("info");
   const tabsRef = useRef(null);
@@ -40,8 +39,7 @@ const UserProfile = () => {
   };
 
   return (
-    <UserProfileErrorBoundary>
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">My Profile</h1>
 
       <div className="relative">
@@ -109,7 +107,6 @@ const UserProfile = () => {
         )}
       </div>
     </div>
-    </UserProfileErrorBoundary>
   );
 };
 

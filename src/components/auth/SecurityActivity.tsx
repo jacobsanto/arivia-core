@@ -1,16 +1,15 @@
 
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { ShieldCheck, Clock, LogIn, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { checkOfflineLoginStatus } from "@/services/auth/offlineService";
 
 const SecurityActivity = () => {
-  const { user } = useAuth();
+  const { user, getOfflineLoginStatus } = useUser();
   
   const handleTwoFactorToggle = (checked: boolean) => {
     // This would connect to the backend to enable/disable 2FA in a real app
@@ -18,13 +17,12 @@ const SecurityActivity = () => {
   };
   
   // Get last auth/login time from localStorage or default to unknown
-  const lastAuthTime = Number(localStorage.getItem("lastAuthTime") || "0");
   const lastLoginTime = localStorage.getItem("lastAuthTime") 
     ? new Date(parseInt(localStorage.getItem("lastAuthTime") || "0")).toLocaleString()
     : "Unknown";
   
   // Determine if offline login is allowed for this user
-  const allowOfflineLogin = checkOfflineLoginStatus(user, lastAuthTime, !navigator.onLine);
+  const allowOfflineLogin = getOfflineLoginStatus();
   
   // For device info, we'll get some basic browser information
   const deviceInfo = {

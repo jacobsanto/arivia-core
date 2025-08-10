@@ -3,8 +3,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('./styles/accessibility.css');
-
 @layer base {
   :root {
     /* Arivia Villas Brand Colors - HSL Values */

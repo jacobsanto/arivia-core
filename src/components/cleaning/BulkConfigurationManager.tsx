@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CleaningTemplate } from '@/hooks/useAdvancedCleaningSystem';
-import { unifiedPropertyService } from '@/services/property/unified-property.service';
 
 interface Property {
   id: string;
@@ -56,15 +55,14 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
 
   const fetchProperties = async () => {
     try {
-      const props = await unifiedPropertyService.fetchAllProperties();
-      const mapped = (props || []).map(p => ({
-        id: p.id,
-        title: p.name, // Use 'name' instead of 'title' from UnifiedProperty
-        property_type: undefined,
-        status: p.status,
-        address: p.location
-      }));
-      setProperties(mapped);
+      const { data, error } = await supabase
+        .from('guesty_listings')
+        .select('id, title, property_type, status, address')
+        .eq('is_deleted', false)
+        .order('title');
+
+      if (error) throw error;
+      setProperties(data || []);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {

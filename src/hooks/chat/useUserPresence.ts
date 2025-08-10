@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 
 interface UserStatus {
@@ -11,7 +11,7 @@ interface UserStatus {
 
 export const useUserPresence = () => {
   const [userStatuses, setUserStatuses] = useState<Record<string, UserStatus>>({});
-  const { user } = useAuth();
+  const { user } = useUser();
   
   useEffect(() => {
     if (!user) return;

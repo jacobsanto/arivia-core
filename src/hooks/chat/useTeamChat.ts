@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useChannelAndUsers } from "@/hooks/chat/useChannelAndUsers";
 import { useChat } from "@/hooks/useChat";
@@ -16,7 +16,7 @@ export function useTeamChat() {
   
   // Hooks
   const isMobile = useIsMobile();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { addError, removeError, errors } = useChatError();
   
   // Use our new hook for channel and users data

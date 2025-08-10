@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { Search, Plus, UserPlus, Mail, Phone, Settings, Users } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,43 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export const MVPUserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [newUserRole, setNewUserRole] = useState("");
   const { toast } = useToast();
-
-  const handleSendInvitation = async () => {
-    if (!newUserEmail || !newUserRole) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in both email and role",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Here you would typically call your invitation API
-      toast({
-        title: "Invitation Sent",
-        description: `Invitation sent to ${newUserEmail} for ${newUserRole} role`,
-      });
-      setNewUserEmail("");
-      setNewUserRole("");
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to send invitation",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleUserSettings = (userId: string) => {
-    toast({
-      title: "User Settings",
-      description: "User settings dialog would open here",
-    });
-  };
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users-list', searchTerm, filterRole],
@@ -139,7 +102,7 @@ export const MVPUserManagement: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="w-full" onClick={handleSendInvitation}>Send Invitation</Button>
+                <Button className="w-full">Send Invitation</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -211,7 +174,12 @@ export const MVPUserManagement: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-4">
-                          <AvatarDisplay user={user as any} size="sm" />
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={user.avatar} alt={user.name} />
+                            <AvatarFallback>
+                              {user.name?.split(' ').map(n => n[0]).join('') || 'U'}
+                            </AvatarFallback>
+                          </Avatar>
                           
                           <div>
                             <h3 className="font-semibold text-foreground">{user.name}</h3>
@@ -234,7 +202,7 @@ export const MVPUserManagement: React.FC = () => {
                           <Badge className={getRoleColor(user.role)}>
                             {getRoleLabel(user.role)}
                           </Badge>
-                          <Button variant="ghost" size="sm" onClick={() => handleUserSettings(user.id)}>
+                          <Button variant="ghost" size="sm">
                             <Settings className="h-4 w-4" />
                           </Button>
                         </div>

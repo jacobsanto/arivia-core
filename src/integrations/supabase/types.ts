@@ -14,62 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      api_logs: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          id: string
-          integration_id: string
-          request_body: Json | null
-          request_headers: Json | null
-          request_method: string
-          request_url: string
-          response_body: Json | null
-          response_headers: Json | null
-          response_status: number | null
-          response_time_ms: number | null
-          retry_count: number | null
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          integration_id: string
-          request_body?: Json | null
-          request_headers?: Json | null
-          request_method: string
-          request_url: string
-          response_body?: Json | null
-          response_headers?: Json | null
-          response_status?: number | null
-          response_time_ms?: number | null
-          retry_count?: number | null
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          id?: string
-          integration_id?: string
-          request_body?: Json | null
-          request_headers?: Json | null
-          request_method?: string
-          request_url?: string
-          response_body?: Json | null
-          response_headers?: Json | null
-          response_status?: number | null
-          response_time_ms?: number | null
-          retry_count?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "api_logs_integration_id_fkey"
-            columns: ["integration_id"]
-            isOneToOne: false
-            referencedRelation: "external_integrations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       audit_logs: {
         Row: {
           action: string
@@ -531,6 +475,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "configuration_assignments_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "configuration_assignments_template_id_fkey"
             columns: ["template_id"]
             isOneToOne: false
@@ -666,108 +617,131 @@ export type Database = {
         }
         Relationships: []
       }
-      egress_monitoring: {
+      guesty_api_usage: {
         Row: {
-          created_at: string | null
-          date: string | null
-          error_count: number | null
+          endpoint: string
           id: string
-          peak_requests_per_minute: number | null
-          request_count: number | null
-          total_bytes: number | null
-          updated_at: string | null
+          rate_limit: number
+          remaining: number
+          reset: string
+          timestamp: string
         }
         Insert: {
-          created_at?: string | null
-          date?: string | null
-          error_count?: number | null
+          endpoint: string
           id?: string
-          peak_requests_per_minute?: number | null
-          request_count?: number | null
-          total_bytes?: number | null
-          updated_at?: string | null
+          rate_limit: number
+          remaining: number
+          reset: string
+          timestamp?: string
         }
         Update: {
-          created_at?: string | null
-          date?: string | null
-          error_count?: number | null
+          endpoint?: string
           id?: string
-          peak_requests_per_minute?: number | null
-          request_count?: number | null
-          total_bytes?: number | null
-          updated_at?: string | null
+          rate_limit?: number
+          remaining?: number
+          reset?: string
+          timestamp?: string
         }
         Relationships: []
       }
-      external_integrations: {
+      guesty_bookings: {
         Row: {
-          api_endpoint: string | null
-          auth_method: string | null
-          category: string
-          config: Json | null
+          check_in: string
+          check_out: string
           created_at: string | null
-          created_by: string | null
-          credentials: Json | null
-          health_score: number | null
+          guest_email: string | null
+          guest_name: string | null
           id: string
-          integration_type: string
-          is_active: boolean | null
-          last_error: string | null
-          last_sync: string | null
-          name: string
-          provider: string
-          rate_limit_per_hour: number | null
-          retry_attempts: number | null
-          status: string
-          timeout_seconds: number | null
+          last_synced: string | null
+          listing_id: string
+          raw_data: Json | null
+          status: string | null
           updated_at: string | null
-          webhook_url: string | null
         }
         Insert: {
-          api_endpoint?: string | null
-          auth_method?: string | null
-          category?: string
-          config?: Json | null
+          check_in: string
+          check_out: string
           created_at?: string | null
-          created_by?: string | null
-          credentials?: Json | null
-          health_score?: number | null
-          id?: string
-          integration_type?: string
-          is_active?: boolean | null
-          last_error?: string | null
-          last_sync?: string | null
-          name: string
-          provider: string
-          rate_limit_per_hour?: number | null
-          retry_attempts?: number | null
-          status?: string
-          timeout_seconds?: number | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id: string
+          last_synced?: string | null
+          listing_id: string
+          raw_data?: Json | null
+          status?: string | null
           updated_at?: string | null
-          webhook_url?: string | null
         }
         Update: {
-          api_endpoint?: string | null
-          auth_method?: string | null
-          category?: string
-          config?: Json | null
+          check_in?: string
+          check_out?: string
           created_at?: string | null
-          created_by?: string | null
-          credentials?: Json | null
-          health_score?: number | null
+          guest_email?: string | null
+          guest_name?: string | null
           id?: string
-          integration_type?: string
-          is_active?: boolean | null
-          last_error?: string | null
-          last_sync?: string | null
-          name?: string
-          provider?: string
-          rate_limit_per_hour?: number | null
-          retry_attempts?: number | null
-          status?: string
-          timeout_seconds?: number | null
+          last_synced?: string | null
+          listing_id?: string
+          raw_data?: Json | null
+          status?: string | null
           updated_at?: string | null
-          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guesty_bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guesty_listings: {
+        Row: {
+          address: Json | null
+          created_at: string | null
+          first_synced_at: string | null
+          highres_url: string | null
+          id: string
+          is_deleted: boolean | null
+          last_synced: string | null
+          property_type: string | null
+          raw_data: Json | null
+          status: string | null
+          sync_status: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          address?: Json | null
+          created_at?: string | null
+          first_synced_at?: string | null
+          highres_url?: string | null
+          id: string
+          is_deleted?: boolean | null
+          last_synced?: string | null
+          property_type?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          sync_status?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          address?: Json | null
+          created_at?: string | null
+          first_synced_at?: string | null
+          highres_url?: string | null
+          id?: string
+          is_deleted?: boolean | null
+          last_synced?: string | null
+          property_type?: string | null
+          raw_data?: Json | null
+          status?: string | null
+          sync_status?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -825,6 +799,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "housekeeping_tasks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "housekeeping_tasks_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "housekeeping_tasks_source_rule_id_fkey"
             columns: ["source_rule_id"]
             isOneToOne: false
@@ -832,66 +820,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      integration_configs: {
-        Row: {
-          category: string
-          created_at: string | null
-          description: string | null
-          documentation_url: string | null
-          estimated_setup_time: string | null
-          id: string
-          is_active: boolean | null
-          logo_url: string | null
-          name: string
-          optional_fields: Json | null
-          provider: string
-          rate_limits: Json | null
-          required_fields: Json | null
-          setup_difficulty: string | null
-          supported_operations: Json | null
-          updated_at: string | null
-          webhook_events: Json | null
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          description?: string | null
-          documentation_url?: string | null
-          estimated_setup_time?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name: string
-          optional_fields?: Json | null
-          provider: string
-          rate_limits?: Json | null
-          required_fields?: Json | null
-          setup_difficulty?: string | null
-          supported_operations?: Json | null
-          updated_at?: string | null
-          webhook_events?: Json | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          description?: string | null
-          documentation_url?: string | null
-          estimated_setup_time?: string | null
-          id?: string
-          is_active?: boolean | null
-          logo_url?: string | null
-          name?: string
-          optional_fields?: Json | null
-          provider?: string
-          rate_limits?: Json | null
-          required_fields?: Json | null
-          setup_difficulty?: string | null
-          supported_operations?: Json | null
-          updated_at?: string | null
-          webhook_events?: Json | null
-        }
-        Relationships: []
       }
       integration_health: {
         Row: {
@@ -1420,7 +1348,15 @@ export type Database = {
           listing_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "property_cleaning_configs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "guesty_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       query_performance_log: {
         Row: {
@@ -2346,65 +2282,6 @@ export type Database = {
         }
         Relationships: []
       }
-      webhook_endpoints: {
-        Row: {
-          created_at: string | null
-          endpoint_url: string
-          events: Json | null
-          headers: Json | null
-          id: string
-          integration_id: string
-          last_received: string | null
-          last_successful: string | null
-          secret_key: string | null
-          status: string | null
-          total_errors: number | null
-          total_received: number | null
-          updated_at: string | null
-          verification_token: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          endpoint_url: string
-          events?: Json | null
-          headers?: Json | null
-          id?: string
-          integration_id: string
-          last_received?: string | null
-          last_successful?: string | null
-          secret_key?: string | null
-          status?: string | null
-          total_errors?: number | null
-          total_received?: number | null
-          updated_at?: string | null
-          verification_token?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          endpoint_url?: string
-          events?: Json | null
-          headers?: Json | null
-          id?: string
-          integration_id?: string
-          last_received?: string | null
-          last_successful?: string | null
-          secret_key?: string | null
-          status?: string | null
-          total_errors?: number | null
-          total_received?: number | null
-          updated_at?: string | null
-          verification_token?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "webhook_endpoints_integration_id_fkey"
-            columns: ["integration_id"]
-            isOneToOne: false
-            referencedRelation: "external_integrations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       webhook_health: {
         Row: {
           created_at: string
@@ -2471,6 +2348,18 @@ export type Database = {
         Args: { rule_uuid: string; booking_data: Json }
         Returns: boolean
       }
+      generate_cleaning_tasks_from_config: {
+        Args: {
+          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
+        }
+        Returns: undefined
+      }
+      generate_housekeeping_tasks_for_booking: {
+        Args: {
+          booking_record: Database["public"]["Tables"]["guesty_bookings"]["Row"]
+        }
+        Returns: undefined
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
@@ -2481,10 +2370,6 @@ export type Database = {
       }
       get_dashboard_metrics: {
         Args: Record<PropertyKey, never>
-        Returns: Json
-      }
-      get_egress_metrics: {
-        Args: { start_date?: string; end_date?: string }
         Returns: Json
       }
       get_housekeeping_metrics: {
@@ -2523,14 +2408,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      is_authenticated_user: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      log_egress_usage: {
-        Args: { bytes_used: number; has_error?: boolean }
-        Returns: undefined
-      }
       log_security_event: {
         Args: {
           event_type: string
@@ -2543,10 +2420,6 @@ export type Database = {
       refresh_performance_views: {
         Args: Record<PropertyKey, never>
         Returns: undefined
-      }
-      require_authenticated: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
       }
       reset_demo_data: {
         Args: Record<PropertyKey, never>

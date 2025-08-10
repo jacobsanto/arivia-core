@@ -6,9 +6,7 @@ import HousekeepingHeader from "./HousekeepingHeader";
 import HousekeepingFilters from "./HousekeepingFilters";
 import HousekeepingKanban from "./HousekeepingKanban";
 import HousekeepingMobileView from "./HousekeepingMobileView";
-import HousekeepingTaskCard from "./HousekeepingTaskCard";
-import HousekeepingListView from "./views/HousekeepingListView";
-import HousekeepingAgendaView from "./views/HousekeepingAgendaView";
+
 const HousekeepingDashboardContainer = () => {
   const {
     tasks,
@@ -23,14 +21,10 @@ const HousekeepingDashboardContainer = () => {
     staffOptions,
     cleaningDefinitions,
     handleTaskStatusUpdate,
-    handleAssignTask,
-    refetch
+    handleAssignTask
   } = useHousekeepingTasks();
 
   const isMobile = useIsMobile();
-
-  const [viewMode, setViewMode] = React.useState<'kanban' | 'card' | 'list' | 'agenda'>('kanban');
-  const [refreshing, setRefreshing] = React.useState(false);
 
   if (loading) {
     return (
@@ -40,23 +34,9 @@ const HousekeepingDashboardContainer = () => {
     );
   }
 
-  // viewMode state moved above loading guard
-
   return (
     <div className="container mx-auto px-4 pb-20">
-      <HousekeepingHeader 
-        viewMode={viewMode} 
-        onViewModeChange={setViewMode}
-        refreshing={refreshing}
-        onRefresh={async () => {
-          try {
-            setRefreshing(true);
-            await refetch();
-          } finally {
-            setRefreshing(false);
-          }
-        }}
-      />
+      <HousekeepingHeader />
       
       <div className="mb-6">
         <HousekeepingFilters 
@@ -81,39 +61,12 @@ const HousekeepingDashboardContainer = () => {
       ) : (
         <>
           {!isMobile && (
-            <>
-              {viewMode === 'kanban' && (
-                <HousekeepingKanban 
-                  tasks={tasks}
-                  onStatusChange={handleTaskStatusUpdate}
-                  onAssignTask={handleAssignTask}
-                  cleaningDefinitions={cleaningDefinitions}
-                />
-              )}
-              {viewMode === 'card' && (
-                <div className="grid grid-cols-1 gap-3">
-                  {tasks.map((task) => (
-                    <HousekeepingTaskCard
-                      key={task.id}
-                      task={task}
-                      onStatusChange={handleTaskStatusUpdate}
-                      onAssignTask={handleAssignTask}
-                      cleaningDefinitions={cleaningDefinitions}
-                    />
-                  ))}
-                </div>
-              )}
-              {viewMode === 'list' && (
-                <HousekeepingListView
-                  tasks={tasks}
-                  onStatusChange={handleTaskStatusUpdate}
-                  onAssignTask={handleAssignTask}
-                />
-              )}
-              {viewMode === 'agenda' && (
-                <HousekeepingAgendaView tasks={tasks} />
-              )}
-            </>
+            <HousekeepingKanban 
+              tasks={tasks}
+              onStatusChange={handleTaskStatusUpdate}
+              onAssignTask={handleAssignTask}
+              cleaningDefinitions={cleaningDefinitions}
+            />
           )}
           
           {isMobile && (
