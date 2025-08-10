@@ -102,7 +102,7 @@ export const useOptimizedAuthContext = () => {
   }, []);
 
   const refreshAuthState = useCallback(async () => {
-    return authCircuitBreaker.execute(async () => {
+    const runRefresh = async () => {
       try {
         logger.debug('AuthContext', 'Refreshing auth state');
         setError(null);
@@ -149,7 +149,22 @@ export const useOptimizedAuthContext = () => {
       } finally {
         setIsLoading(false);
       }
-    });
+    };
+
+    try {
+      const isDev = import.meta.env.MODE === 'development';
+      if (isDev) {
+        logger.debug('AuthContext', 'Dev mode detected - skipping circuit breaker for refresh');
+        await runRefresh();
+      } else {
+        await authCircuitBreaker.execute(runRefresh);
+      }
+    } catch (err) {
+      logger.warn('AuthContext', 'Circuit breaker prevented auth refresh', { error: err instanceof Error ? err.message : err });
+      // Ensure loading unblocks even if breaker is OPEN
+    } finally {
+      setIsLoading(false);
+    }
   }, [fetchProfileWithOptimization, buildUserFromProfile, logRequest]);
 
   // Debounced version to prevent rapid-fire refreshes
