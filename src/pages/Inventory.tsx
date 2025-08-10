@@ -1,7 +1,11 @@
 
 import React, { useState } from "react";
+import { Helmet } from "react-helmet-async";
+import { useQueryClient } from "@tanstack/react-query";
 import { TabsContent, Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RotateCcw, Loader2 } from "lucide-react";
 import InventoryOverview from "@/components/inventory/InventoryOverview";
 import StockLevels from "@/components/inventory/StockLevels";
 import AddItem from "@/components/inventory/AddItem";
@@ -19,12 +23,36 @@ import { InventoryErrorBoundary } from "@/components/error-boundaries/InventoryE
 
 const Inventory = () => {
   const [activeTab, setActiveTab] = useState("overview");
+  const [refreshing, setRefreshing] = useState(false);
   const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["inventory-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["inventory-usage"] }),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const canonicalUrl = typeof window !== "undefined" ? `${window.location.origin}/inventory` : "/inventory";
+  const helmet = (
+    <Helmet>
+      <title>Inventory Management | Arivia Villas</title>
+      <meta name="description" content="Track stock levels, receipts, transfers, vendors, orders and usage across Arivia Villas." />
+      <link rel="canonical" href={canonicalUrl} />
+    </Helmet>
+  );
 
   // Render mobile-specific UI
   if (isMobile) {
     return (
       <InventoryErrorBoundary>
+        {helmet}
         <MobileInventory />
       </InventoryErrorBoundary>
     );
@@ -35,13 +63,20 @@ const Inventory = () => {
     <InventoryErrorBoundary>
       <InventoryProvider>
         <OrderProvider>
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
-              <p className="text-muted-foreground">
-                Manage supplies across main storage and property locations
-              </p>
-            </div>
+          <main className="space-y-6 p-4 md:p-6">
+            {helmet}
+            <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight mb-2">Inventory Management</h1>
+                <p className="text-muted-foreground">
+                  Manage supplies across main storage and property locations
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
+                {refreshing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
+                {refreshing ? "Refreshing" : "Refresh"}
+              </Button>
+            </header>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="border-b">
@@ -98,7 +133,7 @@ const Inventory = () => {
                 </CardContent>
               </Card>
             </Tabs>
-          </div>
+          </main>
         </OrderProvider>
       </InventoryProvider>
     </InventoryErrorBoundary>
