@@ -32,7 +32,7 @@ export const useBookings = (propertyId: string) => {
         // For properties, use the bookings table
         const { data, error } = await supabase
           .from('bookings')
-          .select('*')
+          .select('id, guest_name, guest_email, guest_phone, check_in_date, check_out_date, num_guests, total_price, status, created_at, updated_at, property_id')
           .eq('property_id', propertyId);
         
         if (error) throw new Error(error.message);
