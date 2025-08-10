@@ -4,7 +4,7 @@ import { Helmet } from "react-helmet-async";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RotateCcw, Loader2, DollarSign, PieChart, Receipt } from "lucide-react";
+import { RotateCcw, Loader2, Wrench, Package, BarChart3 } from "lucide-react";
 
 const Finance: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
@@ -14,10 +14,8 @@ const Finance: React.FC = () => {
     try {
       setRefreshing(true);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["finance-expenses"] }),
-        queryClient.invalidateQueries({ queryKey: ["finance-revenue"] }),
-        queryClient.invalidateQueries({ queryKey: ["finance-payouts"] }),
-        queryClient.invalidateQueries({ queryKey: ["finance-reports"] }),
+        queryClient.invalidateQueries({ queryKey: ["inventory-items"] }),
+        queryClient.invalidateQueries({ queryKey: ["inventory-usage"] }),
       ]);
     } finally {
       setRefreshing(false);
@@ -29,8 +27,8 @@ const Finance: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Finance | Arivia Villas</title>
-        <meta name="description" content="Finance dashboard for expenses, revenue, payouts, and per‑villa profitability at Arivia Villas." />
+        <title>Finance — Damage & Inventory | Arivia Villas</title>
+        <meta name="description" content="Track damage repair costs and inventory spend/valuation at Arivia Villas. No revenue or payouts." />
         <link rel="canonical" href={canonicalUrl} />
       </Helmet>
 
@@ -38,7 +36,7 @@ const Finance: React.FC = () => {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Finance</h1>
-            <p className="text-muted-foreground">Expenses, revenue, payouts and profitability overview</p>
+            <p className="text-muted-foreground">Damage repairs and inventory cost tracking</p>
           </div>
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={refreshing}>
             {refreshing ? (
@@ -53,28 +51,28 @@ const Finance: React.FC = () => {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><Receipt className="h-5 w-5" /> Expenses Snapshot</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Wrench className="h-5 w-5" /> Damage Repair Costs</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Coming soon: expense categories, trends and approvals.</p>
+              <p className="text-sm text-muted-foreground">Track repair estimates, approved costs, and pending invoices from damage reports.</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5" /> Revenue & Payouts</CardTitle>
+              <CardTitle className="flex items-center gap-2"><Package className="h-5 w-5" /> Inventory Spend & Stock Valuation</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Coming soon: channel revenue, payouts and reconciliation.</p>
+              <p className="text-sm text-muted-foreground">Monitor purchase spend, unit costs, and current stock valuation.</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><PieChart className="h-5 w-5" /> Per‑Villa Profitability</CardTitle>
+              <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Damage vs Inventory Cost Trends</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Coming soon: per‑villa P&L with filters and exports.</p>
+              <p className="text-sm text-muted-foreground">Compare monthly damage costs vs. inventory usage costs.</p>
             </CardContent>
           </Card>
         </section>
