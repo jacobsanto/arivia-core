@@ -30,9 +30,9 @@ export const useDashboard = () => {
       
       // Fetch dashboard metrics with error handling for each query
       const [propertiesResult, tasksResult, bookingsResult] = await Promise.allSettled([
-        supabase.from('guesty_listings').select('*', { count: 'exact' }).eq('is_deleted', false),
+        supabase.from('properties').select('*', { count: 'exact' }),
         supabase.from('housekeeping_tasks').select('*', { count: 'exact' }).neq('status', 'completed'),
-        supabase.from('guesty_bookings').select('*', { count: 'exact' }).eq('status', 'confirmed')
+        supabase.from('bookings').select('*', { count: 'exact' }).eq('status', 'confirmed')
       ]);
 
       const dashboardData: DashboardMetrics = {

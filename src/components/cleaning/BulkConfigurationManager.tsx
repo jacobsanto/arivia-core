@@ -59,7 +59,7 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
       const props = await unifiedPropertyService.fetchAllProperties();
       const mapped = (props || []).map(p => ({
         id: p.id,
-        title: p.title,
+        title: p.name, // Use 'name' instead of 'title' from UnifiedProperty
         property_type: undefined,
         status: p.status,
         address: p.location

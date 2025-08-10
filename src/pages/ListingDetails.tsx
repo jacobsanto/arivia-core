@@ -22,7 +22,7 @@ const ListingDetails = () => {
     queryKey: ['guesty-listing', listingId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('guesty_listings')
+        .from('properties')
         .select('*')
         .eq('id', listingId)
         .single();
@@ -87,7 +87,7 @@ const ListingDetails = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-2xl font-bold truncate">{listing.title}</h1>
+          <h1 className="text-2xl font-bold truncate">{listing.name}</h1>
         </div>
       </div>
 

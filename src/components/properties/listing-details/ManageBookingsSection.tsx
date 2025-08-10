@@ -3,7 +3,7 @@ import React from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useGuestyBookings } from "./useGuestyBookings";
+import { useBookingsAndTasks } from '@/hooks/useBookingsAndTasks';
 import BookingsEmptyState from "./BookingsEmptyState";
 import ManageBookingsHeader from "./ManageBookingsHeader";
 import { ManageBookingsList } from "./ManageBookingsList";
@@ -19,14 +19,14 @@ const ManageBookingsSection: React.FC<ManageBookingsSectionProps> = ({
   listing,
   isLoading,
 }) => {
-  const { bookingsWithTasks, loading, error, refetch, lastSynced } = useGuestyBookings(listing?.id);
+  const { bookingsWithTasks, loading, error, refetch, lastSynced } = useBookingsAndTasks(listing?.id);
   const { isSyncing, syncBookingsForListing } = useBookingSync({
     onSyncComplete: refetch
   });
 
   // Sort bookings by check-in date
   const sortedBookingsWithTasks = bookingsWithTasks.slice().sort((a, b) =>
-    new Date(a.booking.check_in).getTime() - new Date(b.booking.check_in).getTime()
+    new Date(a.booking.check_in_date).getTime() - new Date(b.booking.check_in_date).getTime()
   );
 
   const handleTriggerCleaning = async (bookingId: string) => {

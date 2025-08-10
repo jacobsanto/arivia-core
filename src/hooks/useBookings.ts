@@ -55,26 +55,24 @@ export const useBookings = (propertyId: string) => {
       if (isGuestyProperty) {
         // For Guesty properties, use the guesty_bookings table with listing_id filter
         const { data, error } = await supabase
-          .from('guesty_bookings')
+          .from('bookings')
           .select('*')
-          .eq('listing_id', propertyId);
+          .eq('property_id', propertyId);
         if (error) throw new Error(`Error fetching Guesty bookings: ${error.message}`);
-        const transformedBookings: Booking[] = (data as GuestyBookingDb[] || []).map(booking => {
-          const rawData = booking.raw_data || {};
-          const guestData = rawData.guest || {};
+        const transformedBookings: Booking[] = (data || []).map(booking => {
           return {
             id: booking.id,
-            guest_name: booking.guest_name || guestData.fullName || 'Guest',
-            guest_email: guestData.email || 'email@example.com',
-            guest_phone: guestData.phone,
-            check_in_date: booking.check_in,
-            check_out_date: booking.check_out,
-            num_guests: rawData.guestsCount || 1,
-            total_price: rawData.money?.netAmount || 0,
-            status: booking.status || 'confirmed',
-            created_at: booking.created_at || new Date().toISOString(),
-            updated_at: booking.updated_at || booking.last_synced || new Date().toISOString(),
-            property_id: booking.listing_id
+            guest_name: booking.guest_name,
+            guest_email: booking.guest_email,
+            guest_phone: booking.guest_phone,
+            check_in_date: booking.check_in_date,
+            check_out_date: booking.check_out_date,
+            num_guests: booking.num_guests,
+            total_price: booking.total_price,
+            status: booking.status,
+            created_at: booking.created_at,
+            updated_at: booking.updated_at,
+            property_id: booking.property_id
           };
         });
         setBookings(transformedBookings);

@@ -81,21 +81,21 @@ export const useInfiniteBookings = (listingId?: string, pageSize = 20) => {
     queryKey: ['bookings', 'infinite', listingId],
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
-        .from('guesty_bookings')
+        .from('bookings')
         .select(`
           id,
-          check_in,
-          check_out,
+          check_in_date,
+          check_out_date,
           status,
           guest_name,
           guest_email,
-          listing_id
+          property_id
         `)
-        .order('check_in', { ascending: false })
+        .order('check_in_date', { ascending: false })
         .range(pageParam as number, (pageParam as number) + pageSize - 1);
 
       if (listingId) {
-        query = query.eq('listing_id', listingId);
+        query = query.eq('property_id', listingId);
       }
 
       const { data, error } = await query;
