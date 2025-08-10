@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Activity, AlertTriangle, BarChart3 } from 'lucide-react';
 import EgressDashboard from './EgressDashboard';
 import EgressAlertsPanel from './EgressAlertsPanel';
+import EgressValidation from './EgressValidation';
 
 const MonitoringCenter: React.FC = () => {
   return (
@@ -18,7 +19,7 @@ const MonitoringCenter: React.FC = () => {
       </div>
 
       <Tabs defaultValue="dashboard" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="dashboard" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Dashboard
@@ -30,6 +31,10 @@ const MonitoringCenter: React.FC = () => {
           <TabsTrigger value="optimization" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
             Optimization
+          </TabsTrigger>
+          <TabsTrigger value="validation" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Validation
           </TabsTrigger>
         </TabsList>
 
@@ -88,6 +93,10 @@ const MonitoringCenter: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="validation" className="space-y-4">
+          <EgressValidation />
         </TabsContent>
       </Tabs>
     </div>
