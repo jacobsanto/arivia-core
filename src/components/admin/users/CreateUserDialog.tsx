@@ -74,19 +74,8 @@ export const CreateUserDialog = ({
       // For now, we'll create a profile entry directly (this is for demo purposes)
       const userId = crypto.randomUUID();
       
-      const { error } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          name: data.name,
-          email: data.email,
-          role: data.role,
-          phone: data.phone || null,
-        });
-
-      if (error) {
-        throw error;
-      }
+      // Since profiles table doesn't exist, show placeholder message
+      throw new Error('User creation not available - profiles table not configured');
 
       toastService.success(`User "${data.name}" created successfully!`);
       form.reset();

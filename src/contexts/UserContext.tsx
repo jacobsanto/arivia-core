@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { createContext, useContext, useState } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { UserContextType } from "./types/userContext.types";

@@ -68,29 +68,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const ensureUserProfile = async (user: User) => {
     try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error && error.code === 'PGRST116') {
-        // Profile doesn't exist, create it
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({
-            id: user.id,
-            email: user.email || '',
-            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
-            role: 'concierge', // Default role
-            avatar: user.user_metadata?.avatar_url || null,
-            phone: user.user_metadata?.phone || null
-          });
-
-        if (insertError) {
-          console.error('Error creating profile:', insertError);
-        }
-      }
+      // Since profiles table doesn't exist, skip profile creation for now
+      console.log('Profile creation skipped - profiles table not configured');
     } catch (error) {
       console.error('Error ensuring user profile:', error);
     }

@@ -22,18 +22,8 @@ export const MVPUserManagement: React.FC = () => {
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users-list', searchTerm, filterRole],
     queryFn: async () => {
-      let query = supabase.from('profiles').select('*');
-      
-      if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
-      }
-      
-      if (filterRole !== 'all') {
-        query = query.eq('role', filterRole);
-      }
-      
-      const { data } = await query.order('created_at', { ascending: false });
-      return data || [];
+      // Since profiles table doesn't exist, return empty array for now
+      return [];
     }
   });
 

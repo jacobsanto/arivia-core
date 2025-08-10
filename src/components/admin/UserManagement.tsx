@@ -79,13 +79,8 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setUsers((data || []) as User[]);
+      // Since profiles table doesn't exist, set empty array for now
+      setUsers([]);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to load users');
@@ -94,14 +89,8 @@ const UserManagement = () => {
 
   const fetchRecentActivity = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_activity_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) throw error;
-      setActivities(data || []);
+      // Since user_activity_log table doesn't exist, set empty array for now
+      setActivities([]);
     } catch (error) {
       console.error('Error fetching activity:', error);
     }
@@ -119,19 +108,10 @@ const UserManagement = () => {
 
   const handleCreateUser = async () => {
     try {
-      const { data, error } = await supabase.rpc('create_user_with_role', {
-        email: newUser.email,
-        password: newUser.password,
-        full_name: newUser.name,
-        user_role: newUser.role
-      });
-
-      if (error) throw error;
-      
-      toast.success('User creation initiated successfully');
+      // Since create_user_with_role function doesn't exist, show placeholder message
+      toast.error('User creation not available - database functions not configured');
       setShowCreateDialog(false);
       setNewUser({ email: '', name: '', role: 'property_manager', password: '' });
-      fetchUsers();
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast.error(error.message || 'Failed to create user');
@@ -140,15 +120,8 @@ const UserManagement = () => {
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     try {
-      const { data, error } = await supabase.rpc('update_user_role', {
-        target_user_id: userId,
-        new_role: newRole
-      });
-
-      if (error) throw error;
-      
-      toast.success('User role updated successfully');
-      fetchUsers();
+      // Since update_user_role function doesn't exist, show placeholder message
+      toast.error('Role update not available - database functions not configured');
     } catch (error: any) {
       console.error('Error updating role:', error);
       toast.error(error.message || 'Failed to update role');
