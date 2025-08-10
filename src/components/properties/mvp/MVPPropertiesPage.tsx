@@ -56,13 +56,16 @@ export const MVPPropertiesPage: React.FC = () => {
     const { error } = await supabase.from('guesty_listings').delete().eq('id', id);
     if (error) { toast.error('Failed to delete property'); } else { toast.success('Property deleted'); refetch(); }
   };
+  const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}/properties` : '/properties';
   return <>
       <Helmet>
-        <title>Properties - Arivia Villas Management</title>
+        <title>Properties | Arivia Villas</title>
+        <meta name="description" content="Manage Arivia Villas properties: search, filter, and view imported and manual listings with live updates." />
+        <link rel="canonical" href={canonicalUrl} />
       </Helmet>
       
-      <div className="space-y-6 p-4 md:p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <main className="space-y-6 p-4 md:p-6">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Properties</h1>
             <p className="text-muted-foreground">Manage your property portfolio</p>
@@ -78,7 +81,7 @@ export const MVPPropertiesPage: React.FC = () => {
               {isRefreshing ? 'Refreshing...' : 'Refresh'}
             </Button>
           </div>
-        </div>
+        </header>
 
         <Card>
           <CardHeader>
@@ -123,7 +126,7 @@ export const MVPPropertiesPage: React.FC = () => {
                 {properties?.map(property => <Card key={property.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <div onClick={() => navigate(`/properties/listings/${property.id}`)}>
                       {property.thumbnail_url && <div className="aspect-video overflow-hidden rounded-t-lg">
-                          <img src={property.thumbnail_url} alt={property.title} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                          <img src={property.thumbnail_url} alt={`${property.title} - Arivia Villas property`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
                         </div>}
                       
                       <CardContent className="p-4">
@@ -188,7 +191,7 @@ export const MVPPropertiesPage: React.FC = () => {
                   <Card key={p.id} className="hover:shadow-lg transition-shadow">
                     {p.image_url && (
                       <div className="aspect-video overflow-hidden rounded-t-lg">
-                        <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                        <img src={p.image_url} alt={`${p.name} - Arivia Villas property`} loading="lazy" className="w-full h-full object-cover" />
                       </div>
                     )}
                     <CardContent className="p-4">
@@ -208,6 +211,6 @@ export const MVPPropertiesPage: React.FC = () => {
         )}
 
         <AddPropertyDialog open={isAddOpen} onOpenChange={setIsAddOpen} onCreated={handlePropertyAdded} />
-      </div>
+      </main>
     </>;
   };
