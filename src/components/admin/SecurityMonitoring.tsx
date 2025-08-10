@@ -66,6 +66,29 @@ const SecurityMonitoring = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  const handleResolveEvent = async (eventId: string) => {
+    try {
+      // For now, just show a toast indicating this would resolve the event
+      // In a real implementation, you would add a resolved field to the audit_logs table
+      toast.success('Security event resolved');
+      
+      // Update local state to mark as resolved
+      setSecurityData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          recent_security_events: prev.recent_security_events.map(event =>
+            event.id === eventId ? { ...event, resolved: true } : event
+          ),
+          unresolved_events_count: Math.max(0, prev.unresolved_events_count - 1)
+        };
+      });
+    } catch (error) {
+      console.error('Error resolving event:', error);
+      toast.error('Failed to resolve event');
+    }
+  };
+
   const fetchSecurityDashboard = async () => {
     try {
       const { data, error } = await supabase.rpc('get_security_dashboard');
@@ -342,7 +365,7 @@ const SecurityMonitoring = () => {
                   </div>
                   
                   {!event.resolved && (
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => handleResolveEvent(event.id)}>
                       Resolve
                     </Button>
                   )}

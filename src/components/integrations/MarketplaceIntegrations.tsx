@@ -15,6 +15,16 @@ export const MarketplaceIntegrations = () => {
   const [vrboEnabled, setVrboEnabled] = useState(false);
   const [autoSync, setAutoSync] = useState(true);
 
+  const connectMarketplace = (marketplaceName: string) => {
+    console.log(`Connecting to ${marketplaceName}...`);
+    // Here you would implement the actual connection logic
+  };
+
+  const configureMarketplace = (marketplaceName: string) => {
+    console.log(`Configuring ${marketplaceName}...`);
+    // Here you would implement the configuration logic
+  };
+
   const marketplaces = [
     {
       name: "Airbnb",
@@ -186,9 +196,6 @@ export const MarketplaceIntegrations = () => {
     }
   };
 
-  const connectMarketplace = (marketplace: string) => {
-    console.log('Connecting to marketplace:', marketplace);
-  };
 
   const optimizeListing = (property: string) => {
     console.log('Optimizing listing for:', property);
@@ -270,7 +277,7 @@ export const MarketplaceIntegrations = () => {
                       Coming Soon
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => configureMarketplace(marketplace.name)}>
                       Configure
                     </Button>
                   )}

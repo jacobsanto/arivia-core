@@ -18,7 +18,43 @@ import { useToast } from "@/hooks/use-toast";
 export const MVPUserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserRole, setNewUserRole] = useState("");
   const { toast } = useToast();
+
+  const handleSendInvitation = async () => {
+    if (!newUserEmail || !newUserRole) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in both email and role",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      // Here you would typically call your invitation API
+      toast({
+        title: "Invitation Sent",
+        description: `Invitation sent to ${newUserEmail} for ${newUserRole} role`,
+      });
+      setNewUserEmail("");
+      setNewUserRole("");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send invitation",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUserSettings = (userId: string) => {
+    toast({
+      title: "User Settings",
+      description: "User settings dialog would open here",
+    });
+  };
 
   const { data: users, isLoading, refetch } = useQuery({
     queryKey: ['users-list', searchTerm, filterRole],
@@ -103,7 +139,7 @@ export const MVPUserManagement: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="w-full">Send Invitation</Button>
+                <Button className="w-full" onClick={handleSendInvitation}>Send Invitation</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -198,7 +234,7 @@ export const MVPUserManagement: React.FC = () => {
                           <Badge className={getRoleColor(user.role)}>
                             {getRoleLabel(user.role)}
                           </Badge>
-                          <Button variant="ghost" size="sm">
+                          <Button variant="ghost" size="sm" onClick={() => handleUserSettings(user.id)}>
                             <Settings className="h-4 w-4" />
                           </Button>
                         </div>

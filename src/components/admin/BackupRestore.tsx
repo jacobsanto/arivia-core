@@ -146,6 +146,20 @@ const BackupRestore = () => {
     }, 3000);
   };
 
+  const handleConfigureSchedule = () => {
+    toast({
+      title: "Schedule Configuration",
+      description: "Backup schedule configuration dialog would open here."
+    });
+  };
+
+  const handleStorageSettings = () => {
+    toast({
+      title: "Storage Settings", 
+      description: "Storage settings dialog would open here."
+    });
+  };
+
   const getStatusColor = (status: BackupRecord['status']) => {
     switch (status) {
       case 'completed': return 'text-green-600';
@@ -372,7 +386,7 @@ const BackupRestore = () => {
                       <span className="text-sm">Compression</span>
                       <Badge>Enabled</Badge>
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={handleConfigureSchedule}>
                       <Settings className="h-4 w-4 mr-2" />
                       Configure Schedule
                     </Button>
@@ -396,7 +410,7 @@ const BackupRestore = () => {
                       <span className="text-sm">Encryption</span>
                       <Badge>AES-256</Badge>
                     </div>
-                    <Button variant="outline" className="w-full">
+                    <Button variant="outline" className="w-full" onClick={handleStorageSettings}>
                       <Settings className="h-4 w-4 mr-2" />
                       Storage Settings
                     </Button>
