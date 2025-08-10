@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { CleaningTemplate } from '@/hooks/useAdvancedCleaningSystem';
+import { unifiedPropertyService } from '@/services/property/unified-property.service';
 
 interface Property {
   id: string;
@@ -55,7 +56,7 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
 
   const fetchProperties = async () => {
     try {
-      const props = await centralizedPropertyService.getAllProperties();
+      const props = await unifiedPropertyService.fetchAllProperties();
       const mapped = (props || []).map(p => ({
         id: p.id,
         title: p.title,

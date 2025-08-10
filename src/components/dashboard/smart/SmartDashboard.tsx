@@ -98,7 +98,7 @@ export const SmartDashboard: React.FC = () => {
         { data: todayTasks, error: todayError },
         { data: maintenanceTasks, error: maintenanceError }
       ] = await Promise.all([
-        supabase.from('guesty_listings').select('id').eq('is_deleted', false),
+        supabase.from('properties').select('id').eq('is_deleted', false),
         supabase.from('housekeeping_tasks').select('id').eq('status', 'pending'),
         supabase.from('housekeeping_tasks').select('id').eq('due_date', today),
         supabase.from('maintenance_tasks').select('id').eq('priority', 'high').eq('status', 'pending')

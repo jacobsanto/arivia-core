@@ -22,9 +22,9 @@ export const MVPPropertiesPage: React.FC = () => {
   } = useQuery({
     queryKey: ['properties-list', searchTerm, filterStatus],
     queryFn: async () => {
-      let query = supabase.from('guesty_listings').select('*');
+      let query = supabase.from('properties').select('*');
       if (searchTerm) {
-        query = query.ilike('title', `%${searchTerm}%`);
+        query = query.ilike('name', `%${searchTerm}%`);
       }
       if (filterStatus !== 'all') {
         query = query.eq('status', filterStatus);
@@ -53,7 +53,7 @@ export const MVPPropertiesPage: React.FC = () => {
   const handlePropertyAdded = () => { refetchManual(); };
   const handleDeleteImported = async (id: string) => {
     if (!confirm('Delete this imported property? This action cannot be undone.')) return;
-    const { error } = await supabase.from('guesty_listings').delete().eq('id', id);
+    const { error } = await supabase.from('properties').delete().eq('id', id);
     if (error) { toast.error('Failed to delete property'); } else { toast.success('Property deleted'); refetch(); }
   };
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}/properties` : '/properties';
@@ -125,14 +125,14 @@ export const MVPPropertiesPage: React.FC = () => {
               </div> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {properties?.map(property => <Card key={property.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                     <div onClick={() => navigate(`/properties/listings/${property.id}`)}>
-                      {property.thumbnail_url && <div className="aspect-video overflow-hidden rounded-t-lg">
-                          <img src={property.thumbnail_url} alt={`${property.title} - Arivia Villas property`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                        {property.image_url && <div className="aspect-video overflow-hidden rounded-t-lg">
+                          <img src={property.image_url} alt={`${property.name} - Arivia Villas property`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
                         </div>}
                       
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between mb-2">
                           <h3 className="font-semibold text-foreground truncate pr-2">
-                            {property.title}
+                            {property.name}
                           </h3>
                           <Badge variant={property.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                             {property.status}
@@ -148,7 +148,7 @@ export const MVPPropertiesPage: React.FC = () => {
                         
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-muted-foreground">
-                            {property.property_type || 'Property'}
+                            Property
                           </span>
                           <div className="flex items-center gap-1">
                             <Button variant="ghost" size="sm" onClick={e => {
