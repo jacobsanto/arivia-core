@@ -54,7 +54,7 @@ export const useBookings = (propertyId: string) => {
 
       if (isGuestyProperty) {
         // For Guesty properties, use the guesty_bookings table with listing_id filter
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('guesty_bookings')
           .select('*')
           .eq('listing_id', propertyId);
@@ -80,7 +80,7 @@ export const useBookings = (propertyId: string) => {
         setBookings(transformedBookings);
       } else {
         // For regular properties, use the bookings table with UUID property_id filter
-        const { data, error } = await supabase
+        const { data, error } = await (supabase as any)
           .from('bookings')
           .select('*')
           .eq('property_id', propertyId);

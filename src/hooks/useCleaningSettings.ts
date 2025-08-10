@@ -19,7 +19,7 @@ export const useCleaningSettings = () => {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
+      const { data, error: fetchError } = await (supabase as any)
         .from('property_cleaning_configs')
         .select('*')
         .order('created_at', { ascending: false });

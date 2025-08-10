@@ -26,7 +26,7 @@ export function useGuestyListingBookings(listingId: string | undefined) {
     queryFn: async () => {
       if (!listingId) return { bookings: [], stats: getEmptyStats() };
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('guesty_bookings')
         .select('*')
         .eq('listing_id', listingId)

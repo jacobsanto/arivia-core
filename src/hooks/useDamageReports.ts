@@ -79,12 +79,12 @@ export const useDamageReports = () => {
 
   const handleUpdateReport = async (reportId: string, updates: Partial<DamageReport>) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('damage_reports')
         .update(updates)
         .eq('id', reportId)
         .select()
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       

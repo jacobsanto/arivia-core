@@ -117,7 +117,7 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch housekeeping metrics
         try {
           console.log('🔧 Analytics: Fetching housekeeping tasks...');
-          const { data: housekeepingTasks, error: hkError } = await supabase
+          const { data: housekeepingTasks, error: hkError } = await (supabase as any)
             .from("housekeeping_tasks")
             .select("*")
             .gte("created_at", dateRange.from.toISOString())
@@ -146,7 +146,7 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch maintenance metrics
         try {
           console.log('🔧 Analytics: Fetching maintenance tasks...');
-          const { data: maintenanceTasks, error: mtError } = await supabase
+          const { data: maintenanceTasks, error: mtError } = await (supabase as any)
             .from("maintenance_tasks")
             .select("*")
             .gte("created_at", dateRange.from.toISOString())
@@ -171,7 +171,7 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch property metrics
         try {
           console.log('🔧 Analytics: Fetching property listings...');
-          const { data: properties, error: propError } = await supabase
+          const { data: properties, error: propError } = await (supabase as any)
             .from("guesty_listings")
             .select("*")
             .eq("is_deleted", false);
@@ -194,7 +194,7 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch damage reports
         try {
           console.log('🔧 Analytics: Fetching damage reports...');
-          const { data: damageReports, error: dmgError } = await supabase
+          const { data: damageReports, error: dmgError } = await (supabase as any)
             .from("damage_reports")
             .select("*")
             .gte("created_at", dateRange.from.toISOString())

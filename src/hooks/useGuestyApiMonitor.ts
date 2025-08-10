@@ -36,7 +36,7 @@ export function useGuestyApiMonitor() {
   const { data: apiUsage, isLoading, refetch } = useQuery({
     queryKey: ['guesty-api-usage'],
     queryFn: async (): Promise<ApiUsageData[]> => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('guesty_api_usage')
         .select('*')
         .order('timestamp', { ascending: false })
@@ -55,10 +55,10 @@ export function useGuestyApiMonitor() {
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('guesty_api_usage')
         .select('*')
-        .lte('remaining', 5) // Consider rate limited if 5 or fewer requests remaining
+        .lte('remaining', 5)
         .gte('timestamp', oneDayAgo.toISOString())
         .order('timestamp', { ascending: false });
         
@@ -72,11 +72,11 @@ export function useGuestyApiMonitor() {
   const { data: healthData } = useQuery({
     queryKey: ['guesty-api-health'],
     queryFn: async (): Promise<HealthData | null> => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('integration_health')
         .select('*')
         .eq('provider', 'guesty')
-        .single();
+        .maybeSingle();
         
       if (error && error.code !== 'PGRST116') throw error; // Ignore not found
       return data as HealthData | null;
