@@ -2,7 +2,7 @@
 import { addDays, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear } from 'date-fns';
 
 // Updated TimeFilter to include all values used throughout the app
-export type TimeFilter = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom' | 'last7' | 'last30' | 'last90' | 'last12months';
+export type TimeFilter = 'day' | 'week' | 'month' | 'quarter' | 'year' | 'custom' | 'last7' | 'last30' | 'last90' | 'last12months' | 'mtd' | 'qtd' | 'ytd' | 'all';
 
 /**
  * Get date range based on time filter
@@ -26,15 +26,30 @@ export const getDateRangeForTimeFilter = (filter: TimeFilter): { from: Date; to:
         from: startOfMonth(now),
         to: endOfMonth(now)
       };
+    case 'mtd':
+      return {
+        from: startOfMonth(now),
+        to: now
+      };
     case 'quarter':
       return {
         from: startOfQuarter(now),
         to: endOfQuarter(now)
       };
+    case 'qtd':
+      return {
+        from: startOfQuarter(now),
+        to: now
+      };
     case 'year':
       return {
         from: startOfYear(now),
         to: endOfYear(now)
+      };
+    case 'ytd':
+      return {
+        from: startOfYear(now),
+        to: now
       };
     case 'last7':
       return {
@@ -54,6 +69,11 @@ export const getDateRangeForTimeFilter = (filter: TimeFilter): { from: Date; to:
     case 'last12months':
       return {
         from: subDays(now, 365),
+        to: now
+      };
+    case 'all':
+      return {
+        from: new Date(2000, 0, 1),
         to: now
       };
     case 'custom':
@@ -120,10 +140,16 @@ export const getDateRangeDescription = (filter: TimeFilter): string => {
       return 'This Week';
     case 'month':
       return 'This Month';
+    case 'mtd':
+      return 'Month to Date';
     case 'quarter':
       return 'This Quarter';
+    case 'qtd':
+      return 'Quarter to Date';
     case 'year':
       return 'This Year';
+    case 'ytd':
+      return 'Year to Date';
     case 'last7':
       return 'Last 7 Days';
     case 'last30':
@@ -132,6 +158,8 @@ export const getDateRangeDescription = (filter: TimeFilter): string => {
       return 'Last 90 Days';
     case 'last12months':
       return 'Last 12 Months';
+    case 'all':
+      return 'All Time';
     case 'custom':
       return 'Custom Period';
     default:
