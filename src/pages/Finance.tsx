@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RotateCcw, Loader2, Wrench, Package, BarChart3, FileWarning } from "lucide-react";
+import { RotateCcw, Loader2, Wrench, Package, BarChart3, FileWarning, ArrowUpDown, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const Finance: React.FC = () => {
@@ -169,6 +169,52 @@ const Finance: React.FC = () => {
     }));
   }, [properties, damageTotalsById, invTotalsByName]);
 
+  const [sortBy, setSortBy] = useState<'name' | 'damage' | 'invQty'>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const sortedRows = React.useMemo(() => {
+    const rows = [...(villaRows || [])];
+    rows.sort((a, b) => {
+      const valA = a[sortBy];
+      const valB = b[sortBy];
+      if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+      if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return rows;
+  }, [villaRows, sortBy, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedRows = React.useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedRows.slice(start, start + pageSize);
+  }, [sortedRows, currentPage]);
+
+  const handleSort = (column: 'name' | 'damage' | 'invQty') => {
+    if (sortBy === column) {
+      setSortDir(prev => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(column);
+      setSortDir('asc');
+    }
+    setPage(1);
+  };
+
+  const exportCsv = () => {
+    const header = ['Villa', 'Damage Cost (EUR)', 'Inventory Usage (qty)'];
+    const rows = sortedRows.map(r => [r.name, (r.damage ?? 0).toString(), (r.invQty ?? 0).toString()]);
+    const csv = [header, ...rows].map(r => r.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finance_villas_mtd.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
     <>
       <Helmet>
@@ -262,19 +308,37 @@ const Finance: React.FC = () => {
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-lg font-semibold">All Villas (MTD)</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">All Villas (MTD)</h2>
+            <Button variant="outline" size="sm" onClick={exportCsv}>
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          </div>
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Villa</TableHead>
-                    <TableHead className="text-right">Damage Cost (EUR)</TableHead>
-                    <TableHead className="text-right">Inventory Usage (qty)</TableHead>
+                    <TableHead>
+                      <button className="flex items-center gap-1" onClick={() => handleSort('name')}>
+                        Villa <ArrowUpDown className="h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button className="flex items-center gap-1 ml-auto" onClick={() => handleSort('damage')}>
+                        Damage Cost (EUR) <ArrowUpDown className="h-4 w-4" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-right">
+                      <button className="flex items-center gap-1 ml-auto" onClick={() => handleSort('invQty')}>
+                        Inventory Usage (qty) <ArrowUpDown className="h-4 w-4" />
+                      </button>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {(villaRows || []).map((row: any) => (
+                  {(paginatedRows || []).map((row: any) => (
                     <TableRow key={row.id}>
                       <TableCell className="font-medium">{row.name}</TableCell>
                       <TableCell className="text-right">{formatCurrency(row.damage)}</TableCell>
@@ -285,6 +349,17 @@ const Finance: React.FC = () => {
               </Table>
             </CardContent>
           </Card>
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">Page {currentPage} of {totalPages}</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
+                <ChevronLeft className="h-4 w-4 mr-1" /> Prev
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
+                Next <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
         </section>
       </main>
     </>
