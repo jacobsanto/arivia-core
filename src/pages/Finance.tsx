@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -17,13 +18,13 @@ const Finance: React.FC = () => {
     try {
       setRefreshing(true);
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["finance-damage-mtd"] }),
-        queryClient.invalidateQueries({ queryKey: ["finance-inventory-mtd"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-damage-period"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-inventory-period"] }),
         queryClient.invalidateQueries({ queryKey: ["finance-properties"] }),
         queryClient.invalidateQueries({ queryKey: ["finance-damage-by-property"] }),
         queryClient.invalidateQueries({ queryKey: ["finance-inventory-by-property"] }),
-        queryClient.invalidateQueries({ queryKey: ["inventory-items"] }),
-        queryClient.invalidateQueries({ queryKey: ["inventory-usage"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-damage-all"] }),
+        queryClient.invalidateQueries({ queryKey: ["finance-inventory-all"] }),
       ]);
     } finally {
       setRefreshing(false);
@@ -31,16 +32,69 @@ const Finance: React.FC = () => {
   };
 
   const canonicalUrl = typeof window !== 'undefined' ? `${window.location.origin}/finance` : '/finance';
+  
+  const [period, setPeriod] = useState<'mtd' | '30d' | 'qtd' | 'ytd' | 'all' | 'custom'>('mtd');
+  const [customFrom, setCustomFrom] = useState<string>('');
+  const [customTo, setCustomTo] = useState<string>('');
 
-  const startOfMonthISO = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+  const getQuarterStart = (d: Date) => {
+    const month = d.getMonth();
+    const qStartMonth = Math.floor(month / 3) * 3;
+    return new Date(d.getFullYear(), qStartMonth, 1);
+  };
+  const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+  const endOfDay = (d: Date) => { const x = new Date(d); x.setHours(23,59,59,999); return x; };
+
+  const now = new Date();
+  let fromDate: Date;
+  let toDate: Date = endOfDay(now);
+  switch (period) {
+    case 'mtd':
+      fromDate = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+      break;
+    case '30d':
+      fromDate = startOfDay(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+      break;
+    case 'qtd':
+      fromDate = startOfDay(getQuarterStart(now));
+      break;
+    case 'ytd':
+      fromDate = startOfDay(new Date(now.getFullYear(), 0, 1));
+      break;
+    case 'all':
+      fromDate = new Date(0);
+      break;
+    case 'custom':
+      fromDate = customFrom ? startOfDay(new Date(customFrom)) : startOfDay(new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000));
+      toDate = customTo ? endOfDay(new Date(customTo)) : endOfDay(now);
+      break;
+    default:
+      fromDate = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1));
+  }
+
+  const fromISO = fromDate.toISOString();
+  const toISO = toDate.toISOString();
+
+  const periodLabel = (() => {
+    switch (period) {
+      case 'mtd': return 'MTD';
+      case '30d': return 'Last 30 Days';
+      case 'qtd': return 'QTD';
+      case 'ytd': return 'YTD';
+      case 'all': return 'All Time';
+      case 'custom': return 'Custom';
+      default: return 'MTD';
+    }
+  })();
 
   const { data: damageStats } = useQuery({
-    queryKey: ["finance-damage-mtd", startOfMonthISO],
+    queryKey: ["finance-damage-period", fromISO, toISO],
     queryFn: async () => {
       const { data } = await supabase
         .from('damage_reports')
         .select('final_cost, estimated_cost, status, created_at')
-        .gte('created_at', startOfMonthISO);
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO);
       let total = 0;
       let openCount = 0;
       (data || []).forEach((r: any) => {
@@ -54,12 +108,13 @@ const Finance: React.FC = () => {
   });
 
   const { data: invStats } = useQuery({
-    queryKey: ["finance-inventory-mtd", startOfMonthISO],
+    queryKey: ["finance-inventory-period", fromISO, toISO],
     queryFn: async () => {
       const { data } = await supabase
         .from('inventory_usage')
         .select('quantity, date')
-        .gte('date', startOfMonthISO);
+        .gte('date', fromISO)
+        .lte('date', toISO);
       const totalQty = (data || []).reduce((sum: number, r: any) => sum + (r.quantity || 0), 0);
       return { totalQty, records: (data || []).length };
     },
@@ -84,13 +139,14 @@ const Finance: React.FC = () => {
     : (properties || []).find((p: any) => p.id === selectedPropertyId)?.name || null;
 
   const { data: damageByProperty } = useQuery({
-    queryKey: ["finance-damage-by-property", selectedPropertyId, startOfMonthISO],
+    queryKey: ["finance-damage-by-property", selectedPropertyId, fromISO, toISO],
     queryFn: async () => {
       if (selectedPropertyId === 'all') return { total: 0 };
       let q = supabase
         .from('damage_reports')
         .select('final_cost, estimated_cost, property_id, created_at')
-        .gte('created_at', startOfMonthISO)
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO)
         .eq('property_id', selectedPropertyId);
       const { data } = await q;
       const total = (data || []).reduce((sum: number, r: any) => sum + ((r.final_cost ?? r.estimated_cost) || 0), 0);
@@ -101,13 +157,14 @@ const Finance: React.FC = () => {
   });
 
   const { data: invByProperty } = useQuery({
-    queryKey: ["finance-inventory-by-property", selectedPropertyName, startOfMonthISO],
+    queryKey: ["finance-inventory-by-property", selectedPropertyName, fromISO, toISO],
     queryFn: async () => {
       if (!selectedPropertyName) return { totalQty: 0 };
       const { data } = await supabase
         .from('inventory_usage')
         .select('quantity, property, date')
-        .gte('date', startOfMonthISO)
+        .gte('date', fromISO)
+        .lte('date', toISO)
         .eq('property', selectedPropertyName);
       const totalQty = (data || []).reduce((sum: number, r: any) => sum + (r.quantity || 0), 0);
       return { totalQty };
@@ -116,12 +173,13 @@ const Finance: React.FC = () => {
     refetchInterval: 30000,
   });
   const { data: dmgAll = [] } = useQuery({
-    queryKey: ["finance-damage-mtd-all", startOfMonthISO],
+    queryKey: ["finance-damage-all", fromISO, toISO],
     queryFn: async () => {
       const { data } = await supabase
         .from('damage_reports')
         .select('property_id, final_cost, estimated_cost, created_at')
-        .gte('created_at', startOfMonthISO);
+        .gte('created_at', fromISO)
+        .lte('created_at', toISO);
       return data || [];
     },
     refetchInterval: 30000,
@@ -139,12 +197,13 @@ const Finance: React.FC = () => {
   }, [dmgAll]);
 
   const { data: invAll = [] } = useQuery({
-    queryKey: ["finance-inventory-mtd-all", startOfMonthISO],
+    queryKey: ["finance-inventory-all", fromISO, toISO],
     queryFn: async () => {
       const { data } = await supabase
         .from('inventory_usage')
         .select('property, quantity, date')
-        .gte('date', startOfMonthISO);
+        .gte('date', fromISO)
+        .lte('date', toISO);
       return data || [];
     },
     refetchInterval: 30000,
@@ -174,8 +233,16 @@ const Finance: React.FC = () => {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
+  const [search, setSearch] = useState('');
+
+  const filteredRows = React.useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return villaRows;
+    return (villaRows || []).filter(r => r.name.toLowerCase().includes(q));
+  }, [villaRows, search]);
+
   const sortedRows = React.useMemo(() => {
-    const rows = [...(villaRows || [])];
+    const rows = [...(filteredRows || [])];
     rows.sort((a, b) => {
       const valA = a[sortBy];
       const valB = b[sortBy];
@@ -184,7 +251,7 @@ const Finance: React.FC = () => {
       return 0;
     });
     return rows;
-  }, [villaRows, sortBy, sortDir]);
+  }, [filteredRows, sortBy, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -211,7 +278,7 @@ const Finance: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `finance_villas_mtd.csv`;
+    a.download = `finance_villas_${periodLabel.toLowerCase().replace(/\s+/g, '-')}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -238,12 +305,30 @@ const Finance: React.FC = () => {
             {refreshing ? "Refreshing" : "Refresh"}
           </Button>
         </header>
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button size="sm" variant={period === 'mtd' ? 'secondary' : 'ghost'} onClick={() => setPeriod('mtd')}>MTD</Button>
+            <Button size="sm" variant={period === '30d' ? 'secondary' : 'ghost'} onClick={() => setPeriod('30d')}>30D</Button>
+            <Button size="sm" variant={period === 'qtd' ? 'secondary' : 'ghost'} onClick={() => setPeriod('qtd')}>QTD</Button>
+            <Button size="sm" variant={period === 'ytd' ? 'secondary' : 'ghost'} onClick={() => setPeriod('ytd')}>YTD</Button>
+            <Button size="sm" variant={period === 'all' ? 'secondary' : 'ghost'} onClick={() => setPeriod('all')}>All</Button>
+            <Button size="sm" variant={period === 'custom' ? 'secondary' : 'ghost'} onClick={() => setPeriod('custom')}>Custom</Button>
+          </div>
+          {period === 'custom' && (
+            <div className="flex items-center gap-2">
+              <Input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} />
+              <span className="text-muted-foreground">to</span>
+              <Input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} />
+            </div>
+          )}
+        </div>
 
         <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                <Wrench className="h-4 w-4" /> MTD Damage Cost
+                <Wrench className="h-4 w-4" /> {periodLabel} Damage Cost
               </div>
               <div className="text-2xl font-bold">{formatCurrency(damageStats?.total || 0)}</div>
             </CardContent>
@@ -261,7 +346,7 @@ const Finance: React.FC = () => {
           <Card className="hover:shadow-md">
             <CardContent className="p-6">
               <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                <Package className="h-4 w-4" /> MTD Inventory Usage (qty)
+                <Package className="h-4 w-4" /> {periodLabel} Inventory Usage (qty)
               </div>
               <div className="text-2xl font-bold">{invStats?.totalQty || 0}</div>
             </CardContent>
@@ -290,7 +375,7 @@ const Finance: React.FC = () => {
             <Card className="hover:shadow-md">
               <CardContent className="p-6">
                 <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                  <Wrench className="h-4 w-4" /> Damage Cost (MTD)
+                  <Wrench className="h-4 w-4" /> Damage Cost ({periodLabel})
                 </div>
                 <div className="text-2xl font-bold">{selectedPropertyId === 'all' ? '—' : formatCurrency(damageByProperty?.total || 0)}</div>
               </CardContent>
@@ -299,7 +384,7 @@ const Finance: React.FC = () => {
             <Card className="hover:shadow-md">
               <CardContent className="p-6">
                 <div className="text-sm text-muted-foreground mb-1 flex items-center gap-2">
-                  <Package className="h-4 w-4" /> Inventory Usage (MTD qty)
+                  <Package className="h-4 w-4" /> Inventory Usage ({periodLabel} qty)
                 </div>
                 <div className="text-2xl font-bold">{selectedPropertyId === 'all' ? '—' : (invByProperty?.totalQty || 0)}</div>
               </CardContent>
@@ -308,12 +393,15 @@ const Finance: React.FC = () => {
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">All Villas (MTD)</h2>
-            <Button variant="outline" size="sm" onClick={exportCsv}>
-              <Download className="h-4 w-4 mr-2" />
-              Export CSV
-            </Button>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="text-lg font-semibold">All Villas ({periodLabel})</h2>
+            <div className="flex items-center gap-2">
+              <Input placeholder="Search villas..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 w-[180px]" />
+              <Button variant="outline" size="sm" onClick={exportCsv}>
+                <Download className="h-4 w-4 mr-2" />
+                Export CSV
+              </Button>
+            </div>
           </div>
           <Card>
             <CardContent className="p-0">
