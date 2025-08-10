@@ -32,6 +32,7 @@ const CleaningSettings = lazy(() => import("@/pages/CleaningSettings"));
 const ListingDetails = lazy(() => import("@/pages/ListingDetails"));
 const SystemAdminPage = lazy(() => import("@/pages/SystemAdminPage"));
 const OptimizationPage = lazy(() => import("@/pages/OptimizationPage"));
+const Finance = lazy(() => import("@/pages/Finance"));
 
 // Admin Pages (lazy-loaded)
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
@@ -83,6 +84,7 @@ function App() {
                         <Route path="/team-chat" element={<TeamChat />} />
                         <Route path="/analytics" element={<Analytics />} />
                         <Route path="/reports" element={<Reports />} />
+                        <Route path="/finance" element={<Finance />} />
                          
                          <Route path="/cleaning-settings" element={<CleaningSettings />} />
                          <Route path="/damage-reports" element={<DamageReports />} />
