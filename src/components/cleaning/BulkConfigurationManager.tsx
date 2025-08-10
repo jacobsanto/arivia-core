@@ -55,14 +55,15 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
 
   const fetchProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('guesty_listings')
-        .select('id, title, property_type, status, address')
-        .eq('is_deleted', false)
-        .order('title');
-
-      if (error) throw error;
-      setProperties(data || []);
+      const props = await centralizedPropertyService.getAllProperties();
+      const mapped = (props || []).map(p => ({
+        id: p.id,
+        title: p.title,
+        property_type: undefined,
+        status: p.status,
+        address: p.location
+      }));
+      setProperties(mapped);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {

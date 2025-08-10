@@ -76,12 +76,12 @@ export const MarketplaceIntegrations = () => {
       avgStay: "4.2 nights"
     },
     {
-      channel: "Guesty Platform",
-      bookings: 762,
-      revenue: "€142,000", 
-      commission: "€4,260",
-      conversion: "8.7%",
-      avgStay: "3.8 nights"
+      channel: "Property Platform",
+      bookings: 0,
+      revenue: "€0", 
+      commission: "€0",
+      conversion: "0%",
+      avgStay: "0 nights"
     },
     {
       channel: "Potential Airbnb",

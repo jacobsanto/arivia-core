@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info, Settings, Store, Link } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import GuestyIntegration from "./integrations/guesty/GuestyIntegration";
 import IntegrationMarketplace from "./integrations/IntegrationMarketplace";
 import IntegrationSetupDialog from "./integrations/IntegrationSetupDialog";
 import ConnectedIntegrationsList from "./integrations/ConnectedIntegrationsList";
@@ -50,7 +49,7 @@ const IntegrationSettings = () => {
           <Separator />
           
           <Tabs defaultValue="marketplace" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="marketplace" className="flex items-center gap-2">
                 <Store className="h-4 w-4" />
                 Marketplace
@@ -58,10 +57,6 @@ const IntegrationSettings = () => {
               <TabsTrigger value="connected" className="flex items-center gap-2">
                 <Link className="h-4 w-4" />
                 Connected
-              </TabsTrigger>
-              <TabsTrigger value="guesty" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Guesty
               </TabsTrigger>
             </TabsList>
             
@@ -73,9 +68,6 @@ const IntegrationSettings = () => {
               <ConnectedIntegrationsList />
             </TabsContent>
             
-            <TabsContent value="guesty">
-              <GuestyIntegration />
-            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

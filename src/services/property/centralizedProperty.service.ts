@@ -18,52 +18,23 @@ interface GuestyAddress {
 export const centralizedPropertyService = {
   async getAllProperties(): Promise<PropertyOption[]> {
     try {
-      // Fetch both Guesty and local properties
-      const [guestyResult, localResult] = await Promise.all([
-        supabase
-          .from('guesty_listings')
-          .select('id, title, status, address')
-          .eq('is_deleted', false)
-          .eq('sync_status', 'active')
-          .order('title', { ascending: true }),
-        supabase
-          .from('properties')
-          .select('id, name, status, address')
-          .order('name', { ascending: true })
-      ]);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, name, status, address')
+        .order('name', { ascending: true });
 
-      const guestyProperties = (guestyResult.data || []).map(listing => {
-        const address = listing.address as GuestyAddress | null;
-        return {
-          id: listing.id,
-          name: listing.title,
-          title: listing.title,
-          status: listing.status || 'active',
-          location: address && typeof address === 'object' && address.full 
-            ? address.full 
-            : 'Unknown location',
-          source: 'guesty' as const
-        };
-      });
+      if (error) throw error;
 
-      const localProperties = (localResult.data || []).map(property => ({
+      const localProperties: PropertyOption[] = (data || []).map((property: any) => ({
         id: property.id,
         name: property.name,
         title: property.name,
         status: property.status || 'active',
         location: property.address || 'Unknown location',
-        source: 'local' as const
+        source: 'local'
       }));
 
-      // Combine and deduplicate properties
-      const allProperties = [...guestyProperties, ...localProperties];
-      
-      // Remove duplicates based on name (in case a property exists in both systems)
-      const uniqueProperties = allProperties.filter((property, index, self) => 
-        index === self.findIndex(p => p.name.toLowerCase() === property.name.toLowerCase())
-      );
-
-      return uniqueProperties;
+      return localProperties;
     } catch (error) {
       console.error('Error fetching properties:', error);
       return [];
@@ -72,47 +43,22 @@ export const centralizedPropertyService = {
 
   async getPropertyById(id: string): Promise<PropertyOption | null> {
     try {
-      // Try Guesty first
-      const { data: guestyData, error: guestyError } = await supabase
-        .from('guesty_listings')
-        .select('id, title, status, address')
-        .eq('id', id)
-        .eq('is_deleted', false)
-        .maybeSingle();
-
-      if (!guestyError && guestyData) {
-        const address = guestyData.address as GuestyAddress | null;
-        return {
-          id: guestyData.id,
-          name: guestyData.title,
-          title: guestyData.title,
-          status: guestyData.status || 'active',
-          location: address && typeof address === 'object' && address.full 
-            ? address.full 
-            : 'Unknown location',
-          source: 'guesty'
-        };
-      }
-
-      // Try local properties
-      const { data: localData, error: localError } = await supabase
+      const { data, error } = await supabase
         .from('properties')
         .select('id, name, status, address')
         .eq('id', id)
         .maybeSingle();
 
-      if (!localError && localData) {
-        return {
-          id: localData.id,
-          name: localData.name,
-          title: localData.name,
-          status: localData.status || 'active',
-          location: localData.address || 'Unknown location',
-          source: 'local'
-        };
-      }
+      if (error || !data) return null;
 
-      return null;
+      return {
+        id: data.id,
+        name: data.name,
+        title: data.name,
+        status: data.status || 'active',
+        location: data.address || 'Unknown location',
+        source: 'local'
+      };
     } catch (error) {
       console.error('Error fetching property:', error);
       return null;

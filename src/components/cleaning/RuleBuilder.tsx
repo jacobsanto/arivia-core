@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { CleaningRule, useRuleBasedCleaningSystem } from '@/hooks/useRuleBasedCleaningSystem';
-import { guestyListingsService } from '@/services/guesty/guestyListings.service';
+import { centralizedPropertyService } from '@/services/property/centralizedProperty.service';
 import { Trash2, Plus } from 'lucide-react';
 
 interface RuleBuilderProps {
@@ -68,7 +68,7 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
 
   const loadProperties = async () => {
     try {
-      const data = await guestyListingsService.getGuestyListings();
+      const data = await centralizedPropertyService.getAllProperties();
       setProperties(data);
     } catch (error) {
       console.error('Error loading properties:', error);
@@ -233,9 +233,9 @@ export const RuleBuilder: React.FC<RuleBuilderProps> = ({
       // Handle assignments
       if (isGlobal && savedRule) {
         try {
-          const allProperties = await guestyListingsService.getGuestyListings();
-          const propertyIds = allProperties.map(p => p.id);
-          
+          const allProperties = await centralizedPropertyService.getAllProperties();
+          const propertyIds = allProperties.map((p: any) => p.id);
+
           if (propertyIds.length > 0) {
             await assignRuleToProperties(savedRule.id, propertyIds);
             toast({

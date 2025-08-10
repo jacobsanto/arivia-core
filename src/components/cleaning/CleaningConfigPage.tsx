@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Plus, Settings, Clock, Calendar, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { centralizedPropertyService } from "@/services/property/centralizedProperty.service";
 import { useToast } from "@/hooks/use-toast";
 import { CleaningConfigDialog } from "./CleaningConfigDialog";
 import { CleaningRulesTable } from "./CleaningRulesTable";
@@ -43,13 +44,8 @@ export const CleaningConfigPage: React.FC = () => {
       setLoading(true);
       
       // Fetch properties
-      const { data: propertiesData, error: propertiesError } = await supabase
-        .from('guesty_listings')
-        .select('id, title')
-        .eq('is_deleted', false);
-
-      if (propertiesError) throw propertiesError;
-      setProperties(propertiesData || []);
+      const propertiesData = await centralizedPropertyService.getAllProperties();
+      setProperties((propertiesData || []).map(p => ({ id: p.id, title: p.title })));
 
       // Fetch cleaning configs with rules count
       const { data: configsData, error: configsError } = await supabase

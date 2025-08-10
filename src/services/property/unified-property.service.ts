@@ -2,61 +2,37 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toastService } from '@/services/toast/toast.service';
 import { UnifiedProperty } from '@/types/property.types';
-import { guestyService } from '../guesty/guesty.service';
 import { SortOption } from '@/components/properties/PropertySort';
 
 export const unifiedPropertyService = {
   async fetchAllProperties(sortOption?: SortOption, searchQuery?: string): Promise<UnifiedProperty[]> {
     try {
       let query = supabase
-        .from('guesty_listings')
+        .from('properties')
         .select(`
-          *,
-          next_booking:guesty_bookings(
-            check_in,
-            status
-          ),
-          housekeeping_tasks!housekeeping_tasks_listing_id_fkey(
-            id,
-            status
-          )
-        `)
-        .eq('is_deleted', false)
-        .gte('next_booking.check_in', new Date().toISOString().split('T')[0])
-        .neq('next_booking.status', 'cancelled')
-        .order('check_in', { ascending: true, foreignTable: 'next_booking' });
+          id,
+          name,
+          status,
+          address,
+          created_at,
+          updated_at
+        `);
 
       if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,address->full.ilike.%${searchQuery}%`);
+        query = query.ilike('name', `%${searchQuery}%`);
       }
 
       if (sortOption) {
-        query = query.order(sortOption.column, {
-          ascending: sortOption.ascending
-        });
+        query = query.order(sortOption.column, { ascending: sortOption.ascending });
       } else {
-        query = query.order('title');
+        query = query.order('name', { ascending: true });
       }
 
-      const { data: guestyListings, error: guestyError } = await query;
+      const { data, error } = await query;
+      if (error) throw error;
 
-      if (guestyError) throw guestyError;
-
-      const guestyProperties = (guestyListings || []).map(listing => {
-        const nextBooking = listing.next_booking?.[0];
-        const hasActiveTasks = listing.housekeeping_tasks?.some(
-          (task: any) => task.status === 'pending' || task.status === 'in-progress'
-        );
-        
-        return {
-          ...this.transformGuestyToUnified(listing),
-          next_check_in: nextBooking?.check_in || null,
-          has_active_cleaning: hasActiveTasks || false,
-          raw_data: listing.raw_data || {} // Ensure raw_data is passed to access area
-        };
-      });
-
-      return guestyProperties;
+      const properties = (data || []).map((p: any) => this.transformPropertyToUnified(p));
+      return properties;
     } catch (err: any) {
       console.error('Error fetching properties:', err);
       toastService.error('Failed to fetch properties', {
@@ -66,73 +42,38 @@ export const unifiedPropertyService = {
     }
   },
 
-  transformGuestyToUnified(listing: any): UnifiedProperty {
-    // Extract address components
-    const address = typeof listing.address === 'object' ? listing.address : {};
-    const fullAddress = address.full || '';
-    const location = address.city || address.country || 'Greece';
-
-    // Extract property details from raw_data if available
-    const rawData = listing.raw_data || {};
-    const bedrooms = rawData.bedrooms || 0;
-    const bathrooms = rawData.bathrooms || 0;
-    const price = rawData.basePrice || 0;
-    const maxGuests = rawData.accommodates || 0;
-
-    // Use highres_url if available, otherwise fallback to thumbnail_url or placeholder
-    const imageUrl = listing.highres_url || listing.thumbnail_url || '/placeholder.svg';
-
+  transformPropertyToUnified(property: any): UnifiedProperty {
     return {
-      id: listing.id,
-      name: listing.title,
-      location: location,
-      status: listing.status || 'Unknown',
-      type: listing.property_type || 'Luxury Villa',
-      bedrooms: bedrooms,
-      bathrooms: bathrooms,
-      price: price,
-      price_per_night: price,
-      imageUrl, // now may be highres
-      description: rawData.description || '',
-      address: fullAddress,
-      max_guests: maxGuests,
-      created_at: listing.created_at || new Date().toISOString(),
-      updated_at: listing.updated_at || new Date().toISOString(),
-      source: 'guesty',
-      guesty_id: listing.id,
-      last_synced: listing.last_synced,
-      raw_data: rawData // Pass through raw_data to access additional fields
+      id: property.id,
+      name: property.name,
+      location: property.address || 'Unknown location',
+      status: property.status || 'Unknown',
+      type: 'Property',
+      bedrooms: 0,
+      bathrooms: 0,
+      price: 0,
+      price_per_night: 0,
+      imageUrl: '/placeholder.svg',
+      description: '',
+      address: property.address || '',
+      max_guests: 0,
+      created_at: property.created_at || new Date().toISOString(),
+      updated_at: property.updated_at || new Date().toISOString(),
+      source: 'local',
+      guesty_id: undefined,
+      last_synced: undefined,
+      raw_data: {}
     };
-  },
-
-  async syncGuestyProperties(): Promise<{ success: boolean; message: string }> {
-    try {
-      await guestyService.syncListings();
-      return { 
-        success: true, 
-        message: 'Properties successfully synced with Guesty' 
-      };
-    } catch (err: any) {
-      console.error('Error syncing properties:', err);
-      return { 
-        success: false, 
-        message: err.message || 'Failed to sync properties' 
-      };
-    }
   },
 
   async getPropertyBookings(propertyId: string): Promise<any[]> {
     try {
-      // For Guesty properties, use the listing_id field
       const { data, error } = await supabase
-        .from('guesty_bookings')
+        .from('bookings')
         .select('*')
-        .eq('listing_id', propertyId);
+        .eq('property_id', propertyId);
 
-      if (error) {
-        throw new Error(error.message);
-      }
-
+      if (error) throw new Error(error.message);
       return data || [];
     } catch (err: any) {
       console.error('Error fetching property bookings:', err);

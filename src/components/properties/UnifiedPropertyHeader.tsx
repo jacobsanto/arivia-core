@@ -15,7 +15,7 @@ const UnifiedPropertyHeader = ({ onSync, isLoading, lastSynced }: UnifiedPropert
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Properties</h1>
         <p className="text-muted-foreground">
-          Manage your Guesty properties
+          Manage your properties
         </p>
       </div>
       <Button 

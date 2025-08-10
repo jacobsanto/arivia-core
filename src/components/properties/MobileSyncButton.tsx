@@ -29,18 +29,5 @@ export const MobileSyncButton = ({ onSyncComplete }: MobileSyncButtonProps) => {
     }
   };
 
-  return (
-    <div className="fixed bottom-20 right-4 z-50">
-      <Button
-        variant="default"
-        size="lg"
-        className="shadow-lg rounded-full"
-        onClick={handleSync}
-        disabled={isSyncing}
-      >
-        <RefreshCw className={`mr-2 h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} />
-        Sync Now
-      </Button>
-    </div>
-  );
+  return null;
 };
