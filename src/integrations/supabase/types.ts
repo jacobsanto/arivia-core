@@ -666,6 +666,39 @@ export type Database = {
         }
         Relationships: []
       }
+      egress_monitoring: {
+        Row: {
+          created_at: string | null
+          date: string | null
+          error_count: number | null
+          id: string
+          peak_requests_per_minute: number | null
+          request_count: number | null
+          total_bytes: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date?: string | null
+          error_count?: number | null
+          id?: string
+          peak_requests_per_minute?: number | null
+          request_count?: number | null
+          total_bytes?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string | null
+          error_count?: number | null
+          id?: string
+          peak_requests_per_minute?: number | null
+          request_count?: number | null
+          total_bytes?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       external_integrations: {
         Row: {
           api_endpoint: string | null
@@ -2450,6 +2483,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_egress_metrics: {
+        Args: { start_date?: string; end_date?: string }
+        Returns: Json
+      }
       get_housekeeping_metrics: {
         Args: { start_date?: string; end_date?: string }
         Returns: Json
@@ -2489,6 +2526,10 @@ export type Database = {
       is_authenticated_user: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      log_egress_usage: {
+        Args: { bytes_used: number; has_error?: boolean }
+        Returns: undefined
       }
       log_security_event: {
         Args: {
