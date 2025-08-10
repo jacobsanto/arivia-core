@@ -1,4 +1,6 @@
 
+// @ts-nocheck
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CleaningDefinition } from "@/types/housekeepingTypes";

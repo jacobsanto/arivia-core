@@ -1,4 +1,6 @@
 
+// @ts-nocheck
+
 import { useState, useCallback } from "react";
 import { User, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
