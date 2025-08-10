@@ -169,8 +169,8 @@ const Finance: React.FC = () => {
     }));
   }, [properties, damageTotalsById, invTotalsByName]);
 
-  const [sortBy, setSortBy] = useState<'name' | 'damage' | 'invQty'>('name');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [sortBy, setSortBy] = useState<'name' | 'damage' | 'invQty'>('damage');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
