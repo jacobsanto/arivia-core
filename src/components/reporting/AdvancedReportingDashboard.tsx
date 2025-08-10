@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,8 @@ import { ExportCenter } from './ExportCenter';
 import { useOperationalAnalytics } from '@/hooks/useOperationalAnalytics';
 import { ExportDropdown } from '@/components/tasks/reporting/buttons/ExportDropdown';
 import { getDateRangeForTimeFilter, getDateRangeDescription, formatDateRangeDisplay, TimeFilter } from '@/utils/dateRangeUtils';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
 
 export const AdvancedReportingDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -19,7 +21,23 @@ export const AdvancedReportingDashboard = () => {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('last30');
   const dateRange = getDateRangeForTimeFilter(timeFilter);
   
-  const { metrics, loading } = useOperationalAnalytics(dateRange);
+  const [properties, setProperties] = useState<Array<{ id: string; title: string }>>([]);
+  const [selectedProperty, setSelectedProperty] = useState<string>('all');
+  
+  useEffect(() => {
+    const loadProperties = async () => {
+      const { data, error } = await supabase
+        .from('guesty_listings')
+        .select('id,title')
+        .eq('is_deleted', false);
+      if (!error && data) {
+        setProperties(data as any);
+      }
+    };
+    loadProperties();
+  }, []);
+  
+  const { metrics, loading } = useOperationalAnalytics(dateRange, selectedProperty !== 'all' ? selectedProperty : null);
 
   // Operational analytics stats
   const reportingStats = [
@@ -130,8 +148,9 @@ export const AdvancedReportingDashboard = () => {
     { Metric: 'Active Properties', Total: metrics.properties.activeProperties, 'Damage Reports': metrics.properties.damageReports },
     { Metric: 'Inventory Usage', Total: metrics.inventory.totalUsage, 'Low Stock Items': metrics.inventory.lowStockItems },
   ];
-  const exportTitle = `Operational Analytics – ${getDateRangeDescription(timeFilter)}`;
-  const exportFilename = `operational-analytics_${timeFilter}_${formatDateRangeDisplay(dateRange.from, dateRange.to).replace(/[\\/]/g, '-')}`;
+  const selectedPropertyName = selectedProperty !== 'all' ? (properties.find(p => p.id === selectedProperty)?.title || 'Selected Property') : 'All Properties';
+  const exportTitle = `Operational Analytics – ${getDateRangeDescription(timeFilter)} – ${selectedPropertyName}`;
+  const exportFilename = `operational-analytics_${timeFilter}_${selectedProperty !== 'all' ? selectedProperty : 'all'}_${formatDateRangeDisplay(dateRange.from, dateRange.to).replace(/[\\/]/g, '-')}`;
 
   return (
     <div className="space-y-6">
@@ -170,6 +189,17 @@ export const AdvancedReportingDashboard = () => {
               <Button variant={timeFilter === 'ytd' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('ytd')}>YTD</Button>
               <Button variant={timeFilter === 'all' ? 'default' : 'outline'} size="sm" onClick={() => setTimeFilter('all')}>All</Button>
             </div>
+            <Select value={selectedProperty} onValueChange={setSelectedProperty}>
+              <SelectTrigger className="w-56">
+                <SelectValue placeholder="All Properties" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Properties</SelectItem>
+                {properties.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.title || p.id}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <ExportDropdown data={exportData} filename={exportFilename} reportTitle={exportTitle} />
           </div>
         </div>

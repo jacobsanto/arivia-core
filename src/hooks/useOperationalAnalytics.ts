@@ -69,7 +69,7 @@ const getFallbackMetrics = (): OperationalMetrics => ({
   },
 });
 
-export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => {
+export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }, selectedListingId?: string | null) => {
   const [metrics, setMetrics] = useState<OperationalMetrics | null>(null);
   const [trends, setTrends] = useState<PerformanceTrend[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,11 +117,15 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch housekeeping metrics
         try {
           console.log('🔧 Analytics: Fetching housekeeping tasks...');
-          const { data: housekeepingTasks, error: hkError } = await supabase
+          let hkQuery: any = supabase
             .from("housekeeping_tasks")
             .select("*")
             .gte("created_at", dateRange.from.toISOString())
             .lte("created_at", dateRange.to.toISOString());
+          if (selectedListingId) {
+            hkQuery = hkQuery.eq("listing_id", selectedListingId);
+          }
+          const { data: housekeepingTasks, error: hkError } = await hkQuery;
 
           if (hkError) {
             console.error('🔧 Analytics: Housekeeping query error:', hkError);
@@ -171,10 +175,14 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
         // Try to fetch property metrics
         try {
           console.log('🔧 Analytics: Fetching property listings...');
-          const { data: properties, error: propError } = await supabase
+          let propQuery: any = supabase
             .from("guesty_listings")
             .select("*")
             .eq("is_deleted", false);
+          if (selectedListingId) {
+            propQuery = propQuery.eq("id", selectedListingId);
+          }
+          const { data: properties, error: propError } = await propQuery;
 
           if (propError) {
             console.error('🔧 Analytics: Properties query error:', propError);
@@ -287,7 +295,7 @@ export const useOperationalAnalytics = (dateRange: { from: Date; to: Date }) => 
     };
 
     fetchAnalytics();
-  }, [dateRange]);
+  }, [dateRange, selectedListingId]);
 
   return { metrics, trends, loading, error };
 };
