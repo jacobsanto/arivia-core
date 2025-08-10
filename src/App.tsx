@@ -33,6 +33,7 @@ const ListingDetails = lazy(() => import("@/pages/ListingDetails"));
 const SystemAdminPage = lazy(() => import("@/pages/SystemAdminPage"));
 const OptimizationPage = lazy(() => import("@/pages/OptimizationPage"));
 const Finance = lazy(() => import("@/pages/Finance"));
+const MonitoringRoutes = lazy(() => import("@/routes/MonitoringRoutes"));
 
 // Admin Pages (lazy-loaded)
 const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
@@ -92,6 +93,7 @@ function App() {
                         <Route path="/system-admin" element={<SystemAdminPage />} />
                          <Route path="/optimization" element={<OptimizationPage />} />
                          <Route path="/system-health" element={<SystemHealth />} />
+                         <Route path="/monitoring/*" element={<MonitoringRoutes />} />
                         
                         {/* Property details route */}
                         <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
