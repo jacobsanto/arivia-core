@@ -1,12 +1,11 @@
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { inventoryService } from "@/services/inventory.service";
+import { useInventoryUsage } from "@/hooks/data/useInventoryUsage";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 
@@ -14,11 +13,7 @@ const InventoryUsage = () => {
   const [period, setPeriod] = useState("week");
   const [property, setProperty] = useState("all");
 
-  const { data: usage = [] } = useQuery({
-    queryKey: ["inventory-usage"],
-    queryFn: () => inventoryService.getInventoryUsageHistory(),
-    refetchInterval: 30000,
-  });
+  const { data: usage = [] } = useInventoryUsage();
 
   const filteredData = usage.filter((u: any) => {
     const matchesProperty = property === "all" || u.property === property;

@@ -6,26 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Plus, UserPlus, Mail, Phone, Settings, Users } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useUsersList } from "@/hooks/data/useUsersList";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
 
 export const MVPUserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState("all");
-  const { toast } = useToast();
 
-  const { data: users, isLoading, refetch } = useQuery({
-    queryKey: ['users-list', searchTerm, filterRole],
-    queryFn: async () => {
-      // Since profiles table doesn't exist, return empty array for now
-      return [];
-    }
-  });
+  const { data: users, isLoading, refetch } = useUsersList(searchTerm, filterRole);
 
   const roles = [
     { value: 'superadmin', label: 'Super Admin', color: 'bg-red-100 text-red-800' },

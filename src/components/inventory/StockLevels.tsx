@@ -1,11 +1,10 @@
 
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { inventoryService } from "@/services/inventory.service";
+import { useInventoryItems } from "@/hooks/data/useInventoryItems";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
@@ -15,11 +14,7 @@ const StockLevels = () => {
   const [search, setSearch] = useState("");
   const isMobile = useIsMobile();
   // Load items
-  const { data: items = [] } = useQuery({
-    queryKey: ["inventory-items"],
-    queryFn: () => inventoryService.getItems(),
-    refetchInterval: 30000,
-  });
+  const { data: items = [] } = useInventoryItems();
 
   const filteredItems = items
     .map((i: any) => ({
