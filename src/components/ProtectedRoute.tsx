@@ -13,16 +13,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  // Access dev mode context safely
-  const devMode = (() => {
-    try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useDevMode();
-    } catch {
-      // Dev mode context not available
-      return null;
-    }
-  })();
+  const devMode = useDevMode();
 
   // Show loading state while authentication is being determined
   if (isLoading) {
@@ -39,10 +30,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
-  // Development build: always allow access
-  if (import.meta.env.DEV) {
-    return <>{children}</>;
-  }
+  // In development, still enforce route protection unless dev mode bypass is enabled
+  // This ensures closer parity with production while retaining dev overrides
 
   // If dev mode is active and bypassing auth, allow access
   if (devMode?.isDevMode && devMode.settings.bypassAuth) {

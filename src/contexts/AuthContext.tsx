@@ -24,16 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Access dev mode context safely
-  const devMode = (() => {
-    try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useDevMode();
-    } catch {
-      // Dev mode context not available
-      return null;
-    }
-  })();
+  const devMode = useDevMode();
 
   const refreshAuthState = async () => {
     try {
@@ -173,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Update user when mock user changes in dev mode
   useEffect(() => {
     if (devMode?.isDevMode && devMode.settings.bypassAuth && devMode.currentMockUser) {
-      console.log('🔧 Mock user changed, updating auth state:', devMode.currentMockUser.name, devMode.currentMockUser.role);
+      logger.debug('AuthContext', 'Mock user changed, updating auth state', { name: devMode.currentMockUser.name, role: devMode.currentMockUser.role });
       setUser(devMode.currentMockUser);
       
       // Create a mock session for the new user
@@ -199,7 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handleMockUserChange = (event: CustomEvent) => {
       const mockUser = event.detail;
-      console.log('🔧 Mock user change event received:', mockUser);
+      logger.debug('AuthContext', 'Mock user change event received', { mockUser });
       
       if (devMode?.isDevMode && devMode.settings.bypassAuth) {
         if (mockUser) {

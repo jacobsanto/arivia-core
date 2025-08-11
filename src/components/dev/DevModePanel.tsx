@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { logger } from '@/services/logger';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,20 +66,20 @@ export const DevModePanel: React.FC = () => {
   };
 
   const handleMockUserChange = (value: string) => {
-    console.log('🔧 DevModePanel: Mock user selection changed to:', value);
+    logger.debug('DevModePanel', 'Mock user selection changed', { value });
     if (value === 'none') {
       setMockUser(null);
     } else {
       const user = mockUsers.find(u => u.id === value);
       if (user) {
-        console.log('🔧 DevModePanel: Setting mock user to:', user);
+        logger.debug('DevModePanel', 'Setting mock user', { user });
         setMockUser(user);
       }
     }
   };
 
   const handleTestConnection = async () => {
-    console.log('🔧 DevModePanel: Test connection button clicked');
+    logger.debug('DevModePanel', 'Test connection clicked');
     await checkConnection();
   };
 

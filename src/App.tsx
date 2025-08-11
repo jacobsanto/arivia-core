@@ -3,8 +3,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
-import { DevModeProvider } from "@/contexts/DevModeContext";
-import { AuthProvider } from "@/contexts/AuthContext";
+
+
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { SkipLink } from "@/components/accessibility/SkipLink";
@@ -47,8 +47,6 @@ function App() {
       <HelmetProvider>
         <AccessibilityProvider>
           <ToastProvider>
-            <DevModeProvider>
-              <AuthProvider>
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <DevModeStatusBar />
@@ -96,8 +94,6 @@ function App() {
                 </Routes>
                 <DevModePanel />
                 </Router>
-              </AuthProvider>
-            </DevModeProvider>
           </ToastProvider>
         </AccessibilityProvider>
       </HelmetProvider>
