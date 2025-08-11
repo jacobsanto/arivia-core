@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          created_at: string
+          error_name: string | null
+          error_stack: string | null
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          route: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_name?: string | null
+          error_stack?: string | null
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_name?: string | null
+          error_stack?: string | null
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cleaning_rules: {
         Row: {
           actions: Json | null
