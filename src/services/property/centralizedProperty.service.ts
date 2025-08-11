@@ -18,35 +18,18 @@ interface GuestyAddress {
 export const centralizedPropertyService = {
   async getAllProperties(): Promise<PropertyOption[]> {
     try {
-      // Fetch both Guesty and local properties
-      const [guestyResult, localResult] = await Promise.all([
-        supabase
-          .from('guesty_listings')
-          .select('id, title, status, address')
-          .eq('is_deleted', false)
-          .eq('sync_status', 'active')
-          .order('title', { ascending: true }),
-        supabase
-          .from('properties')
-          .select('id, name, status, address')
-          .order('name', { ascending: true })
-      ]);
+      // Fetch only local properties since guesty tables don't exist
+      const { data: localResult, error } = await supabase
+        .from('properties')
+        .select('id, name, status, address')
+        .order('name', { ascending: true });
 
-      const guestyProperties = (guestyResult.data || []).map(listing => {
-        const address = listing.address as GuestyAddress | null;
-        return {
-          id: listing.id,
-          name: listing.title,
-          title: listing.title,
-          status: listing.status || 'active',
-          location: address && typeof address === 'object' && address.full 
-            ? address.full 
-            : 'Unknown location',
-          source: 'guesty' as const
-        };
-      });
+      if (error) {
+        console.error('Error fetching properties:', error);
+        return [];
+      }
 
-      const localProperties = (localResult.data || []).map(property => ({
+      const localProperties = (localResult || []).map(property => ({
         id: property.id,
         name: property.name,
         title: property.name,
@@ -55,8 +38,7 @@ export const centralizedPropertyService = {
         source: 'local' as const
       }));
 
-      // Combine and deduplicate properties
-      const allProperties = [...guestyProperties, ...localProperties];
+      const allProperties = localProperties;
       
       // Remove duplicates based on name (in case a property exists in both systems)
       const uniqueProperties = allProperties.filter((property, index, self) => 
@@ -72,29 +54,7 @@ export const centralizedPropertyService = {
 
   async getPropertyById(id: string): Promise<PropertyOption | null> {
     try {
-      // Try Guesty first
-      const { data: guestyData, error: guestyError } = await supabase
-        .from('guesty_listings')
-        .select('id, title, status, address')
-        .eq('id', id)
-        .eq('is_deleted', false)
-        .maybeSingle();
-
-      if (!guestyError && guestyData) {
-        const address = guestyData.address as GuestyAddress | null;
-        return {
-          id: guestyData.id,
-          name: guestyData.title,
-          title: guestyData.title,
-          status: guestyData.status || 'active',
-          location: address && typeof address === 'object' && address.full 
-            ? address.full 
-            : 'Unknown location',
-          source: 'guesty'
-        };
-      }
-
-      // Try local properties
+      // Try local properties only
       const { data: localData, error: localError } = await supabase
         .from('properties')
         .select('id, name, status, address')

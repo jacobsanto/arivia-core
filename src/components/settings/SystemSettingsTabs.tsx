@@ -2,14 +2,7 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import SwipeableTabs from "@/components/ui/swipeable-tabs";
-import GeneralSettings from "./sections/GeneralSettings";
-import UserManagementSettings from "./sections/UserManagementSettings";
-import NotificationSettings from "./sections/NotificationSettings";
-// import IntegrationSettings from "./sections/integration/IntegrationSettings";
-import AppearanceSettings from "./sections/AppearanceSettings";
-import EmailSettings from "./sections/EmailSettings";
 import BackupSettings from "./sections/BackupSettings";
-import EnhancedSecuritySettings from "./sections/EnhancedSecuritySettings";
 import UserManagement from "../admin/UserManagement";
 import SecurityMonitoring from "../admin/SecurityMonitoring";
 import SettingsTabContent from "./tabs/SettingsTabContent";
@@ -45,7 +38,7 @@ const SystemSettingsTabs = () => {
         title="General Settings"
         status={{ status: "configured", lastUpdated: new Date() }}
       >
-        <GeneralSettings />
+        <div className="p-4 text-center text-muted-foreground">General settings coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent
@@ -61,7 +54,7 @@ const SystemSettingsTabs = () => {
         title="Security Settings"
         status={{ status: "configured" }}
       >
-        <EnhancedSecuritySettings />
+        <div className="p-4 text-center text-muted-foreground">Security settings coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent
@@ -77,7 +70,7 @@ const SystemSettingsTabs = () => {
         title="System Permissions"
         status={{ status: "configured" }}
       >
-        <UserManagementSettings />
+        <div className="p-4 text-center text-muted-foreground">Permissions coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent
@@ -85,7 +78,7 @@ const SystemSettingsTabs = () => {
         title="Email Settings"
         status={{ status: "not-configured" }}
       >
-        <EmailSettings />
+        <div className="p-4 text-center text-muted-foreground">Email settings coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent
@@ -93,7 +86,7 @@ const SystemSettingsTabs = () => {
         title="Notification Settings"
         status={{ status: "not-configured" }}
       >
-        <NotificationSettings />
+        <div className="p-4 text-center text-muted-foreground">Notification settings coming soon</div>
       </SettingsTabContent>
 
       <SettingsTabContent
@@ -117,7 +110,7 @@ const SystemSettingsTabs = () => {
         title="Appearance Settings"
         status={{ status: "configured" }}
       >
-        <AppearanceSettings />
+        <div className="p-4 text-center text-muted-foreground">Appearance settings coming soon</div>
       </SettingsTabContent>
     </Tabs>
   );

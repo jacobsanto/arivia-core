@@ -25,22 +25,11 @@ export const orderService = {
   async getItemsByVendor(vendorId: string | null): Promise<any[]> {
     if (!vendorId) return [];
     
-    // For now, return inventory items that match the vendor's categories
-    const { data: vendor } = await supabase
-      .from('vendors')
-      .select('categories')
-      .eq('id', vendorId)
-      .single();
-    
-    if (!vendor || !vendor.categories) return [];
-    
+    // Return inventory items that match the vendor
     const { data, error } = await supabase
       .from('inventory_items')
-      .select(`
-        *,
-        inventory_categories(name)
-      `)
-      .in('category_id', vendor.categories);
+      .select('*')
+      .eq('vendor', vendorId);
     
     if (error) {
       console.error('Error fetching vendor items:', error);
@@ -50,9 +39,8 @@ export const orderService = {
     return (data || []).map(item => ({
       id: item.id,
       name: item.name,
-      description: item.description,
       unit: item.unit,
-      category: item.inventory_categories?.name || 'Unknown'
+      category: 'General'
     }));
   },
 

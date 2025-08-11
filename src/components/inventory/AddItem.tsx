@@ -66,11 +66,12 @@ const AddItem = () => {
 
       await inventoryService.createItem({
         name: values.name,
-        description: values.notes,
-        category_id: categoryObject.id,
-        unit: values.unit,
+        sku: values.itemCode || '',
+        unit: values.unit || '',
         min_quantity: values.minLevel,
-        item_code: values.itemCode
+        quantity: values.initialStock,
+        notes: values.notes,
+        vendor: ''
       });
 
       toast({
