@@ -81,6 +81,10 @@ export default {
 					DEFAULT: 'hsl(var(--info))',
 					foreground: 'hsl(var(--info-foreground))'
 				},
+				overlay: {
+					DEFAULT: 'hsl(var(--overlay))',
+					foreground: 'hsl(var(--overlay-foreground))'
+				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'

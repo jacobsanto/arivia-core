@@ -49,6 +49,8 @@
     --border: 210 40% 90%;        /* Light border */
     --input: 210 40% 95%;         /* Input background */
     --ring: 27 87% 67%;           /* Focus ring - primary color */
+    --overlay: 0 0% 0%;           /* Overlay/backdrop base */
+    --overlay-foreground: 0 0% 98%; /* Text on overlay */
     
     /* Semantic Colors */
     --text-primary: 210 40% 15%;
@@ -140,6 +142,8 @@
     --border: 210 40% 20%;
     --input: 210 40% 15%;
     --ring: 27 87% 67%;
+    --overlay: 0 0% 0%;
+    --overlay-foreground: 0 0% 98%;
     
     /* Dark mode surfaces */
     --surface-elevated: 210 40% 8%;
