@@ -80,6 +80,16 @@ export const usePermissions = (): PermissionsReturn => {
       return cachedPermissions;
     }
 
+    // In Dev Mode, treat Administrator as Superadmin (full access)
+    if (devMode?.isDevMode && effectiveUser.role === 'administrator') {
+      const allKeys = getAllPermissionKeys();
+      const devAdminPermissions: Record<string, boolean> = {};
+      allKeys.forEach(k => { devAdminPermissions[k] = true; });
+      permissionCache.set(effectiveUser.id, effectiveUser.role, devAdminPermissions);
+      logger.debug('usePermissions', 'DevMode: granting admin full access');
+      return devAdminPermissions;
+    }
+
     // Calculate permissions for all features at once
     const permissions: Record<string, boolean> = {};
     const allFeatureKeys = getAllPermissionKeys();
@@ -131,6 +141,11 @@ export const usePermissions = (): PermissionsReturn => {
       return false;
     }
     
+    // Dev Mode: admin has full access
+    if (devMode?.isDevMode && effectiveUser.role === 'administrator') {
+      return true;
+    }
+    
     // Use cached/memoized permission if available
     if (permissionCalculations[featureKey] !== undefined) {
       const hasAccess = permissionCalculations[featureKey];
@@ -168,10 +183,8 @@ export const usePermissions = (): PermissionsReturn => {
   // Get all permission keys with their status for the current user
   const getAllPermissionsList = () => {
     const permissionKeys = getAllPermissionKeys();
-    
     return permissionKeys.map(key => {
       const permission = FEATURE_PERMISSIONS[key];
-      
       return {
         key,
         title: permission?.title || key,
@@ -184,6 +197,11 @@ export const usePermissions = (): PermissionsReturn => {
   // Get all offline capabilities for current user
   const getOfflineCapabilities = (): string[] => {
     if (!effectiveUser) return [];
+    
+    // Dev Mode: admin inherits superadmin offline capabilities
+    if (devMode?.isDevMode && effectiveUser.role === 'administrator') {
+      return OFFLINE_CAPABILITIES['superadmin'] || [];
+    }
     
     let capabilities = OFFLINE_CAPABILITIES[effectiveUser.role] || [];
     
@@ -204,6 +222,9 @@ export const usePermissions = (): PermissionsReturn => {
   // Check if user has a specific offline capability
   const hasOfflineAccess = (capability: string): boolean => {
     if (!effectiveUser) return false;
+    
+    // Dev Mode: admin has all offline capabilities
+    if (devMode?.isDevMode && effectiveUser.role === 'administrator') return true;
     
     // Superadmin has access to all offline capabilities
     if (effectiveUser.role === 'superadmin') return true;

@@ -144,8 +144,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
     try {
-      if (currentUser?.role !== "superadmin") {
-        toastService.error("Permission denied", { description: "Only Super Admins can modify permissions" });
+      const isElevated = (currentUser?.role === "superadmin") || (devMode?.isDevMode && currentUser?.role === "administrator");
+      if (!isElevated) {
+        toastService.error("Permission denied", { description: "Only Super Admins (or Admin in Dev Mode) can modify permissions" });
         return false;
       }
 

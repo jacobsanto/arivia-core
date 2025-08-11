@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { useDevMode } from "@/contexts/DevModeContext";
 import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, Trash2 } from "lucide-react";
@@ -16,6 +17,7 @@ import { useRoleManagement } from "./role-management/useRoleManagement";
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
   const { user } = useUser();
+  const devMode = (() => { try { /* eslint-disable react-hooks/rules-of-hooks */ return useDevMode(); } catch { return null; } })();
   const [activeTab, setActiveTab] = useState<string>("roles");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isDeleteAllDialogOpen, setIsDeleteAllDialogOpen] = useState(false);
@@ -33,8 +35,9 @@ const RoleManagement: React.FC = () => {
     handleEditPermissions
   } = useRoleManagement();
 
-  // Only superadmins can access this component
-  if (user?.role !== "superadmin") {
+  // Only superadmins can access this component (Admin inherits in Dev Mode)
+  const isElevated = (user?.role === "superadmin") || (devMode?.isDevMode && user?.role === "administrator");
+  if (!isElevated) {
     return <UnauthorizedAccess />;
   }
   
