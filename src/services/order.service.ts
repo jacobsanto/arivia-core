@@ -39,7 +39,7 @@ export const orderService = {
     return (data || []).map(item => ({
       id: item.id,
       name: item.name,
-      unit: item.unit,
+      unit: item.unit || 'Each',
       category: 'General'
     }));
   },

@@ -25,8 +25,17 @@ export interface InventoryItem {
 
 export const inventoryService = {
   async getCategories(): Promise<InventoryCategory[]> {
-    // Return empty array since categories table doesn't exist
-    return [];
+    const { data, error } = await supabase
+      .from('inventory_categories')
+      .select('*')
+      .order('name');
+    
+    if (error) {
+      console.error('Error fetching inventory categories:', error);
+      throw error;
+    }
+    
+    return data || [];
   },
 
   async getItems(): Promise<InventoryItem[]> {
@@ -44,8 +53,18 @@ export const inventoryService = {
   },
 
   async createCategory(name: string, description?: string): Promise<InventoryCategory | null> {
-    // Categories table doesn't exist, return null
-    return null;
+    const { data, error } = await supabase
+      .from('inventory_categories')
+      .insert({ name, description })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating inventory category:', error);
+      throw error;
+    }
+    
+    return data;
   },
 
   async createItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>): Promise<InventoryItem | null> {
@@ -66,14 +85,36 @@ export const inventoryService = {
   // Inventory usage APIs
   async recordInventoryUsage(usage: {
     date?: string;
-    item: string;
-    category: string;
+    item_id: string;
     quantity: number;
-    property: string;
+    property_id: string;
     reported_by: string;
+    task_id?: string;
+    notes?: string;
   }): Promise<boolean> {
-    // Usage table doesn't exist, return true
-    return true;
+    try {
+      const { error } = await supabase
+        .from('inventory_usage')
+        .insert({
+          item_id: usage.item_id,
+          quantity_used: usage.quantity,
+          property_id: usage.property_id,
+          reported_by: usage.reported_by,
+          task_id: usage.task_id,
+          notes: usage.notes,
+          usage_date: usage.date || new Date().toISOString()
+        });
+      
+      if (error) {
+        console.error('Error recording inventory usage:', error);
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error recording inventory usage:', error);
+      return false;
+    }
   },
 
   async getInventoryUsageHistory(): Promise<Array<{
@@ -85,8 +126,35 @@ export const inventoryService = {
     property: string;
     reported_by: string;
   }>> {
-    // Usage table doesn't exist, return empty array
-    return [];
+    try {
+      const { data, error } = await supabase
+        .from('inventory_usage')
+        .select(`
+          *,
+          inventory_items:item_id (name),
+          properties:property_id (name),
+          profiles:reported_by (name)
+        `)
+        .order('usage_date', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching inventory usage:', error);
+        return [];
+      }
+      
+      return (data || []).map(item => ({
+        id: item.id,
+        date: item.usage_date || '',
+        item: item.inventory_items?.name || 'Unknown Item',
+        category: 'General',
+        quantity: item.quantity_used,
+        property: item.properties?.name || 'Unknown Property',
+        reported_by: item.profiles?.name || 'Unknown User'
+      }));
+    } catch (error) {
+      console.error('Error fetching inventory usage:', error);
+      return [];
+    }
   },
 
   async getUniqueLocations(): Promise<string[]> {

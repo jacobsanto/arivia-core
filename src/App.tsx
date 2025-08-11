@@ -29,7 +29,6 @@ import Reports from "@/pages/Reports";
 import SystemHealth from "@/pages/SystemHealth";
 
 import DamageReports from "@/pages/DamageReports";
-import CleaningSettings from "@/pages/CleaningSettings";
 import ListingDetails from "@/pages/ListingDetails";
 import VirtualTourPage from "@/pages/VirtualTourPage";
 import SystemAdminPage from "@/pages/SystemAdminPage";
@@ -75,7 +74,7 @@ function App() {
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/reports" element={<Reports />} />
                      
-                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
+                     
                      <Route path="/damage-reports" element={<DamageReports />} />
                     <Route path="/virtual-tours" element={<VirtualTourPage />} />
                     <Route path="/system-admin" element={<SystemAdminPage />} />
