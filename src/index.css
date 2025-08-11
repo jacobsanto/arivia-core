@@ -1,9 +1,8 @@
+@import url('./styles/accessibility.css');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('./styles/accessibility.css');
 
 @layer base {
   :root {
