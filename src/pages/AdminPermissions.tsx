@@ -39,12 +39,22 @@ const AdminPermissions = () => {
     }
   });
 
-  // Check for superadmin access
-  if (user?.role !== "superadmin") {
-    // Redirect non-superadmins away
+  // Check for elevated access: Superadmin or Admin in Dev Mode
+  const devMode = (() => {
+    try {
+      // eslint-disable-next-line react-hooks/rules-of-hooks, @typescript-eslint/no-var-requires
+      const { useDevMode } = require('@/contexts/DevModeContext');
+      return useDevMode();
+    } catch {
+      return null;
+    }
+  })();
+  const isElevated = (user?.role === "superadmin") || (devMode?.isDevMode && user?.role === "administrator");
+  if (!isElevated) {
+    // Redirect non-elevated users away
     React.useEffect(() => {
       toast.error("Access denied", {
-        description: "You need superadmin privileges to access this area"
+        description: "You need elevated privileges to access this area"
       });
       navigate("/");
     }, [navigate]);
