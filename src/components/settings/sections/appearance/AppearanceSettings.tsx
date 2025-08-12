@@ -79,7 +79,7 @@ const AppearanceSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
-        footer={<div className="w-full flex items-center justify-between text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="appearance" /></div>}
+        footer={<div className="w-full flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="appearance" /></div>}
       >
         <div className="space-y-6">
           {/* Theme */}
