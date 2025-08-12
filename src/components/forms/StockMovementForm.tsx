@@ -36,11 +36,16 @@ export function StockMovementForm({ defaultValues, onSuccess }: StockMovementFor
   const createMovement = useCreateStockMovement();
 
   const handleSubmit = async (values: StockMovementFormValues) => {
-    const res = await createMovement.mutateAsync(values);
+    const payload = {
+      item_id: values.item_id,
+      quantity: values.quantity,
+      type: values.type,
+      note: values.note || null,
+    } as const;
+    const res = await createMovement.mutateAsync(payload);
     toast({ title: "Stock movement recorded" });
     onSuccess?.(res);
   };
-
   const { errors } = form.formState;
 
   return (

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type CreateTaskInput = {
   title: string;
-  property: string;
+  property?: string; // name; we store property_id null for now
   priority: string;
   dueDate: string; // ISO
   assignee?: string | null;
@@ -16,14 +16,20 @@ export function useCreateTask() {
 
   return useAppMutation<any, Error, CreateTaskInput, unknown>(
     async (values) => {
-      const payload = {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth?.user?.id;
+      if (!userId) throw new Error("Not authenticated");
+
+      const payload: any = {
         title: values.title,
-        property: values.property,
         priority: values.priority,
         due_date: values.dueDate,
-        assignee: values.assignee ?? null,
         description: values.description ?? null,
         status: "pending",
+        assigned_to: values.assignee ?? null,
+        property_id: null, // map name->id in future iteration
+        task_type: "housekeeping",
+        created_by: userId,
       };
 
       const { data, error } = await supabase

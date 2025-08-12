@@ -13,7 +13,7 @@ export type UpsertInventoryItemInput = {
 export type CreateStockMovementInput = {
   item_id: string;
   quantity: number;
-  type: "in" | "out";
+  type: "in" | "out"; // accepted by form, not stored directly
   note?: string | null;
 };
 
@@ -28,10 +28,10 @@ export function useUpsertInventoryItem() {
         sku: values.sku ?? null,
         quantity: values.quantity,
         unit: values.unit ?? null,
-      };
+      } as any;
 
       const { data, error } = await supabase
-        .from("inventory")
+        .from("inventory_items")
         .upsert(payload, { onConflict: "id" })
         .select("*")
         .maybeSingle();
@@ -56,13 +56,17 @@ export function useCreateStockMovement() {
 
   return useAppMutation<any, Error, CreateStockMovementInput, unknown>(
     async (values) => {
+      const { data: auth } = await supabase.auth.getUser();
+      const userId = auth?.user?.id;
+      if (!userId) throw new Error("Not authenticated");
+
       const { data, error } = await supabase
-        .from("stock_movements")
+        .from("inventory_usage")
         .insert({
           item_id: values.item_id,
-          quantity: values.quantity,
-          type: values.type,
-          note: values.note ?? null,
+          quantity_used: values.quantity,
+          notes: values.note ?? null,
+          reported_by: userId,
         })
         .select("*")
         .maybeSingle();

@@ -40,15 +40,17 @@ export function TaskForm({ defaultValues, onSuccess }: TaskFormProps) {
 
   const handleSubmit = async (values: TaskFormValues) => {
     const payload = {
-      ...values,
+      title: values.title,
+      property: values.property,
+      priority: values.priority,
       dueDate: values.dueDate.toISOString(),
       assignee: values.assignee || null,
-    };
+      description: values.description || null,
+    } as const;
     const res = await createTask.mutateAsync(payload);
     toast({ title: "Task created", description: values.title });
     onSuccess?.(res);
   };
-
   const { errors } = form.formState;
 
   return (
