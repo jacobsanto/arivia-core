@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
 
 export interface User {
   id: string;
@@ -12,14 +13,25 @@ export interface User {
 }
 
 export const useUsers = () => {
+  const { user: currentUser } = useUser();
+
   const { data: users, isLoading, error, refetch } = useQuery({
-    queryKey: ['users'],
+    queryKey: ['users', currentUser?.id, currentUser?.role],
     queryFn: async () => {
-      const { data, error } = await supabase
+      if (!currentUser) return [] as User[];
+
+      const isManagerOrAdmin = ['superadmin', 'administrator', 'property_manager'].includes(currentUser.role);
+
+      let query = supabase
         .from('profiles')
         .select('id, name, email, role, avatar, phone')
         .order('name');
-      
+
+      if (!isManagerOrAdmin) {
+        query = query.eq('user_id', currentUser.id);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as User[];
     }
