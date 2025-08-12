@@ -10,6 +10,7 @@ import EmailSettings from "./sections/email/EmailSettings";
 import SecuritySettings from "./sections/security/SecuritySettings";
 import UserManagementSettings from "./sections/user-management/UserManagementSettings";
 import NotificationsSettings from "./sections/notifications/NotificationsSettings";
+import IntegrationsSettings from "./sections/integrations/IntegrationsSettings";
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
@@ -94,11 +95,10 @@ const SystemSettingsTabs = () => {
       <SettingsTabContent
         value="integrations"
         title="Integration Settings"
-        status={{ status: "not-configured" }}
+        status={{ status: "configured" }}
       >
-        <div className="p-4 text-center text-muted-foreground">Integrations coming soon</div>
+        <IntegrationsSettings />
       </SettingsTabContent>
-
       <SettingsTabContent
         value="backup"
         title="Backup & Restore"
