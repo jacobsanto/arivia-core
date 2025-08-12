@@ -3,6 +3,8 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { logger } from '@/services/logger';
+import { recordAudit } from '@/services/auditLogs';
 
 interface Props {
   children: ReactNode;
@@ -27,18 +29,13 @@ export class MVPErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Production Error Boundary:', error, errorInfo);
-    
-    // Log to external service in production
-    if (process.env.NODE_ENV === 'production') {
-      // Here you would send to your error tracking service
-      console.error('Error logged for tracking:', {
-        error: error.message,
-        stack: error.stack,
-        componentStack: errorInfo.componentStack
-      });
-    }
-    
+    logger.error('ErrorBoundary', error, { component: 'MVPErrorBoundary' });
+    recordAudit('error', error.message, {
+      error_name: error.name,
+      error_stack: error.stack,
+      component: 'MVPErrorBoundary',
+      metadata: { componentStack: errorInfo.componentStack },
+    });
     this.setState({ error, errorInfo });
   }
 

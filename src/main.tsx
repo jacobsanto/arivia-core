@@ -7,6 +7,7 @@ import { UserProvider } from './contexts/UserContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DevModeProvider } from './contexts/DevModeContext'
+import { initWebVitals } from './monitoring/webVitals';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -33,3 +34,6 @@ createRoot(rootElement).render(
     </DevModeProvider>
   </QueryClientProvider>
 );
+
+// Initialize Web Vitals after initial render
+setTimeout(() => initWebVitals(), 0);
