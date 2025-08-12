@@ -4,6 +4,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 
+// New unified auth system
+import { AuthProvider } from "@/auth";
 
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
@@ -47,7 +49,8 @@ function App() {
       <HelmetProvider>
         <AccessibilityProvider>
           <ToastProvider>
-                <Router>
+            <AuthProvider>
+              <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <DevModeStatusBar />
                 <Routes>
@@ -93,7 +96,8 @@ function App() {
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
                 <DevModePanel />
-                </Router>
+              </Router>
+            </AuthProvider>
           </ToastProvider>
         </AccessibilityProvider>
       </HelmetProvider>
