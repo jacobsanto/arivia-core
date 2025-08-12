@@ -1,8 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useForm, UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+function computeDiff(before: any, after: any) {
+  const changes: Record<string, { before: any; after: any }> = {};
+  const keys = new Set([...Object.keys(before || {}), ...Object.keys(after || {})]);
+  keys.forEach((k) => {
+    const a = (before || {})[k];
+    const b = (after || {})[k];
+    if (JSON.stringify(a) !== JSON.stringify(b)) {
+      changes[k] = { before: a, after: b };
+    }
+  });
+  return changes;
+}
 
 type UseSystemSettingsFormParams<T> = {
   category: string;
@@ -24,10 +37,13 @@ export function useSystemSettingsForm<T>({
   onSubmit: (values: T) => Promise<void>;
   resetForm: () => void;
   reload: () => Promise<void>;
+  updatedAt: string | null;
 } {
   const storageKey = useMemo(() => `arivia.settings.${category}`, [category]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const prevValuesRef = useRef<T>(defaultValues as any);
 
   const form = useForm<T>({
     resolver: zodResolver(schema),
@@ -40,7 +56,7 @@ export function useSystemSettingsForm<T>({
     try {
       const { data, error } = await supabase
         .from("system_settings")
-        .select("value")
+        .select("value, updated_at, updated_by")
         .eq("category", category)
         .maybeSingle();
 
@@ -57,6 +73,8 @@ export function useSystemSettingsForm<T>({
 
       const merged = Object.assign({}, defaultValues as any, (data?.value ?? {}));
       form.reset(merged);
+      prevValuesRef.current = merged as any;
+      setUpdatedAt(data.updated_at ?? null);
 
       // Cache locally as a resilience measure (optional)
       try {
@@ -86,7 +104,7 @@ export function useSystemSettingsForm<T>({
     setIsSaving(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
-      const { error } = await supabase
+      const { data: upserted, error } = await supabase
         .from("system_settings")
         .upsert(
           {
@@ -95,14 +113,33 @@ export function useSystemSettingsForm<T>({
             updated_by: userData.user?.id ?? null,
           },
           { onConflict: "category" }
-        );
+        )
+        .select("updated_at, updated_by")
+        .single();
 
       if (error) throw error;
+
+      // Audit log
+      try {
+        const changes = computeDiff(prevValuesRef.current, values);
+        await supabase.from("audit_logs").insert({
+          user_id: userData.user?.id ?? null,
+          level: "info",
+          message: `Updated system settings: ${category}`,
+          route: "/admin/settings",
+          metadata: { category, changes },
+        });
+      } catch (e) {
+        console.warn("Failed to write audit log", e);
+      }
 
       // Persist locally as well
       try {
         localStorage.setItem(storageKey, JSON.stringify(values));
       } catch (_) {}
+
+      setUpdatedAt(upserted?.updated_at ?? new Date().toISOString());
+      prevValuesRef.current = values as any;
 
       toast.success("Settings saved");
       form.reset(values);
@@ -125,5 +162,6 @@ export function useSystemSettingsForm<T>({
     onSubmit,
     resetForm,
     reload: loadFromSupabase,
+    updatedAt,
   };
 }

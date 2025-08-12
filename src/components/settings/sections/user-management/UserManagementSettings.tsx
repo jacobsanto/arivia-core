@@ -15,7 +15,7 @@ const roles = [
 ];
 
 const UserManagementSettings: React.FC = () => {
-  const { form, isLoading, isSaving, onSubmit, resetForm } = useSystemSettingsForm<UserManagementFormValues>({
+  const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<UserManagementFormValues>({
     category: "user-management",
     defaultValues: defaultUserManagementValues,
     schema: userManagementSchema,
@@ -30,6 +30,7 @@ const UserManagementSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
+        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
       >
         <div className="space-y-6">
           {/* Registration toggle */}

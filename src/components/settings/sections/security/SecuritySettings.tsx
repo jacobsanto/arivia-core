@@ -7,7 +7,7 @@ import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { securitySchema, defaultSecurityValues, SecurityFormValues } from "./types";
 
 const SecuritySettings: React.FC = () => {
-  const { form, isLoading, isSaving, onSubmit, resetForm } = useSystemSettingsForm<SecurityFormValues>({
+  const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<SecurityFormValues>({
     category: "security",
     defaultValues: defaultSecurityValues,
     schema: securitySchema,
@@ -24,6 +24,7 @@ const SecuritySettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
+        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
       >
         <div className="space-y-6">
           {/* Two-Factor Authentication */}

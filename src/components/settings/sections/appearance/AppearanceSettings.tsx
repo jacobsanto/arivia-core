@@ -36,7 +36,7 @@ function applyRadius(radius: "none" | "sm" | "md" | "lg" | "xl") {
 }
 
 const AppearanceSettings: React.FC = () => {
-  const { form, isLoading, isSaving, onSubmit, resetForm } = useSystemSettingsForm<AppearanceSettingsFormValues>({
+  const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<AppearanceSettingsFormValues>({
     category: "appearance",
     defaultValues: defaultAppearanceValues,
     schema: appearanceSettingsSchema,
@@ -78,6 +78,7 @@ const AppearanceSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
+        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
       >
         <div className="space-y-6">
           {/* Theme */}

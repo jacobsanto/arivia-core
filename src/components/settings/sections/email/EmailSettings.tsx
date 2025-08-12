@@ -9,7 +9,7 @@ import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { emailSettingsSchema, defaultEmailValues, EmailSettingsFormValues } from "./types";
 
 const EmailSettings: React.FC = () => {
-  const { form, isLoading, isSaving, onSubmit, resetForm } = useSystemSettingsForm<EmailSettingsFormValues>({
+  const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<EmailSettingsFormValues>({
     category: "email",
     defaultValues: defaultEmailValues,
     schema: emailSettingsSchema,
@@ -24,6 +24,7 @@ const EmailSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
+        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
       >
         <div className="space-y-6">
           <ProviderSettings form={form} />

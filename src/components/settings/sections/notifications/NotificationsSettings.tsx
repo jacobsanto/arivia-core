@@ -7,7 +7,7 @@ import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { notificationSettingsSchema, defaultNotificationValues, NotificationSettingsFormValues } from "./types";
 
 const NotificationsSettings: React.FC = () => {
-  const { form, isLoading, isSaving, onSubmit, resetForm } = useSystemSettingsForm<NotificationSettingsFormValues>({
+  const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<NotificationSettingsFormValues>({
     category: "notifications",
     defaultValues: defaultNotificationValues,
     schema: notificationSettingsSchema,
@@ -24,6 +24,7 @@ const NotificationsSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
+        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
       >
         <div className="space-y-6">
           {/* Channels */}
