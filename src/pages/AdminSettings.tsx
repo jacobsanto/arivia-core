@@ -37,7 +37,7 @@ const AdminSettings = () => {
       return null;
     }
   })();
-  const isElevated = (user?.role === "superadmin") || (devMode?.isDevMode && user?.role === "administrator");
+  const isElevated = user?.role === "superadmin" || user?.role === "administrator";
   if (!isElevated) {
     // Redirect non-elevated users away
     React.useEffect(() => {
