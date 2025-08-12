@@ -11,6 +11,7 @@ import SecuritySettings from "./sections/security/SecuritySettings";
 import UserManagementSettings from "./sections/user-management/UserManagementSettings";
 import NotificationsSettings from "./sections/notifications/NotificationsSettings";
 import IntegrationsSettings from "./sections/integrations/IntegrationsSettings";
+import AppearanceSettings from "./sections/appearance/AppearanceSettings";
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
@@ -112,7 +113,7 @@ const SystemSettingsTabs = () => {
         title="Appearance Settings"
         status={{ status: "configured" }}
       >
-        <div className="p-4 text-center text-muted-foreground">Appearance settings coming soon</div>
+        <AppearanceSettings />
       </SettingsTabContent>
     </Tabs>
   );
