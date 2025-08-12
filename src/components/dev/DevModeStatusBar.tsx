@@ -2,13 +2,14 @@ import React from 'react';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff } from 'lucide-react';
+import { isLovablePreviewEnv } from '@/lib/env/runtimeFlags';
 export const DevModeStatusBar: React.FC = () => {
   const {
     isDevMode,
     connectionStatus,
     currentMockUser
   } = useDevMode();
-  if (!isDevMode) return null;
+  if (isLovablePreviewEnv() || !isDevMode) return null;
   return <div className="fixed top-0 left-0 right-0 z-50 bg-orange-100 border-b border-orange-200 px-4 py-[5px]">
       <div className="flex items-center justify-between max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
