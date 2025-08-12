@@ -23,7 +23,7 @@ const SettingsTabContent: React.FC<SettingsTabContentProps> = ({
   useRegisterTab(value);
 
   return (
-    <TabsContent value={value} className="space-y-4 max-w-full overflow-x-hidden">
+    <TabsContent value={value} className="space-y-4 max-w-full overflow-x-auto">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2">
         <h2 className="text-xl font-semibold">{title}</h2>
         <SettingsStatusBadge 
