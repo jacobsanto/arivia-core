@@ -4,7 +4,6 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDevMode } from "@/contexts/DevModeContext";
 import { Loader2 } from "lucide-react";
-import { shouldBypassAuth } from "@/lib/env/runtimeFlags";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -15,7 +14,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const location = useLocation();
 
   const devMode = useDevMode();
-
 
   // Show loading state while authentication is being determined
   if (isLoading) {
@@ -36,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   // This ensures closer parity with production while retaining dev overrides
 
   // If dev mode is active and bypassing auth, allow access
-  if (shouldBypassAuth() || (devMode?.isDevMode && devMode.settings.bypassAuth)) {
+  if (devMode?.isDevMode && devMode.settings.bypassAuth) {
     return <>{children}</>;
   }
 

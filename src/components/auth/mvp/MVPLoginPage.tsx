@@ -11,7 +11,6 @@ import { MVPSignUpForm } from "./MVPSignUpForm";
 import { MVPLoginHero } from "./MVPLoginHero";
 import { DevModeActivator } from "@/components/dev/DevModeActivator";
 import { Badge } from "@/components/ui/badge";
-import { shouldBypassAuth } from "@/lib/env/runtimeFlags";
 export const MVPLoginPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const navigate = useNavigate();
@@ -33,11 +32,9 @@ export const MVPLoginPage: React.FC = () => {
   })();
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      navigate("/dashboard", { replace: true });
-      return;
-    }
-    if (!isAuthenticated && !isLoading && shouldBypassAuth()) {
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true
+      });
     }
   }, [isAuthenticated, isLoading, navigate]);
   if (isLoading) {
@@ -91,10 +88,7 @@ export const MVPLoginPage: React.FC = () => {
                   </p>
                   <button
                     onClick={() => {
-                      try {
-                        if (!devMode?.isDevMode) devMode?.toggleDevMode?.();
-                        devMode?.updateSettings?.({ bypassAuth: true });
-                      } catch {}
+                      try { devMode?.updateSettings?.({ bypassAuth: true }); } catch {}
                       navigate("/dashboard");
                     }}
                     className="w-full bg-primary text-primary-foreground py-2 px-4 rounded transition-colors"
