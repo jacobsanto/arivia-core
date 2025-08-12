@@ -87,10 +87,7 @@ export const MVPLoginPage: React.FC = () => {
                     Authentication is disabled in development. Using admin: iakovos@ariviagroup.com
                   </p>
                   <button
-                    onClick={() => {
-                      try { devMode?.updateSettings?.({ bypassAuth: true }); } catch {}
-                      navigate("/dashboard");
-                    }}
+                    onClick={() => navigate("/dashboard")}
                     className="w-full bg-primary text-primary-foreground py-2 px-4 rounded transition-colors"
                   >
                     Enter app
