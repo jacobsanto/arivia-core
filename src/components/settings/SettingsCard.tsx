@@ -28,7 +28,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   footer,
 }) => {
   return (
-    <Card className="w-full max-w-full overflow-hidden">
+    <Card className="w-full max-w-full overflow-x-hidden">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
