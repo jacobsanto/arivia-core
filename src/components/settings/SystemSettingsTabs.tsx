@@ -30,13 +30,13 @@ const SystemSettingsTabs = () => {
   const [value, setValue] = useState("general");
 
   return (
-    <Tabs value={value} onValueChange={setValue} className="w-full max-w-[100vw] overflow-x-hidden">
-      <div className="mb-4 sm:mb-8 px-2 sm:px-0">
+    <Tabs value={value} onValueChange={setValue} className="w-full min-w-0 max-w-[100vw] overflow-x-hidden">
+      <div className="mb-4 sm:mb-8 px-2 sm:px-0 min-w-0">
         <SwipeableTabs
           tabs={settingsTabs}
           value={value}
           onValueChange={setValue}
-          className="max-w-[100vw]"
+          className="max-w-[100vw] min-w-0"
         />
       </div>
 

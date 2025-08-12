@@ -44,9 +44,9 @@ const SwipeableTabs: React.FC<SwipeableTabsProps> = ({
 
   return (
     <SwipeableTabsProvider>
-      <div className={cn("w-full", className)}>
-        <div ref={scrollRef} className="w-full overflow-x-auto">
-          <TabsList className="inline-flex min-w-max flex-nowrap px-2 py-1">
+      <div className={cn("w-full min-w-0", className)}>
+        <div ref={scrollRef} className="w-full min-w-0 overflow-x-auto">
+          <TabsList className="inline-flex min-w-max flex-nowrap px-2 py-1 justify-start md:justify-center">
             {tabs.map((tab) => {
               let iconElement = null;
               if (tab.icon) {
