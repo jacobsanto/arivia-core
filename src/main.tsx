@@ -8,6 +8,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DevModeProvider } from './contexts/DevModeContext'
 import { initWebVitals } from './monitoring/webVitals';
+import { registerSW } from 'virtual:pwa-register';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -37,3 +38,7 @@ createRoot(rootElement).render(
 
 // Initialize Web Vitals after initial render
 setTimeout(() => initWebVitals(), 0);
+
+// Register Service Worker for PWA (auto update)
+registerSW({ immediate: true });
+
