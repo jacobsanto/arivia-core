@@ -3,7 +3,7 @@ import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User, UserRole, UserStateSetter, StateSetter } from "@/types/auth";
 import { getUserFromStorage } from "@/services/auth/userAuthService";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/auth";
 
 export const useSessionSync = (
   setUser: UserStateSetter,

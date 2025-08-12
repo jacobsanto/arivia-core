@@ -2,7 +2,7 @@
 import { useAuthState } from "./auth/useAuthState";
 import { useUserData } from "./users/useUserData";
 import { useSessionSync } from "./auth/useSessionSync";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/auth";
 
 // Refactored hook to avoid duplicate subscriptions and ensure consistent typing
 export const useUserState = () => {

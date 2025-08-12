@@ -1,20 +1,15 @@
 
-// @ts-nocheck
-
-import { User, UserRole } from "@/types/auth";
+import { User, UserRole } from "@/auth/types";
 import { toastService } from "@/services/toast/toast.service";
-import { 
-  checkFeatureAccess, 
-  checkRolePermission
-} from "@/services/auth/permissionService";
+import { permissionService } from "@/auth/services/permissionService";
 import { supabase } from "@/integrations/supabase/client";
 
 export const hasPermission = (user: User | null, roles: UserRole[]) => {
-  return checkRolePermission(user, roles);
+  return permissionService.checkRolePermission(user, roles);
 };
 
 export const hasFeatureAccess = (user: User | null, featureKey: string) => {
-  return checkFeatureAccess(user, featureKey);
+  return permissionService.checkFeatureAccess(user, featureKey);
 };
 
 export const updatePermissions = async (

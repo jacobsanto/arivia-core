@@ -3,8 +3,8 @@ import { Bell, MessageSquare, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
-import { ROLE_DETAILS } from "@/types/auth";
+import { useAuth } from "@/auth";
+import { ROLE_DETAILS } from "@/auth/types";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
@@ -20,9 +20,9 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const {
     user,
-    logout,
-    refreshProfile
-  } = useUser();
+    signOut,
+    refreshAuthState
+  } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { isDevMode } = useDevMode();
@@ -31,20 +31,18 @@ const Header: React.FC<HeaderProps> = ({
     if (!user) return;
     const intervalId = setInterval(() => {
       if (navigator.onLine) {
-        refreshProfile().then(updated => {
-          if (updated) {
-            console.log("Profile automatically refreshed");
-          }
+        refreshAuthState().then(() => {
+          console.log("Profile automatically refreshed");
         });
       }
     }, 5 * 60 * 1000); // 5 minutes
 
-    refreshProfile();
+    refreshAuthState();
     return () => clearInterval(intervalId);
-  }, [user, refreshProfile]);
+  }, [user, refreshAuthState]);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate("/login");
   };
 
@@ -117,7 +115,7 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuItem onClick={() => navigate("/settings")}>
                 <span>Settings</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => refreshProfile()}>
+              <DropdownMenuItem onClick={() => refreshAuthState()}>
                 <span className="flex items-center">
                   <RefreshCw className="mr-2 h-4 w-4" />
                   <span>Refresh Profile</span>
