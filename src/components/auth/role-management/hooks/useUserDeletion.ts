@@ -1,11 +1,11 @@
 
 import { useState } from "react";
-import { User } from "@/types/auth";
-import { useUser } from "@/contexts/UserContext";
+import { User } from "@/auth/types";
+import { useProfile } from "@/auth";
 import { toast } from "sonner";
 
 export const useUserDeletion = () => {
-  const { deleteUser } = useUser();
+  const { deleteUserProfile } = useProfile();
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
@@ -20,19 +20,15 @@ export const useUserDeletion = () => {
       setIsDeleting(true);
       console.log("Starting delete operation for user:", userToDelete.id);
       
-      // Call the deleteUser function from the context
-      const result = await deleteUser(userToDelete.id);
+      // Call the deleteUserProfile function from the context
+      await deleteUserProfile(userToDelete.id);
       
-      if (result) {
-        console.log("User deleted successfully");
-        toast.success("User deleted successfully");
-        
-        // No need to update the users array here - will happen via realtime subscription
-        setUserToDelete(null);
-        return true;
-      } else {
-        throw new Error("Delete operation failed");
-      }
+      console.log("User deleted successfully");
+      toast.success("User deleted successfully");
+      
+      // No need to update the users array here - will happen via realtime subscription
+      setUserToDelete(null);
+      return true;
     } catch (error) {
       console.error("Error in handleDeleteConfirm:", error);
       toast.error("Failed to delete user", {
@@ -56,12 +52,8 @@ export const useUserDeletion = () => {
       for (const user of usersToDelete) {
         try {
           console.log(`Attempting to delete user: ${user.id} (${user.name})`);
-          const result = await deleteUser(user.id);
-          if (result) {
-            successCount++;
-          } else {
-            failCount++;
-          }
+          await deleteUserProfile(user.id);
+          successCount++;
           // Small delay to prevent overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {

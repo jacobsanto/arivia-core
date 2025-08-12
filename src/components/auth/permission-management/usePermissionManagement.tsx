@@ -1,6 +1,6 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
-import { User, getDefaultPermissionsForRole } from "@/types/auth";
+import { User } from "@/auth/types";
+import { getDefaultPermissionsForRole } from "@/auth/utils/defaultPermissions";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
