@@ -42,13 +42,15 @@ export function useSystemSettingsForm<T>({
         .from("system_settings")
         .select("value")
         .eq("category", category)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        // PGRST116 = No rows found; treat as initial state
-        if ((error as any)?.code !== "PGRST116") {
-          console.warn(`Failed to load system settings for ${category}`, error);
-        }
+        console.warn(`Failed to load system settings for ${category}`, error);
+        form.reset(defaultValues as any);
+        return;
+      }
+
+      if (!data) {
         form.reset(defaultValues as any);
         return;
       }
