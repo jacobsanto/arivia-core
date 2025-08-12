@@ -88,7 +88,10 @@ export const MVPLoginPage: React.FC = () => {
                   </p>
                   <button
                     onClick={() => {
-                      try { devMode?.updateSettings?.({ bypassAuth: true }); } catch {}
+                      try {
+                        if (!devMode?.isDevMode) devMode?.toggleDevMode?.();
+                        devMode?.updateSettings?.({ bypassAuth: true });
+                      } catch {}
                       navigate("/dashboard");
                     }}
                     className="w-full bg-primary text-primary-foreground py-2 px-4 rounded transition-colors"
