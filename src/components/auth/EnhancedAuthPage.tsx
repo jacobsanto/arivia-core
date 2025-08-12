@@ -181,9 +181,8 @@ export const EnhancedAuthPage: React.FC = () => {
                 </form>
 
                 <div className="text-center text-sm text-muted-foreground">
-                  <p>Demo accounts:</p>
-                  <p><strong>Admin:</strong> admin@ariviavillas.com / admin123</p>
-                  <p><strong>Manager:</strong> manager@ariviavillas.com / manager123</p>
+                  <p>Welcome to Arivia Villas Operations</p>
+                  <p>Contact your administrator for account access</p>
                 </div>
               </TabsContent>
 
