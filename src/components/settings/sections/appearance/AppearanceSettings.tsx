@@ -6,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import SettingsCard from "@/components/settings/SettingsCard";
 import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { appearanceSettingsSchema, defaultAppearanceValues, AppearanceSettingsFormValues } from "./types";
+import SettingsHistoryDialog from "@/components/settings/SettingsHistoryDialog";
 
 function applyTheme(theme: "system" | "light" | "dark") {
   const root = document.documentElement;
@@ -78,7 +79,7 @@ const AppearanceSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
-        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
+        footer={<div className="w-full flex items-center justify-between text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="appearance" /></div>}
       >
         <div className="space-y-6">
           {/* Theme */}

@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import SettingsCard from "@/components/settings/SettingsCard";
 import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { userManagementSchema, defaultUserManagementValues, UserManagementFormValues } from "./types";
+import SettingsHistoryDialog from "@/components/settings/SettingsHistoryDialog";
 
 const roles = [
   { value: "housekeeping_staff", label: "Housekeeping Staff" },
@@ -30,7 +31,7 @@ const UserManagementSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
-        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
+        footer={<div className="w-full flex items-center justify-between text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="user-management" /></div>}
       >
         <div className="space-y-6">
           {/* Registration toggle */}

@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import SettingsCard from "@/components/settings/SettingsCard";
 import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { notificationSettingsSchema, defaultNotificationValues, NotificationSettingsFormValues } from "./types";
+import SettingsHistoryDialog from "@/components/settings/SettingsHistoryDialog";
 
 const NotificationsSettings: React.FC = () => {
   const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<NotificationSettingsFormValues>({
@@ -24,7 +25,7 @@ const NotificationsSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
-        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
+        footer={<div className="w-full flex items-center justify-between text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="notifications" /></div>}
       >
         <div className="space-y-6">
           {/* Channels */}

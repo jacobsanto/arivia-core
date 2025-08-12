@@ -7,6 +7,7 @@ import SenderSettings from "./SenderSettings";
 import NotificationSettings from "./NotificationSettings";
 import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { emailSettingsSchema, defaultEmailValues, EmailSettingsFormValues } from "./types";
+import SettingsHistoryDialog from "@/components/settings/SettingsHistoryDialog";
 
 const EmailSettings: React.FC = () => {
   const { form, isLoading, isSaving, onSubmit, resetForm, updatedAt } = useSystemSettingsForm<EmailSettingsFormValues>({
@@ -24,7 +25,7 @@ const EmailSettings: React.FC = () => {
         isSaving={isSaving}
         onSave={() => form.handleSubmit(onSubmit)()}
         onReset={resetForm}
-        footer={<div className="text-xs text-muted-foreground">Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</div>}
+        footer={<div className="w-full flex items-center justify-between text-xs text-muted-foreground"><span>Last updated: {updatedAt ? new Date(updatedAt).toLocaleString() : "Not saved yet"}</span><SettingsHistoryDialog category="email" /></div>}
       >
         <div className="space-y-6">
           <ProviderSettings form={form} />
