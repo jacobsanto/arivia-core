@@ -26,6 +26,10 @@ export default defineConfig(({ mode }) => ({
           { src: "/pwa-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/pwa-512x512.png", sizes: "512x512", type: "image/png" }
         ]
+      },
+      workbox: {
+        // Allow precaching our large main chunk (default is 2 MiB)
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       }
     }),
     mode === 'development' && componentTagger(),
@@ -35,9 +39,14 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Vitest config
   test: {
     environment: "jsdom",
     setupFiles: "src/test/setup.ts",
     css: true,
+  },
+  // Relax chunk warning; we will code-split heavy routes later
+  build: {
+    chunkSizeWarningLimit: 2048,
   },
 }));
