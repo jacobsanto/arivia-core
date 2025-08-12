@@ -8,6 +8,7 @@ import SecurityMonitoring from "../admin/SecurityMonitoring";
 import SettingsTabContent from "./tabs/SettingsTabContent";
 import EmailSettings from "./sections/email/EmailSettings";
 import SecuritySettings from "./sections/security/SecuritySettings";
+import UserManagementSettings from "./sections/user-management/UserManagementSettings";
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
@@ -47,9 +48,11 @@ const SystemSettingsTabs = () => {
         title="User Management"
         status={{ status: "configured" }}
       >
-        <UserManagement />
+        <div className="space-y-6">
+          <UserManagementSettings />
+          <UserManagement />
+        </div>
       </SettingsTabContent>
-
       <SettingsTabContent
         value="security"
         title="Security Settings"
