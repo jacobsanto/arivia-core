@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { BarChart, LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 import { BarChart3, TrendingUp, PieChart as PieChartIcon, Activity, Download, RefreshCw } from 'lucide-react';
+import { chartPalette } from '@/styles/chartPalette';
 
 export const DataVisualization = () => {
   const [chartType, setChartType] = useState('bar');
@@ -22,11 +23,11 @@ export const DataVisualization = () => {
   ];
 
   const occupancyData = [
-    { name: 'Villa Aurora', value: 85, color: '#8884d8' },
-    { name: 'Villa Serenity', value: 92, color: '#82ca9d' },
-    { name: 'Villa Paradise', value: 78, color: '#ffc658' },
-    { name: 'Villa Sunset', value: 88, color: '#ff7300' },
-    { name: 'Villa Dreams', value: 95, color: '#00ff88' }
+    { name: 'Villa Aurora', value: 85, color: chartPalette.series[0] },
+    { name: 'Villa Serenity', value: 92, color: chartPalette.series[1] },
+    { name: 'Villa Paradise', value: 78, color: chartPalette.series[2] },
+    { name: 'Villa Sunset', value: 88, color: chartPalette.series[3] },
+    { name: 'Villa Dreams', value: 95, color: chartPalette.series[4] }
   ];
 
   const taskCompletionData = [
@@ -40,10 +41,10 @@ export const DataVisualization = () => {
   ];
 
   const guestSatisfactionData = [
-    { name: 'Excellent', value: 65, color: '#22c55e' },
-    { name: 'Good', value: 25, color: '#3b82f6' },
-    { name: 'Average', value: 8, color: '#f59e0b' },
-    { name: 'Poor', value: 2, color: '#ef4444' }
+    { name: 'Excellent', value: 65, color: chartPalette.success },
+    { name: 'Good', value: 25, color: chartPalette.info },
+    { name: 'Average', value: 8, color: chartPalette.warning },
+    { name: 'Poor', value: 2, color: chartPalette.destructive }
   ];
 
   const chartTypes = [
@@ -89,8 +90,8 @@ export const DataVisualization = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#3b82f6" />
-              {dataSource === 'revenue' && <Bar dataKey="bookings" fill="#10b981" />}
+              <Bar dataKey="value" fill={chartPalette.info} />
+              {dataSource === 'revenue' && <Bar dataKey="bookings" fill={chartPalette.success} />}
             </BarChart>
           </ResponsiveContainer>
         );
@@ -103,11 +104,11 @@ export const DataVisualization = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={2} />
+              <Line type="monotone" dataKey="value" stroke={chartPalette.info} strokeWidth={2} />
               {dataSource === 'tasks' && (
                 <>
-                  <Line type="monotone" dataKey="housekeeping" stroke="#10b981" strokeWidth={2} />
-                  <Line type="monotone" dataKey="maintenance" stroke="#f59e0b" strokeWidth={2} />
+                  <Line type="monotone" dataKey="housekeeping" stroke={chartPalette.success} strokeWidth={2} />
+                  <Line type="monotone" dataKey="maintenance" stroke={chartPalette.warning} strokeWidth={2} />
                 </>
               )}
             </LineChart>
@@ -145,7 +146,7 @@ export const DataVisualization = () => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Area type="monotone" dataKey="value" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
+              <Area type="monotone" dataKey="value" stroke={chartPalette.info} fill={chartPalette.info} fillOpacity={0.6} />
             </AreaChart>
           </ResponsiveContainer>
         );
@@ -274,15 +275,15 @@ export const DataVisualization = () => {
         {dataSource === 'tasks' && chartType === 'line' && (
           <div className="flex justify-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-blue-500 rounded"></div>
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: chartPalette.info }}></div>
               <span className="text-sm">Total Completion</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: chartPalette.success }}></div>
               <span className="text-sm">Housekeeping</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: chartPalette.warning }}></div>
               <span className="text-sm">Maintenance</span>
             </div>
           </div>
