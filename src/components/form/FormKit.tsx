@@ -1,6 +1,8 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { Button, type ButtonProps } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 export interface FormFieldWrapperProps extends React.HTMLAttributes<HTMLDivElement> {
   label?: React.ReactNode;
@@ -98,3 +100,67 @@ export const mobileHints = {
   name: { autoComplete: "name", inputMode: "text", enterKeyHint: "next" } as MobileInputHints,
   number: { inputMode: "numeric", enterKeyHint: "done" } as MobileInputHints,
 };
+
+// Input + Textarea primitives with mobile hints
+export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
+  hint?: string;
+  error?: string;
+}
+
+function pickHints(type?: React.HTMLInputTypeAttribute): MobileInputHints | undefined {
+  switch (type) {
+    case "email":
+      return mobileHints.email;
+    case "tel":
+      return mobileHints.phone;
+    case "number":
+      return mobileHints.number;
+    default:
+      return undefined;
+  }
+}
+
+export function InputField({ id, name, label, hint, error, type = "text", className, required, ...props }: InputFieldProps) {
+  const fieldId = id || (name as string);
+  const hints = pickHints(type);
+  return (
+    <FormFieldWrapper label={label} description={hint} error={error} required={required}>
+      <Input
+        id={fieldId}
+        name={name}
+        type={type}
+        aria-invalid={!!error}
+        aria-describedby={hint ? `${fieldId}-hint` : undefined}
+        className={className}
+        {...hints}
+        {...props}
+      />
+    </FormFieldWrapper>
+  );
+}
+
+export interface TextAreaFieldProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: string;
+  hint?: string;
+  error?: string;
+}
+
+export function TextAreaField({ id, name, label, hint, error, className, required, rows = 4, ...props }: TextAreaFieldProps) {
+  const fieldId = id || (name as string);
+  return (
+    <FormFieldWrapper label={label} description={hint} error={error} required={required}>
+      <Textarea
+        id={fieldId}
+        name={name}
+        aria-invalid={!!error}
+        aria-describedby={hint ? `${fieldId}-hint` : undefined}
+        className={className}
+        rows={rows}
+        enterKeyHint="done"
+        {...props}
+      />
+    </FormFieldWrapper>
+  );
+}
+
