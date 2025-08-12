@@ -1,6 +1,6 @@
 // @ts-nocheck
 import React, { useState, useEffect } from "react";
-import { useSettingsForm } from "@/hooks/useSettingsForm";
+import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { Form } from "@/components/ui/form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -57,7 +57,7 @@ const BackupSettings: React.FC = () => {
     isDirty,
     onSubmit,
     resetForm,
-  } = useSettingsForm({
+  } = useSystemSettingsForm({
     category: 'backup',
     defaultValues: defaultBackupValues,
     schema: backupSettingsSchema,

@@ -12,6 +12,7 @@ import UserManagementSettings from "./sections/user-management/UserManagementSet
 import NotificationsSettings from "./sections/notifications/NotificationsSettings";
 import IntegrationsSettings from "./sections/integrations/IntegrationsSettings";
 import AppearanceSettings from "./sections/appearance/AppearanceSettings";
+import GeneralSettings from "./sections/general/GeneralSettings";
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
@@ -43,9 +44,8 @@ const SystemSettingsTabs = () => {
         title="General Settings"
         status={{ status: "configured", lastUpdated: new Date() }}
       >
-        <div className="p-4 text-center text-muted-foreground">General settings coming soon</div>
+        <GeneralSettings />
       </SettingsTabContent>
-
       <SettingsTabContent
         value="users"
         title="User Management"
