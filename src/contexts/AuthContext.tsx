@@ -11,9 +11,16 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  // Alias for compatibility with older components
+  loading: boolean;
   isAuthenticated: boolean;
   error: string | null;
   refreshAuthState: () => Promise<void>;
+  // Auth actions
+  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, userData?: any) => Promise<{ error: any }>;
+  signOut: () => Promise<{ error: any }>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -223,13 +230,97 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [devMode?.isDevMode, devMode?.settings.bypassAuth]);
 
+  // Auth actions unified for app
+  const signIn = async (email: string, password: string) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        toastService.error('Sign In Failed', { description: error.message });
+        return { error };
+      }
+      toastService.success('Welcome Back!', { description: 'You have successfully signed in.' });
+      return { error: null };
+    } catch (err) {
+      logger.error('AuthContext', 'Sign in error', { error: err });
+      return { error: err };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signUp = async (email: string, password: string, userData?: any) => {
+    try {
+      setIsLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: userData || {}
+        }
+      });
+      if (error) {
+        toastService.error('Sign Up Failed', { description: error.message });
+        return { error };
+      }
+      toastService.success('Account Created!', { description: 'Please check your email to verify your account.' });
+      return { error: null };
+    } catch (err) {
+      logger.error('AuthContext', 'Sign up error', { error: err });
+      return { error: err };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toastService.error('Sign Out Failed', { description: error.message });
+        return { error };
+      }
+      toastService.info('Signed Out', { description: 'You have been successfully signed out.' });
+      return { error: null };
+    } catch (err) {
+      logger.error('AuthContext', 'Sign out error', { error: err });
+      return { error: err };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetPassword = async (email: string) => {
+    try {
+      const redirectUrl = `${window.location.origin}/reset-password`;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: redirectUrl });
+      if (error) {
+        toastService.error('Reset Failed', { description: error.message });
+        return { error };
+      }
+      toastService.success('Reset Email Sent', { description: 'Please check your email for password reset instructions.' });
+      return { error: null };
+    } catch (err) {
+      logger.error('AuthContext', 'Password reset error', { error: err });
+      return { error: err };
+    }
+  };
+
   const value = {
     user,
     session,
     isLoading,
+    loading: isLoading,
     isAuthenticated: !!user && !!session,
     error,
-    refreshAuthState
+    refreshAuthState,
+    signIn,
+    signUp,
+    signOut,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

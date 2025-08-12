@@ -16,6 +16,7 @@ interface LogContext {
 class Logger {
   private isDevelopment = import.meta.env.DEV;
   private isDevMode = localStorage.getItem('arivia-dev-mode') === 'true';
+  private originalConsole = (typeof window !== 'undefined' && (window as any).__ORIGINAL_CONSOLE) || console;
 
   private shouldLog(level: LogLevel): boolean {
     // Always log errors and warnings
@@ -40,9 +41,9 @@ class Logger {
     
     const formattedMessage = this.formatMessage('debug', message, context);
     if (data) {
-      console.log(formattedMessage, data);
+      this.originalConsole.log(formattedMessage, data);
     } else {
-      console.log(formattedMessage);
+      this.originalConsole.log(formattedMessage);
     }
   }
 
@@ -54,9 +55,9 @@ class Logger {
     
     const formattedMessage = this.formatMessage('info', message, context);
     if (data) {
-      console.log(formattedMessage, data);
+      this.originalConsole.log(formattedMessage, data);
     } else {
-      console.log(formattedMessage);
+      this.originalConsole.log(formattedMessage);
     }
   }
 
@@ -66,9 +67,9 @@ class Logger {
   warn(message: string, data?: unknown, context?: LogContext): void {
     const formattedMessage = this.formatMessage('warn', message, context);
     if (data && this.isDevelopment) {
-      console.warn(formattedMessage, data);
+      this.originalConsole.warn(formattedMessage, data);
     } else {
-      console.warn(formattedMessage);
+      this.originalConsole.warn(formattedMessage);
     }
   }
 
@@ -80,11 +81,11 @@ class Logger {
     
     if (this.isDevelopment || this.isDevMode) {
       // Show full error details in development
-      console.error(formattedMessage, error);
+      this.originalConsole.error(formattedMessage, error);
     } else {
       // Show sanitized error in production
       const sanitizedError = error instanceof Error ? error.message : 'Unknown error';
-      console.error(formattedMessage, sanitizedError);
+      this.originalConsole.error(formattedMessage, sanitizedError);
     }
   }
 
