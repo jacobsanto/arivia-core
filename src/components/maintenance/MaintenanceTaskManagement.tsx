@@ -199,13 +199,15 @@ export const MaintenanceTaskManagement: React.FC = () => {
             <p className="text-muted-foreground">Track and manage maintenance tasks across all properties</p>
           </div>
           
-          <CreateMaintenanceTaskDialog
-            isOpen={isCreateTaskOpen}
-            onOpenChange={setIsCreateTaskOpen}
-            onTaskCreated={() => {
-              queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
-            }}
-          />
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsCreateTaskOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Maintenance Task
+            </Button>
+          </div>
         </div>
 
         {/* Stats Overview */}
@@ -330,6 +332,15 @@ export const MaintenanceTaskManagement: React.FC = () => {
             </TabsContent>
           ))}
         </Tabs>
+
+        {/* Create Maintenance Task Dialog */}
+        <CreateMaintenanceTaskDialog
+          isOpen={isCreateTaskOpen}
+          onOpenChange={setIsCreateTaskOpen}
+          onTaskCreated={() => {
+            queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
+          }}
+        />
       </div>
     </>
   );
