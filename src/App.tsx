@@ -22,6 +22,7 @@ import Housekeeping from "@/pages/Housekeeping";
 import Properties from "@/pages/Properties";
 import Inventory from "@/pages/Inventory";
 import TeamChat from "@/pages/TeamChat";
+import CleaningSettings from "@/pages/CleaningSettings";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
 import SystemHealth from "@/pages/SystemHealth";
@@ -66,6 +67,7 @@ function App() {
                     <Route path="/properties" element={<Properties />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/team-chat" element={<TeamChat />} />
+                    <Route path="/cleaning-settings" element={<CleaningSettings />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/reports" element={<Reports />} />
                      

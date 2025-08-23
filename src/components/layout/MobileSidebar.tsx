@@ -6,7 +6,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare } from "lucide-react";
+import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, FileText, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 
@@ -79,7 +79,13 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
             
             <MobileSidebarLink to="/team-chat" icon={<MessageSquare size={20} />} label="Team Chat" onClick={handleLinkClick} />
             
-            {canAccess("viewReports") && <MobileSidebarLink to="/analytics" icon={<BarChart size={20} />} label="Analytics" onClick={handleLinkClick} />}
+            {canAccess("viewReports") && (
+              <>
+                <MobileSidebarLink to="/analytics" icon={<BarChart3 size={20} />} label="Analytics" onClick={handleLinkClick} />
+                <MobileSidebarLink to="/reports" icon={<FileText size={20} />} label="Reports" onClick={handleLinkClick} />
+                <MobileSidebarLink to="/cleaning-settings" icon={<Settings size={20} />} label="Cleaning Settings" onClick={handleLinkClick} />
+              </>
+            )}
             
             {isSuperAdmin && (
               <div className="pt-2 mt-2 border-t border-sidebar-border">
