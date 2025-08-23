@@ -31,6 +31,8 @@ export const updatePermissions = async (
   try {
     // First, update the database if online - this is now our primary action
     if (navigator.onLine) {
+      console.log("Saving permissions to database:", permissions);
+      
       const { error } = await supabase
         .from('profiles')
         .update({ 
@@ -39,9 +41,13 @@ export const updatePermissions = async (
         .eq('id', userId);
       
       if (error) {
+        console.error("Error saving permissions to database:", error);
         throw error;
       }
+      
+      console.log("Permissions saved to database successfully");
     } else {
+      console.log("Offline mode - permissions will sync when online");
       toastService.warning("You are offline", {
         description: "Permission changes will sync when you're back online"
       });
@@ -84,6 +90,7 @@ export const updatePermissions = async (
     
     return true;
   } catch (error) {
+    console.error("Error updating permissions:", error);
     toastService.error("Failed to update permissions", {
       description: error instanceof Error ? error.message : "An unknown error occurred"
     });

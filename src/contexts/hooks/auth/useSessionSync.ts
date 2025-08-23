@@ -2,7 +2,7 @@
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User, UserRole, UserStateSetter, StateSetter } from "@/types/auth";
-import { getCurrentSession } from "@/services/auth/secureAuthService";
+import { getUserFromStorage } from "@/services/auth/userAuthService";
 import { useAuth } from "@/auth";
 
 export const useSessionSync = (
@@ -32,19 +32,11 @@ export const useSessionSync = (
         }, 100);
       } else {
         console.log("No central auth data available, using local storage");
-        // Try to get session from Supabase as fallback
-        const session = await getCurrentSession();
-        if (session?.user) {
-          // Convert to our User format if needed
-          const storedUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
-            role: session.user.user_metadata?.role || 'housekeeping_staff',
-            avatar: session.user.user_metadata?.avatar || "/placeholder.svg"
-          };
+        // If central auth is not available, use local storage as fallback
+        const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
+        if (storedUser) {
           setUser(storedUser);
-          setLastAuthTime(Date.now());
+          setLastAuthTime(storedAuthTime);
         }
       }
     } catch (error) {

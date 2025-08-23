@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/auth/types";
 import { toastService } from "@/services/toast";
-import { signInSecure } from "@/services/auth/secureAuthService";
+import { loginUser as loginMockUser, MOCK_USERS } from "@/services/auth/userAuthService";
 
 export const login = async (
   email: string,
@@ -13,13 +13,39 @@ export const login = async (
   try {
     setIsLoading(true);
 
-    // Use secure authentication
-    const result = await signInSecure(email, password);
-    if (result.error) {
-      throw result.error;
+    // First, try to authenticate with mock users for development
+    const mockUser = MOCK_USERS.find(u => u.email === email);
+    if (mockUser) {
+      console.log("Attempting mock user authentication for:", email);
+      try {
+        const authenticatedUser = await loginMockUser(email, password);
+        
+        // If mock authentication succeeds, update state immediately
+        setUser(authenticatedUser);
+        
+        const authTime = Date.now();
+        localStorage.setItem("lastAuthTime", authTime.toString());
+        setLastAuthTime(authTime);
+        localStorage.setItem("user", JSON.stringify(authenticatedUser));
+        
+        console.log("Mock user authentication successful:", authenticatedUser.name);
+        return; // Exit early on successful mock authentication
+      } catch (mockError) {
+        console.log("Mock user authentication failed:", mockError instanceof Error ? mockError.message : mockError);
+        // Continue to Supabase authentication if mock fails
+      }
     }
 
-    const { data } = result;
+    // Fall back to Supabase authentication
+    console.log("Attempting Supabase authentication for:", email);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      throw error;
+    }
 
     // Convert Supabase user to our User format
     if (data.user) {

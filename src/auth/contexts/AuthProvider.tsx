@@ -10,7 +10,6 @@ import { permissionService } from '../services/permissionService';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { toastService } from '@/services/toast';
 import { logger } from '@/services/logger';
-import { monitorAuthAttempt, logUserActivity } from '@/services/security/securityMonitoring';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -47,11 +46,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       logger.debug('AuthProvider', 'Refreshing auth state');
 
-      // Import dev mode security check
-      const { isStrictLocalDev } = await import('@/services/security/devModeHardening');
-      const isLocalDev = isStrictLocalDev();
+      // Security: Only allow dev mode bypass in local development
+      const isLocalDev = typeof window !== 'undefined' && 
+        (window.location.hostname === 'localhost' || 
+         window.location.hostname === '127.0.0.1' ||
+         process.env.NODE_ENV === 'development');
          
-      // Security: Only allow dev mode bypass in strict local development
+      // Check for dev mode bypass
       if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev) {
         logger.debug('AuthProvider', 'Using dev mode authentication bypass');
         
@@ -64,12 +65,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
 
         setUser(mockUser);
-        const { generateDevToken } = await import('@/services/security/devModeHardening');
         setSession({
-          access_token: generateDevToken(),
+          access_token: 'dev-token',
           token_type: 'bearer',
           expires_in: 3600,
-          refresh_token: generateDevToken(),
+          refresh_token: 'dev-refresh',
           user: {
             id: mockUser.id,
             email: mockUser.email,
@@ -159,15 +159,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const result = await authService.signIn(email, password);
       
-      // Monitor authentication attempt
-      await monitorAuthAttempt(email, !result.error);
-      
       if (result.error) {
         setError(result.error.message);
         toastService.error('Sign in failed', result.error.message);
       } else {
         toastService.success('Signed in successfully');
-        await logUserActivity('sign_in', 'authentication');
       }
       
       return result;
@@ -211,7 +207,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(result.error.message);
         toastService.error('Sign out failed', result.error.message);
       } else {
-        await logUserActivity('sign_out', 'authentication');
         setUser(null);
         setSession(null);
         toastService.success('Signed out successfully');

@@ -17,9 +17,6 @@ const Sidebar = () => {
   const handleLogout = () => {
     logout();
   };
-  
-  console.log('Sidebar Debug:', { user: user?.name, role: user?.role });
-  
   if (!user) return null;
   const isSuperAdmin = user.role === "superadmin";
   const isAdmin = user.role === "administrator";

@@ -1,8 +1,7 @@
 
-import React, { useEffect } from "react";
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
-import { initializeSecurityEnhancements } from "@/services/security/securityEnhancement";
 import { ToastProvider } from "@/contexts/ToastContext";
 
 // New unified auth system
@@ -45,11 +44,6 @@ import AdminChecklists from "@/pages/AdminChecklists";
 import EnhancedTasks from "@/pages/EnhancedTasks";
 
 function App() {
-  // Initialize security enhancements on app startup
-  useEffect(() => {
-    initializeSecurityEnhancements().catch(console.error);
-  }, []);
-
   return (
     <MVPErrorBoundary>
       <HelmetProvider>

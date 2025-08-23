@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { UseFormReturn } from "react-hook-form";
 import { SecurityFormValues } from "./types";
-import { sanitizeIpList } from "@/services/security/inputSanitizer";
 
 interface IpRestrictionSettingsProps {
   form: UseFormReturn<SecurityFormValues>;
@@ -45,15 +44,7 @@ const IpRestrictionSettings: React.FC<IpRestrictionSettingsProps> = ({ form }) =
             <FormItem>
               <FormLabel>Allowed IP Addresses</FormLabel>
               <FormControl>
-                <Input 
-                  placeholder="192.168.1.1, 10.0.0.1" 
-                  {...field} 
-                  value={field.value || ''} 
-                  onChange={(e) => {
-                    const sanitized = sanitizeIpList(e.target.value);
-                    field.onChange(sanitized);
-                  }}
-                />
+                <Input placeholder="192.168.1.1, 10.0.0.1" {...field} value={field.value || ''} />
               </FormControl>
               <FormDescription>
                 Comma-separated list of allowed IP addresses
