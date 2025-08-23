@@ -33,47 +33,58 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<CleaningRule | null>(null);
   const [formData, setFormData] = useState({
-    rule_name: '',
+    name: '',
+    task_type: 'cleaning',
     min_nights: 1,
-    max_nights: 999,
-    is_global: true,
+    max_nights: 3,
+    actions: {} as Record<string, string[]>,
     is_active: true,
-    actions_by_day: {} as Record<string, string[]>,
-    assignable_properties: [] as string[]
+    priority: 1
   });
 
   const handleOpenDialog = (rule?: CleaningRule) => {
     if (rule) {
       setEditingRule(rule);
+      const stayLength = rule.conditions?.stay_length || { min: 1, max: 3 };
       setFormData({
-        rule_name: rule.rule_name,
-        min_nights: rule.min_nights,
-        max_nights: rule.max_nights,
-        is_global: rule.is_global,
+        name: rule.name,
+        task_type: rule.task_type,
+        min_nights: stayLength.min,
+        max_nights: stayLength.max,
+        actions: rule.actions || {},
         is_active: rule.is_active,
-        actions_by_day: rule.actions_by_day,
-        assignable_properties: rule.assignable_properties
+        priority: rule.priority
       });
     } else {
       setEditingRule(null);
       setFormData({
-        rule_name: '',
+        name: '',
+        task_type: 'cleaning',
         min_nights: 1,
-        max_nights: 999,
-        is_global: true,
+        max_nights: 3,
+        actions: {},
         is_active: true,
-        actions_by_day: {},
-        assignable_properties: []
+        priority: 1
       });
     }
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
+    const conditions = {
+      stay_length: {
+        min: formData.min_nights,
+        max: formData.max_nights
+      }
+    };
+
     const ruleData = {
-      ...formData,
-      stay_length_range: [formData.min_nights, formData.max_nights],
-      config_id: 'default'
+      name: formData.name,
+      task_type: formData.task_type,
+      actions: formData.actions,
+      conditions,
+      is_active: formData.is_active,
+      priority: formData.priority
     };
 
     if (editingRule) {
@@ -87,16 +98,16 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
   const handleActionToggle = (day: string, actionId: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
-      actions_by_day: {
-        ...prev.actions_by_day,
+      actions: {
+        ...prev.actions,
         [day]: checked 
-          ? [...(prev.actions_by_day[day] || []), actionId]
-          : (prev.actions_by_day[day] || []).filter(id => id !== actionId)
+          ? [...(prev.actions[day] || []), actionId]
+          : (prev.actions[day] || []).filter(id => id !== actionId)
       }
     }));
   };
 
-  const getDayActions = (day: string) => formData.actions_by_day[day] || [];
+  const getDayActions = (day: string) => formData.actions[day] || [];
 
   const days = ['check_in', 'during_stay', 'check_out'];
 
@@ -129,21 +140,22 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="rule_name">Rule Name</Label>
+                  <Label htmlFor="name">Rule Name</Label>
                   <Input
-                    id="rule_name"
-                    value={formData.rule_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, rule_name: e.target.value }))}
-                    placeholder="e.g., Standard Short Stay Rule"
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="e.g., Up to 3 Nights Stay"
                   />
                 </div>
-                <div className="flex items-center space-x-2 pt-6">
-                  <Switch
-                    id="is_active"
-                    checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                <div>
+                  <Label htmlFor="priority">Priority</Label>
+                  <Input
+                    id="priority"
+                    type="number"
+                    value={formData.priority}
+                    onChange={(e) => setFormData(prev => ({ ...prev, priority: parseInt(e.target.value) || 1 }))}
                   />
-                  <Label htmlFor="is_active">Active</Label>
                 </div>
               </div>
 
@@ -170,11 +182,11 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
 
               <div className="flex items-center space-x-2">
                 <Switch
-                  id="is_global"
-                  checked={formData.is_global}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_global: checked }))}
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
                 />
-                <Label htmlFor="is_global">Apply to all properties (Global Rule)</Label>
+                <Label htmlFor="is_active">Active</Label>
               </div>
 
               <div>
@@ -232,15 +244,15 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">{rule.rule_name}</CardTitle>
+                    <CardTitle className="text-lg">{rule.name}</CardTitle>
                     <CardDescription className="flex items-center gap-4 mt-1">
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        {rule.min_nights}-{rule.max_nights} nights
+                        {rule.conditions?.stay_length?.min || 1}-{rule.conditions?.stay_length?.max || 999} nights
                       </span>
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        {Object.values(rule.actions_by_day).flat().length} actions
+                        {Object.values(rule.actions || {}).flat().length} actions
                       </span>
                     </CardDescription>
                   </div>
@@ -248,8 +260,8 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
                     <Badge variant={rule.is_active ? "default" : "secondary"}>
                       {rule.is_active ? 'Active' : 'Inactive'}
                     </Badge>
-                    <Badge variant={rule.is_global ? "outline" : "secondary"}>
-                      {rule.is_global ? 'Global' : 'Assigned'}
+                    <Badge variant="outline">
+                      Priority {rule.priority}
                     </Badge>
                     <Button
                       variant="ghost"
@@ -271,7 +283,7 @@ export const CleaningRulesManager: React.FC<CleaningRulesManagerProps> = ({
               <CardContent>
                 <div className="space-y-3">
                   {days.map(day => {
-                    const dayActions = rule.actions_by_day[day] || [];
+                    const dayActions = rule.actions?.[day] || [];
                     if (dayActions.length === 0) return null;
                     
                     return (

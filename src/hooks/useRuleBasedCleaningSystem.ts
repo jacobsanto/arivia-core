@@ -15,17 +15,16 @@ export interface CleaningAction {
 
 export interface CleaningRule {
   id: string;
-  rule_name: string;
-  stay_length_range: number[];
-  actions_by_day: Record<string, string[]>;
-  is_global: boolean;
-  assignable_properties: string[];
+  name: string;
+  task_type: string;
+  actions: Record<string, string[]>;
+  conditions: Record<string, any>;
   is_active: boolean;
+  priority: number;
+  property_id?: string;
+  created_by?: string;
   created_at: string;
   updated_at: string;
-  config_id: string;
-  min_nights: number;
-  max_nights: number;
 }
 
 export interface RuleAssignment {
@@ -36,8 +35,8 @@ export interface RuleAssignment {
   assigned_by?: string;
   is_active: boolean;
   cleaning_rules?: {
-    rule_name: string;
-    stay_length_range: number[];
+    name: string;
+    conditions: Record<string, any>;
   };
 }
 
@@ -119,38 +118,34 @@ export const useRuleBasedCleaningSystem = () => {
         return;
       }
       
-      // Transform rules with safe property access and type assertions
+      // Transform rules with proper column mapping
       const transformedRules = (data || []).map((rule: any) => {
         try {
           return {
             id: rule.id,
-            rule_name: rule.rule_name,
-            stay_length_range: isNumberArray(rule.stay_length_range) ? rule.stay_length_range : [rule.min_nights || 1, rule.max_nights || 999],
-            actions_by_day: isActionsRecord(rule.actions_by_day) ? rule.actions_by_day : {},
-            is_global: rule.is_global ?? true,
-            assignable_properties: isStringArray(rule.assignable_properties) ? rule.assignable_properties : [],
+            name: rule.name,
+            task_type: rule.task_type,
+            actions: rule.actions || {},
+            conditions: rule.conditions || {},
             is_active: rule.is_active ?? true,
+            priority: rule.priority || 0,
+            property_id: rule.property_id,
+            created_by: rule.created_by,
             created_at: rule.created_at,
-            updated_at: rule.updated_at,
-            config_id: rule.config_id || 'default',
-            min_nights: rule.min_nights || 1,
-            max_nights: rule.max_nights || 999
+            updated_at: rule.updated_at
           } as CleaningRule;
         } catch (transformError) {
           console.warn('Error transforming rule:', rule, transformError);
           return {
             id: rule.id,
-            rule_name: rule.rule_name || 'Unknown Rule',
-            stay_length_range: [1, 999],
-            actions_by_day: {},
-            is_global: true,
-            assignable_properties: [],
+            name: rule.name || 'Unknown Rule',
+            task_type: rule.task_type || 'cleaning',
+            actions: {},
+            conditions: {},
             is_active: rule.is_active ?? true,
+            priority: rule.priority || 0,
             created_at: rule.created_at,
-            updated_at: rule.updated_at,
-            config_id: rule.config_id || 'default',
-            min_nights: rule.min_nights || 1,
-            max_nights: rule.max_nights || 999
+            updated_at: rule.updated_at
           } as CleaningRule;
         }
       });
@@ -178,7 +173,7 @@ export const useRuleBasedCleaningSystem = () => {
           assigned_at,
           assigned_by,
           is_active,
-          cleaning_rules(rule_name, stay_length_range)
+          cleaning_rules(name, conditions)
         `)
         .eq('is_active', true)
         .order('assigned_at', { ascending: false });
@@ -198,10 +193,8 @@ export const useRuleBasedCleaningSystem = () => {
         assigned_by: assignment.assigned_by,
         is_active: assignment.is_active,
         cleaning_rules: assignment.cleaning_rules ? {
-          rule_name: assignment.cleaning_rules.rule_name,
-          stay_length_range: isNumberArray(assignment.cleaning_rules.stay_length_range) 
-            ? assignment.cleaning_rules.stay_length_range 
-            : [1, 999]
+          name: assignment.cleaning_rules.name,
+          conditions: assignment.cleaning_rules.conditions || {}
         } : undefined
       }));
       
@@ -277,28 +270,17 @@ export const useRuleBasedCleaningSystem = () => {
 
   const createCleaningRule = async (rule: Omit<CleaningRule, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      // Use first available config_id or create a fallback
-      let configId = rule.config_id;
-      if (!configId) {
-        const { data: configData } = await supabase
-          .from('property_cleaning_configs')
-          .select('id')
-          .limit(1);
-        configId = configData?.[0]?.id || crypto.randomUUID();
-      }
-
       const { data, error } = await supabase
         .from('cleaning_rules')
         .insert([{
-          rule_name: rule.rule_name,
-          config_id: configId,
-          stay_length_range: rule.stay_length_range,
-          actions_by_day: rule.actions_by_day,
-          is_global: rule.is_global,
-          assignable_properties: rule.assignable_properties,
+          name: rule.name,
+          task_type: rule.task_type,
+          actions: rule.actions,
+          conditions: rule.conditions,
           is_active: rule.is_active,
-          min_nights: rule.min_nights,
-          max_nights: rule.max_nights
+          priority: rule.priority,
+          property_id: rule.property_id,
+          created_by: rule.created_by
         }])
         .select()
         .single();
@@ -307,23 +289,22 @@ export const useRuleBasedCleaningSystem = () => {
       
       const transformedRule: CleaningRule = {
         id: data.id,
-        rule_name: data.rule_name,
-        stay_length_range: isNumberArray(data.stay_length_range) ? data.stay_length_range : rule.stay_length_range,
-        actions_by_day: isActionsRecord(data.actions_by_day) ? data.actions_by_day : rule.actions_by_day,
-        is_global: data.is_global ?? rule.is_global,
-        assignable_properties: isStringArray(data.assignable_properties) ? data.assignable_properties : rule.assignable_properties,
-        is_active: data.is_active ?? rule.is_active,
+        name: data.name,
+        task_type: data.task_type,
+        actions: data.actions || {},
+        conditions: data.conditions || {},
+        is_active: data.is_active ?? true,
+        priority: data.priority || 0,
+        property_id: data.property_id,
+        created_by: data.created_by,
         created_at: data.created_at,
-        updated_at: data.updated_at,
-        config_id: data.config_id,
-        min_nights: data.min_nights || rule.min_nights,
-        max_nights: data.max_nights || rule.max_nights
+        updated_at: data.updated_at
       };
       
       setRules(prev => [transformedRule, ...prev]);
       toast({
         title: "Rule Created",
-        description: `Rule "${rule.rule_name}" has been created successfully`,
+        description: `Rule "${rule.name}" has been created successfully`,
       });
       
       return transformedRule;
@@ -351,17 +332,16 @@ export const useRuleBasedCleaningSystem = () => {
       
       const transformedRule: CleaningRule = {
         id: data.id,
-        rule_name: data.rule_name,
-        stay_length_range: isNumberArray(data.stay_length_range) ? data.stay_length_range : updates.stay_length_range || [1, 999],
-        actions_by_day: isActionsRecord(data.actions_by_day) ? data.actions_by_day : updates.actions_by_day || {},
-        is_global: data.is_global ?? updates.is_global ?? true,
-        assignable_properties: isStringArray(data.assignable_properties) ? data.assignable_properties : updates.assignable_properties || [],
-        is_active: data.is_active ?? updates.is_active ?? true,
+        name: data.name,
+        task_type: data.task_type,
+        actions: data.actions || {},
+        conditions: data.conditions || {},
+        is_active: data.is_active ?? true,
+        priority: data.priority || 0,
+        property_id: data.property_id,
+        created_by: data.created_by,
         created_at: data.created_at,
-        updated_at: data.updated_at,
-        config_id: data.config_id,
-        min_nights: data.min_nights || 1,
-        max_nights: data.max_nights || 999
+        updated_at: data.updated_at
       };
       
       setRules(prev => prev.map(r => r.id === id ? transformedRule : r));
