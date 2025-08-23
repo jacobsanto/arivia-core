@@ -16,9 +16,6 @@ export { authService } from './services/authService';
 export { profileService } from './services/profileService';
 export { permissionService } from './services/permissionService';
 
-// Utilities
-export { getDefaultPermissionsForRole } from './utils/defaultPermissions';
-
 // Types
 export type {
   User,
