@@ -184,7 +184,7 @@ const TaskCreationForm = ({
                       </SelectItem>
                     ))}
                     {propertiesLoading && (
-                      <SelectItem value="" disabled>Loading properties...</SelectItem>
+                      <SelectItem value="loading" disabled>Loading properties...</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
@@ -282,7 +282,7 @@ const TaskCreationForm = ({
                       </SelectItem>
                     ))}
                     {usersLoading && (
-                      <SelectItem value="" disabled>Loading users...</SelectItem>
+                      <SelectItem value="loading" disabled>Loading users...</SelectItem>
                     )}
                   </SelectContent>
                 </Select>
