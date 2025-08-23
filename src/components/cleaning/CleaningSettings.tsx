@@ -1,144 +1,89 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Settings, Bot, Shield, Zap } from 'lucide-react';
-import { CleaningRulesManager } from './CleaningRulesManager';
-import { CleaningActionsManager } from './CleaningActionsManager';
-import { CleaningAutomation } from './CleaningAutomation';
-import { useRuleBasedCleaningSystem } from '@/hooks/useRuleBasedCleaningSystem';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings2, Plus, Calendar, Users, Timer, MapPin } from 'lucide-react';
+import { CleaningScheduleConfig } from './CleaningScheduleConfig';
+import { CleaningTeamManagement } from './CleaningTeamManagement';
+import { CleaningOverview } from './CleaningOverview';
 
 export const CleaningSettings: React.FC = () => {
-  const {
-    rules,
-    actions,
-    assignments,
-    tasks,
-    loading,
-    error,
-    createCleaningRule,
-    updateCleaningRule,
-    deleteCleaningRule,
-    assignRuleToProperties,
-    updateTaskActions
-  } = useRuleBasedCleaningSystem();
-
-  const [activeTab, setActiveTab] = useState('rules');
-
-  const handleActionCreated = (action: any) => {
-    // Refresh data or update local state
-    window.location.reload();
-  };
-
-  const handleActionUpdated = (action: any) => {
-    // Refresh data or update local state
-    window.location.reload();
-  };
-
-  const handleActionDeleted = (actionId: string) => {
-    // Refresh data or update local state
-    window.location.reload();
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Settings className="h-6 w-6" />
-            Cleaning Settings & Automation
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            <Settings2 className="h-8 w-8 text-primary" />
+            Cleaning Management
           </h1>
-          <p className="text-muted-foreground">
-            Configure cleaning rules, actions, and automation for your properties
+          <p className="text-muted-foreground mt-1">
+            Configure cleaning schedules, team assignments, and automation for all Arivia properties
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-            <Bot className="h-3 w-3 mr-1" />
-            Automation Active
+        <div className="flex items-center gap-3">
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+            System Active
           </Badge>
-          <Badge variant="outline">
-            {rules.length} Rules
-          </Badge>
-          <Badge variant="outline">
-            {actions.length} Actions
-          </Badge>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Quick Setup
+          </Button>
         </div>
       </div>
 
-      {error && (
-        <Card className="border-destructive bg-destructive/5">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 text-destructive">
-              <Shield className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
+      {/* Main Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="rules" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            Cleaning Rules
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <MapPin className="h-4 w-4" />
+            Overview
           </TabsTrigger>
-          <TabsTrigger value="actions" className="flex items-center gap-2">
-            <Zap className="h-4 w-4" />
-            Actions
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Schedule Rules
+          </TabsTrigger>
+          <TabsTrigger value="team" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Team & Zones
           </TabsTrigger>
           <TabsTrigger value="automation" className="flex items-center gap-2">
-            <Bot className="h-4 w-4" />
+            <Timer className="h-4 w-4" />
             Automation
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="rules" className="space-y-6">
+        <TabsContent value="overview" className="space-y-6">
+          <CleaningOverview />
+        </TabsContent>
+
+        <TabsContent value="schedule" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Cleaning Rules Management</CardTitle>
+              <CardTitle>Cleaning Schedule Configuration</CardTitle>
               <CardDescription>
-                Define rules that automatically determine what cleaning actions should be performed based on booking characteristics
+                Set up automatic cleaning schedules based on booking patterns and stay duration
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CleaningRulesManager
-                rules={rules}
-                actions={actions}
-                assignments={assignments}
-                onRuleCreated={createCleaningRule}
-                onRuleUpdated={updateCleaningRule}
-                onRuleDeleted={deleteCleaningRule}
-                onRuleAssigned={assignRuleToProperties}
-              />
+              <CleaningScheduleConfig />
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="actions" className="space-y-6">
+        <TabsContent value="team" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Cleaning Actions Library</CardTitle>
+              <CardTitle>Team Management & Zone Assignment</CardTitle>
               <CardDescription>
-                Manage the available cleaning actions that can be assigned to tasks
+                Manage cleaning staff and assign them to specific villa zones
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CleaningActionsManager
-                actions={actions}
-                onActionCreated={handleActionCreated}
-                onActionUpdated={handleActionUpdated}
-                onActionDeleted={handleActionDeleted}
-              />
+              <CleaningTeamManagement />
             </CardContent>
           </Card>
         </TabsContent>
@@ -146,17 +91,24 @@ export const CleaningSettings: React.FC = () => {
         <TabsContent value="automation" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Cleaning Automation</CardTitle>
+              <CardTitle>Automation Settings</CardTitle>
               <CardDescription>
-                Configure automation settings and monitor automated task creation
+                Configure smart automation features for efficient cleaning operations
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <CleaningAutomation
-                rules={rules}
-                tasks={tasks}
-                onTaskUpdate={updateTaskActions}
-              />
+              <div className="space-y-6">
+                <div className="text-center py-12">
+                  <Timer className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-medium mb-2">Advanced Automation</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Smart scheduling and task automation features
+                  </p>
+                  <Button variant="outline">
+                    Configure Automation
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
