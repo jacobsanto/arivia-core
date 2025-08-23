@@ -12,79 +12,88 @@ import { CreateMaintenanceTaskDialog } from "@/components/maintenance/CreateMain
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-
 export const HousekeepingTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tasks");
   const queryClient = useQueryClient();
-
-  const { data: housekeepingTasks, isLoading } = useQuery({
+  const {
+    data: housekeepingTasks,
+    isLoading
+  } = useQuery({
     queryKey: ['housekeeping-tasks'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('housekeeping_tasks')
-        .select('*')
-        .order('due_date', { ascending: true });
+      const {
+        data
+      } = await supabase.from('housekeeping_tasks').select('*').order('due_date', {
+        ascending: true
+      });
       return data || [];
     }
   });
-
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done': return CheckCircle;
-      case 'in_progress': return Clock;
-      case 'pending': return AlertTriangle;
-      default: return Clock;
+      case 'done':
+        return CheckCircle;
+      case 'in_progress':
+        return Clock;
+      case 'pending':
+        return AlertTriangle;
+      default:
+        return Clock;
     }
   };
-
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'done': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'done':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
-
   const handleStartTask = async (taskId: string) => {
     try {
-      const { error } = await supabase
-        .from('housekeeping_tasks')
-        .update({ status: 'in_progress' })
-        .eq('id', taskId);
-
+      const {
+        error
+      } = await supabase.from('housekeeping_tasks').update({
+        status: 'in_progress'
+      }).eq('id', taskId);
       if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      queryClient.invalidateQueries({
+        queryKey: ['housekeeping-tasks']
+      });
       toastService.success('Task started successfully!');
     } catch (error) {
       console.error('Error starting task:', error);
       toastService.error('Failed to start task');
     }
   };
-
   const handleCompleteTask = async (taskId: string) => {
     try {
-      const { error } = await supabase
-        .from('housekeeping_tasks')
-        .update({ status: 'done' })
-        .eq('id', taskId);
-
+      const {
+        error
+      } = await supabase.from('housekeeping_tasks').update({
+        status: 'done'
+      }).eq('id', taskId);
       if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
+      queryClient.invalidateQueries({
+        queryKey: ['housekeeping-tasks']
+      });
       toastService.success('Task completed successfully!');
     } catch (error) {
       console.error('Error completing task:', error);
       toastService.error('Failed to complete task');
     }
   };
-
-  const TaskCard = ({ task }: { task: any }) => {
+  const TaskCard = ({
+    task
+  }: {
+    task: any;
+  }) => {
     const StatusIcon = getStatusIcon(task.status);
-    
-    return (
-      <Card className="hover:shadow-md transition-shadow">
+    return <Card className="hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-start space-x-3">
@@ -95,11 +104,9 @@ export const HousekeepingTaskManagement: React.FC = () => {
                 <h3 className="font-semibold text-foreground">
                   {task.task_type}
                 </h3>
-                {task.description && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                {task.description && <p className="text-sm text-muted-foreground mt-1">
                     {task.description}
-                  </p>
-                )}
+                  </p>}
               </div>
             </div>
             <Badge className={getStatusColor(task.status)}>
@@ -114,46 +121,28 @@ export const HousekeepingTaskManagement: React.FC = () => {
                 {format(new Date(task.due_date), 'MMM dd, yyyy')}
               </div>
               <div className="flex items-center">
-                <UserAvatar 
-                  userId={task.assigned_to} 
-                  showName={false} 
-                  size="sm" 
-                />
+                <UserAvatar userId={task.assigned_to} showName={false} size="sm" />
                 <span className="ml-2">
                   {task.assigned_to ? 'Assigned' : 'Unassigned'}
                 </span>
               </div>
-              {task.listing_id && (
-                <div className="flex items-center">
+              {task.listing_id && <div className="flex items-center">
                   <MapPin className="h-3 w-3 mr-1" />
                   Property
-                </div>
-              )}
+                </div>}
             </div>
             
             <div className="flex items-center space-x-2">
-              {task.status === 'pending' && (
-                <Button 
-                  size="sm" 
-                  variant="outline"
-                  onClick={() => handleStartTask(task.id)}
-                >
+              {task.status === 'pending' && <Button size="sm" variant="outline" onClick={() => handleStartTask(task.id)}>
                   Start Task
-                </Button>
-              )}
-              {task.status === 'in_progress' && (
-                <Button 
-                  size="sm"
-                  onClick={() => handleCompleteTask(task.id)}
-                >
+                </Button>}
+              {task.status === 'in_progress' && <Button size="sm" onClick={() => handleCompleteTask(task.id)}>
                   Complete
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </CardContent>
-      </Card>
-    );
+      </Card>;
   };
 
   // Stats calculation
@@ -168,24 +157,14 @@ export const HousekeepingTaskManagement: React.FC = () => {
       return dueDate.toDateString() === today.toDateString();
     }).length || 0
   };
-
-  return (
-    <>
+  return <>
       <Helmet>
         <title>Housekeeping Management - Arivia Villas</title>
         <meta name="description" content="Manage housekeeping tasks and create maintenance requests" />
       </Helmet>
       
       <div className="space-y-6 p-4 md:p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Bed className="h-8 w-8 text-primary" />
-              Housekeeping Task Management
-            </h1>
-            <p className="text-muted-foreground">View and manage all housekeeping tasks</p>
-          </div>
-        </div>
+        
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -265,27 +244,18 @@ export const HousekeepingTaskManagement: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {isLoading ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                  {isLoading ? <div className="text-center py-8 text-muted-foreground">
                       <p>Loading housekeeping tasks...</p>
-                    </div>
-                  ) : housekeepingTasks?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
+                    </div> : housekeepingTasks?.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                       <p>No housekeeping tasks found</p>
                       <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
-                    </div>
-                  ) : (
-                    housekeepingTasks?.map((task) => (
-                      <TaskCard key={task.id} task={task} />
-                    ))
-                  )}
+                    </div> : housekeepingTasks?.map(task => <TaskCard key={task.id} task={task} />)}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
           
-          {['pending', 'in_progress', 'done'].map((status) => (
-            <TabsContent key={status} value={status} className="space-y-4">
+          {['pending', 'in_progress', 'done'].map(status => <TabsContent key={status} value={status} className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>
@@ -294,22 +264,14 @@ export const HousekeepingTaskManagement: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {housekeepingTasks?.filter(task => task.status === status)?.length === 0 ? (
-                      <div className="text-center py-8 text-muted-foreground">
+                    {housekeepingTasks?.filter(task => task.status === status)?.length === 0 ? <div className="text-center py-8 text-muted-foreground">
                         <p>No {status === 'done' ? 'completed' : status.replace('_', ' ')} housekeeping tasks found</p>
-                      </div>
-                    ) : (
-                      housekeepingTasks?.filter(task => task.status === status)?.map((task) => (
-                        <TaskCard key={task.id} task={task} />
-                      ))
-                    )}
+                      </div> : housekeepingTasks?.filter(task => task.status === status)?.map(task => <TaskCard key={task.id} task={task} />)}
                   </div>
                 </CardContent>
               </Card>
-            </TabsContent>
-          ))}
+            </TabsContent>)}
         </Tabs>
       </div>
-    </>
-  );
+    </>;
 };
