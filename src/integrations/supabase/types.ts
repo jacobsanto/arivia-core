@@ -239,6 +239,63 @@ export type Database = {
         }
         Relationships: []
       }
+      damage_reports: {
+        Row: {
+          actual_cost: number | null
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          estimated_cost: number | null
+          id: string
+          location: string | null
+          photos: string[] | null
+          property_id: string | null
+          repair_notes: string | null
+          reported_by: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          location?: string | null
+          photos?: string[] | null
+          property_id?: string | null
+          repair_notes?: string | null
+          reported_by?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_cost?: number | null
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_cost?: number | null
+          id?: string
+          location?: string | null
+          photos?: string[] | null
+          property_id?: string | null
+          repair_notes?: string | null
+          reported_by?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       guesty_listings: {
         Row: {
           address: string | null
