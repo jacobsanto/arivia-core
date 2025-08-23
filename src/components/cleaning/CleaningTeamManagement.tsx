@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,50 +27,35 @@ export const CleaningTeamManagement: React.FC = () => {
     { id: 'crete', name: 'Crete Zone', count: 5 }
   ];
 
-  const staff = [
-    {
-      id: 1,
-      name: 'Maria Konstantinou',
-      avatar: '/placeholder.svg',
-      zone: 'santorini',
-      role: 'Senior Housekeeper',
-      status: 'available',
-      rating: 4.9,
-      todayTasks: 3,
-      completedToday: 2,
-      phone: '+30 123 456 789',
-      email: 'maria@arivia.com',
-      specialties: ['Deep Cleaning', 'Luxury Amenities']
-    },
-    {
-      id: 2,
-      name: 'John Dimitriou',
-      avatar: '/placeholder.svg',
-      zone: 'mykonos',
-      role: 'Housekeeper',
-      status: 'busy',
-      rating: 4.7,
-      todayTasks: 4,
-      completedToday: 1,
-      phone: '+30 123 456 790',
-      email: 'john@arivia.com',
-      specialties: ['Quick Turnovers', 'Maintenance Support']
-    },
-    {
-      id: 3,
-      name: 'Anna Papadaki',
-      avatar: '/placeholder.svg',
-      zone: 'crete',
-      role: 'Team Lead',
-      status: 'available',
-      rating: 5.0,
-      todayTasks: 2,
-      completedToday: 2,
-      phone: '+30 123 456 791',
-      email: 'anna@arivia.com',
-      specialties: ['Team Coordination', 'Quality Control']
+  // Load real staff data from profiles
+  const { data: staff = [] } = useQuery({
+    queryKey: ['housekeeping-staff'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'housekeeping_staff')
+        .order('name');
+      
+      if (error) throw error;
+      
+      // Transform data to match UI expectations
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.name,
+        avatar: profile.avatar || '/placeholder.svg',
+        zone: 'santorini', // TODO: Add zone field to profiles
+        role: 'Housekeeper',
+        status: 'available', // TODO: Add status tracking
+        rating: 4.8,
+        todayTasks: 0, // TODO: Calculate from tasks
+        completedToday: 0, // TODO: Calculate from tasks
+        phone: profile.phone || '',
+        email: profile.email,
+        specialties: ['General Cleaning'] // TODO: Add specialties field
+      }));
     }
-  ];
+  });
 
   const getStatusColor = (status: string) => {
     switch (status) {
