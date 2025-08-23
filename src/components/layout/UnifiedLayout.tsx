@@ -17,7 +17,16 @@ const UnifiedLayout = () => {
   const { isDevMode } = useDevMode();
   const location = useLocation();
   
+  // Debug logging to see what's happening
+  console.log('UnifiedLayout Debug:', { 
+    isMobile, 
+    user: user?.name, 
+    mobileMenuOpen,
+    pathname: location.pathname
+  });
+  
   const toggleMobileMenu = () => {
+    console.log('Toggling mobile menu from', mobileMenuOpen, 'to', !mobileMenuOpen);
     setMobileMenuOpen(prev => !prev);
   };
 
@@ -43,6 +52,13 @@ const UnifiedLayout = () => {
             <MobileSidebar isOpen={mobileMenuOpen} onClose={() => setMobileMenuOpen(false)} />
             <MobileBottomNav onOpenMenu={toggleMobileMenu} />
           </>
+        )}
+        
+        {/* Always render mobile nav for debugging if no user */}
+        {!user && (
+          <div className="fixed bottom-0 left-0 right-0 h-16 bg-red-500 text-white text-center p-4 z-50">
+            DEBUG: No user found - Navigation hidden
+          </div>
         )}
       </div>
     </div>

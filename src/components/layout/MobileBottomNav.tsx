@@ -2,6 +2,7 @@ import React from "react";
 import { Home, Menu, BedDouble, Package, Wrench, FileWarning } from "lucide-react";
 import NavItem from "./NavItem";
 import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/auth"; // Add direct auth import for comparison
 import { usePermissions } from "@/hooks/usePermissions";
 interface MobileBottomNavProps {
   onOpenMenu: () => void;
@@ -12,10 +13,18 @@ const MobileBottomNav = ({
   const {
     user
   } = useUser();
+  const authUser = useAuth().user; // Compare both auth systems
   const {
     canAccess
   } = usePermissions();
-  if (!user) return null;
+  
+  console.log('MobileBottomNav Debug:', { 
+    legacyUser: user?.name, 
+    authUser: authUser?.name,
+    role: user?.role || authUser?.role 
+  });
+  
+  if (!user && !authUser) return null;
   const isAdminOrManager = user.role === "administrator" || user.role === "property_manager";
   return <div className="fixed bottom-0 left-0 right-0 h-16 bg-primary text-primary-foreground flex items-center justify-around z-50 lg:hidden shadow-lg border-t border-border">{/* Changed to use design system colors */}
       <NavItem to="/dashboard" icon={<Home size={20} />} label="Home" />

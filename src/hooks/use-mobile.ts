@@ -37,7 +37,9 @@ export function useIsMobile() {
   const isMobile = useMemo(() => {
     // Only calculate if width is available
     if (width === null) return false;
-    return width < MOBILE_BREAKPOINT;
+    const result = width < MOBILE_BREAKPOINT;
+    console.log('useIsMobile Debug:', { width, isMobile: result, breakpoint: MOBILE_BREAKPOINT });
+    return result;
   }, [width]);
 
   return isMobile;
