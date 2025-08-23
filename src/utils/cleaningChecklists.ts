@@ -56,35 +56,37 @@ export const generateCleaningSchedule = (checkIn: Date, checkOut: Date) => {
   scheduledCleanings.push(format(checkIn, "yyyy-MM-dd"));
   cleaningTypes.push("Full");
 
-  // Based on the user's new cleaning service breakdown:
+  // Based on Arivia's cleaning service breakdown by length of stay:
   if (stayDuration <= 3) {
-    // No additional cleaning except check-in and check-out
+    // Stays of Up to 3 Nights: Only full cleaning before check-in
+    // No additional cleaning during stay
   } 
   else if (stayDuration <= 5) {
-    // One full cleaning mid-stay
+    // Stays of Up to 5 Nights: Full cleaning + 1 standard cleaning mid-stay
     const midStayDate = addDays(checkIn, Math.floor(stayDuration / 2));
     scheduledCleanings.push(format(midStayDate, "yyyy-MM-dd"));
-    cleaningTypes.push("Full");
+    cleaningTypes.push("Standard");
   }
   else if (stayDuration <= 7) {
-    // Two cleanings during stay
-    const firstCleanDate = addDays(checkIn, 2);
+    // Stays of Up to 7 Nights: Full cleaning + 2 standard cleanings during stay
+    const firstCleanDate = addDays(checkIn, Math.floor(stayDuration / 3));
     scheduledCleanings.push(format(firstCleanDate, "yyyy-MM-dd"));
-    cleaningTypes.push("Full");
+    cleaningTypes.push("Standard");
     
-    const secondCleanDate = addDays(checkIn, 5);
+    const secondCleanDate = addDays(checkIn, Math.floor((stayDuration * 2) / 3));
     scheduledCleanings.push(format(secondCleanDate, "yyyy-MM-dd"));
-    cleaningTypes.push("Linen & Towel Change");
+    cleaningTypes.push("Standard");
   }
   else {
-    // For stays more than 7 nights: custom schedule with cleanings every 3 days
+    // Stays of More Than 7 Nights: Custom schedule with guest coordination
+    // Default to cleaning every 3-4 days with full cleaning and linen changes
     let currentDay = addDays(checkIn, 3);
     let cleaningCount = 0;
     
     while (differenceInDays(checkOut, currentDay) > 1) {
       scheduledCleanings.push(format(currentDay, "yyyy-MM-dd"));
       
-      // Alternate between full cleaning and linen change
+      // Alternate between full cleaning and linen/towel changes
       if (cleaningCount % 2 === 0) {
         cleaningTypes.push("Full");
       } else {
@@ -95,10 +97,6 @@ export const generateCleaningSchedule = (checkIn: Date, checkOut: Date) => {
       cleaningCount++;
     }
   }
-
-  // Always add check-out day
-  scheduledCleanings.push(format(checkOut, "yyyy-MM-dd"));
-  cleaningTypes.push("Full");
 
   return { scheduledCleanings, cleaningTypes, stayDuration };
 };
