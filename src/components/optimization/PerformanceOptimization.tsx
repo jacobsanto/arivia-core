@@ -357,7 +357,7 @@ const PerformanceOptimization = () => {
                       <h4 className="font-medium">Frontend Optimizations</h4>
                       <ul className="text-sm text-muted-foreground space-y-1">
                         <li>• Use React.memo for expensive components</li>
-                        <li>• Implement virtual scrolling for large lists</li>
+                        <li>• Implement lazy scrolling for large lists</li>
                         <li>• Optimize CSS delivery and remove unused styles</li>
                         <li>• Use modern image formats (WebP, AVIF)</li>
                       </ul>

@@ -30,7 +30,7 @@ import SystemHealth from "@/pages/SystemHealth";
 
 import DamageReports from "@/pages/DamageReports";
 import ListingDetails from "@/pages/ListingDetails";
-import VirtualTourPage from "@/pages/VirtualTourPage";
+
 import SystemAdminPage from "@/pages/SystemAdminPage";
 import OptimizationPage from "@/pages/OptimizationPage";
 
@@ -74,7 +74,7 @@ function App() {
                      
                      
                      <Route path="/damage-reports" element={<DamageReports />} />
-                    <Route path="/virtual-tours" element={<VirtualTourPage />} />
+                    
                     <Route path="/system-admin" element={<SystemAdminPage />} />
                      <Route path="/optimization" element={<OptimizationPage />} />
                      <Route path="/system-health" element={<SystemHealth />} />

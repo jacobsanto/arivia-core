@@ -141,7 +141,7 @@ export const MarketplaceIntegrations = () => {
       currentRating: 4.9,
       currentBookings: 95,
       potentialIncrease: "+28%",
-      recommendations: ["Virtual tour", "Seasonal pricing", "Local attractions guide"]
+      recommendations: ["Seasonal pricing", "Local attractions guide", "Amenity showcase"]
     },
     {
       property: "Villa Paradise",
