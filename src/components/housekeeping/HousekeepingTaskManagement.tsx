@@ -15,8 +15,6 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export const HousekeepingTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tasks");
-  const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
-  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: housekeepingTasks, isLoading } = useQuery({
@@ -183,28 +181,9 @@ export const HousekeepingTaskManagement: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
               <Bed className="h-8 w-8 text-primary" />
-              Housekeeping Management
+              Housekeeping Task Management
             </h1>
-            <p className="text-muted-foreground">Manage housekeeping tasks and create maintenance requests</p>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <Button 
-              onClick={() => setIsCreateTaskOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create Housekeeping Task
-            </Button>
-            
-            <Button 
-              variant="outline"
-              onClick={() => setIsCreateMaintenanceOpen(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create Maintenance Request
-            </Button>
+            <p className="text-muted-foreground">View and manage all housekeeping tasks</p>
           </div>
         </div>
 
@@ -330,20 +309,6 @@ export const HousekeepingTaskManagement: React.FC = () => {
             </TabsContent>
           ))}
         </Tabs>
-
-        <TaskCreationDialog 
-          isOpen={isCreateTaskOpen}
-          onOpenChange={setIsCreateTaskOpen}
-          defaultTab="housekeeping"
-        />
-
-        <CreateMaintenanceTaskDialog
-          isOpen={isCreateMaintenanceOpen}
-          onOpenChange={setIsCreateMaintenanceOpen}
-          onTaskCreated={() => {
-            toastService.success('Maintenance task created successfully!');
-          }}
-        />
       </div>
     </>
   );
