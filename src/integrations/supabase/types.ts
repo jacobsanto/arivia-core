@@ -864,7 +864,15 @@ export type Database = {
           property_id?: string
           rule_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_rule_assignments_cleaning_rules"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "cleaning_rules"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rule_conditions: {
         Row: {

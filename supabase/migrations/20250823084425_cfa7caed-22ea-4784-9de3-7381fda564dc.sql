@@ -1,0 +1,30 @@
+-- Fix foreign key relationship and add sample data with correct column names
+
+-- Add foreign key constraint between rule_assignments and cleaning_rules
+ALTER TABLE rule_assignments 
+ADD CONSTRAINT fk_rule_assignments_cleaning_rules 
+FOREIGN KEY (rule_id) REFERENCES cleaning_rules(id) ON DELETE CASCADE;
+
+-- Clear existing data to avoid conflicts
+TRUNCATE cleaning_actions RESTART IDENTITY CASCADE;
+TRUNCATE cleaning_rules RESTART IDENTITY CASCADE;
+
+-- Add sample cleaning actions
+INSERT INTO cleaning_actions (action_name, display_name, description, estimated_duration, category) VALUES
+('standard_cleaning', 'Standard Cleaning', 'Regular cleaning including bathrooms, kitchen, and common areas', 90, 'cleaning'),
+('full_cleaning', 'Full Cleaning', 'Deep cleaning including all areas, behind furniture, and detailed sanitization', 180, 'cleaning'),
+('deep_cleaning', 'Deep Cleaning', 'Comprehensive cleaning for move-in/move-out or special occasions', 240, 'cleaning'),
+('change_sheets', 'Change Bed Sheets', 'Replace all bed linens with fresh sets', 30, 'linen'),
+('towel_refresh', 'Towel Refresh', 'Replace all towels and bathroom linens', 20, 'linen'),
+('linen_towel_change', 'Linen & Towel Change', 'Complete refresh of all linens and towels', 45, 'linen'),
+('sanitize_bathrooms', 'Sanitize Bathrooms', 'Deep sanitization of all bathroom surfaces', 60, 'sanitization'),
+('kitchen_deep_clean', 'Kitchen Deep Clean', 'Thorough cleaning of kitchen appliances and surfaces', 75, 'cleaning'),
+('balcony_cleaning', 'Clean Balcony/Outdoor Areas', 'Cleaning of outdoor spaces and balconies', 40, 'cleaning'),
+('restock_amenities', 'Restock Amenities', 'Replenish bathroom and kitchen supplies', 15, 'supplies');
+
+-- Add sample cleaning rules using the correct column names (name instead of rule_name)
+INSERT INTO cleaning_rules (name, task_type, actions, conditions, is_active, priority) VALUES
+('Up to 3 Nights Stay', 'cleaning', '{"day_0": ["full_cleaning"]}', '{"stay_length": {"min": 1, "max": 3}}', true, 1),
+('Up to 5 Nights Stay', 'cleaning', '{"day_0": ["full_cleaning"], "day_2": ["standard_cleaning"]}', '{"stay_length": {"min": 4, "max": 5}}', true, 2),
+('Up to 7 Nights Stay', 'cleaning', '{"day_0": ["full_cleaning"], "day_2": ["standard_cleaning"], "day_5": ["standard_cleaning"]}', '{"stay_length": {"min": 6, "max": 7}}', true, 3),
+('7+ Nights Custom', 'cleaning', '{"day_0": ["full_cleaning"], "day_3": ["full_cleaning"], "day_6": ["linen_towel_change"], "day_9": ["standard_cleaning"]}', '{"stay_length": {"min": 8, "max": 999}}', true, 4);
