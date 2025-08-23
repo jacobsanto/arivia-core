@@ -1,7 +1,7 @@
 
 import React from "react";
 import { CleaningOverview } from "@/components/cleaning/CleaningOverview";
-import { MVPTaskManagement } from "@/components/tasks/mvp/MVPTaskManagement";
+import { HousekeepingTaskManagement } from "@/components/housekeeping/HousekeepingTaskManagement";
 import { HousekeepingErrorBoundary } from "@/components/error-boundaries/HousekeepingErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -25,7 +25,7 @@ const Housekeeping: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="tasks">
-            <MVPTaskManagement />
+            <HousekeepingTaskManagement />
           </TabsContent>
         </Tabs>
       </div>
