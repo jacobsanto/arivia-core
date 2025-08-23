@@ -5,6 +5,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { User, UserRole } from '@/types/auth';
 import { logger } from '@/services/logger';
 
+// Security check: Only allow dev mode on localhost and development domains
+const isLocalDevelopment = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname.endsWith('.local') || hostname.includes('dev') || process.env.NODE_ENV === 'development';
+};
+
 interface DevModeSettings {
   bypassAuth: boolean;
   showConnectionStatus: boolean;
@@ -135,6 +142,12 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [isDevMode, settings.showConnectionStatus, settings.autoRefreshInterval]);
 
   const toggleDevMode = () => {
+    // Security: Only allow dev mode toggle in development environments
+    if (!isLocalDevelopment()) {
+      logger.warn('DevModeProvider', 'Dev mode blocked - not running in development environment');
+      return;
+    }
+    
     const newMode = !isDevMode;
     logger.debug('DevModeProvider', 'Toggling dev mode', { newMode });
     setIsDevMode(newMode);
@@ -145,6 +158,9 @@ export const DevModeProvider: React.FC<{ children: React.ReactNode }> = ({ child
       localStorage.removeItem('arivia-mock-user');
       logger.debug('DevModeProvider', 'Cleared mock user on dev mode disable');
     }
+    
+    // Persist dev mode state to localStorage
+    localStorage.setItem('arivia-dev-mode', String(newMode));
   };
 
   const updateSettings = (newSettings: Partial<DevModeSettings>) => {
