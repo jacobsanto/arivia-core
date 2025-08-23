@@ -17,7 +17,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
-import Login from "@/pages/Login";
+// Login page removed - app is now open access
 import UserProfile from "@/pages/UserProfile";
 import Maintenance from "@/pages/Maintenance";
 import Housekeeping from "@/pages/Housekeeping";
@@ -51,8 +51,7 @@ function App() {
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 <DevModeStatusBar />
                 <Routes>
-                  {/* Login route - doesn't use the unified layout */}
-                  <Route path="/login" element={<Login />} />
+                   {/* Login route removed - app is now open access */}
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
