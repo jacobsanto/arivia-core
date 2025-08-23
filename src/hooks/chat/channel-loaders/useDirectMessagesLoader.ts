@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
-import { DirectMessage } from "@/components/chat/ChatSidebar";
+import { DirectMessage } from "@/components/chat/sidebar/ChatSidebar";
 import { toast } from "sonner";
 
 export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (userId: string) => "online" | "offline" | "away") {
@@ -50,6 +50,7 @@ export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (us
         const userProfiles: DirectMessage[] = profiles.map(profile => ({
           id: profile.id,
           name: profile.name || 'Unknown User',
+          userId: profile.id,
           avatar: profile.avatar || '/placeholder.svg',
           status: getUserStatus(profile.id),
           unreadCount: unreadCounts[profile.id] || 0

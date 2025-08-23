@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
-import { Channel } from "@/components/chat/ChatSidebar";
+import { Channel } from "@/components/chat/sidebar/ChatSidebar";
 import { toast } from "sonner";
 import { FALLBACK_GENERAL_CHANNEL } from "@/services/chat/chat.types";
 
@@ -41,8 +41,10 @@ export function useChannelsLoader(isConnected: boolean) {
           const typedChannels: Channel[] = allChannels.map(channel => ({
             id: channel.id,
             name: channel.name,
-            status: "offline" as const, // Channels don't have online status
-            unreadCount: 0 // Not tracking unread counts for channels for now
+            description: '',
+            memberCount: 0,
+            unreadCount: 0,
+            isPrivate: false
           }));
           
           setChannels(typedChannels);
@@ -54,12 +56,13 @@ export function useChannelsLoader(isConnected: boolean) {
           description: "Using offline mode for channels"
         });
         
-        // Set fallback channels
-        const fallbackChannel = {
+        const fallbackChannel: Channel = {
           id: FALLBACK_GENERAL_CHANNEL.id,
           name: FALLBACK_GENERAL_CHANNEL.name,
-          status: "offline" as const,
-          unreadCount: 0
+          description: '',
+          memberCount: 0,
+          unreadCount: 0,
+          isPrivate: false
         };
         
         setChannels([fallbackChannel]);
