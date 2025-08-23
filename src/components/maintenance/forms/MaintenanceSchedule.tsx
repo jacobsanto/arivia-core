@@ -50,7 +50,7 @@ const MaintenanceSchedule = ({ form }: MaintenanceScheduleProps) => {
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="" disabled>Select assignee</SelectItem>
+                <SelectItem value="none" disabled>Select assignee</SelectItem>
                 <SelectItem value="unassigned">Unassigned</SelectItem>
                 {!usersLoading && assignableUsers.map((user) => (
                   <SelectItem key={user.id} value={user.id}>
@@ -58,7 +58,7 @@ const MaintenanceSchedule = ({ form }: MaintenanceScheduleProps) => {
                   </SelectItem>
                 ))}
                 {usersLoading && (
-                  <SelectItem value="" disabled>Loading users...</SelectItem>
+                  <SelectItem value="loading" disabled>Loading users...</SelectItem>
                 )}
               </SelectContent>
             </Select>

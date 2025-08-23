@@ -1,12 +1,12 @@
 
-import React from "react";
-import { MVPTaskManagement } from "@/components/tasks/mvp/MVPTaskManagement";
+import React, { useState } from "react";
+import { MaintenanceTaskManagement } from "@/components/maintenance/MaintenanceTaskManagement";
 import { MaintenanceErrorBoundary } from "@/components/error-boundaries/MaintenanceErrorBoundary";
 
 const Maintenance: React.FC = () => {
   return (
     <MaintenanceErrorBoundary>
-      <MVPTaskManagement />
+      <MaintenanceTaskManagement />
     </MaintenanceErrorBoundary>
   );
 };

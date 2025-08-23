@@ -54,7 +54,7 @@ const MaintenanceBasicInfo = ({ form }: MaintenanceBasicInfoProps) => {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="" disabled>Select property</SelectItem>
+                    <SelectItem value="none" disabled>Select property</SelectItem>
                     {Array.isArray(properties) && properties.map(property => (
                       <SelectItem key={property.id} value={property.name}>
                         {property.name}
