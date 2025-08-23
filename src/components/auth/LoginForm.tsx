@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
 import { loginUser } from "@/services/auth/userAuthService";
-import { useAuth } from "@/auth";
+import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
 
 interface LoginFormProps {
@@ -24,7 +24,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { login } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -41,9 +41,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      // Call login function from AuthContext
-      const { error } = await signIn(values.email, values.password);
-      if (error) throw error;
+      // Call login function from UserContext
+      await login(values.email, values.password);
       
       // Redirect to previous page or dashboard
       const from = location.state?.from?.pathname || "/dashboard";

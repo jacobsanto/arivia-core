@@ -7,7 +7,7 @@ import MobileSidebar from "./MobileSidebar";
 import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useAuth } from "@/auth";
+import { useAuth } from "@/contexts/AuthContext";
 import { useDevMode } from "@/contexts/DevModeContext";
 
 const UnifiedLayout = () => {

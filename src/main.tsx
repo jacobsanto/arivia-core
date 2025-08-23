@@ -3,7 +3,8 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './setup/console-patch';
-import { AuthProvider } from '@/auth'
+import { UserProvider } from './contexts/UserContext'
+import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { DevModeProvider } from './contexts/DevModeContext'
 import { initWebVitals } from './monitoring/webVitals';
@@ -27,7 +28,9 @@ createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
     <DevModeProvider>
       <AuthProvider>
-        <App />
+        <UserProvider>
+          <App />
+        </UserProvider>
       </AuthProvider>
     </DevModeProvider>
   </QueryClientProvider>

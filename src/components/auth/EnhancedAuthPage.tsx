@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/auth';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Eye, EyeOff, Mail, Lock, User, Phone, Building } from 'lucide-react';
 import { toastService } from '@/services/toast/toast.service';
 
 export const EnhancedAuthPage: React.FC = () => {
-  const { signIn, signUp, resetPassword, isLoading, user } = useAuth();
+  const { signIn, signUp, resetPassword, loading, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -175,8 +175,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Signing In...' : 'Sign In'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </form>
 
@@ -279,8 +279,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Creating Account...' : 'Create Account'}
                   </Button>
                 </form>
               </TabsContent>
@@ -304,8 +304,8 @@ export const EnhancedAuthPage: React.FC = () => {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Sending Reset Email...' : 'Send Reset Email'}
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Sending Reset Email...' : 'Send Reset Email'}
                   </Button>
                 </form>
               </TabsContent>
