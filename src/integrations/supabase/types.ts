@@ -143,6 +143,105 @@ export type Database = {
           },
         ]
       }
+      guesty_listings: {
+        Row: {
+          address: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          calendar_last_synced: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_deleted: boolean | null
+          listing_url: string | null
+          max_guests: number | null
+          property_type: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          calendar_last_synced?: string | null
+          created_at?: string
+          description?: string | null
+          id: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          listing_url?: string | null
+          max_guests?: number | null
+          property_type?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          calendar_last_synced?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_deleted?: boolean | null
+          listing_url?: string | null
+          max_guests?: number | null
+          property_type?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      housekeeping_tasks: {
+        Row: {
+          additional_actions: Json | null
+          assigned_to: string | null
+          booking_id: string | null
+          checklist: Json | null
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          listing_id: string | null
+          status: string
+          task_type: string
+          updated_at: string
+        }
+        Insert: {
+          additional_actions?: Json | null
+          assigned_to?: string | null
+          booking_id?: string | null
+          checklist?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          listing_id?: string | null
+          status?: string
+          task_type: string
+          updated_at?: string
+        }
+        Update: {
+          additional_actions?: Json | null
+          assigned_to?: string | null
+          booking_id?: string | null
+          checklist?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          listing_id?: string | null
+          status?: string
+          task_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inventory_categories: {
         Row: {
           created_at: string | null
@@ -287,6 +386,71 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      maintenance_tasks: {
+        Row: {
+          assigned_to: string | null
+          attachments: Json | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          estimated_duration: number | null
+          id: string
+          notes: string | null
+          priority: string
+          property_id: string | null
+          status: string
+          task_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_duration?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id?: string | null
+          status?: string
+          task_type?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_duration?: number | null
+          id?: string
+          notes?: string | null
+          priority?: string
+          property_id?: string | null
+          status?: string
+          task_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "maintenance_tasks_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -561,6 +725,39 @@ export type Database = {
           severity?: string
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      system_permissions: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          permission_key: string
+          permission_name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          permission_key: string
+          permission_name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          permission_key?: string
+          permission_name?: string
+          updated_at?: string
         }
         Relationships: []
       }
