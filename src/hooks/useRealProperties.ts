@@ -5,8 +5,15 @@ import { supabase } from '@/integrations/supabase/client';
 export interface PropertyOption {
   id: string;
   name: string;
-  address?: string;
-  status?: string;
+  address: string;
+  property_type: string;
+  status: string;
+  num_bedrooms: number;
+  num_bathrooms: number;
+  description?: string;
+  notes?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const useRealProperties = () => {
