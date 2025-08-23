@@ -86,6 +86,42 @@ export type Database = {
         }
         Relationships: []
       }
+      cleaning_actions: {
+        Row: {
+          action_name: string
+          category: string
+          created_at: string | null
+          description: string | null
+          display_name: string
+          estimated_duration: number
+          id: string
+          is_active: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          action_name: string
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          display_name: string
+          estimated_duration?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          action_name?: string
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          display_name?: string
+          estimated_duration?: number
+          id?: string
+          is_active?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       cleaning_rules: {
         Row: {
           actions: Json | null
@@ -142,6 +178,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      cleaning_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_global: boolean
+          name: string
+          template_data: Json
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          name: string
+          template_data?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_global?: boolean
+          name?: string
+          template_data?: Json
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      configuration_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          config_id: string | null
+          id: string
+          listing_id: string
+          template_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          config_id?: string | null
+          id?: string
+          listing_id: string
+          template_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          config_id?: string | null
+          id?: string
+          listing_id?: string
+          template_id?: string | null
+        }
+        Relationships: []
       }
       guesty_listings: {
         Row: {
@@ -683,6 +779,147 @@ export type Database = {
           property_type?: string | null
           status?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      property_cleaning_configs: {
+        Row: {
+          config_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          listing_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          config_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          config_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          listing_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      rule_actions: {
+        Row: {
+          action_data: Json
+          action_order: number
+          action_type: string
+          created_at: string | null
+          id: string
+          is_active: boolean
+          rule_id: string
+        }
+        Insert: {
+          action_data?: Json
+          action_order?: number
+          action_type: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          rule_id: string
+        }
+        Update: {
+          action_data?: Json
+          action_order?: number
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean
+          rule_id?: string
+        }
+        Relationships: []
+      }
+      rule_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          is_active: boolean
+          property_id: string
+          rule_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean
+          property_id: string
+          rule_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          is_active?: boolean
+          property_id?: string
+          rule_id?: string
+        }
+        Relationships: []
+      }
+      rule_conditions: {
+        Row: {
+          condition_order: number
+          condition_type: string
+          created_at: string | null
+          id: string
+          logical_operator: string | null
+          operator: string
+          rule_id: string
+          value: Json
+        }
+        Insert: {
+          condition_order?: number
+          condition_type: string
+          created_at?: string | null
+          id?: string
+          logical_operator?: string | null
+          operator: string
+          rule_id: string
+          value?: Json
+        }
+        Update: {
+          condition_order?: number
+          condition_type?: string
+          created_at?: string | null
+          id?: string
+          logical_operator?: string | null
+          operator?: string
+          rule_id?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      rule_test_results: {
+        Row: {
+          created_at: string | null
+          id: string
+          rule_id: string
+          test_booking_data: Json
+          test_result: Json
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          rule_id: string
+          test_booking_data: Json
+          test_result: Json
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          rule_id?: string
+          test_booking_data?: Json
+          test_result?: Json
         }
         Relationships: []
       }
