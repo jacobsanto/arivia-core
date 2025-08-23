@@ -16,7 +16,6 @@ import { toastService } from "@/services/toast";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 
 export const MVPTaskManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("housekeeping");
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const queryClient = useQueryClient();
@@ -26,17 +25,6 @@ export const MVPTaskManagement: React.FC = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from('housekeeping_tasks')
-        .select('*')
-        .order('due_date', { ascending: true });
-      return data || [];
-    }
-  });
-
-  const { data: maintenanceTasks } = useQuery({
-    queryKey: ['maintenance-tasks'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('maintenance_tasks')
         .select('*')
         .order('due_date', { ascending: true });
       return data || [];
@@ -61,17 +49,16 @@ export const MVPTaskManagement: React.FC = () => {
     }
   };
 
-  const handleStartTask = async (taskId: string, type: 'housekeeping' | 'maintenance') => {
+  const handleStartTask = async (taskId: string) => {
     try {
-      const table = type === 'housekeeping' ? 'housekeeping_tasks' : 'maintenance_tasks';
       const { error } = await supabase
-        .from(table)
+        .from('housekeeping_tasks')
         .update({ status: 'in_progress' })
         .eq('id', taskId);
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: [`${type}-tasks`] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
       toastService.success('Task started successfully!');
     } catch (error) {
       console.error('Error starting task:', error);
@@ -79,17 +66,16 @@ export const MVPTaskManagement: React.FC = () => {
     }
   };
 
-  const handleCompleteTask = async (taskId: string, type: 'housekeeping' | 'maintenance') => {
+  const handleCompleteTask = async (taskId: string) => {
     try {
-      const table = type === 'housekeeping' ? 'housekeeping_tasks' : 'maintenance_tasks';
       const { error } = await supabase
-        .from(table)
+        .from('housekeeping_tasks')
         .update({ status: 'done' })
         .eq('id', taskId);
 
       if (error) throw error;
 
-      queryClient.invalidateQueries({ queryKey: [`${type}-tasks`] });
+      queryClient.invalidateQueries({ queryKey: ['housekeeping-tasks'] });
       toastService.success('Task completed successfully!');
     } catch (error) {
       console.error('Error completing task:', error);
@@ -97,7 +83,7 @@ export const MVPTaskManagement: React.FC = () => {
     }
   };
 
-  const TaskCard = ({ task, type }: { task: any; type: 'housekeeping' | 'maintenance' }) => {
+  const TaskCard = ({ task }: { task: any }) => {
     const StatusIcon = getStatusIcon(task.status);
     
     return (
@@ -110,7 +96,7 @@ export const MVPTaskManagement: React.FC = () => {
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-foreground">
-                  {type === 'housekeeping' ? task.task_type : task.title}
+                  {task.task_type}
                 </h3>
                 {task.description && (
                   <p className="text-sm text-muted-foreground mt-1">
@@ -153,7 +139,7 @@ export const MVPTaskManagement: React.FC = () => {
                 <Button 
                   size="sm" 
                   variant="outline"
-                  onClick={() => handleStartTask(task.id, type)}
+                  onClick={() => handleStartTask(task.id)}
                 >
                   Start Task
                 </Button>
@@ -161,7 +147,7 @@ export const MVPTaskManagement: React.FC = () => {
               {task.status === 'in_progress' && (
                 <Button 
                   size="sm"
-                  onClick={() => handleCompleteTask(task.id, type)}
+                  onClick={() => handleCompleteTask(task.id)}
                 >
                   Complete
                 </Button>
@@ -182,75 +168,47 @@ export const MVPTaskManagement: React.FC = () => {
       <div className="space-y-6 p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Task Management</h1>
-            <p className="text-muted-foreground">Manage housekeeping and maintenance tasks</p>
+            <h1 className="text-3xl font-bold text-foreground">Housekeeping Tasks</h1>
+            <p className="text-muted-foreground">Manage housekeeping tasks and create maintenance requests</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsCreateTaskOpen(true)}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Housekeeping Task
+            </Button>
+            
+            <CreateMaintenanceTaskDialog
+              isOpen={isCreateMaintenanceOpen}
+              onOpenChange={setIsCreateMaintenanceOpen}
+              onTaskCreated={() => {
+                toastService.success('Maintenance task created successfully!');
+              }}
+            />
           </div>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="housekeeping">Housekeeping Tasks</TabsTrigger>
-            <TabsTrigger value="maintenance">Maintenance Tasks</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="housekeeping" className="space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Housekeeping Tasks</CardTitle>
-                <Button 
-                  onClick={() => setIsCreateTaskOpen(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Housekeeping Task
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {housekeepingTasks?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No housekeeping tasks found</p>
-                      <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
-                    </div>
-                  ) : (
-                    housekeepingTasks?.map((task) => (
-                      <TaskCard key={task.id} task={task} type="housekeeping" />
-                    ))
-                  )}
+        <Card>
+          <CardHeader>
+            <CardTitle>Housekeeping Tasks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {housekeepingTasks?.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No housekeeping tasks found</p>
+                  <p className="text-sm mt-2">Click "Create Housekeeping Task" to create your first task</p>
                 </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="maintenance" className="space-y-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Maintenance Tasks</CardTitle>
-                <CreateMaintenanceTaskDialog
-                  isOpen={isCreateMaintenanceOpen}
-                  onOpenChange={setIsCreateMaintenanceOpen}
-                  onTaskCreated={() => {
-                    queryClient.invalidateQueries({ queryKey: ['maintenance-tasks'] });
-                  }}
-                />
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {maintenanceTasks?.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No maintenance tasks found</p>
-                      <p className="text-sm mt-2">Click "Add Maintenance Task" to create your first task</p>
-                    </div>
-                  ) : (
-                    maintenanceTasks?.map((task) => (
-                      <TaskCard key={task.id} task={task} type="maintenance" />
-                    ))
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+              ) : (
+                housekeepingTasks?.map((task) => (
+                  <TaskCard key={task.id} task={task} />
+                ))
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         <TaskCreationDialog 
           isOpen={isCreateTaskOpen}
