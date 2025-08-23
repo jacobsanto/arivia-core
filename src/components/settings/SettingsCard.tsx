@@ -28,7 +28,7 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
   footer,
 }) => {
   return (
-    <Card className="w-full max-w-full overflow-x-hidden">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
@@ -39,11 +39,11 @@ const SettingsCard: React.FC<SettingsCardProps> = ({
           <LoadingSpinner />
         </CardContent>
       ) : (
-        <CardContent className="space-y-6 overflow-x-auto">{children}</CardContent>
+        <CardContent className="space-y-6">{children}</CardContent>
       )}
       
       {showFooter && (footer || onSave || onReset) && (
-        <CardFooter className="flex flex-wrap items-center gap-2 justify-between">
+        <CardFooter className="flex justify-between">
           {footer ? (
             footer
           ) : (

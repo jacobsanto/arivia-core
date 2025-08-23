@@ -6,13 +6,7 @@ import BackupSettings from "./sections/BackupSettings";
 import UserManagement from "../admin/UserManagement";
 import SecurityMonitoring from "../admin/SecurityMonitoring";
 import SettingsTabContent from "./tabs/SettingsTabContent";
-import EmailSettings from "./sections/email/EmailSettings";
-import SecuritySettings from "./sections/security/SecuritySettings";
-import UserManagementSettings from "./sections/user-management/UserManagementSettings";
-import NotificationsSettings from "./sections/notifications/NotificationsSettings";
-import IntegrationsSettings from "./sections/integrations/IntegrationsSettings";
-import AppearanceSettings from "./sections/appearance/AppearanceSettings";
-import GeneralSettings from "./sections/general/GeneralSettings";
+
 const settingsTabs = [
   { value: "general", label: "General", icon: "Settings" as const },
   { value: "users", label: "Users", icon: "Users" as const },
@@ -30,13 +24,12 @@ const SystemSettingsTabs = () => {
   const [value, setValue] = useState("general");
 
   return (
-    <Tabs value={value} onValueChange={setValue} className="w-full min-w-0 max-w-[100vw] overflow-x-hidden">
-      <div className="mb-4 sm:mb-8 px-2 sm:px-0 min-w-0">
+    <Tabs value={value} onValueChange={setValue} className="w-full">
+      <div className="mb-8">
         <SwipeableTabs
           tabs={settingsTabs}
           value={value}
           onValueChange={setValue}
-          className="max-w-[100vw] min-w-0"
         />
       </div>
 
@@ -45,27 +38,25 @@ const SystemSettingsTabs = () => {
         title="General Settings"
         status={{ status: "configured", lastUpdated: new Date() }}
       >
-        <GeneralSettings />
+        <div className="p-4 text-center text-muted-foreground">General settings coming soon</div>
       </SettingsTabContent>
+
       <SettingsTabContent
         value="users"
         title="User Management"
         status={{ status: "configured" }}
       >
-        <div className="space-y-6">
-          <UserManagementSettings />
-          <div className="overflow-x-auto">
-            <UserManagement />
-          </div>
-        </div>
+        <UserManagement />
       </SettingsTabContent>
+
       <SettingsTabContent
         value="security"
         title="Security Settings"
         status={{ status: "configured" }}
       >
-        <SecuritySettings />
+        <div className="p-4 text-center text-muted-foreground">Security settings coming soon</div>
       </SettingsTabContent>
+
       <SettingsTabContent
         value="monitoring"
         title="Security Monitoring"
@@ -85,24 +76,27 @@ const SystemSettingsTabs = () => {
       <SettingsTabContent
         value="email"
         title="Email Settings"
-        status={{ status: "configured" }}
+        status={{ status: "not-configured" }}
       >
-        <EmailSettings />
+        <div className="p-4 text-center text-muted-foreground">Email settings coming soon</div>
       </SettingsTabContent>
+
       <SettingsTabContent
         value="notifications"
         title="Notification Settings"
-        status={{ status: "configured" }}
+        status={{ status: "not-configured" }}
       >
-        <NotificationsSettings />
+        <div className="p-4 text-center text-muted-foreground">Notification settings coming soon</div>
       </SettingsTabContent>
+
       <SettingsTabContent
         value="integrations"
         title="Integration Settings"
-        status={{ status: "configured" }}
+        status={{ status: "not-configured" }}
       >
-        <IntegrationsSettings />
+        <div className="p-4 text-center text-muted-foreground">Integrations coming soon</div>
       </SettingsTabContent>
+
       <SettingsTabContent
         value="backup"
         title="Backup & Restore"
@@ -116,7 +110,7 @@ const SystemSettingsTabs = () => {
         title="Appearance Settings"
         status={{ status: "configured" }}
       >
-        <AppearanceSettings />
+        <div className="p-4 text-center text-muted-foreground">Appearance settings coming soon</div>
       </SettingsTabContent>
     </Tabs>
   );

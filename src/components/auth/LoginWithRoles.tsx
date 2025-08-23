@@ -31,7 +31,6 @@ const LoginWithRoles: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -41,38 +40,55 @@ const LoginWithRoles: React.FC = () => {
     },
   });
 
-  // Security Notice: Demo accounts removed for production security
+  // Define demo accounts for quick login
+  const demoAccounts = [
+    { role: "superadmin" as UserRole, email: "superadmin@ariviavillas.com", password: "superadmin123" },
+    { role: "administrator" as UserRole, email: "admin@ariviavillas.com", password: "admin123" },
+    { role: "property_manager" as UserRole, email: "manager@ariviavillas.com", password: "manager123" },
+    { role: "housekeeping_staff" as UserRole, email: "housekeeping@ariviavillas.com", password: "housekeeping123" },
+  ];
 
-  const onSubmit = async (values: FormValues) => {
+  const onSubmit = async (data: FormValues) => {
     try {
       setIsLoading(true);
-      setError(null);
+      await login(data.email, data.password);
       
-      await login(values.email, values.password);
-      
+      // Get the redirect path from location state or default to "/"
       const from = location.state?.from?.pathname || "/";
       navigate(from);
       
-      toast.success("Logged in successfully");
-    } catch (error: any) {
-      setError(error.message || "Login failed");
+      toast.success("Login successful", {
+        description: "Welcome back to Arivia Villa Sync",
+      });
+    } catch (error) {
       toast.error("Login failed", {
-        description: error.message || "Please check your credentials and try again.",
+        description: "Invalid email or password",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  return (
-    <div className="w-full max-w-md mx-auto space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Welcome Back</h1>
-        <p className="text-muted-foreground">
-          Sign in to access Arivia Villas Operations
-        </p>
-      </div>
+  const handleDemoLogin = async (demoAccount: typeof demoAccounts[0]) => {
+    try {
+      setIsLoading(true);
+      await login(demoAccount.email, demoAccount.password);
+      
+      const from = location.state?.from?.pathname || "/";
+      navigate(from);
+      
+      toast.success(`Logged in as ${ROLE_DETAILS[demoAccount.role].title}`, {
+        description: "This is a demo account for testing",
+      });
+    } catch (error) {
+      toast.error("Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  return (
+    <div>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -82,18 +98,12 @@ const LoginWithRoles: React.FC = () => {
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter your email" 
-                    type="email"
-                    disabled={isLoading}
-                    {...field} 
-                  />
+                  <Input placeholder="your-email@example.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
           <FormField
             control={form.control}
             name="password"
@@ -101,32 +111,41 @@ const LoginWithRoles: React.FC = () => {
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder="Enter your password" 
-                    type="password"
-                    disabled={isLoading}
-                    {...field} 
-                  />
+                  <Input type="password" placeholder="••••••••" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-
-          {error && (
-            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">
-              {error}
-            </div>
-          )}
-
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+          <Button 
+            type="submit" 
+            className="w-full" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing in..." : "Sign in"}
           </Button>
         </form>
       </Form>
-
-      <div className="text-center text-sm text-muted-foreground">
-        <p>Contact your administrator for account access</p>
+      
+      <div className="mt-8">
+        <h3 className="text-sm font-medium text-center mb-3">Demo Accounts</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {demoAccounts.map((account) => (
+            <Button
+              key={account.role}
+              variant="outline"
+              size="sm"
+              disabled={isLoading}
+              onClick={() => handleDemoLogin(account)}
+              className="text-xs"
+            >
+              Login as {ROLE_DETAILS[account.role].title}
+            </Button>
+          ))}
+        </div>
+        <p className="text-xs text-center mt-2 text-muted-foreground">
+          Click any button above to sign in with a demo account
+        </p>
       </div>
     </div>
   );

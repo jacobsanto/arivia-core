@@ -37,13 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
       
-      // Security: Only allow dev mode bypass in local development
-      const isLocalDev = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1' ||
-         process.env.NODE_ENV === 'development');
-         
-      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev) {
+      // Check if dev mode is active and should bypass auth
+      if (devMode?.isDevMode && devMode.settings.bypassAuth) {
         logger.debug('AuthContext', 'Dev mode active, using mock authentication');
         
         // Use mock user if available, otherwise create a default dev user

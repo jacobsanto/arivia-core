@@ -15,35 +15,23 @@ if (typeof window !== 'undefined') {
   if (isProd) {
     console.log = (...args: any[]) => {
       try {
-        // Security: Only log non-sensitive data in production
-        const sanitizedArgs = args.map(arg => 
-          typeof arg === 'object' && arg !== null ? '[Object]' : String(arg)
-        );
-        logger.info('console.log', 'message', { count: args.length });
+        logger.info('console.log', 'message', { args });
       } catch {}
-      // Suppress all console.log output in production
+      // suppress noisy logs in prod
     };
 
     console.warn = (...args: any[]) => {
       try {
-        logger.warn('console.warn', 'warning', { count: args.length });
+        logger.warn('console.warn', 'warning', { args });
       } catch {}
-      // Suppress warnings in production unless critical
     };
 
     console.error = (...args: any[]) => {
       try {
-        // Security: Sanitize error messages to prevent data exposure
-        const sanitizedArgs = args.map(arg => 
-          typeof arg === 'string' ? arg.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]') : '[Error Object]'
-        );
-        logger.error('console.error', 'error', { count: args.length });
+        logger.error('console.error', 'error', { args });
       } catch {}
-      // Still forward sanitized errors to original for visibility
-      const sanitizedError = args.map(arg => 
-        typeof arg === 'string' ? arg.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL]') : '[Error]'
-      );
-      originalError(...sanitizedError);
+      // Still forward to original for visibility in hosting logs
+      originalError(...args);
     };
   }
 }

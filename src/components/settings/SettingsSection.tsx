@@ -20,14 +20,14 @@ const SettingsSection: React.FC<SettingsSectionProps> = ({
   showSeparator = false
 }) => {
   return (
-    <Card className={cn("w-full overflow-hidden", className)}>
+    <Card className={cn("w-full", className)}>
       {(title || description) && (
         <CardHeader className="pb-3">
           {title && <CardTitle>{title}</CardTitle>}
           {description && <CardDescription>{description}</CardDescription>}
         </CardHeader>
       )}
-      <CardContent className="space-y-4 overflow-x-auto">
+      <CardContent className="space-y-4">
         {children}
         {showSeparator && <Separator className="my-4" />}
       </CardContent>
