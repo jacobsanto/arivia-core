@@ -1,8 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { ActivityDialog } from './ActivityDialog';
+import { QuickActionDialog } from './QuickActionDialog';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Calendar, 
   Users, 
@@ -15,36 +19,90 @@ import {
 } from 'lucide-react';
 
 export const CleaningOverview: React.FC = () => {
-  // Mock data - replace with real data
-  const stats = {
-    todayTasks: 12,
-    completedTasks: 8,
-    activeStaff: 6,
-    avgDuration: 45,
-    upcomingBookings: 15,
-    completionRate: 85
-  };
+  const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
+  const [isQuickActionDialogOpen, setIsQuickActionDialogOpen] = useState(false);
+  const [selectedAction, setSelectedAction] = useState<'emergency' | 'assignment' | 'schedule' | null>(null);
 
-  const recentActivity = [
-    { id: 1, property: 'Villa Santorini', staff: 'Maria K.', status: 'completed', time: '2 hours ago' },
-    { id: 2, property: 'Villa Mykonos', staff: 'John D.', status: 'in_progress', time: '30 min ago' },
-    { id: 3, property: 'Villa Crete', staff: 'Anna P.', status: 'pending', time: '1 hour ago' },
-  ];
+  // Fetch real-time housekeeping stats
+  const { data: housekeepingTasks } = useQuery({
+    queryKey: ['housekeeping-overview'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .select('*');
+
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Calculate real stats from database
+  const stats = React.useMemo(() => {
+    if (!housekeepingTasks) {
+      return {
+        todayTasks: 0,
+        completedTasks: 0,
+        activeStaff: 0,
+        avgDuration: 45,
+        upcomingBookings: 0,
+        completionRate: 0
+      };
+    }
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayTasks = housekeepingTasks.filter(task => 
+      task.due_date && task.due_date.startsWith(today)
+    );
+    const completedTasks = todayTasks.filter(task => task.status === 'done');
+    const uniqueStaff = new Set(housekeepingTasks
+      .filter(task => task.assigned_to && task.status === 'in_progress')
+      .map(task => task.assigned_to)
+    );
+
+    return {
+      todayTasks: todayTasks.length,
+      completedTasks: completedTasks.length,
+      activeStaff: uniqueStaff.size,
+      avgDuration: 45, // This would need more complex calculation
+      upcomingBookings: housekeepingTasks.filter(task => task.status === 'pending').length,
+      completionRate: todayTasks.length > 0 ? Math.round((completedTasks.length / todayTasks.length) * 100) : 0
+    };
+  }, [housekeepingTasks]);
+
+  // Fetch recent activity from database
+  const { data: recentActivity } = useQuery({
+    queryKey: ['recent-activity'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('housekeeping_tasks')
+        .select('*')
+        .order('updated_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+      return data || [];
+    },
+    refetchInterval: 30000,
+  });
 
   const quickActions = [
     { 
+      id: 'emergency',
       title: 'Emergency Cleaning', 
       description: 'Schedule urgent cleaning for incoming guests',
       icon: AlertTriangle,
       color: 'text-orange-600'
     },
     { 
+      id: 'assignment',
       title: 'Staff Assignment', 
       description: 'Assign staff to properties for today',
       icon: Users,
       color: 'text-blue-600'
     },
     { 
+      id: 'schedule',
       title: 'Schedule Review', 
       description: 'Review and optimize cleaning schedules',
       icon: Calendar,
@@ -54,7 +112,7 @@ export const CleaningOverview: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800';
+      case 'done': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -63,11 +121,20 @@ export const CleaningOverview: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'done': return <CheckCircle className="h-4 w-4" />;
       case 'in_progress': return <Clock className="h-4 w-4" />;
       case 'pending': return <AlertTriangle className="h-4 w-4" />;
       default: return <Activity className="h-4 w-4" />;
     }
+  };
+
+  const handleQuickAction = (actionId: string) => {
+    setSelectedAction(actionId as 'emergency' | 'assignment' | 'schedule');
+    setIsQuickActionDialogOpen(true);
+  };
+
+  const handleViewAllActivity = () => {
+    setIsActivityDialogOpen(true);
   };
 
   return (
@@ -150,28 +217,46 @@ export const CleaningOverview: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity) => (
-                <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border">
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(activity.status)}
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-sm">{activity.property}</p>
-                      <p className="text-sm text-muted-foreground">{activity.staff}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge className={getStatusColor(activity.status)}>
-                      {activity.status.replace('_', ' ')}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground mt-1">{activity.time}</p>
-                  </div>
+              {recentActivity?.length === 0 ? (
+                <div className="text-center py-4 text-muted-foreground">
+                  <Activity className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                  <p>No recent activity</p>
                 </div>
-              ))}
+              ) : (
+                recentActivity?.map((activity) => (
+                  <div key={activity.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {getStatusIcon(activity.status)}
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{activity.task_type}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {activity.assigned_to || 'Unassigned'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Badge className={getStatusColor(activity.status)}>
+                        {activity.status.replace('_', ' ')}
+                      </Badge>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {activity.updated_at 
+                          ? new Date(activity.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          : 'No time'
+                        }
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-            <Button variant="outline" className="w-full mt-4">
+            <Button 
+              variant="outline" 
+              className="w-full mt-4"
+              onClick={handleViewAllActivity}
+            >
               View All Activity
             </Button>
           </CardContent>
@@ -189,7 +274,8 @@ export const CleaningOverview: React.FC = () => {
                 <Button
                   key={index}
                   variant="outline"
-                  className="w-full justify-start h-auto p-4"
+                  className="w-full justify-start h-auto p-4 hover:bg-muted/50 transition-colors"
+                  onClick={() => handleQuickAction(action.id)}
                 >
                   <div className="flex items-center gap-3">
                     <action.icon className={`h-5 w-5 ${action.color}`} />
@@ -204,6 +290,19 @@ export const CleaningOverview: React.FC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Activity Dialog */}
+      <ActivityDialog
+        isOpen={isActivityDialogOpen}
+        onOpenChange={setIsActivityDialogOpen}
+      />
+
+      {/* Quick Action Dialog */}
+      <QuickActionDialog
+        isOpen={isQuickActionDialogOpen}
+        onOpenChange={setIsQuickActionDialogOpen}
+        actionType={selectedAction}
+      />
     </div>
   );
 };
