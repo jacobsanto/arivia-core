@@ -10,6 +10,7 @@ import { permissionService } from '../services/permissionService';
 import { useDevMode } from '@/contexts/DevModeContext';
 import { toastService } from '@/services/toast';
 import { logger } from '@/services/logger';
+import { monitorAuthAttempt, logUserActivity } from '@/services/security/securityMonitoring';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -46,14 +47,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       logger.debug('AuthProvider', 'Refreshing auth state');
 
-      // Security: Only allow dev mode bypass in local development
+      // Security: Enhanced dev mode protection
       const isLocalDev = typeof window !== 'undefined' && 
         (window.location.hostname === 'localhost' || 
          window.location.hostname === '127.0.0.1' ||
-         process.env.NODE_ENV === 'development');
+         window.location.hostname.endsWith('.local')) &&
+        (!window.location.protocol.includes('https') || window.location.hostname === 'localhost');
+      
+      const isDevelopmentEnv = process.env.NODE_ENV === 'development' || 
+        import.meta.env.DEV === true;
          
-      // Check for dev mode bypass
-      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev) {
+      // Security: Only allow dev mode bypass in strict local development
+      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev && isDevelopmentEnv) {
         logger.debug('AuthProvider', 'Using dev mode authentication bypass');
         
         const mockUser = devMode.currentMockUser || {
@@ -66,10 +71,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         setUser(mockUser);
         setSession({
-          access_token: 'dev-token',
+          access_token: `dev-token-${Date.now()}`, // Dynamic token to prevent hardcoding
           token_type: 'bearer',
           expires_in: 3600,
-          refresh_token: 'dev-refresh',
+          refresh_token: `dev-refresh-${Date.now()}`,
           user: {
             id: mockUser.id,
             email: mockUser.email,
@@ -159,11 +164,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const result = await authService.signIn(email, password);
       
+      // Monitor authentication attempt
+      await monitorAuthAttempt(email, !result.error);
+      
       if (result.error) {
         setError(result.error.message);
         toastService.error('Sign in failed', result.error.message);
       } else {
         toastService.success('Signed in successfully');
+        await logUserActivity('sign_in', 'authentication');
       }
       
       return result;
@@ -207,6 +216,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setError(result.error.message);
         toastService.error('Sign out failed', result.error.message);
       } else {
+        await logUserActivity('sign_out', 'authentication');
         setUser(null);
         setSession(null);
         toastService.success('Signed out successfully');
