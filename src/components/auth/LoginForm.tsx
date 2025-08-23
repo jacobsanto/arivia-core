@@ -14,9 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
-import { loginUser } from "@/services/auth/userAuthService";
 import { useAuth } from "@/auth";
 import { Loader2 } from "lucide-react";
+import { logger } from "@/services/logger";
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -54,7 +54,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
         description: "You have successfully logged in.",
       });
     } catch (error: any) {
-      console.error("Login failed:", error.message);
+      // Use secure logger instead of console.error
+      logger.warn('LoginForm', 'Login failed', { email: values.email });
       toast({
         variant: "destructive",
         title: "Login Failed",

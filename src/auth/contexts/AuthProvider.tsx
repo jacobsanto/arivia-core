@@ -47,18 +47,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       logger.debug('AuthProvider', 'Refreshing auth state');
 
-      // Security: Enhanced dev mode protection
-      const isLocalDev = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1' ||
-         window.location.hostname.endsWith('.local')) &&
-        (!window.location.protocol.includes('https') || window.location.hostname === 'localhost');
-      
-      const isDevelopmentEnv = process.env.NODE_ENV === 'development' || 
-        import.meta.env.DEV === true;
+      // Import dev mode security check
+      const { isStrictLocalDev } = await import('@/services/security/devModeHardening');
+      const isLocalDev = isStrictLocalDev();
          
       // Security: Only allow dev mode bypass in strict local development
-      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev && isDevelopmentEnv) {
+      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev) {
         logger.debug('AuthProvider', 'Using dev mode authentication bypass');
         
         const mockUser = devMode.currentMockUser || {
@@ -70,11 +64,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         };
 
         setUser(mockUser);
+        const { generateDevToken } = await import('@/services/security/devModeHardening');
         setSession({
-          access_token: `dev-token-${Date.now()}`, // Dynamic token to prevent hardcoding
+          access_token: generateDevToken(),
           token_type: 'bearer',
           expires_in: 3600,
-          refresh_token: `dev-refresh-${Date.now()}`,
+          refresh_token: generateDevToken(),
           user: {
             id: mockUser.id,
             email: mockUser.email,

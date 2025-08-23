@@ -748,6 +748,15 @@ export type Database = {
           unresolved_events_count: number
         }[]
       }
+      get_system_health: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          authentication: Json
+          database: Json
+          integrations: Json
+          performance: Json
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
