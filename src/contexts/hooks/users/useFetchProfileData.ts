@@ -14,14 +14,6 @@ export const useFetchProfileData = (
   setUser: (user: User | null) => void
 ) => {
   const fetchProfileData = useCallback(async (userId: string): Promise<boolean> => {
-    // Check if we're in dev mode and should skip fetching
-    const isDevMode = localStorage.getItem('arivia-dev-mode') === 'true';
-    const mockUser = localStorage.getItem('arivia-mock-user');
-    
-    if (isDevMode && mockUser) {
-      console.log("🔧 Skipping profile fetch in dev mode");
-      return true;
-    }
 
     const now = Date.now();
     if (now - lastFetchTime < THROTTLE_MS) {

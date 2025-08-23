@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
-import { useDevMode } from "@/contexts/DevModeContext";
+
 import { logger } from "@/services/logger";
 
 interface AuthContextType {
@@ -31,52 +31,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const devMode = useDevMode();
+  
 
   const refreshAuthState = async () => {
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
       
-      // Security: Only allow dev mode bypass in local development
-      const isLocalDev = typeof window !== 'undefined' && 
-        (window.location.hostname === 'localhost' || 
-         window.location.hostname === '127.0.0.1' ||
-         process.env.NODE_ENV === 'development');
-         
-      if (devMode?.isDevMode && devMode.settings.bypassAuth && isLocalDev) {
-        logger.debug('AuthContext', 'Dev mode active, using mock authentication');
-        
-        // Use mock user if available, otherwise create a default dev user
-        const mockUser = devMode.currentMockUser || {
-          id: 'dev-user-default',
-          email: 'dev@ariviavillas.com',
-          name: 'Development User',
-          role: 'administrator' as UserRole,
-          avatar: "/placeholder.svg"
-        };
-        
-        logger.debug('AuthContext', 'Setting mock user', { name: mockUser.name, role: mockUser.role });
-        
-        setUser(mockUser);
-        setSession({
-          access_token: 'dev-token',
-          token_type: 'bearer',
-          expires_in: 3600,
-          refresh_token: 'dev-refresh',
-          user: {
-            id: mockUser.id,
-            email: mockUser.email,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            aud: 'authenticated',
-            app_metadata: {},
-            user_metadata: { name: mockUser.name, role: mockUser.role }
-          }
-        } as Session);
-        
-        setIsLoading(false);
-        return;
-      }
 
       logger.debug('AuthContext', 'Using real Supabase authentication');
       const { data, error: sessionError } = await supabase.auth.getSession();
@@ -127,11 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, newSession) => {
         logger.debug('AuthContext', 'Auth state change event', { event });
         
-        // If dev mode is active and bypassing auth, ignore auth state changes
-        if (devMode?.isDevMode && devMode.settings.bypassAuth) {
-          logger.debug('AuthContext', 'Ignoring auth state change due to dev mode');
-          return;
-        }
         
         setSession(newSession);
         
@@ -171,69 +126,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [devMode?.isDevMode, devMode?.settings.bypassAuth, devMode?.currentMockUser]);
+  }, []);
 
-  // Update user when mock user changes in dev mode
-  useEffect(() => {
-    if (devMode?.isDevMode && devMode.settings.bypassAuth && devMode.currentMockUser) {
-      logger.debug('AuthContext', 'Mock user changed, updating auth state', { name: devMode.currentMockUser.name, role: devMode.currentMockUser.role });
-      setUser(devMode.currentMockUser);
-      
-      // Create a mock session for the new user
-      setSession({
-        access_token: 'dev-token',
-        token_type: 'bearer',
-        expires_in: 3600,
-        refresh_token: 'dev-refresh',
-        user: {
-          id: devMode.currentMockUser.id,
-          email: devMode.currentMockUser.email,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          aud: 'authenticated',
-          app_metadata: {},
-          user_metadata: { name: devMode.currentMockUser.name, role: devMode.currentMockUser.role }
-        }
-      } as Session);
-    }
-  }, [devMode?.currentMockUser, devMode?.isDevMode, devMode?.settings.bypassAuth]);
 
-  // Listen for mock user changes from other components
-  useEffect(() => {
-    const handleMockUserChange = (event: CustomEvent) => {
-      const mockUser = event.detail;
-      logger.debug('AuthContext', 'Mock user change event received', { mockUser });
-      
-      if (devMode?.isDevMode && devMode.settings.bypassAuth) {
-        if (mockUser) {
-          setUser(mockUser);
-          setSession({
-            access_token: 'dev-token',
-            token_type: 'bearer',
-            expires_in: 3600,
-            refresh_token: 'dev-refresh',
-            user: {
-              id: mockUser.id,
-              email: mockUser.email,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              aud: 'authenticated',
-              app_metadata: {},
-              user_metadata: { name: mockUser.name, role: mockUser.role }
-            }
-          } as Session);
-        } else {
-          setUser(null);
-          setSession(null);
-        }
-      }
-    };
-
-    window.addEventListener('mockUserChanged', handleMockUserChange as EventListener);
-    return () => {
-      window.removeEventListener('mockUserChanged', handleMockUserChange as EventListener);
-    };
-  }, [devMode?.isDevMode, devMode?.settings.bypassAuth]);
 
   // Auth actions unified for app
   const signIn = async (email: string, password: string) => {

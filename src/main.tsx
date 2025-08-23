@@ -6,7 +6,7 @@ import './setup/console-patch';
 import { UserProvider } from './contexts/UserContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { DevModeProvider } from './contexts/DevModeContext'
+
 import { initWebVitals } from './monitoring/webVitals';
 import { registerSW } from 'virtual:pwa-register';
 
@@ -26,13 +26,11 @@ if (!rootElement) throw new Error("Failed to find the root element");
 
 createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
-    <DevModeProvider>
-      <AuthProvider>
-        <UserProvider>
-          <App />
-        </UserProvider>
-      </AuthProvider>
-    </DevModeProvider>
+    <AuthProvider>
+      <UserProvider>
+        <App />
+      </UserProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

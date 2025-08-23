@@ -8,8 +8,6 @@ import { ToastProvider } from "@/contexts/ToastContext";
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { SkipLink } from "@/components/accessibility/SkipLink";
-import { DevModePanel } from "@/components/dev/DevModePanel";
-import { DevModeStatusBar } from "@/components/dev/DevModeStatusBar";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
@@ -49,7 +47,7 @@ function App() {
           <ToastProvider>
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
-                <DevModeStatusBar />
+                
                 <Routes>
                    {/* Login route removed - app is now open access */}
                   
@@ -91,7 +89,7 @@ function App() {
                   {/* Catch all route */}
                   <Route path="*" element={<Navigate to="/dashboard" replace />} />
                 </Routes>
-                <DevModePanel />
+                
                 </Router>
           </ToastProvider>
         </AccessibilityProvider>

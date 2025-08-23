@@ -8,13 +8,13 @@ import MobileBottomNav from "./MobileBottomNav";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDevMode } from "@/contexts/DevModeContext";
+
 
 const UnifiedLayout = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { isDevMode } = useDevMode();
+  
   const location = useLocation();
   
   const toggleMobileMenu = () => {
@@ -22,7 +22,7 @@ const UnifiedLayout = () => {
   };
 
   return (
-    <div className={`flex min-h-screen bg-background overflow-hidden ${isDevMode ? 'pt-12' : ''}`}>
+    <div className="flex min-h-screen bg-background overflow-hidden">
       {/* Desktop sidebar - hidden on mobile */}
       {!isMobile && <Sidebar />}
       

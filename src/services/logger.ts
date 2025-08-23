@@ -15,15 +15,15 @@ interface LogContext {
 
 class Logger {
   private isDevelopment = import.meta.env.DEV;
-  private isDevMode = localStorage.getItem('arivia-dev-mode') === 'true';
+  
   private originalConsole = (typeof window !== 'undefined' && (window as any).__ORIGINAL_CONSOLE) || console;
 
   private shouldLog(level: LogLevel): boolean {
     // Always log errors and warnings
     if (level === 'error' || level === 'warn') return true;
     
-    // Log debug/info only in development or dev mode
-    return this.isDevelopment || this.isDevMode;
+    // Log debug/info only in development
+    return this.isDevelopment;
   }
 
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
@@ -79,7 +79,7 @@ class Logger {
   error(message: string, error?: Error | unknown, context?: LogContext): void {
     const formattedMessage = this.formatMessage('error', message, context);
     
-    if (this.isDevelopment || this.isDevMode) {
+    if (this.isDevelopment) {
       // Show full error details in development
       this.originalConsole.error(formattedMessage, error);
     } else {

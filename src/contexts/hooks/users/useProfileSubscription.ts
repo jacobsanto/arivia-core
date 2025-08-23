@@ -10,14 +10,6 @@ export const useProfileSubscription = (
   const subscriptionRef = useRef<any>(null);
   
   useEffect(() => {
-    // Don't set up subscription in dev mode
-    const isDevMode = localStorage.getItem('arivia-dev-mode') === 'true';
-    const mockUser = localStorage.getItem('arivia-mock-user');
-    
-    if (isDevMode && mockUser) {
-      console.log("🔧 Skipping profile subscription in dev mode");
-      return;
-    }
 
     // Clean up previous subscription
     if (subscriptionRef.current) {

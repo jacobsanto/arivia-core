@@ -2,7 +2,7 @@
 import React from 'react';
 import { User } from "@/types/auth";
 import { useUser } from "@/contexts/UserContext";
-import { useDevMode } from "@/contexts/DevModeContext";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Shield } from "lucide-react";
@@ -19,15 +19,6 @@ interface PermissionManagementProps {
 
 const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUser }) => {
   const { user: currentUser, updateUserPermissions } = useUser();
-  // Safe access to dev mode
-  const devMode = (() => {
-    try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      return useDevMode();
-    } catch {
-      return null;
-    }
-  })();
 
   const {
     permissions,
@@ -43,8 +34,8 @@ const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUse
     updateUserPermissions
   });
   
-  // Only superadmins can access this component (Admin inherits in Dev Mode)
-  const isElevated = (currentUser?.role === "superadmin") || (devMode?.isDevMode && currentUser?.role === "administrator");
+  // Only superadmins can access this component
+  const isElevated = (currentUser?.role === "superadmin");
   if (!isElevated || !selectedUser) {
     return <UnauthorizedPermissionView />;
   }

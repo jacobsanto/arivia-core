@@ -39,17 +39,8 @@ const AdminPermissions = () => {
     }
   });
 
-  // Check for elevated access: Superadmin or Admin in Dev Mode
-  const devMode = (() => {
-    try {
-      // eslint-disable-next-line react-hooks/rules-of-hooks, @typescript-eslint/no-var-requires
-      const { useDevMode } = require('@/contexts/DevModeContext');
-      return useDevMode();
-    } catch {
-      return null;
-    }
-  })();
-  const isElevated = (user?.role === "superadmin") || (devMode?.isDevMode && user?.role === "administrator");
+  // Check for elevated access: Superadmin only
+  const isElevated = (user?.role === "superadmin");
   if (!isElevated) {
     // Redirect non-elevated users away
     React.useEffect(() => {

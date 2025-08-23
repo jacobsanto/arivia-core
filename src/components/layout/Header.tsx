@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
-import { useDevMode } from "@/contexts/DevModeContext";
+
 
 interface HeaderProps {
   onMobileMenuToggle?: () => void;
@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
-  const { isDevMode } = useDevMode();
+  
 
   useEffect(() => {
     if (!user) return;
