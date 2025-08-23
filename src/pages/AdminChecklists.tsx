@@ -34,7 +34,7 @@ const AdminChecklists = () => {
     getTemplateById
   } = useChecklistTemplates();
 
-  // Use the new custom hook for dialog management
+  // Use the custom hook for dialog management
   const {
     isCreateTemplateOpen,
     setIsCreateTemplateOpen,
@@ -45,10 +45,12 @@ const AdminChecklists = () => {
     isUseTemplateOpen,
     setIsUseTemplateOpen,
     selectedTemplate,
+    setSelectedTemplate,
     templateToDelete,
     setTemplateToDelete,
     selectedTemplateForUse,
-    setSelectedTemplateForUse
+    setSelectedTemplateForUse,
+    openEditTemplateDialog
   } = useTemplateDialogs();
 
   // Add swipe gesture to navigate back
@@ -107,7 +109,7 @@ const AdminChecklists = () => {
   const handleEditClick = (templateId: string) => {
     const template = getTemplateById(templateId);
     if (template) {
-      setIsEditTemplateOpen(true);
+      openEditTemplateDialog(template);
     }
   };
 
