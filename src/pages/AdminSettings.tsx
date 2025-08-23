@@ -37,7 +37,7 @@ const AdminSettings = () => {
       return null;
     }
   })();
-  const isElevated = (user?.role === "superadmin") || (devMode?.isDevMode && user?.role === "administrator");
+  const isElevated = user?.role === "superadmin" || user?.role === "administrator";
   if (!isElevated) {
     // Redirect non-elevated users away
     React.useEffect(() => {
@@ -69,12 +69,12 @@ const AdminSettings = () => {
   };
   
   return (
-    <div {...gestureProps} className="max-w-full">
+    <div {...gestureProps} className="max-w-full min-w-0 overflow-x-hidden">
       <Helmet>
         <title>System Settings - Arivia Villa Sync</title>
       </Helmet>
       
-      <div className="space-y-6 max-w-full">
+      <div className="space-y-6 max-w-full min-w-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-2">
             {isMobile && <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="mr-1">
@@ -103,7 +103,7 @@ const AdminSettings = () => {
           </div>
         </div>
         
-        <div className="max-w-full">
+        <div className="min-w-0 max-w-[100vw] overflow-x-hidden">
           <SystemSettingsTabs />
         </div>
       </div>
