@@ -142,6 +142,7 @@ export interface TouchTargetProps {
   size?: 'sm' | 'md' | 'lg';
   as?: React.ElementType;
   onClick?: () => void;
+  [key: string]: any; // Allow forwarding of additional props
 }
 
 export const TouchTarget: React.FC<TouchTargetProps> = ({
@@ -149,7 +150,8 @@ export const TouchTarget: React.FC<TouchTargetProps> = ({
   className,
   size = 'md',
   as: Component = 'button',
-  onClick
+  onClick,
+  ...props
 }) => {
   const sizeMap = {
     sm: 'min-h-[44px] min-w-[44px]', // iOS guideline minimum
@@ -167,6 +169,7 @@ export const TouchTarget: React.FC<TouchTargetProps> = ({
         className
       )}
       onClick={onClick}
+      {...props}
     >
       {children}
     </Component>
