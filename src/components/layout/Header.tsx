@@ -49,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground">
+    <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground" style={{ boxShadow: 'var(--shadow-border)' }}>
       <div className="flex justify-between items-center">
         <div className="flex items-center">
           
