@@ -84,7 +84,7 @@ const Sidebar = () => {
             </CollapsibleTrigger>
             <CollapsibleContent className="space-y-1">
               {canAccess("viewReports") && <SidebarLink to="/analytics" icon={<BarChart3 size={20} />} label="Analytics" />}
-              {(isSuperAdmin || isAdmin) && <SidebarLink to="/admin/checklists" icon={<CheckSquare size={20} />} label="Checklists" />}
+              {(isSuperAdmin || isAdmin) && <SidebarLink to="/checklists" icon={<CheckSquare size={20} />} label="Checklists" />}
               {(isSuperAdmin || isAdmin) && <SidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" />}
               {(isSuperAdmin || isAdmin) && <SidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" />}
               {(isSuperAdmin || isAdmin) && <SidebarLink to="/system-admin" icon={<Monitor size={20} />} label="System Admin" />}
