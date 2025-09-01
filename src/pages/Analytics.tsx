@@ -1,41 +1,92 @@
-
-import React from "react";
-import { AdvancedReportingDashboard } from "@/components/reporting/AdvancedReportingDashboard";
-import { AnalyticsErrorBoundary } from "@/components/analytics/AnalyticsErrorBoundary";
-import { Helmet } from "react-helmet-async";
+import React, { useState, useEffect } from 'react';
+import { AnalyticsFiltersCard } from '@/components/analytics/AnalyticsFiltersCard';
+import { KPIOverview } from '@/components/analytics/KPIOverview';
+import { FinancialOverviewChart } from '@/components/analytics/FinancialOverviewChart';
+import { PropertyInsightsCharts } from '@/components/analytics/PropertyInsightsCharts';
+import { TaskTypeBreakdownChart } from '@/components/analytics/TaskTypeBreakdownChart';
+import { TeamPerformanceTable } from '@/components/analytics/TeamPerformanceTable';
+import { useAnalytics } from '@/hooks/useAnalytics';
 
 const Analytics: React.FC = () => {
-  const pageTitle = "Operational Analytics | Arivia Villas";
-  const description = "Real-time analytics for properties, operations, and performance metrics.";
-  const canonical = typeof window !== 'undefined' ? `${window.location.origin}/analytics` : '/analytics';
+  const {
+    data,
+    loading,
+    error,
+    filters,
+    updateFilters,
+    getProperties
+  } = useAnalytics();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Arivia Villas Operational Analytics",
-    "url": canonical,
-    "applicationCategory": "BusinessApplication",
-    "description": description
-  };
+  const [properties, setProperties] = useState<Array<{ id: string; name: string }>>([]);
+
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const propertiesData = await getProperties();
+      setProperties(propertiesData);
+    };
+    fetchProperties();
+  }, [getProperties]);
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold mb-2">Failed to Load Analytics</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <AnalyticsErrorBoundary>
-      <Helmet>
-        <title>{pageTitle}</title>
-        <meta name="description" content={description} />
-        <link rel="canonical" href={canonical} />
-        <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
-      </Helmet>
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Operational Analytics</h1>
-          <p className="text-muted-foreground mt-2">
-            Comprehensive insights into your property operations, performance metrics, and efficiency tracking
-          </p>
-        </div>
-        <AdvancedReportingDashboard />
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">Analytics Dashboard</h1>
+        <p className="text-muted-foreground mt-2">
+          Strategic insights and performance metrics for data-driven decision making
+        </p>
       </div>
-    </AnalyticsErrorBoundary>
+
+      {/* Global Filters */}
+      <AnalyticsFiltersCard
+        filters={filters}
+        onFiltersChange={updateFilters}
+        properties={properties}
+        loading={loading}
+      />
+
+      {/* KPI Overview */}
+      <KPIOverview 
+        data={data?.kpis || { totalOperationalCosts: 0, tasksCompleted: 0, openIssues: 0, avgCostPerTask: 0 }}
+        loading={loading}
+      />
+
+      {/* Financial Overview */}
+      <FinancialOverviewChart
+        data={data?.financialOverview || []}
+        loading={loading}
+      />
+
+      {/* Property Insights and Task Priorities */}
+      <PropertyInsightsCharts
+        propertyData={data?.propertyInsights || []}
+        priorityData={data?.taskPriorities || []}
+        loading={loading}
+      />
+
+      {/* Task Type Breakdown */}
+      <TaskTypeBreakdownChart
+        data={data?.taskTypeBreakdown || []}
+        loading={loading}
+      />
+
+      {/* Team Performance */}
+      <TeamPerformanceTable
+        data={data?.teamPerformance || []}
+        loading={loading}
+      />
+    </div>
   );
 };
 
