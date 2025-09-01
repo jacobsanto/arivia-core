@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText, ChevronDown, ChevronRight, Clock, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -29,10 +29,14 @@ const Sidebar = () => {
   return <div className="hidden md:flex flex-col bg-sidebar text-sidebar-foreground w-64 p-4 shadow-lg border-r border-sidebar-border" style={{
     boxShadow: 'var(--shadow-border)'
   }}>
-      {/* User Profile Section */}
+      {/* Logo Section */}
+      <div className="flex items-center justify-center mb-6">
+        <Link to="/dashboard" className="flex items-center">
+          <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-10 invert brightness-0 filter" />
+        </Link>
+      </div>
       
-      
-      <nav className="mt-6 flex-1 space-y-2">
+      <nav className="flex-1 space-y-2">
         {/* OPERATIONS - The Daily Hub */}
         <Collapsible open={operationsOpen} onOpenChange={setOperationsOpen}>
           <CollapsibleTrigger className="flex items-center justify-between w-full px-2 py-2 text-sidebar-muted hover:text-sidebar-foreground transition-colors">

@@ -52,10 +52,7 @@ const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-sidebar-border px-4 py-2 md:px-6 md:py-3 bg-sidebar text-sidebar-foreground" style={{ boxShadow: 'var(--shadow-border)' }}>
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          
-          <Link to="/dashboard" className="flex items-center">
-            <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-12 md:h-10 invert brightness-0 filter" />
-          </Link>
+          {/* Logo moved to sidebar */}
         </div>
 
         <div className="flex items-center space-x-2 md:space-x-4">
