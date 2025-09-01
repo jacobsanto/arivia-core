@@ -36,16 +36,9 @@ const Sidebar = () => {
       {/* Logo Section */}
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
-          <img 
-            src={resolvedTheme === 'dark' ? "/arivia-logo-icon-white.png" : "/arivia-logo-icon-black.png"} 
-            alt="Arivia Villas" 
-            className="h-10"
-            onError={(e) => {
-              console.log('Logo failed to load:', e.currentTarget.src);
-              e.currentTarget.src = "/arivia-logo-icon-black.png";
-            }}
-            onLoad={() => console.log('Logo loaded successfully:', resolvedTheme)}
-          />
+          <div className="text-2xl font-bold text-primary">
+            ARIVIA VILLAS
+          </div>
         </Link>
       </div>
       
