@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useTeamChat } from '@/hooks/useTeamChat';
+import { useRealTimeChat } from '@/hooks/useRealTimeChat';
 import { ChatSidebar } from '@/components/chat/ChatSidebar';
 import { EnhancedChatHeader } from '@/components/chat/EnhancedChatHeader';
 import { MessageFeed } from '@/components/chat/MessageFeed';
 import { MessageInput } from '@/components/chat/MessageInput';
 import { ChatDetailSidebar } from '@/components/chat/ChatDetailSidebar';
 import { ChatNotifications } from '@/components/chat/ChatNotifications';
+import { TeamMemberList } from '@/components/chat/TeamMemberList';
 import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Users, Loader2 } from 'lucide-react';
 
 const TeamChat: React.FC = () => {
   const { user } = useUser();
@@ -15,23 +18,27 @@ const TeamChat: React.FC = () => {
   const [isWindowFocused, setIsWindowFocused] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showTeamMembers, setShowTeamMembers] = useState(false);
 
   const {
     chatListItems,
     activeMessages,
     activeDetails,
     typingUsers,
+    teamMembers,
     activeItem,
     showDetailSidebar,
     replyingTo,
+    isLoading,
     setActiveItem,
     setShowDetailSidebar,
     setReplyingTo,
     sendMessage,
     addReaction,
+    startDirectMessage,
     startTyping,
     stopTyping
-  } = useTeamChat();
+  } = useRealTimeChat();
 
   // Track window focus for notifications
   useEffect(() => {
@@ -72,11 +79,31 @@ const TeamChat: React.FC = () => {
     });
   };
 
+  const handleStartDirectMessage = async (userId: string) => {
+    await startDirectMessage(userId);
+    setShowTeamMembers(false); // Close team members panel
+    toast({
+      title: "Direct Message Started",
+      description: "You can now chat directly with this team member.",
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">Loading chat...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Filter messages based on search query
   const filteredMessages = searchQuery 
     ? activeMessages.filter(msg => 
         msg.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        msg.author.name.toLowerCase().includes(searchQuery.toLowerCase())
+        (msg.author?.name.toLowerCase().includes(searchQuery.toLowerCase()) || false)
       )
     : activeMessages;
 
@@ -91,14 +118,56 @@ const TeamChat: React.FC = () => {
       />
 
       {/* Conversation List Sidebar */}
-      <ChatSidebar
-        chatItems={chatListItems}
-        activeItem={activeItem}
-        onSelectItem={(item) => {
-          setActiveItem(item);
-          setSearchQuery(''); // Clear search when switching conversations
-        }}
-      />
+      <div className="relative">
+        <ChatSidebar
+          chatItems={chatListItems}
+          activeItem={activeItem}
+          onSelectItem={(item) => {
+            setActiveItem(item);
+            setSearchQuery(''); // Clear search when switching conversations
+          }}
+        />
+        
+        {/* Team Members Toggle */}
+        <div className="absolute top-4 right-4">
+          <Button
+            variant={showTeamMembers ? "default" : "ghost"}
+            size="sm"
+            onClick={() => setShowTeamMembers(!showTeamMembers)}
+            className="h-8 w-8 p-0"
+          >
+            <Users className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        {/* Team Members Panel */}
+        {showTeamMembers && (
+          <div className="absolute top-0 left-full w-80 h-full bg-background border-r shadow-lg z-10">
+            <div className="p-4 border-b">
+              <h2 className="text-lg font-semibold">Team Members</h2>
+            </div>
+            <div className="p-4 overflow-y-auto">
+              <TeamMemberList
+                members={teamMembers}
+                currentUserId={user?.id}
+                onStartDirectMessage={handleStartDirectMessage}
+                onStartCall={(userId) => {
+                  toast({
+                    title: "Voice Call",
+                    description: "Voice call feature coming soon!",
+                  });
+                }}
+                onStartVideoCall={(userId) => {
+                  toast({
+                    title: "Video Call", 
+                    description: "Video call feature coming soon!",
+                  });
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
       
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-gradient-to-b from-background to-muted/20">
