@@ -9,7 +9,9 @@ import {
   X, 
   PlusCircle,
   Save,
-  RotateCcw
+  RotateCcw,
+  Maximize2,
+  Minimize2
 } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
@@ -40,6 +42,7 @@ export interface WidgetConfig {
   allowedRoles: string[];
   category: 'kpi' | 'actionable' | 'trends' | 'team';
   defaultSize?: 'small' | 'medium' | 'large';
+  currentSize?: 'small' | 'medium' | 'large';
 }
 
 const ALL_WIDGETS: WidgetConfig[] = [
@@ -182,6 +185,7 @@ export const RoleBasedDashboard: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [userWidgets, setUserWidgets] = useState<string[]>([]);
   const [originalLayout, setOriginalLayout] = useState<string[]>([]);
+  const [widgetSizes, setWidgetSizes] = useState<Record<string, 'small' | 'medium' | 'large'>>({});
 
   // Get widgets available to current user
   const availableWidgets = useMemo(() => {
@@ -214,8 +218,14 @@ export const RoleBasedDashboard: React.FC = () => {
       try {
         const parsed = JSON.parse(savedLayout);
         const userLayout = parsed[user.id];
-        if (userLayout && Array.isArray(userLayout)) {
-          setUserWidgets(userLayout);
+        if (userLayout) {
+          // Handle both old format (array) and new format (object)
+          if (Array.isArray(userLayout)) {
+            setUserWidgets(userLayout);
+          } else if (userLayout.widgets && Array.isArray(userLayout.widgets)) {
+            setUserWidgets(userLayout.widgets);
+            setWidgetSizes(userLayout.sizes || {});
+          }
           return;
         }
       } catch (error) {
@@ -246,16 +256,19 @@ export const RoleBasedDashboard: React.FC = () => {
   const saveLayout = () => {
     if (!user) return;
 
-    try {
-      const existingLayouts = localStorage.getItem(STORAGE_KEY);
-      const layouts = existingLayouts ? JSON.parse(existingLayouts) : {};
-      layouts[user.id] = userWidgets;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
-      
-      exitEditMode();
-    } catch (error) {
-      console.error('Failed to save dashboard layout:', error);
-    }
+      try {
+        const existingLayouts = localStorage.getItem(STORAGE_KEY);
+        const layouts = existingLayouts ? JSON.parse(existingLayouts) : {};
+        layouts[user.id] = {
+          widgets: userWidgets,
+          sizes: widgetSizes
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
+        
+        exitEditMode();
+      } catch (error) {
+        console.error('Failed to save dashboard layout:', error);
+      }
   };
 
   const addWidget = (widgetId: string) => {
@@ -267,14 +280,31 @@ export const RoleBasedDashboard: React.FC = () => {
   };
 
   const getGridClass = (widget: WidgetConfig) => {
-    switch (widget.defaultSize) {
+    const currentSize = widgetSizes[widget.id] || widget.defaultSize;
+    switch (currentSize) {
       case 'large':
-        return 'md:col-span-2 lg:col-span-3';
+        return 'col-span-1 sm:col-span-2 md:col-span-2 lg:col-span-3 xl:col-span-3';
       case 'medium':
-        return 'md:col-span-1 lg:col-span-2';
+        return 'col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-2 xl:col-span-2';
       case 'small':
       default:
-        return 'md:col-span-1 lg:col-span-1';
+        return 'col-span-1 sm:col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1';
+    }
+  };
+
+  const resizeWidget = (widgetId: string, newSize: 'small' | 'medium' | 'large') => {
+    setWidgetSizes(prev => ({
+      ...prev,
+      [widgetId]: newSize
+    }));
+  };
+
+  const getNextSize = (currentSize: 'small' | 'medium' | 'large') => {
+    switch (currentSize) {
+      case 'small': return 'medium';
+      case 'medium': return 'large';
+      case 'large': return 'small';
+      default: return 'medium';
     }
   };
 
@@ -345,7 +375,7 @@ export const RoleBasedDashboard: React.FC = () => {
       </div>
 
       {/* Widgets Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
         {visibleWidgets.map((widget) => {
           const WidgetComponent = widget.component;
           
@@ -362,10 +392,27 @@ export const RoleBasedDashboard: React.FC = () => {
                       <GripVertical className="h-3 w-3" />
                     </div>
                     
+                    {/* Resize Button */}
+                    <button
+                      onClick={() => {
+                        const currentSize = widgetSizes[widget.id] || widget.defaultSize || 'medium';
+                        const nextSize = getNextSize(currentSize);
+                        resizeWidget(widget.id, nextSize);
+                      }}
+                      className="absolute -top-2 -right-8 z-10 bg-secondary text-secondary-foreground rounded-full p-1 hover:bg-secondary/80 transition-colors"
+                      title="Resize widget"
+                    >
+                      {(() => {
+                        const currentSize = widgetSizes[widget.id] || widget.defaultSize || 'medium';
+                        return currentSize === 'large' ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />;
+                      })()}
+                    </button>
+                    
                     {/* Remove Button */}
                     <button
                       onClick={() => removeWidget(widget.id)}
-                      className="absolute -top-2 -right-2 z-10 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80"
+                      className="absolute -top-2 -right-2 z-10 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/80 transition-colors"
+                      title="Remove widget"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -382,10 +429,10 @@ export const RoleBasedDashboard: React.FC = () => {
         {isEditMode && addableWidgets.length > 0 && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 cursor-pointer transition-colors">
-                <CardContent className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                  <PlusCircle className="h-8 w-8 mb-2" />
-                  <span className="text-sm">Add Widget</span>
+              <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 cursor-pointer transition-colors min-h-[120px] sm:min-h-[140px]">
+                <CardContent className="flex flex-col items-center justify-center h-full text-muted-foreground p-4">
+                  <PlusCircle className="h-6 w-6 sm:h-8 sm:w-8 mb-2" />
+                  <span className="text-xs sm:text-sm text-center">Add Widget</span>
                 </CardContent>
               </Card>
             </DropdownMenuTrigger>
