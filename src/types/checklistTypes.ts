@@ -14,8 +14,8 @@ export const CHECKLIST_CATEGORIES = [
 
 export type ChecklistCategoryType = typeof CHECKLIST_CATEGORIES[number];
 
-// Define the ChecklistTemplate interface
-export interface ChecklistTemplate {
+// Legacy ChecklistTemplate interface (for backward compatibility)
+export interface LegacyChecklistTemplate {
   id: string;
   name: string;
   description: string;
@@ -26,6 +26,9 @@ export interface ChecklistTemplate {
   updatedAt?: string;
   isDefault?: boolean;
 }
+
+// Re-export as ChecklistTemplate for now to maintain compatibility
+export type ChecklistTemplate = LegacyChecklistTemplate;
 
 // Define the form values for creating/editing a template
 export interface ChecklistTemplateFormValues {

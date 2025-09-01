@@ -4,7 +4,7 @@ import { CheckSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useChecklistTemplates } from "@/hooks/useNewChecklistTemplates";
+import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
 import { ChecklistTemplate, CHECKLIST_CATEGORIES } from "@/types/checklistTypes";
 import { transformToOldFormat } from "@/utils/checklistCompatibility";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

@@ -39,8 +39,9 @@ import OptimizationPage from "@/pages/OptimizationPage";
 import AdminUsers from "@/pages/AdminUsers";
 import AdminPermissions from "@/pages/AdminPermissions";
 import AdminSettings from "@/pages/AdminSettings";
-import AdminChecklists from "@/pages/AdminChecklists";
+// AdminChecklists removed - using new Checklists page instead
 import EnhancedTasks from "@/pages/EnhancedTasks";
+import Checklists from "@/pages/Checklists";
 
 function App() {
   return (
@@ -89,7 +90,7 @@ function App() {
                     <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/permissions" element={<AdminPermissions />} />
                     <Route path="/admin/settings" element={<AdminSettings />} />
-                    <Route path="/admin/checklists" element={<AdminChecklists />} />
+                    <Route path="/checklists" element={<Checklists />} />
                   </Route>
                   
                   {/* Catch all route */}

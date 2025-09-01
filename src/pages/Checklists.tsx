@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Plus, ClipboardList } from 'lucide-react';
 import { TemplatesGrid } from '@/components/checklists/TemplatesGrid';
 import { TemplateEditorModal } from '@/components/checklists/TemplateEditorModal';
-import { useChecklistTemplates } from '@/hooks/useNewChecklistTemplates';
+import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 import { ChecklistTemplate } from '@/types/checklists.types';
 
 const Checklists: React.FC = () => {
