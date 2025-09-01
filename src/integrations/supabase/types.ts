@@ -347,6 +347,45 @@ export type Database = {
         }
         Relationships: []
       }
+      housekeeping_checklist_templates: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          estimated_duration: number | null
+          id: string
+          is_active: boolean | null
+          items: Json
+          name: string
+          task_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+          name: string
+          task_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          estimated_duration?: number | null
+          id?: string
+          is_active?: boolean | null
+          items?: Json
+          name?: string
+          task_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       housekeeping_tasks: {
         Row: {
           additional_actions: Json | null
@@ -355,12 +394,28 @@ export type Database = {
           checklist: Json | null
           completed_at: string | null
           created_at: string
+          dependencies: string[] | null
           description: string | null
           due_date: string | null
+          estimated_duration: number | null
+          guest_checkin: string | null
+          guest_checkout: string | null
+          guest_name: string | null
           id: string
+          is_blocked: boolean | null
           listing_id: string | null
+          photos: string[] | null
+          priority: string | null
+          property_id: string | null
+          qc_notes: string | null
+          qc_reviewed_at: string | null
+          qc_reviewed_by: string | null
+          qc_status: string | null
+          room_number: string | null
           status: string
+          tags: string[] | null
           task_type: string
+          title: string
           updated_at: string
         }
         Insert: {
@@ -370,12 +425,28 @@ export type Database = {
           checklist?: Json | null
           completed_at?: string | null
           created_at?: string
+          dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
+          guest_checkin?: string | null
+          guest_checkout?: string | null
+          guest_name?: string | null
           id?: string
+          is_blocked?: boolean | null
           listing_id?: string | null
+          photos?: string[] | null
+          priority?: string | null
+          property_id?: string | null
+          qc_notes?: string | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          room_number?: string | null
           status?: string
+          tags?: string[] | null
           task_type: string
+          title: string
           updated_at?: string
         }
         Update: {
@@ -385,12 +456,28 @@ export type Database = {
           checklist?: Json | null
           completed_at?: string | null
           created_at?: string
+          dependencies?: string[] | null
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
+          guest_checkin?: string | null
+          guest_checkout?: string | null
+          guest_name?: string | null
           id?: string
+          is_blocked?: boolean | null
           listing_id?: string | null
+          photos?: string[] | null
+          priority?: string | null
+          property_id?: string | null
+          qc_notes?: string | null
+          qc_reviewed_at?: string | null
+          qc_reviewed_by?: string | null
+          qc_status?: string | null
+          room_number?: string | null
           status?: string
+          tags?: string[] | null
           task_type?: string
+          title?: string
           updated_at?: string
         }
         Relationships: []
@@ -866,6 +953,42 @@ export type Database = {
         }
         Relationships: []
       }
+      room_status_log: {
+        Row: {
+          changed_by: string | null
+          created_at: string | null
+          id: string
+          new_status: string
+          notes: string | null
+          old_status: string | null
+          property_id: string
+          room_number: string | null
+          task_id: string | null
+        }
+        Insert: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_status: string
+          notes?: string | null
+          old_status?: string | null
+          property_id: string
+          room_number?: string | null
+          task_id?: string | null
+        }
+        Update: {
+          changed_by?: string | null
+          created_at?: string | null
+          id?: string
+          new_status?: string
+          notes?: string | null
+          old_status?: string | null
+          property_id?: string
+          room_number?: string | null
+          task_id?: string | null
+        }
+        Relationships: []
+      }
       rule_actions: {
         Row: {
           action_data: Json
@@ -1090,6 +1213,60 @@ export type Database = {
         }
         Relationships: []
       }
+      task_comments: {
+        Row: {
+          comment: string
+          created_at: string | null
+          id: string
+          task_id: string
+          task_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string | null
+          id?: string
+          task_id: string
+          task_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string | null
+          id?: string
+          task_id?: string
+          task_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_dependencies: {
+        Row: {
+          created_at: string | null
+          dependency_type: string | null
+          depends_on_task_id: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_task_id: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dependency_type?: string | null
+          depends_on_task_id?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -1301,6 +1478,16 @@ export type Database = {
       }
       log_security_event: {
         Args: { details?: Json; event_type: string; severity: string }
+        Returns: string
+      }
+      update_room_status: {
+        Args: {
+          p_new_status: string
+          p_notes?: string
+          p_property_id: string
+          p_room_number: string
+          p_task_id?: string
+        }
         Returns: string
       }
     }
