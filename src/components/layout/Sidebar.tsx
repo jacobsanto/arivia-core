@@ -21,9 +21,6 @@ const Sidebar = () => {
   } = usePermissions();
   const { resolvedTheme } = useTheme();
   const [operationsOpen, setOperationsOpen] = useState(true);
-  
-  // Debug theme
-  console.log('Current theme:', resolvedTheme);
   const [managementOpen, setManagementOpen] = useState(true);
   const [administrationOpen, setAdministrationOpen] = useState(true);
   const handleLogout = () => {
@@ -40,12 +37,9 @@ const Sidebar = () => {
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
           <img 
-            src={resolvedTheme === 'dark' ? "/arivia-logo-full-dark-bg.png" : "/arivia-logo-black-light-bg.png"} 
+            src={resolvedTheme === 'dark' ? "/arivia-logo-white-dark-mode.png" : "/arivia-logo-colored-light-mode.png"} 
             alt="Arivia Villas" 
             className="h-10"
-            onError={(e) => {
-              console.error('Logo failed to load:', e.currentTarget.src);
-            }}
           />
         </Link>
       </div>
@@ -104,15 +98,15 @@ const Sidebar = () => {
         <div className="space-y-1 pt-2">
           <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
           
-          {/* Theme Toggle */}
-          <div className="flex items-center justify-center py-2">
-            <ThemeToggle />
-          </div>
-          
           <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="mr-3 h-5 w-5" />
             <span>Logout</span>
           </Button>
+          
+          {/* Theme Toggle at bottom */}
+          <div className="flex items-center justify-center py-2 border-t border-sidebar-border mt-4 pt-4">
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
     </div>;
