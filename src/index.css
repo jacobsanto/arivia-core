@@ -163,14 +163,14 @@
     --shadow-elegant: 0 10px 30px -10px hsl(27 87% 67% / 0.5);
     --shadow-glow: 0 0 40px hsl(27 87% 77% / 0.6);
     
-    /* Dark mode sidebar */
-    --sidebar-background: 234 53% 19%;   /* HEX #1c174b */
+    /* Dark mode sidebar - matches page background */
+    --sidebar-background: 210 40% 5%;   /* Same as background */
     --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 27 87% 67%;
-    --sidebar-primary-foreground: 234 53% 19%;
-    --sidebar-accent: 234 53% 25%;       /* Slightly lighter variant */
+    --sidebar-primary-foreground: 210 40% 5%;
+    --sidebar-accent: 210 40% 8%;        /* Same as card background */
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 234 53% 25%;
+    --sidebar-border: 210 40% 20%;       /* Same as border */
     --sidebar-ring: 27 87% 67%;
   }
 }
