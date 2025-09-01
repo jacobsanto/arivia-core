@@ -93,7 +93,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
                   Admin Controls
                 </h3>
                 <MobileSidebarLink to="/admin/users" icon={<Users size={20} />} label="User Management" onClick={handleLinkClick} />
-                <MobileSidebarLink to="/admin/permissions" icon={<Shield size={20} />} label="Permissions" onClick={handleLinkClick} />
+                <MobileSidebarLink to="/permissions" icon={<Shield size={20} />} label="Permissions" onClick={handleLinkClick} />
                 <MobileSidebarLink to="/checklists" icon={<CheckSquare size={20} />} label="Checklists" onClick={handleLinkClick} />
                 <MobileSidebarLink to="/admin/settings" icon={<Settings size={20} />} label="System Settings" onClick={handleLinkClick} />
               </div>
