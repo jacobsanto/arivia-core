@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ChatMessage } from '@/types/chat.types';
 import { useToast } from '@/hooks/use-toast';
+import { useNotifications } from '@/hooks/useNotifications';
 import { Bell } from 'lucide-react';
 
 interface ChatNotificationsProps {
@@ -17,6 +18,7 @@ export const ChatNotifications: React.FC<ChatNotificationsProps> = ({
   enableNotifications
 }) => {
   const { toast } = useToast();
+  const { refetch } = useNotifications();
   const [lastNotifiedMessage, setLastNotifiedMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -47,7 +49,10 @@ export const ChatNotifications: React.FC<ChatNotificationsProps> = ({
     }
 
     setLastNotifiedMessage(latestMessage.id);
-  }, [messages, currentUserId, isWindowFocused, enableNotifications, lastNotifiedMessage, toast]);
+    
+    // Refresh notifications to sync with the notification system
+    refetch();
+  }, [messages, currentUserId, isWindowFocused, enableNotifications, lastNotifiedMessage, toast, refetch]);
 
   // Request notification permission on mount
   useEffect(() => {

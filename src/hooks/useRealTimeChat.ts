@@ -17,6 +17,7 @@ import {
   ChatListItem
 } from '@/types/chat.types';
 import { supabase } from '@/integrations/supabase/client';
+import { NotificationPatterns } from '@/services/notifications/notification.patterns';
 
 
 export const useRealTimeChat = () => {
@@ -166,6 +167,10 @@ export const useRealTimeChat = () => {
       
       // Stop typing
       await typingIndicatorsAPI.stopTyping();
+      
+      // Generate notifications for mentions
+      const { generateChatNotifications } = await import('@/services/chat/notification.service');
+      await generateChatNotifications(newMessage, activeItem);
       
     } catch (error) {
       console.error('Error sending message:', error);
