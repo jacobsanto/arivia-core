@@ -1,63 +1,49 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useRealProperties } from '@/hooks/useRealProperties';
-import { PropertyCard } from "@/components/properties/PropertyCard";
+import { useDetailedProperties, usePropertyFiltering } from '@/hooks/useDetailedProperties';
+import { PropertyGridView } from "@/components/properties/enhanced/PropertyGridView";
+import { PropertyListView } from "@/components/properties/enhanced/PropertyListView";
+import { PropertyAdvancedFilters } from "@/components/properties/enhanced/PropertyAdvancedFilters";
 import { PropertyStats } from "@/components/properties/PropertyStats";
-import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { CreatePropertyDialog } from "@/components/properties/CreatePropertyDialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RoomStatusManager from "@/components/properties/RoomStatusManager";
-import { 
-  Building2, 
-  Grid3X3, 
-  List,
-  Download,
-  Settings
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2 } from "lucide-react";
 
 const Properties: React.FC = () => {
-  const { properties, isLoading } = useRealProperties();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [typeFilter, setTypeFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const { properties, isLoading } = useDetailedProperties();
+  const { 
+    filters, 
+    viewMode, 
+    updateFilter, 
+    updateViewMode, 
+    clearFilters, 
+    activeFiltersCount 
+  } = usePropertyFiltering();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
-  // Filter properties based on search and filters
-  const filteredProperties = useMemo(() => {
-    if (!properties) return [];
-    
+  // Filter properties based on current filters
+  const filteredProperties = React.useMemo(() => {
     return properties.filter(property => {
-      const matchesSearch = searchQuery === "" || 
-        property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        property.address.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = filters.search === "" || 
+        property.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        property.address.toLowerCase().includes(filters.search.toLowerCase());
       
-      const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-      const matchesType = typeFilter === "all" || property.property_type === typeFilter;
+      const matchesStatus = filters.status === "all" || property.status === filters.status;
+      const matchesRoomStatus = filters.room_status === "all" || property.room_status === filters.room_status;
+      const matchesType = filters.property_type === "all" || property.property_type === filters.property_type;
+      const matchesBedrooms = filters.bedrooms === "all" || 
+        (filters.bedrooms === "4" ? property.num_bedrooms >= 4 : property.num_bedrooms.toString() === filters.bedrooms);
+      const matchesIssues = !filters.has_issues || property.open_issues_count > 0;
       
-      return matchesSearch && matchesStatus && matchesType;
+      return matchesSearch && matchesStatus && matchesRoomStatus && matchesType && matchesBedrooms && matchesIssues;
     });
-  }, [properties, searchQuery, statusFilter, typeFilter]);
-
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (statusFilter !== "all") count++;
-    if (typeFilter !== "all") count++;
-    return count;
-  }, [statusFilter, typeFilter]);
-
-  const handleClearFilters = () => {
-    setSearchQuery("");
-    setStatusFilter("all");
-    setTypeFilter("all");
-  };
+  }, [properties, filters]);
 
   const handleQuickAction = (propertyId: string, action: string) => {
     console.log(`Quick action: ${action} for property: ${propertyId}`);
-    // Implement quick actions here
   };
 
   if (isLoading) {
@@ -65,11 +51,7 @@ const Properties: React.FC = () => {
       <div className="space-y-6 p-4 md:p-6">
         <div className="animate-pulse space-y-6">
           <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-24 bg-muted rounded"></div>
-            ))}
-          </div>
+          <div className="h-32 bg-muted rounded"></div>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="h-64 bg-muted rounded"></div>
@@ -84,7 +66,7 @@ const Properties: React.FC = () => {
     <>
       <Helmet>
         <title>Properties Management - Arivia Villas</title>
-        <meta name="description" content="Manage and monitor all villa properties across the Arivia portfolio" />
+        <meta name="description" content="Comprehensive property management system for Arivia Villas portfolio" />
       </Helmet>
       
       <div className="space-y-6 p-4 md:p-6">
@@ -96,77 +78,53 @@ const Properties: React.FC = () => {
               Properties Management
             </h1>
             <p className="text-muted-foreground">
-              Manage and monitor all villa properties across the Arivia portfolio
+              Digital asset catalog with operational integration and deep-dive property views
             </p>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
           </div>
         </div>
 
         {/* Stats Overview */}
-        <PropertyStats properties={properties || []} />
+        <PropertyStats properties={properties} />
 
-        {/* Filters and Search */}
-        <PropertyFilters
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          onCreateProperty={() => setIsCreateDialogOpen(true)}
-          onClearFilters={handleClearFilters}
+        {/* Advanced Filters */}
+        <PropertyAdvancedFilters
+          filters={filters}
+          viewMode={viewMode}
           activeFiltersCount={activeFiltersCount}
+          onFilterChange={updateFilter}
+          onViewModeChange={updateViewMode}
+          onClearFilters={clearFilters}
+          onCreateProperty={() => setIsCreateDialogOpen(true)}
         />
 
         {/* View Tabs */}
-        <Tabs defaultValue="grid" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="grid">Grid View</TabsTrigger>
-            <TabsTrigger value="list">List View</TabsTrigger>
-            <TabsTrigger value="rooms">Room Status</TabsTrigger>
+        <Tabs defaultValue="properties" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="properties">Properties ({filteredProperties.length})</TabsTrigger>
+            <TabsTrigger value="rooms">Room Status Manager</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="grid">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {filteredProperties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  onQuickAction={handleQuickAction}
-                />
-              ))}
-            </div>
+          <TabsContent value="properties" className="mt-6">
+            {viewMode.mode === 'grid' ? (
+              <PropertyGridView 
+                properties={filteredProperties}
+                onQuickAction={handleQuickAction}
+              />
+            ) : (
+              <PropertyListView
+                properties={filteredProperties}
+                viewMode={viewMode}
+                onViewModeChange={updateViewMode}
+                onQuickAction={handleQuickAction}
+              />
+            )}
           </TabsContent>
           
-          <TabsContent value="list">
-            <div className="space-y-4">
-              {filteredProperties.map((property) => (
-                <PropertyCard
-                  key={property.id}
-                  property={property}
-                  onQuickAction={handleQuickAction}
-                />
-              ))}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="rooms">
+          <TabsContent value="rooms" className="mt-6">
             <RoomStatusManager />
           </TabsContent>
         </Tabs>
 
-
-        {/* Create Property Dialog */}
         <CreatePropertyDialog
           isOpen={isCreateDialogOpen}
           onOpenChange={setIsCreateDialogOpen}
