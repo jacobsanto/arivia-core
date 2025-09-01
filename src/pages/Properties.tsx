@@ -8,6 +8,8 @@ import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { CreatePropertyDialog } from "@/components/properties/CreatePropertyDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RoomStatusManager from "@/components/properties/RoomStatusManager";
 import { 
   Building2, 
   Grid3X3, 
@@ -163,41 +165,6 @@ const Properties: React.FC = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Properties Grid/List */}
-        {filteredProperties.length === 0 ? (
-          <Card>
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">
-                No properties found
-              </h3>
-              <p className="text-muted-foreground text-center mb-4">
-                {searchQuery || statusFilter !== "all" || typeFilter !== "all"
-                  ? "Try adjusting your search criteria or filters."
-                  : "Get started by adding your first property."}
-              </p>
-              {(!searchQuery && statusFilter === "all" && typeFilter === "all") && (
-                <Button onClick={() => setIsCreateDialogOpen(true)}>
-                  <Building2 className="h-4 w-4 mr-2" />
-                  Add First Property
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          <div className={viewMode === 'grid' 
-            ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" 
-            : "space-y-4"
-          }>
-            {filteredProperties.map((property) => (
-              <PropertyCard
-                key={property.id}
-                property={property}
-                onQuickAction={handleQuickAction}
-              />
-            ))}
-          </div>
-        )}
 
         {/* Create Property Dialog */}
         <CreatePropertyDialog

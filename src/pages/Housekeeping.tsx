@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { CleaningOverview } from "@/components/cleaning/CleaningOverview";
 import { HousekeepingTaskManagement } from "@/components/housekeeping/HousekeepingTaskManagement";
+import HousekeepingViewModes from "@/components/housekeeping/HousekeepingViewModes";
 import { HousekeepingErrorBoundary } from "@/components/error-boundaries/HousekeepingErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -47,9 +48,10 @@ const Housekeeping: React.FC = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Operations Overview</TabsTrigger>
             <TabsTrigger value="tasks">Task Management</TabsTrigger>
+            <TabsTrigger value="views">Enhanced Views</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
@@ -58,6 +60,10 @@ const Housekeeping: React.FC = () => {
           
           <TabsContent value="tasks">
             <HousekeepingTaskManagement />
+          </TabsContent>
+          
+          <TabsContent value="views">
+            <HousekeepingViewModes />
           </TabsContent>
         </Tabs>
 
