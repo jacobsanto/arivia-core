@@ -46,3 +46,26 @@ export const PERMISSION_CATEGORY_LABELS: Record<PermissionCategory, string> = {
   chat: 'Chat & Communication',
   properties: 'Properties'
 };
+
+// Backward compatibility types
+export type AppRole = 'superadmin' | 'administrator' | 'property_manager' | 'housekeeping_staff' | 'maintenance_staff' | 'guest';
+
+export const ROLE_LABELS: Record<AppRole, string> = {
+  superadmin: 'Super Admin',
+  administrator: 'Administrator', 
+  property_manager: 'Property Manager',
+  housekeeping_staff: 'Housekeeping Staff',
+  maintenance_staff: 'Maintenance Staff',
+  guest: 'Guest'
+};
+
+export interface PermissionMatrix {
+  category: string;
+  permissions: SystemPermission[];
+}
+
+export interface RolePermission {
+  role: AppRole;
+  permission_key: string;
+  granted: boolean;
+}

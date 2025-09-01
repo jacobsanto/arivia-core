@@ -84,11 +84,11 @@ function App() {
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/team-chat" element={<TeamChat />} />
                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
-                    <Route path="/recurring-tasks" element={<RecurringTasks />} />
+                     <Route path="/recurring-tasks" element={<RecurringTasks />} />
                      <Route path="/analytics" element={<Analytics />} />
                      <Route path="/reports" element={<Reports />} />
+                     <Route path="/notifications" element={<Notifications />} />
           <Route path="/permissions" element={<Permissions />} />
-          <Route path="/notifications" element={<Notifications />} />
                       
                      <Route path="/damage-reports" element={<DamageReports />} />
                     
