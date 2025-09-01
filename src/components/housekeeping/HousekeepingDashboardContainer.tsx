@@ -4,7 +4,7 @@ import { useHousekeepingTasks } from "@/hooks/useHousekeepingTasks";
 import { useIsMobile } from "@/hooks/use-mobile";
 import HousekeepingHeader from "./HousekeepingHeader";
 import HousekeepingFilters from "./HousekeepingFilters";
-import HousekeepingKanban from "./HousekeepingKanban";
+import { HousekeepingKanban } from "./HousekeepingKanban";
 import HousekeepingMobileView from "./HousekeepingMobileView";
 
 const HousekeepingDashboardContainer = () => {
@@ -61,12 +61,7 @@ const HousekeepingDashboardContainer = () => {
       ) : (
         <>
           {!isMobile && (
-            <HousekeepingKanban 
-              tasks={tasks}
-              onStatusChange={handleTaskStatusUpdate}
-              onAssignTask={handleAssignTask}
-              cleaningDefinitions={cleaningDefinitions}
-            />
+            <HousekeepingKanban />
           )}
           
           {isMobile && (

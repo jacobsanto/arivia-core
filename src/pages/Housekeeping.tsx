@@ -7,7 +7,7 @@ import { useUser } from "@/contexts/UserContext";
 
 // Import components
 import { HousekeepingDashboard } from "@/components/housekeeping/HousekeepingDashboard";
-import HousekeepingDashboardContainer from "@/components/housekeeping/HousekeepingDashboardContainer";
+import { HousekeepingKanban } from "@/components/housekeeping/HousekeepingKanban";
 import { HousekeepingCalendar } from "@/components/housekeeping/HousekeepingCalendar";
 import { HousekeepingReports } from "@/components/housekeeping/HousekeepingReports";
 import { CreateTaskModal } from "@/components/housekeeping/CreateTaskModal";
@@ -79,7 +79,7 @@ const Housekeeping: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="kanban" className="mt-6">
-            <HousekeepingDashboardContainer />
+            <HousekeepingKanban />
           </TabsContent>
           
           <TabsContent value="calendar" className="mt-6">
