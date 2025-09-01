@@ -1,7 +1,7 @@
 import React from "react";
-import { SmartDashboard } from "../smart/SmartDashboard";
+import { RoleBasedDashboard } from "../smart/RoleBasedDashboard";
 
 export const MVPDashboard: React.FC = () => {
-  // Default to Smart Dashboard for Phase 2A implementation
-  return <SmartDashboard />;
+  // Use the new Role-Based Dashboard with widget system
+  return <RoleBasedDashboard />;
 };
