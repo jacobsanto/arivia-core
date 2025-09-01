@@ -3,6 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
+import { ThemeProvider } from "next-themes";
 
 
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
@@ -50,8 +51,14 @@ function App() {
   return (
     <MVPErrorBoundary>
       <HelmetProvider>
-        <AccessibilityProvider>
-          <ToastProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AccessibilityProvider>
+            <ToastProvider>
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 
@@ -104,8 +111,9 @@ function App() {
                 </Routes>
                 
                 </Router>
-          </ToastProvider>
-        </AccessibilityProvider>
+            </ToastProvider>
+          </AccessibilityProvider>
+        </ThemeProvider>
       </HelmetProvider>
     </MVPErrorBoundary>
   );

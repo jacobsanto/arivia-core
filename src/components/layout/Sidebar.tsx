@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText, ChevronDown, ChevronRight, Clock, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useUser } from "@/contexts/UserContext";
@@ -17,6 +18,7 @@ const Sidebar = () => {
   const {
     canAccess
   } = usePermissions();
+  const { resolvedTheme } = useTheme();
   const [operationsOpen, setOperationsOpen] = useState(true);
   const [managementOpen, setManagementOpen] = useState(true);
   const [administrationOpen, setAdministrationOpen] = useState(true);
@@ -33,7 +35,11 @@ const Sidebar = () => {
       {/* Logo Section */}
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
-          <img src="/lovable-uploads/9a31da8a-a1fd-4326-9d13-1d452aa8c0b5.png" alt="Arivia Villas" className="h-10 invert brightness-0 filter" />
+          <img 
+            src={resolvedTheme === 'dark' ? "/arivia-logo-full-dark-bg.png" : "/arivia-logo-black-light-bg.png"} 
+            alt="Arivia Villas" 
+            className="h-10"
+          />
         </Link>
       </div>
       
