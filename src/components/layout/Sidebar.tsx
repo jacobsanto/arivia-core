@@ -9,6 +9,7 @@ import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useState } from "react";
 const Sidebar = () => {
   const {
@@ -20,6 +21,9 @@ const Sidebar = () => {
   } = usePermissions();
   const { resolvedTheme } = useTheme();
   const [operationsOpen, setOperationsOpen] = useState(true);
+  
+  // Debug theme
+  console.log('Current theme:', resolvedTheme);
   const [managementOpen, setManagementOpen] = useState(true);
   const [administrationOpen, setAdministrationOpen] = useState(true);
   const handleLogout = () => {
@@ -39,6 +43,9 @@ const Sidebar = () => {
             src={resolvedTheme === 'dark' ? "/arivia-logo-full-dark-bg.png" : "/arivia-logo-black-light-bg.png"} 
             alt="Arivia Villas" 
             className="h-10"
+            onError={(e) => {
+              console.error('Logo failed to load:', e.currentTarget.src);
+            }}
           />
         </Link>
       </div>
@@ -96,6 +103,11 @@ const Sidebar = () => {
         {/* PROFILE & LOGOUT */}
         <div className="space-y-1 pt-2">
           <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
+          
+          {/* Theme Toggle */}
+          <div className="flex items-center justify-center py-2">
+            <ThemeToggle />
+          </div>
           
           <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
             <LogOut className="mr-3 h-5 w-5" />
