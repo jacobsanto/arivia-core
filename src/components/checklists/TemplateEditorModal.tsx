@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2 } from 'lucide-react';
-import { ChecklistTemplate, ChecklistSection as ChecklistSectionType, ChecklistType, CHECKLIST_TYPE_LABELS } from '@/types/checklists.types';
+import { ChecklistTemplate, ChecklistSection as ChecklistSectionType, ChecklistType, CHECKLIST_TYPE_LABELS } from '@/types/checklistTypes';
 import { ChecklistSection, AddSectionButton } from './ChecklistSection';
 
 interface TemplateEditorModalProps {
@@ -152,7 +152,13 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
       category: formData.type === 'housekeeping' ? 'Housekeeping' : 
                formData.type === 'maintenance' ? 'Maintenance' : 'Inspection',
       sections: formData.sections,
-      items: formData.sections.flatMap(section => section.items || []),
+      items: formData.sections.flatMap(section => 
+        section.items?.map((item, index) => ({
+          id: Date.now() + index,
+          title: item.text,
+          completed: false
+        })) || []
+      ),
       isActive: true,
       createdBy: 'current-user-id'
     };
@@ -203,7 +209,7 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
                   </SelectTrigger>
                   <SelectContent className="bg-background border border-border shadow-lg z-50">
                     {Object.entries(CHECKLIST_TYPE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
+                      <SelectItem key={value} value={value}>{String(label)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -268,3 +274,5 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
     </Dialog>
   );
 };
+
+export default TemplateEditorModal;
