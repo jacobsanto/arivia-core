@@ -37,7 +37,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
           <img 
-            src={resolvedTheme === 'dark' ? "/arivia-logo-white-dark-mode.png" : "/arivia-logo-colored-light-mode.png"} 
+            src={resolvedTheme === 'dark' ? "/arivia-logo-full-dark-bg.png" : "/arivia-logo-black-light-bg.png"} 
             alt="Arivia Villas" 
             className="h-10"
           />
