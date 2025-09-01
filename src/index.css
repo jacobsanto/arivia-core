@@ -102,15 +102,16 @@
     --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Sidebar */
-    --sidebar-background: 234 53% 19%;   /* HEX #1c174b */
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 197 71% 73%;
-    --sidebar-primary-foreground: 210 40% 15%;
-    --sidebar-accent: 234 53% 25%;       /* Slightly lighter variant */
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 234 53% 25%;
-    --sidebar-ring: 197 71% 73%;
+    /* Sidebar - aligned with light mode */
+    --sidebar-background: 0 0% 100%;         /* Same as background */
+    --sidebar-foreground: 210 40% 15%;       /* Same as foreground */
+    --sidebar-primary: 27 87% 67%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 210 40% 96%;           /* Same as muted */
+    --sidebar-accent-foreground: 210 40% 15%;
+    --sidebar-border: 210 40% 90%;           /* Same as border */
+    --sidebar-ring: 27 87% 67%;
+    --sidebar-muted: 210 20% 50%;            /* Same as muted-foreground */
   }
 
   .dark {
