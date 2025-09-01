@@ -102,7 +102,10 @@ export const QuickActionDialog: React.FC<QuickActionDialogProps> = ({
 
       const { error } = await supabase
         .from('housekeeping_tasks')
-        .insert(taskData);
+        .insert({
+          ...taskData,
+          title: taskData.task_type,
+        });
 
       if (error) throw error;
 
