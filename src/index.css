@@ -6,79 +6,82 @@
 
 @layer base {
   :root {
-    /* Arivia Villas Brand Colors - HSL Values */
-    --primary: 27 87% 67%;        /* Warm sandy gold - #F4A261 */
-    --primary-light: 27 87% 77%;  /* Lighter sand - #F7B97F */
-    --primary-dark: 27 87% 57%;   /* Darker sand - #E08E42 */
-    --primary-foreground: 0 0% 98%;
+    /* Enhanced Arivia Villas Brand Colors - More Vibrant HSL Values */
+    --primary: 25 95% 63%;        /* Richer golden orange - #F09819 */
+    --primary-light: 25 95% 73%;  /* Lighter golden - #F3B547 */
+    --primary-dark: 25 95% 53%;   /* Deeper gold - #E8830A */
+    --primary-foreground: 0 0% 100%;
     
-    --secondary: 210 40% 95%;     /* Light blue-grey - #F1F5F8 */
-    --secondary-light: 210 40% 98%; /* Almost white blue - #F8FAFC */
-    --secondary-dark: 210 40% 85%; /* Darker blue-grey - #D1D9E0 */
-    --secondary-foreground: 210 40% 15%;
+    --secondary: 220 50% 96%;     /* Cooler light blue - #F4F7FB */
+    --secondary-light: 220 50% 98%; /* Near white blue - #FAFBFD */
+    --secondary-dark: 220 50% 88%; /* Subtle blue-grey - #E1E8F0 */
+    --secondary-foreground: 220 40% 20%;
     
-    --accent: 197 71% 73%;        /* Ocean blue - #64C7E8 */
-    --accent-light: 197 71% 83%;  /* Light ocean - #87D4EC */
-    --accent-dark: 197 71% 63%;   /* Dark ocean - #41BAE4 */
-    --accent-foreground: 0 0% 98%;
+    --accent: 200 85% 67%;        /* Vibrant ocean blue - #36B9E6 */
+    --accent-light: 200 85% 77%;  /* Light ocean - #5CC7EA */
+    --accent-dark: 200 85% 57%;   /* Deep ocean - #1AABE2 */
+    --accent-foreground: 0 0% 100%;
     
-    --background: 0 0% 100%;
-    --foreground: 210 40% 15%;    /* Dark blue-grey text */
+    --background: 0 0% 99%;        /* Slightly off-white for warmth */
+    --foreground: 220 40% 18%;     /* Deeper text for better contrast */
     
     --card: 0 0% 100%;
-    --card-foreground: 210 40% 15%;
+    --card-foreground: 220 40% 18%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 210 40% 15%;
+    --popover-foreground: 220 40% 18%;
     
-    --muted: 210 40% 96%;         /* Very light blue-grey */
-    --muted-foreground: 210 20% 50%; /* Medium grey text */
+    --muted: 220 50% 94%;          /* Enhanced light background */
+    --muted-foreground: 220 25% 45%; /* Better contrast grey text */
     
-    --destructive: 0 84% 60%;     /* Vibrant red */
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 90% 58%;      /* More vibrant red */
+    --destructive-foreground: 0 0% 100%;
     
-    --success: 142 71% 45%;       /* Emerald green */
-    --success-foreground: 0 0% 98%;
+    --success: 145 75% 42%;        /* Richer emerald green */
+    --success-foreground: 0 0% 100%;
     
-    --warning: 45 93% 58%;        /* Amber yellow */
-    --warning-foreground: 0 0% 98%;
+    --warning: 42 96% 55%;         /* Enhanced amber */
+    --warning-foreground: 0 0% 100%;
     
-    --info: 221 83% 53%;          /* Blue */
-    --info-foreground: 0 0% 98%;
+    --info: 215 85% 55%;           /* More vibrant blue */
+    --info-foreground: 0 0% 100%;
     
-    --border: 210 40% 90%;        /* Light border */
-    --input: 210 40% 95%;         /* Input background */
-    --ring: 27 87% 67%;           /* Focus ring - primary color */
-    --overlay: 0 0% 0%;           /* Overlay/backdrop base */
-    --overlay-foreground: 0 0% 98%; /* Text on overlay */
+    --border: 220 50% 88%;         /* Enhanced border with blue tint */
+    --input: 220 50% 96%;          /* Enhanced input background */
+    --ring: 25 95% 63%;            /* Focus ring - enhanced primary */
+    --overlay: 0 0% 0%;
+    --overlay-foreground: 0 0% 100%;
     
-    /* Semantic Colors */
-    --text-primary: 210 40% 15%;
-    --text-secondary: 210 20% 50%;
-    --text-tertiary: 210 15% 65%;
+    /* Enhanced Semantic Colors */
+    --text-primary: 220 40% 18%;
+    --text-secondary: 220 25% 45%;
+    --text-tertiary: 220 20% 60%;
     
-    /* Surface Colors */
+    /* Enhanced Surface Colors */
     --surface-elevated: 0 0% 100%;
-    --surface-overlay: 210 40% 98%;
-    --surface-subtle: 210 40% 96%;
+    --surface-overlay: 220 50% 98%;
+    --surface-subtle: 220 50% 96%;
     
-    /* Interactive States */
-    --hover-primary: 27 87% 57%;
-    --hover-secondary: 210 40% 85%;
-    --hover-accent: 197 71% 63%;
+    /* Enhanced Interactive States */
+    --hover-primary: 25 95% 53%;
+    --hover-secondary: 220 50% 88%;
+    --hover-accent: 200 85% 57%;
     
-    /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(27 87% 67%), hsl(27 87% 77%));
-    --gradient-secondary: linear-gradient(135deg, hsl(210 40% 95%), hsl(210 40% 98%));
-    --gradient-accent: linear-gradient(135deg, hsl(197 71% 73%), hsl(197 71% 83%));
+    /* Enhanced Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(25 95% 63%), hsl(25 95% 73%));
+    --gradient-secondary: linear-gradient(135deg, hsl(220 50% 96%), hsl(220 50% 98%));
+    --gradient-accent: linear-gradient(135deg, hsl(200 85% 67%), hsl(200 85% 77%));
+    --gradient-hero: linear-gradient(135deg, hsl(25 95% 63%) 0%, hsl(200 85% 67%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 73%) 0%, hsl(42 96% 65%) 100%);
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(210 40% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(210 40% 15% / 0.1), 0 2px 4px -1px hsl(210 40% 15% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(210 40% 15% / 0.1), 0 4px 6px -2px hsl(210 40% 15% / 0.05);
-    --shadow-xl: 0 20px 25px -5px hsl(210 40% 15% / 0.1), 0 10px 10px -5px hsl(210 40% 15% / 0.04);
-    --shadow-elegant: 0 10px 30px -10px hsl(27 87% 67% / 0.3);
-    --shadow-glow: 0 0 40px hsl(27 87% 77% / 0.4);
+    /* Enhanced Shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 40% 18% / 0.06);
+    --shadow-md: 0 4px 6px -1px hsl(220 40% 18% / 0.12), 0 2px 4px -1px hsl(220 40% 18% / 0.08);
+    --shadow-lg: 0 10px 15px -3px hsl(220 40% 18% / 0.12), 0 4px 6px -2px hsl(220 40% 18% / 0.06);
+    --shadow-xl: 0 20px 25px -5px hsl(220 40% 18% / 0.12), 0 10px 10px -5px hsl(220 40% 18% / 0.05);
+    --shadow-elegant: 0 10px 30px -10px hsl(25 95% 63% / 0.35);
+    --shadow-glow: 0 0 40px hsl(25 95% 73% / 0.45);
+    --shadow-border: 0 1px 3px 0 hsl(220 40% 18% / 0.08);
     
     /* Spacing Scale */
     --space-xs: 0.25rem;
@@ -102,16 +105,16 @@
     --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
     
-    /* Sidebar - aligned with light mode */
-    --sidebar-background: 0 0% 100%;         /* Same as background */
-    --sidebar-foreground: 210 40% 15%;       /* Same as foreground */
-    --sidebar-primary: 27 87% 67%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 40% 96%;           /* Same as muted */
-    --sidebar-accent-foreground: 210 40% 15%;
-    --sidebar-border: 210 40% 90%;           /* Same as border */
-    --sidebar-ring: 27 87% 67%;
-    --sidebar-muted: 210 20% 50%;            /* Same as muted-foreground */
+    /* Enhanced Sidebar - More elegant light mode */
+    --sidebar-background: 220 50% 98%;       /* Subtle blue-tinted white */
+    --sidebar-foreground: 220 40% 18%;       /* Rich dark text */
+    --sidebar-primary: 25 95% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 50% 94%;           /* Enhanced accent background */
+    --sidebar-accent-foreground: 220 40% 18%;
+    --sidebar-border: 220 50% 88%;           /* Enhanced border */
+    --sidebar-ring: 25 95% 63%;
+    --sidebar-muted: 220 25% 45%;            /* Enhanced muted text */
   }
 
   .dark {
