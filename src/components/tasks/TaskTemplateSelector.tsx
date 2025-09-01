@@ -4,8 +4,9 @@ import { CheckSquare, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useChecklistTemplates } from "@/hooks/useChecklistTemplates";
+import { useChecklistTemplates } from "@/hooks/useNewChecklistTemplates";
 import { ChecklistTemplate, CHECKLIST_CATEGORIES } from "@/types/checklistTypes";
+import { transformToOldFormat } from "@/utils/checklistCompatibility";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface TaskTemplateSelectorProps {
@@ -21,8 +22,11 @@ const TaskTemplateSelector = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("Housekeeping");
   
-  const { templates, loading } = useChecklistTemplates();
+  const { templates: newTemplates, loading } = useChecklistTemplates();
   
+  // Transform new format to old format for compatibility
+  const templates = newTemplates.map(transformToOldFormat);
+
   // Filter templates by search and category
   const filteredTemplates = templates.filter(template => {
     const matchesSearch = 
