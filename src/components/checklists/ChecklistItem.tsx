@@ -3,9 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GripVertical, Trash2, Plus } from 'lucide-react';
-import { ChecklistTemplateItem } from '@/types/checklists.types';
+import { ChecklistTemplateItem } from '@/types/checklistTypes';
 
-interface ChecklistItemProps {
+interface ChecklistItemComponentProps {
   item: ChecklistTemplateItem;
   onUpdate: (itemId: string, text: string) => void;
   onDelete: (itemId: string) => void;
@@ -13,7 +13,7 @@ interface ChecklistItemProps {
   isDragging?: boolean;
 }
 
-export const ChecklistItem: React.FC<ChecklistItemProps> = ({
+export const ChecklistItemComponent: React.FC<ChecklistItemComponentProps> = ({
   item,
   onUpdate,
   onDelete,

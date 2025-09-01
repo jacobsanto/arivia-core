@@ -3,8 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { GripVertical, Trash2, Plus } from 'lucide-react';
-import { ChecklistSection as ChecklistSectionType, ChecklistTemplateItem } from '@/types/checklists.types';
-import { ChecklistItem, AddItemButton } from './ChecklistItem';
+import { ChecklistSection as ChecklistSectionType, ChecklistTemplateItem } from '@/types/checklistTypes';
+import { ChecklistItemComponent } from './ChecklistItem';
 
 interface ChecklistSectionProps {
   section: ChecklistSectionType;
@@ -100,7 +100,7 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
       <CardContent className="space-y-2">
         {/* Section Items */}
         {section.items.map((item) => (
-          <ChecklistItem
+          <ChecklistItemComponent
             key={item.id}
             item={item}
             onUpdate={(itemId, text) => onUpdateItem(section.id, itemId, text)}
@@ -109,7 +109,12 @@ export const ChecklistSection: React.FC<ChecklistSectionProps> = ({
         ))}
 
         {/* Add Item Button */}
-        <AddItemButton onAdd={() => onAddItem(section.id)} />
+        <button 
+          onClick={() => onAddItem(section.id)}
+          className="w-full p-2 border border-dashed border-gray-300 rounded hover:border-gray-400"
+        >
+          Add Item
+        </button>
       </CardContent>
     </Card>
   );

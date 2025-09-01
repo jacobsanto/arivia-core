@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Edit2, Copy, Trash2, FileText, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import { ChecklistTemplate, CHECKLIST_TYPE_LABELS, CHECKLIST_TYPE_COLORS } from '@/types/checklists.types';
+import { ChecklistTemplate, CHECKLIST_TYPE_LABELS, CHECKLIST_TYPE_COLORS } from '@/types/checklistTypes';
 
 interface TemplateCardProps {
   template: ChecklistTemplate;

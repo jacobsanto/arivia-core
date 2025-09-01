@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ClipboardList } from 'lucide-react';
 import { TemplateCard } from './TemplateCard';
-import { ChecklistTemplate } from '@/types/checklists.types';
+import { ChecklistTemplate } from '@/types/checklistTypes';
 
 interface TemplatesGridProps {
   templates: ChecklistTemplate[];
