@@ -126,31 +126,42 @@ const Properties: React.FC = () => {
           activeFiltersCount={activeFiltersCount}
         />
 
-        {/* View Toggle and Results Count */}
-        <div className="flex justify-between items-center">
-          <div className="text-sm text-muted-foreground">
-            Showing {filteredProperties.length} of {properties?.length || 0} properties
-          </div>
+        {/* View Tabs */}
+        <Tabs defaultValue="grid" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="grid">Grid View</TabsTrigger>
+            <TabsTrigger value="list">List View</TabsTrigger>
+            <TabsTrigger value="rooms">Room Status</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="grid">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredProperties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onQuickAction={handleQuickAction}
+                />
+              ))}
+            </div>
+          </TabsContent>
           
-          <div className="flex items-center gap-1 border rounded-lg p-1">
-            <Button
-              variant={viewMode === 'grid' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('grid')}
-              className="h-8 w-8 p-0"
-            >
-              <Grid3X3 className="h-4 w-4" />
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="h-8 w-8 p-0"
-            >
-              <List className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+          <TabsContent value="list">
+            <div className="space-y-4">
+              {filteredProperties.map((property) => (
+                <PropertyCard
+                  key={property.id}
+                  property={property}
+                  onQuickAction={handleQuickAction}
+                />
+              ))}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="rooms">
+            <RoomStatusManager />
+          </TabsContent>
+        </Tabs>
 
         {/* Properties Grid/List */}
         {filteredProperties.length === 0 ? (

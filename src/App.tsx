@@ -25,6 +25,7 @@ import TeamChat from "@/pages/TeamChat";
 import CleaningSettings from "@/pages/CleaningSettings";
 import Analytics from "@/pages/Analytics";
 import Reports from "@/pages/Reports";
+import RecurringTasks from "@/pages/RecurringTasks";
 import SystemHealth from "@/pages/SystemHealth";
 
 import DamageReports from "@/pages/DamageReports";
@@ -68,6 +69,7 @@ function App() {
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/team-chat" element={<TeamChat />} />
                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
+                    <Route path="/recurring-tasks" element={<RecurringTasks />} />
                     <Route path="/analytics" element={<Analytics />} />
                     <Route path="/reports" element={<Reports />} />
                      
