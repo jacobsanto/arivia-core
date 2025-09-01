@@ -5,9 +5,9 @@ import { useDetailedProperties, usePropertyFiltering } from '@/hooks/useDetailed
 import { PropertyGridView } from "@/components/properties/enhanced/PropertyGridView";
 import { PropertyListView } from "@/components/properties/enhanced/PropertyListView";
 import { PropertyAdvancedFilters } from "@/components/properties/enhanced/PropertyAdvancedFilters";
-import { PropertyStats } from "@/components/properties/PropertyStats";
+import { PropertyStatsEnhanced } from "@/components/properties/enhanced/PropertyStatsEnhanced";
 import { CreatePropertyDialog } from "@/components/properties/CreatePropertyDialog";
-import RoomStatusManager from "@/components/properties/RoomStatusManager";
+import { RoomStatusManagerEnhanced } from "@/components/properties/enhanced/RoomStatusManagerEnhanced";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Building2 } from "lucide-react";
@@ -84,7 +84,7 @@ const Properties: React.FC = () => {
         </div>
 
         {/* Stats Overview */}
-        <PropertyStats properties={properties} />
+        <PropertyStatsEnhanced properties={properties} />
 
         {/* Advanced Filters */}
         <PropertyAdvancedFilters
@@ -121,7 +121,7 @@ const Properties: React.FC = () => {
           </TabsContent>
           
           <TabsContent value="rooms" className="mt-6">
-            <RoomStatusManager />
+            <RoomStatusManagerEnhanced />
           </TabsContent>
         </Tabs>
 

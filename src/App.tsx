@@ -20,6 +20,7 @@ import UserProfile from "@/pages/UserProfile";
 import Maintenance from "@/pages/Maintenance";
 import Housekeeping from "@/pages/Housekeeping";
 import Properties from "@/pages/Properties";
+import { PropertyDetailView as PropertyDetailPage } from "./components/properties/enhanced/PropertyDetailView";
 import Inventory from "@/pages/Inventory";
 import TeamChat from "@/pages/TeamChat";
 import CleaningSettings from "@/pages/CleaningSettings";
@@ -65,7 +66,8 @@ function App() {
                     <Route path="/housekeeping" element={<Housekeeping />} />
                     <Route path="/maintenance" element={<Maintenance />} />
                     <Route path="/tasks/enhanced" element={<EnhancedTasks />} />
-                    <Route path="/properties" element={<Properties />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
                     <Route path="/inventory" element={<Inventory />} />
                     <Route path="/team-chat" element={<TeamChat />} />
                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
