@@ -196,7 +196,7 @@ export const useTeamChat = () => {
   }, [activeItem, channels, conversations]);
 
   // Send a message
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, attachments?: any[]) => {
     if (!activeItem || !user) return;
 
     const newMessage: ChatMessage = {
@@ -217,7 +217,16 @@ export const useTeamChat = () => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       reactions: [],
-      mentions: []
+      mentions: [],
+      attachments: attachments?.map(att => ({
+        id: att.id,
+        messageId: newMessage.id,
+        fileName: att.name,
+        fileUrl: att.url,
+        fileType: att.type,
+        fileSize: att.size,
+        createdAt: new Date().toISOString()
+      }))
     };
 
     setMessages(prev => [...prev, newMessage]);
