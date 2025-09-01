@@ -30,7 +30,7 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    type: '' as ChecklistType | '',
+    type: undefined as ChecklistType | undefined,
     sections: [] as ChecklistSectionType[]
   });
 
@@ -47,7 +47,7 @@ export const TemplateEditorModal: React.FC<TemplateEditorModalProps> = ({
       setFormData({
         title: '',
         description: '',
-        type: '',
+        type: undefined,
         sections: []
       });
     }
