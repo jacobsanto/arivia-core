@@ -86,16 +86,17 @@ const Sidebar = () => {
               {isSuperAdmin && <SidebarLink to="/optimization" icon={<Zap size={20} />} label="Optimization" />}
             </CollapsibleContent>
           </Collapsible>}
-      </nav>
-      
-      <div className="pt-4 border-t border-sidebar-border mt-6 space-y-1">
-        <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
         
-        <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-          <LogOut className="mr-3 h-5 w-5" />
-          <span>Logout</span>
-        </Button>
-      </div>
+        {/* PROFILE & LOGOUT */}
+        <div className="space-y-1 pt-2">
+          <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
+          
+          <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <LogOut className="mr-3 h-5 w-5" />
+            <span>Logout</span>
+          </Button>
+        </div>
+      </nav>
     </div>;
 };
 interface SidebarLinkProps {
