@@ -30,14 +30,7 @@ const Sidebar = () => {
     boxShadow: 'var(--shadow-border)'
   }}>
       {/* User Profile Section */}
-      <div className="flex items-center justify-center mb-6 mx-[50px] my-0 py-[3px] px-0">
-        <div className="flex flex-col items-center">
-          <p className="font-semibold text-base text-justify">{user.name}</p>
-          <span className="text-sidebar-muted px-2 py-1 bg-sidebar-accent rounded-full mt-1 font-semibold text-sm">
-            {user.role.replace('_', ' ')}
-          </span>
-        </div>
-      </div>
+      
       
       <nav className="mt-6 flex-1 space-y-2">
         {/* OPERATIONS - The Daily Hub */}
