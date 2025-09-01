@@ -889,6 +889,45 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          data: Json | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          message: string
+          title: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message: string
+          title: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          message?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -1770,6 +1809,16 @@ export type Database = {
         | "housekeeping_staff"
         | "maintenance_staff"
         | "guest"
+      notification_type:
+        | "task_assigned"
+        | "task_completed"
+        | "damage_report"
+        | "low_stock"
+        | "chat_mention"
+        | "order_status"
+        | "maintenance_request"
+        | "system_alert"
+        | "integration_status"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1904,6 +1953,17 @@ export const Constants = {
         "housekeeping_staff",
         "maintenance_staff",
         "guest",
+      ],
+      notification_type: [
+        "task_assigned",
+        "task_completed",
+        "damage_report",
+        "low_stock",
+        "chat_mention",
+        "order_status",
+        "maintenance_request",
+        "system_alert",
+        "integration_status",
       ],
     },
   },

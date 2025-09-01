@@ -46,6 +46,7 @@ import Checklists from "@/pages/Checklists";
 import Permissions from "@/pages/Permissions";
 import UserManagement from "@/pages/UserManagement";
 import SystemSettings from "@/pages/SystemSettings";
+import Notifications from "@/pages/Notifications";
 
 function App() {
   return (
@@ -83,10 +84,10 @@ function App() {
                     <Route path="/team-chat" element={<TeamChat />} />
                     <Route path="/cleaning-settings" element={<CleaningSettings />} />
                     <Route path="/recurring-tasks" element={<RecurringTasks />} />
-                    <Route path="/analytics" element={<Analytics />} />
-                    <Route path="/reports" element={<Reports />} />
-                     
-                     
+                     <Route path="/analytics" element={<Analytics />} />
+                     <Route path="/reports" element={<Reports />} />
+                     <Route path="/notifications" element={<Notifications />} />
+                      
                      <Route path="/damage-reports" element={<DamageReports />} />
                     
                     <Route path="/system-admin" element={<SystemAdminPage />} />

@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Bell, MessageSquare, LogOut, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
@@ -9,6 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Link } from "react-router-dom";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
+import NotificationCenter from "@/components/notifications/NotificationCenter";
+import { useNotifications } from "@/hooks/useNotifications";
+import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
 
 
 interface HeaderProps {
@@ -25,6 +29,8 @@ const Header: React.FC<HeaderProps> = ({
   } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { unreadCount } = useNotifications();
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   
 
   useEffect(() => {
@@ -56,27 +62,25 @@ const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="flex items-center space-x-2 md:space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          <NotificationTestButton />
+          <Popover open={isNotificationOpen} onOpenChange={setIsNotificationOpen}>
+            <PopoverTrigger asChild>
               <Button variant="outline" size="icon" className="relative hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground">
                 <Bell className="h-5 w-5" />
-                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-destructive"></span>
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <div className="max-h-80 overflow-y-auto">
-                <NotificationItem title="New Maintenance Request" message="Villa Caldera has reported a plumbing issue in the master bathroom." time="10 minutes ago" />
-                <NotificationItem title="Housekeeping Task Completed" message="Villa Azure cleanup has been completed and verified." time="1 hour ago" />
-                <NotificationItem title="Low Inventory Alert" message="Bathroom supplies are running low at Villa Sunset." time="2 hours ago" />
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
-                <span>View All Notifications</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-auto p-0">
+              <NotificationCenter onClose={() => setIsNotificationOpen(false)} />
+            </PopoverContent>
+          </Popover>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -105,25 +109,6 @@ const Header: React.FC<HeaderProps> = ({
   );
 };
 
-interface NotificationItemProps {
-  title: string;
-  message: string;
-  time: string;
-}
-
-const NotificationItem = ({
-  title,
-  message,
-  time
-}: NotificationItemProps) => {
-  return (
-    <div className="px-2 py-3 hover:bg-secondary cursor-pointer">
-      <div className="font-medium text-sm">{title}</div>
-      <div className="text-sm text-muted-foreground mt-1">{message}</div>
-      <div className="text-xs text-muted-foreground mt-1">{time}</div>
-    </div>
-  );
-};
 
 interface MessageItemProps {
   name: string;

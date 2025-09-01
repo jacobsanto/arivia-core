@@ -28,6 +28,7 @@ import { PortfolioReadinessWidget } from "../widgets/PortfolioReadinessWidget";
 import { OccupancyOverviewWidget } from "../widgets/OccupancyOverviewWidget";
 import { MyTasksWidget } from "../widgets/MyTasksWidget";
 import { ActionItemsWidget } from "../widgets/ActionItemsWidget";
+import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
 import { RecentActivityWidget } from "../widgets/RecentActivityWidget";
 import { MaintenanceHotspotsWidget } from "../widgets/MaintenanceHotspotsWidget";
 import { RecentDamageReportsWidget } from "../widgets/RecentDamageReportsWidget";
