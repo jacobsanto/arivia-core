@@ -207,6 +207,44 @@ export const useRealTimeChat = () => {
     }
   }, [user, messages, activeItem, loadMessages, toast]);
 
+  // Create channel
+  const createChannel = useCallback(async (name: string, description?: string, topic?: string, type: 'public' | 'private' = 'public') => {
+    if (!user) return;
+    
+    try {
+      const newChannel = await chatChannelsAPI.createChannel(name, description, topic, type);
+      
+      // Reload channels to include the new one
+      await loadInitialData();
+      
+      // Auto-join the newly created channel
+      await chatChannelsAPI.joinChannel(newChannel.id);
+      
+      // Set the new channel as active
+      const chatListItem: ChatListItem = {
+        id: newChannel.id,
+        type: 'channel',
+        name: `#${newChannel.name}`,
+        lastMessage: undefined,
+        unreadCount: 0,
+        updatedAt: newChannel.updatedAt
+      };
+      
+      setActiveItem(chatListItem);
+      await loadMessages(chatListItem);
+      
+      return newChannel;
+    } catch (error) {
+      console.error('Error creating channel:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create channel.",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  }, [user, loadInitialData, loadMessages, toast]);
+
   // Start direct message with user
   const startDirectMessage = useCallback(async (userId: string) => {
     if (!user) return;
@@ -344,6 +382,7 @@ export const useRealTimeChat = () => {
     setReplyingTo,
     sendMessage,
     addReaction,
+    createChannel,
     startDirectMessage,
     startTyping,
     stopTyping,

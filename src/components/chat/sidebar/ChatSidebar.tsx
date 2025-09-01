@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChannelList } from './ChannelList';
 import { DirectMessageList } from './DirectMessageList';
 import { Badge } from '@/components/ui/badge';
-import { Hash, Users, X } from 'lucide-react';
+import { Hash, Users, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { CreateChannelDialog } from '../dialogs/CreateChannelDialog';
 
 export interface Channel {
   id: string;
@@ -33,6 +34,7 @@ interface ChatSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onSelectChat: (chatId: string, chatName: string, type: 'channel' | 'direct') => void;
+  onChannelCreated?: () => void;
   onClose?: () => void;
 }
 
@@ -43,9 +45,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   activeTab,
   onTabChange,
   onSelectChat,
+  onChannelCreated,
   onClose
 }) => {
   const isMobile = useIsMobile();
+  const [showCreateChannelDialog, setShowCreateChannelDialog] = useState(false);
 
   const totalChannelUnread = channels.reduce((sum, channel) => sum + channel.unreadCount, 0);
   const totalDirectUnread = directMessages.reduce((sum, dm) => sum + dm.unreadCount, 0);
@@ -74,6 +78,19 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
               <Badge variant="destructive" className="ml-1 h-5 min-w-5 text-xs">
                 {totalChannelUnread}
               </Badge>
+            )}
+            {activeTab === 'channels' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-auto h-5 w-5 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCreateChannelDialog(true);
+                }}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
             )}
           </TabsTrigger>
           <TabsTrigger value="direct" className="flex items-center gap-2">
@@ -105,6 +122,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </TabsContent>
         </div>
       </Tabs>
+
+      <CreateChannelDialog
+        isOpen={showCreateChannelDialog}
+        onOpenChange={setShowCreateChannelDialog}
+        onChannelCreated={() => {
+          onChannelCreated?.();
+          setShowCreateChannelDialog(false);
+        }}
+      />
     </div>
   );
 };

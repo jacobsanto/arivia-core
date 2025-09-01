@@ -1,21 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatListItem } from '@/types/chat.types';
-import { Hash, User, Circle } from 'lucide-react';
+import { Hash, User, Circle, Plus } from 'lucide-react';
+import { CreateChannelDialog } from './dialogs/CreateChannelDialog';
 import { format, isToday, isYesterday } from 'date-fns';
 
 interface ChatSidebarProps {
   chatItems: ChatListItem[];
   activeItem: ChatListItem | null;
   onSelectItem: (item: ChatListItem) => void;
+  onChannelCreated?: () => void;
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   chatItems,
   activeItem,
-  onSelectItem
+  onSelectItem,
+  onChannelCreated
 }) => {
+  const [showCreateChannelDialog, setShowCreateChannelDialog] = useState(false);
   const channels = chatItems.filter(item => item.type === 'channel');
   const directMessages = chatItems.filter(item => item.type === 'direct');
 
@@ -97,9 +102,19 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         <div className="p-4 space-y-6">
           {/* Channels */}
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-              Channels
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                Channels
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 w-6 p-0"
+                onClick={() => setShowCreateChannelDialog(true)}
+              >
+                <Plus className="h-3 w-3" />
+              </Button>
+            </div>
             <div className="space-y-1">
               {channels.map(item => (
                 <ChatItem key={item.id} item={item} />
@@ -120,6 +135,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </div>
         </div>
       </ScrollArea>
+      
+      <CreateChannelDialog
+        isOpen={showCreateChannelDialog}
+        onOpenChange={setShowCreateChannelDialog}
+        onChannelCreated={() => {
+          onChannelCreated?.();
+          setShowCreateChannelDialog(false);
+        }}
+      />
     </div>
   );
 };

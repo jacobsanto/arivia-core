@@ -35,9 +35,11 @@ const TeamChat: React.FC = () => {
     setReplyingTo,
     sendMessage,
     addReaction,
+    createChannel,
     startDirectMessage,
     startTyping,
-    stopTyping
+    stopTyping,
+    loadInitialData
   } = useRealTimeChat();
 
   // Track window focus for notifications
@@ -126,6 +128,7 @@ const TeamChat: React.FC = () => {
             setActiveItem(item);
             setSearchQuery(''); // Clear search when switching conversations
           }}
+          onChannelCreated={loadInitialData}
         />
         
         {/* Team Members Toggle */}
