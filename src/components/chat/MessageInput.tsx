@@ -8,7 +8,6 @@ import { useEmojiPicker } from '@/hooks/chat/message/useEmojiPicker';
 import FileInputs from '@/components/chat/input/FileInputs';
 import InlineEmojiPicker from '@/components/chat/emoji/InlineEmojiPicker';
 
-
 interface MessageInputProps {
   onSendMessage: (content: string, attachments?: any[]) => void;
   replyingTo: ChatMessage | null;
