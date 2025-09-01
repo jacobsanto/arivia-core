@@ -6,20 +6,42 @@ export const usePermissions = () => {
   const { user } = useUser();
 
   const canAccess = (featureKey: string): boolean => {
-    return checkFeatureAccess(user, featureKey);
+    try {
+      if (!user) {
+        console.warn('No user found in usePermissions');
+        return false;
+      }
+      
+      if (!checkFeatureAccess) {
+        console.error('checkFeatureAccess function not found');
+        return false;
+      }
+      
+      return checkFeatureAccess(user, featureKey);
+    } catch (error) {
+      console.error('Error in canAccess:', error, { featureKey, user });
+      return false;
+    }
   };
 
   const getOfflineCapabilities = () => {
-    if (!user) return [];
-    
-    return Object.keys(OFFLINE_CAPABILITIES).filter(capability => {
-      const capabilityInfo = OFFLINE_CAPABILITIES[capability];
-      return capabilityInfo.allowedRoles.includes(user.role);
-    });
+    try {
+      if (!user) return [];
+      
+      return OFFLINE_CAPABILITIES[user.role] || [];
+    } catch (error) {
+      console.error('Error in getOfflineCapabilities:', error);
+      return [];
+    }
   };
 
   const getAllPermissionsList = () => {
-    return getAllPermissionKeys();
+    try {
+      return getAllPermissionKeys();
+    } catch (error) {
+      console.error('Error in getAllPermissionsList:', error);
+      return [];
+    }
   };
 
   return {
