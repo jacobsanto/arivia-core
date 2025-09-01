@@ -6,25 +6,18 @@ import {
   directConversationsAPI, 
   chatMessagesAPI, 
   chatUsersAPI,
-  typingIndicatorsAPI,
+  typingIndicatorsAPI
+} from '@/services/chat/realtime-chat.service';
+import {
   ChatChannel,
   DirectConversation,
   ChatMessage,
   ChatUser,
-  TypingIndicator
-} from '@/services/chat/realtime-chat.service';
+  TypingIndicator,
+  ChatListItem
+} from '@/types/chat.types';
 import { supabase } from '@/integrations/supabase/client';
 
-export interface ChatListItem {
-  id: string;
-  type: 'channel' | 'direct';
-  name: string;
-  lastMessage?: ChatMessage;
-  unreadCount: number;
-  participants?: ChatUser[];
-  isOnline?: boolean;
-  updatedAt: string;
-}
 
 export const useRealTimeChat = () => {
   const { user } = useUser();
@@ -115,8 +108,8 @@ export const useRealTimeChat = () => {
       type: 'channel' as const,
       name: `#${channel.name}`,
       lastMessage: undefined, // TODO: Get last message
-      unreadCount: 0, // TODO: Calculate unread count
-      updatedAt: channel.updated_at
+      unreadCount: channel.unreadCount || 0,
+      updatedAt: channel.updatedAt
     })),
     ...conversations.map(conv => {
       const otherParticipant = conv.participants?.find(p => p.id !== user?.id);
@@ -125,10 +118,10 @@ export const useRealTimeChat = () => {
         type: 'direct' as const,
         name: otherParticipant?.name || 'Unknown User',
         lastMessage: undefined, // TODO: Get last message
-        unreadCount: 0, // TODO: Calculate unread count
+        unreadCount: conv.unreadCount || 0,
         participants: conv.participants,
         isOnline: otherParticipant?.isOnline,
-        updatedAt: conv.updated_at
+        updatedAt: conv.updatedAt
       };
     })
   ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
@@ -191,7 +184,7 @@ export const useRealTimeChat = () => {
     try {
       // Check if user already reacted with this emoji
       const message = messages.find(m => m.id === messageId);
-      const existingReaction = message?.reactions?.find(r => r.user_id === user.id && r.emoji === emoji);
+      const existingReaction = message?.reactions?.find(r => r.userId === user.id && r.emoji === emoji);
       
       if (existingReaction) {
         await chatMessagesAPI.removeReaction(messageId, emoji);
@@ -234,10 +227,10 @@ export const useRealTimeChat = () => {
           type: 'direct',
           name: otherParticipant?.name || 'Unknown User',
           lastMessage: undefined,
-          unreadCount: 0,
+          unreadCount: conversation.unreadCount || 0,
           participants: conversation.participants,
           isOnline: otherParticipant?.isOnline,
-          updatedAt: conversation.updated_at
+          updatedAt: conversation.updatedAt
         };
         
         setActiveItem(chatListItem);
@@ -334,8 +327,8 @@ export const useRealTimeChat = () => {
     activeMessages: messages,
     activeDetails: getActiveDetails(),
     typingUsers: typingUsers.filter(t => 
-      (activeItem?.type === 'channel' && t.channel_id === activeItem.id) ||
-      (activeItem?.type === 'direct' && t.conversation_id === activeItem.id)
+      (activeItem?.type === 'channel' && t.channelId === activeItem.id) ||
+      (activeItem?.type === 'direct' && t.conversationId === activeItem.id)
     ),
     teamMembers,
     

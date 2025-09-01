@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { ChatUser } from '@/services/chat/realtime-chat.service';
+import { ChatUser } from '@/types/chat.types';
 import { MessageSquare, UserPlus, Phone, Video, MoreHorizontal, Circle } from 'lucide-react';
 
 interface TeamMemberListProps {

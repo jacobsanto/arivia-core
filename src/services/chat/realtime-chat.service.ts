@@ -1,75 +1,13 @@
 import { supabase } from '@/integrations/supabase/client';
-
-export interface ChatUser {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role: string;
-  isOnline: boolean;
-  lastSeen?: string;
-}
-
-export interface ChatChannel {
-  id: string;
-  name: string;
-  description?: string;
-  topic?: string;
-  type: 'public' | 'private';
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-  is_active: boolean;
-  members?: ChatUser[];
-  unread_count?: number;
-}
-
-export interface DirectConversation {
-  id: string;
-  participant_1: string;
-  participant_2: string;
-  created_at: string;
-  updated_at: string;
-  last_message_at?: string;
-  participants?: ChatUser[];
-  unread_count?: number;
-}
-
-export interface ChatMessage {
-  id: string;
-  content: string;
-  author_id: string;
-  author?: ChatUser;
-  channel_id?: string;
-  conversation_id?: string;
-  reply_to_id?: string;
-  reply_to?: ChatMessage;
-  created_at: string;
-  updated_at: string;
-  edited_at?: string;
-  mentions: string[];
-  attachments: any[];
-  reactions?: MessageReaction[];
-}
-
-export interface MessageReaction {
-  id: string;
-  message_id: string;
-  user_id: string;
-  user?: ChatUser;
-  emoji: string;
-  created_at: string;
-}
-
-export interface TypingIndicator {
-  id: string;
-  user_id: string;
-  user?: ChatUser;
-  channel_id?: string;
-  conversation_id?: string;
-  started_at: string;
-  expires_at: string;
-}
+import {
+  ChatUser,
+  ChatMessage,
+  MessageReaction,
+  MessageAttachment,
+  ChatChannel,
+  DirectConversation,
+  TypingIndicator
+} from '@/types/chat.types';
 
 // Chat Channels API
 export const chatChannelsAPI = {
@@ -83,9 +21,17 @@ export const chatChannelsAPI = {
 
     if (error) throw error;
     return (data || []).map(channel => ({
-      ...channel,
+      id: channel.id,
+      name: channel.name,
+      description: channel.description,
+      topic: channel.topic,
+      type: channel.type as 'public' | 'private',
+      createdBy: channel.created_by,
+      createdAt: channel.created_at,
+      updatedAt: channel.updated_at,
       members: [],
-      unread_count: 0
+      unreadCount: 0,
+      pinnedMessages: []
     })) as ChatChannel[];
   },
 
@@ -114,7 +60,19 @@ export const chatChannelsAPI = {
         role: 'admin'
       });
 
-    return data as ChatChannel;
+    return {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      topic: data.topic,
+      type: data.type as 'public' | 'private',
+      createdBy: data.created_by,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      members: [],
+      unreadCount: 0,
+      pinnedMessages: []
+    } as ChatChannel;
   },
 
   // Join a channel
@@ -155,7 +113,13 @@ export const directConversationsAPI = {
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
-    return (data || []) as DirectConversation[];
+    return (data || []).map(conv => ({
+      id: conv.id,
+      participants: [],
+      unreadCount: 0,
+      createdAt: conv.created_at,
+      updatedAt: conv.updated_at
+    })) as DirectConversation[];
   },
 
   // Create or get direct conversation
@@ -199,7 +163,9 @@ export const chatMessagesAPI = {
     return messages.map(msg => {
       const profile = profileMap.get(msg.author_id);
       return {
-        ...msg,
+        id: msg.id,
+        content: msg.content,
+        authorId: msg.author_id,
         author: profile ? {
           id: profile.user_id,
           name: profile.name,
@@ -207,8 +173,19 @@ export const chatMessagesAPI = {
           avatar: profile.avatar,
           role: profile.role,
           isOnline: false
-        } : undefined,
-        reactions: []
+        } : {
+          id: msg.author_id,
+          name: 'Unknown User',
+          email: '',
+          role: 'user',
+          isOnline: false
+        },
+        channelId: msg.channel_id,
+        createdAt: msg.created_at,
+        updatedAt: msg.updated_at,
+        reactions: [],
+        mentions: msg.mentions || [],
+        attachments: []
       };
     }) as ChatMessage[];
   },
@@ -237,7 +214,9 @@ export const chatMessagesAPI = {
     return messages.map(msg => {
       const profile = profileMap.get(msg.author_id);
       return {
-        ...msg,
+        id: msg.id,
+        content: msg.content,
+        authorId: msg.author_id,
         author: profile ? {
           id: profile.user_id,
           name: profile.name,
@@ -245,8 +224,19 @@ export const chatMessagesAPI = {
           avatar: profile.avatar,
           role: profile.role,
           isOnline: false
-        } : undefined,
-        reactions: []
+        } : {
+          id: msg.author_id,
+          name: 'Unknown User',
+          email: '',
+          role: 'user',
+          isOnline: false
+        },
+        conversationId: msg.conversation_id,
+        createdAt: msg.created_at,
+        updatedAt: msg.updated_at,
+        reactions: [],
+        mentions: msg.mentions || [],
+        attachments: []
       };
     }) as ChatMessage[];
   },
@@ -278,7 +268,9 @@ export const chatMessagesAPI = {
       .single();
     
     return {
-      ...data,
+      id: data.id,
+      content: data.content,
+      authorId: data.author_id,
       author: profile ? {
         id: profile.user_id,
         name: profile.name,
@@ -286,8 +278,19 @@ export const chatMessagesAPI = {
         avatar: profile.avatar,
         role: profile.role,
         isOnline: false
-      } : undefined,
-      reactions: []
+      } : {
+        id: userId,
+        name: 'Current User',
+        email: '',
+        role: 'user',
+        isOnline: false
+      },
+      channelId: data.channel_id,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      reactions: [],
+      mentions: data.mentions || [],
+      attachments: []
     } as ChatMessage;
   },
 
@@ -318,7 +321,9 @@ export const chatMessagesAPI = {
       .single();
     
     return {
-      ...data,
+      id: data.id,
+      content: data.content,
+      authorId: data.author_id,
       author: profile ? {
         id: profile.user_id,
         name: profile.name,
@@ -326,8 +331,19 @@ export const chatMessagesAPI = {
         avatar: profile.avatar,
         role: profile.role,
         isOnline: false
-      } : undefined,
-      reactions: []
+      } : {
+        id: userId,
+        name: 'Current User',
+        email: '',
+        role: 'user',
+        isOnline: false
+      },
+      conversationId: data.conversation_id,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+      reactions: [],
+      mentions: data.mentions || [],
+      attachments: []
     } as ChatMessage;
   },
 
@@ -441,6 +457,19 @@ export const typingIndicatorsAPI = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return (data || []) as TypingIndicator[];
+    
+    return (data || []).map(indicator => ({
+      userId: indicator.user_id,
+      user: {
+        id: indicator.user_id,
+        name: 'User',
+        email: '',
+        role: 'user',
+        isOnline: true
+      },
+      channelId: indicator.channel_id,
+      conversationId: indicator.conversation_id,
+      timestamp: indicator.started_at
+    })) as TypingIndicator[];
   }
 };
