@@ -1,46 +1,17 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { usePermissions } from '@/hooks/usePermissionsAdmin';
-import PermissionsPageHeader from '@/components/permissions/PermissionsPageHeader';
-import PermissionMatrixTable from '@/components/permissions/PermissionMatrixTable';
+import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const Permissions: React.FC = () => {
-  const {
-    permissionMatrix,
-    loading,
-    saving,
-    error,
-    hasChanges,
-    getPermissionsByCategory,
-    togglePermission,
-    savePermissions,
-    resetPermissions
-  } = usePermissions();
+  const { user } = useUser();
 
-  if (loading) {
-    return (
-      <div className="container mx-auto p-6">
-        <Helmet>
-          <title>Permissions - Arivia Villa Sync</title>
-        </Helmet>
-        
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-            <div>
-              <h3 className="text-lg font-semibold">Loading Permissions</h3>
-              <p className="text-muted-foreground">Setting up the permission matrix...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Check if user has admin access
+  const hasAdminAccess = user?.role === "superadmin" || user?.role === "administrator";
 
-  if (error) {
+  if (!hasAdminAccess) {
     return (
       <div className="container mx-auto p-6">
         <Helmet>
@@ -50,14 +21,12 @@ const Permissions: React.FC = () => {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Failed to load permissions: {error}
+            Access denied. You must be an Administrator or Super Admin to access this page.
           </AlertDescription>
         </Alert>
       </div>
     );
   }
-
-  const categories = getPermissionsByCategory();
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -66,30 +35,26 @@ const Permissions: React.FC = () => {
         <meta name="description" content="Manage role-based access control and permissions for all system users" />
       </Helmet>
 
-      {/* Page Header */}
-      <PermissionsPageHeader
-        hasChanges={hasChanges}
-        saving={saving}
-        onSave={savePermissions}
-        onReset={resetPermissions}
-      />
-
-      {/* Permissions Matrix */}
+      {/* Permissions Info */}
       <Card>
         <CardContent className="p-6">
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-semibold mb-2">Role Permission Matrix</h3>
+              <h3 className="text-lg font-semibold mb-2">Permission System</h3>
               <p className="text-sm text-muted-foreground mb-6">
-                Grant or revoke permissions for each user role. Super Admin permissions are locked for security.
+                The permissions system is currently configured for development mode. Full database-driven permissions will be available when authentication is fully implemented.
               </p>
             </div>
             
-            <PermissionMatrixTable
-              categories={categories}
-              permissionMatrix={permissionMatrix}
-              onTogglePermission={togglePermission}
-            />
+            <div className="rounded-lg bg-muted p-4">
+              <h4 className="font-medium mb-2">Current User Access</h4>
+              <p className="text-sm text-muted-foreground">
+                Role: <span className="font-medium">{user?.role}</span>
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Access Level: <span className="font-medium">Full Administrative Access</span>
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
