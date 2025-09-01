@@ -1,71 +1,33 @@
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScheduledReports } from "@/components/reporting/ScheduledReports";
-import { ExportCenter } from "@/components/reporting/ExportCenter";
-import { ReportBuilder } from "@/components/reporting/ReportBuilder";
 import { ReportsErrorBoundary } from "@/components/error-boundaries/ReportsErrorBoundary";
+import { ReportGenerator } from "@/components/reports/ReportGenerator";
+import { ReportDisplay } from "@/components/reports/ReportDisplay";
+import { useReportsGenerator } from "@/hooks/useReportsGenerator";
 
 const Reports: React.FC = () => {
+  const { generatedReport, clearReport } = useReportsGenerator();
+
   return (
     <ReportsErrorBoundary>
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-foreground">Operational Reports</h1>
+          <h1 className="text-3xl font-bold text-foreground">Business Intelligence Hub</h1>
           <p className="text-muted-foreground mt-2">
-            Create, schedule, and export operational reports for your property management operations
+            Transform operational data into structured reports for financial analysis, performance reviews, and record-keeping
           </p>
         </div>
 
-        <Tabs defaultValue="builder" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="builder">Report Builder</TabsTrigger>
-            <TabsTrigger value="scheduled">Scheduled Reports</TabsTrigger>
-            <TabsTrigger value="exports">Export Center</TabsTrigger>
-          </TabsList>
+        {/* Report Generator */}
+        <ReportGenerator />
 
-          <TabsContent value="builder">
-            <Card>
-              <CardHeader>
-                <CardTitle>Build Custom Operational Reports</CardTitle>
-                <CardDescription>
-                  Create custom reports focusing on housekeeping, maintenance, property performance, and inventory management
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ReportBuilder />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="scheduled">
-            <Card>
-              <CardHeader>
-                <CardTitle>Scheduled Operational Reports</CardTitle>
-                <CardDescription>
-                  Manage and monitor your automated operational reports
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScheduledReports />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="exports">
-            <Card>
-              <CardHeader>
-                <CardTitle>Export Operations Data</CardTitle>
-                <CardDescription>
-                  Export operational data in various formats for analysis and record keeping
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ExportCenter />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Report Display */}
+        {generatedReport && (
+          <ReportDisplay 
+            report={generatedReport} 
+            onClear={clearReport} 
+          />
+        )}
       </div>
     </ReportsErrorBoundary>
   );
