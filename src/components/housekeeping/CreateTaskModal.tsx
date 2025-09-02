@@ -166,7 +166,6 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 <SelectValue placeholder="Select property (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No specific property</SelectItem>
                 {properties.map((property) => (
                   <SelectItem key={property.id} value={property.id}>
                     {property.title || `Property ${property.id}`}
