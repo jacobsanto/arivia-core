@@ -1,21 +1,23 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Loader2 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { CleaningRule, ServiceType, FrequencyType, SERVICE_TYPE_LABELS, DAYS_OF_WEEK } from '@/types/cleaningSettings.types';
 
 interface RuleEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (rule: Omit<CleaningRule, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  onUpdate?: (ruleId: string, updates: Partial<CleaningRule>) => Promise<void>;
+  onSave: (rule: Omit<CleaningRule, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  onUpdate: (ruleId: string, updates: Partial<CleaningRule>) => void;
   rule?: CleaningRule;
   isLoading: boolean;
 }
+
+type FormData = Omit<CleaningRule, 'id' | 'createdAt' | 'updatedAt'>;
 
 export const RuleEditorModal: React.FC<RuleEditorModalProps> = ({
   isOpen,
@@ -25,212 +27,190 @@ export const RuleEditorModal: React.FC<RuleEditorModalProps> = ({
   rule,
   isLoading
 }) => {
-  const [formData, setFormData] = useState<{
-    name: string;
-    minNights: number;
-    maxNights: string;
-    serviceType: ServiceType | '';
-    frequency: FrequencyType;
-    dayOfStay: string;
-    dayOfWeek: string;
-    isActive: boolean;
-  }>({
-    name: rule?.name || '',
-    minNights: rule?.minNights || 1,
-    maxNights: rule?.maxNights?.toString() || '',
-    serviceType: rule?.serviceType || '',
-    frequency: rule?.frequency || 'once',
-    dayOfStay: rule?.dayOfStay?.toString() || '',
-    dayOfWeek: rule?.dayOfWeek || '',
-    isActive: rule?.isActive ?? true
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
+    defaultValues: {
+      name: '',
+      minNights: 1,
+      maxNights: undefined,
+      serviceType: 'turnover-clean',
+      frequency: 'once',
+      dayOfStay: undefined,
+      dayOfWeek: undefined,
+      isActive: true
+    }
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.serviceType) return;
-    
-    const ruleData: Omit<CleaningRule, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: formData.name,
-      minNights: formData.minNights,
-      maxNights: formData.maxNights ? parseInt(formData.maxNights) : undefined,
-      serviceType: formData.serviceType,
-      frequency: formData.frequency,
-      dayOfStay: formData.frequency === 'once' ? parseInt(formData.dayOfStay) : undefined,
-      dayOfWeek: formData.frequency === 'weekly' ? formData.dayOfWeek : undefined,
-      isActive: formData.isActive
-    };
+  const frequency = watch('frequency');
 
-    if (rule && onUpdate) {
-      await onUpdate(rule.id, ruleData);
+  useEffect(() => {
+    if (rule) {
+      reset({
+        name: rule.name,
+        minNights: rule.minNights,
+        maxNights: rule.maxNights,
+        serviceType: rule.serviceType,
+        frequency: rule.frequency,
+        dayOfStay: rule.dayOfStay,
+        dayOfWeek: rule.dayOfWeek,
+        isActive: rule.isActive
+      });
     } else {
-      await onSave(ruleData);
+      reset({
+        name: '',
+        minNights: 1,
+        maxNights: undefined,
+        serviceType: 'turnover-clean',
+        frequency: 'once',
+        dayOfStay: undefined,
+        dayOfWeek: undefined,
+        isActive: true
+      });
     }
-    
+  }, [rule, reset]);
+
+  const onSubmit = (data: FormData) => {
+    if (rule) {
+      onUpdate(rule.id, data);
+    } else {
+      onSave(data);
+    }
     onClose();
   };
 
-  const isValid = formData.serviceType && 
-    (formData.frequency === 'once' ? formData.dayOfStay : formData.dayOfWeek);
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>
-            {rule ? 'Edit Cleaning Rule' : 'Add New Cleaning Rule'}
-          </DialogTitle>
+          <DialogTitle>{rule ? 'Edit' : 'Create'} Cleaning Rule</DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Rule Name */}
+        
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="rule-name">Rule Name</Label>
+            <Label htmlFor="name">Rule Name</Label>
             <Input
-              id="rule-name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="e.g., Mid-stay Service for Extended Stays"
+              id="name"
+              {...register('name', { required: 'Name is required' })}
+              placeholder="e.g., Mid-stay cleaning for long bookings"
             />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name.message}</p>
+            )}
           </div>
 
-          {/* Length of Stay Condition */}
-          <div className="space-y-4">
-            <Label className="text-sm font-medium">For stays between:</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="min-nights">Min nights</Label>
-                <Input
-                  id="min-nights"
-                  type="number"
-                  min="1"
-                  value={formData.minNights}
-                  onChange={(e) => setFormData(prev => ({ ...prev, minNights: parseInt(e.target.value) || 1 }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="max-nights">Max nights (leave blank for "and up")</Label>
-                <Input
-                  id="max-nights"
-                  type="number"
-                  min={formData.minNights + 1}
-                  value={formData.maxNights}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxNights: e.target.value }))}
-                  placeholder="Optional"
-                />
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="minNights">Min Nights</Label>
+              <Input
+                id="minNights"
+                type="number"
+                min={1}
+                {...register('minNights', { 
+                  required: 'Min nights is required',
+                  valueAsNumber: true,
+                  min: { value: 1, message: 'Must be at least 1' }
+                })}
+              />
+              {errors.minNights && (
+                <p className="text-sm text-destructive">{errors.minNights.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="maxNights">Max Nights (optional)</Label>
+              <Input
+                id="maxNights"
+                type="number"
+                min={1}
+                {...register('maxNights', { valueAsNumber: true })}
+                placeholder="Leave empty for no limit"
+              />
             </div>
           </div>
 
-          {/* Service Type */}
           <div className="space-y-2">
-            <Label htmlFor="service-type">Schedule this service:</Label>
+            <Label htmlFor="serviceType">Service Type</Label>
             <Select
-              value={formData.serviceType}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, serviceType: value as ServiceType }))}
+              value={watch('serviceType')}
+              onValueChange={(value) => setValue('serviceType', value as ServiceType)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select service type" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(SERVICE_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                  <SelectItem key={value} value={value}>
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Frequency */}
-          <div className="space-y-4">
-            <Label className="text-sm font-medium">How often?</Label>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="frequency-once"
-                  name="frequency"
-                  value="once"
-                  checked={formData.frequency === 'once'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value as FrequencyType }))}
-                />
-                <Label htmlFor="frequency-once">Once</Label>
-              </div>
-              
-              {formData.frequency === 'once' && (
-                <div className="ml-6 space-y-2">
-                  <Label htmlFor="day-of-stay">On day of stay:</Label>
-                  <Input
-                    id="day-of-stay"
-                    type="number"
-                    min="1"
-                    value={formData.dayOfStay}
-                    onChange={(e) => setFormData(prev => ({ ...prev, dayOfStay: e.target.value }))}
-                    placeholder="e.g., 4"
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  id="frequency-weekly"
-                  name="frequency"
-                  value="weekly"
-                  checked={formData.frequency === 'weekly'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value as FrequencyType }))}
-                />
-                <Label htmlFor="frequency-weekly">Weekly</Label>
-              </div>
-
-              {formData.frequency === 'weekly' && (
-                <div className="ml-6 space-y-2">
-                  <Label htmlFor="day-of-week">On day of week:</Label>
-                  <Select
-                    value={formData.dayOfWeek}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, dayOfWeek: value }))}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select day" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DAYS_OF_WEEK.map(day => (
-                        <SelectItem key={day} value={day}>{day}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="frequency">Frequency</Label>
+            <Select
+              value={frequency}
+              onValueChange={(value) => setValue('frequency', value as FrequencyType)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="once">Once during stay</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Active Toggle */}
+          {frequency === 'once' && (
+            <div className="space-y-2">
+              <Label htmlFor="dayOfStay">Day of Stay</Label>
+              <Input
+                id="dayOfStay"
+                type="number"
+                min={1}
+                {...register('dayOfStay', { valueAsNumber: true })}
+                placeholder="e.g., 3 for day 3 of stay"
+              />
+            </div>
+          )}
+
+          {frequency === 'weekly' && (
+            <div className="space-y-2">
+              <Label htmlFor="dayOfWeek">Day of Week</Label>
+              <Select
+                value={watch('dayOfWeek') || ''}
+                onValueChange={(value) => setValue('dayOfWeek', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select day" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DAYS_OF_WEEK.map((day) => (
+                    <SelectItem key={day} value={day}>
+                      {day}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2">
             <Switch
-              id="is-active"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+              id="isActive"
+              checked={watch('isActive')}
+              onCheckedChange={(checked) => setValue('isActive', checked)}
             />
-            <Label htmlFor="is-active">Rule is active</Label>
+            <Label htmlFor="isActive">Active</Label>
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-            >
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              type="submit"
-              disabled={!isValid || isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : null}
-              {rule ? 'Update Rule' : 'Save Rule'}
+            <Button type="submit" disabled={isLoading}>
+              {rule ? 'Update' : 'Create'} Rule
             </Button>
           </div>
         </form>
