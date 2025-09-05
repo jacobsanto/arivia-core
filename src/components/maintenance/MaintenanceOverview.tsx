@@ -45,7 +45,7 @@ export const MaintenanceOverview: React.FC = () => {
         todayTasks: 0,
         completedTasks: 0,
         activeStaff: 0,
-        avgDuration: 120,
+        avgDuration: 0,
         urgentTasks: 0,
         completionRate: 0
       };
@@ -61,11 +61,27 @@ export const MaintenanceOverview: React.FC = () => {
       .map(task => task.assigned_to)
     );
 
+    // Calculate average duration for completed tasks
+    const completedWithDuration = maintenanceTasks.filter(task => 
+      task.status === 'completed' && task.created_at && task.completed_at
+    );
+    
+    let avgDuration = 0;
+    if (completedWithDuration.length > 0) {
+      const totalMinutes = completedWithDuration.reduce((sum, task) => {
+        const start = new Date(task.created_at);
+        const end = new Date(task.completed_at!);
+        const duration = (end.getTime() - start.getTime()) / (1000 * 60); // minutes
+        return sum + duration;
+      }, 0);
+      avgDuration = Math.round(totalMinutes / completedWithDuration.length);
+    }
+
     return {
       todayTasks: todayTasks.length,
       completedTasks: completedTasks.length,
       activeStaff: uniqueStaff.size,
-      avgDuration: 120, // This would need more complex calculation
+      avgDuration,
       urgentTasks: maintenanceTasks.filter(task => task.priority === 'high' && task.status !== 'completed').length,
       completionRate: todayTasks.length > 0 ? Math.round((completedTasks.length / todayTasks.length) * 100) : 0
     };
@@ -189,14 +205,18 @@ export const MaintenanceOverview: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg Duration</p>
-                <p className="text-2xl font-bold">{stats.avgDuration}min</p>
+                <p className="text-2xl font-bold">
+                  {stats.avgDuration > 0 ? `${stats.avgDuration}min` : 'N/A'}
+                </p>
               </div>
               <Clock className="h-8 w-8 text-purple-600" />
             </div>
             <div className="mt-4">
               <div className="flex items-center gap-1">
                 <TrendingUp className="h-3 w-3 text-green-600" />
-                <p className="text-xs text-green-600">8% faster this week</p>
+                <p className="text-xs text-green-600">
+                  {stats.avgDuration > 0 ? 'Based on completed tasks' : 'No completed tasks yet'}
+                </p>
               </div>
             </div>
           </CardContent>

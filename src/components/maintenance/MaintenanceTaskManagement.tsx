@@ -197,7 +197,23 @@ export const MaintenanceTaskManagement: React.FC = () => {
     activeStaff: new Set(maintenanceTasks?.filter(t => 
       t.assigned_to && t.status === 'in_progress'
     ).map(t => t.assigned_to)).size || 0,
-    avgDuration: 120, // This would need more complex calculation based on actual data
+    // Calculate real average duration from completed tasks
+    avgDuration: (() => {
+      const completedWithDuration = maintenanceTasks?.filter(t => 
+        t.status === 'completed' && t.created_at && t.completed_at
+      ) || [];
+      
+      if (completedWithDuration.length === 0) return 0;
+      
+      const totalMinutes = completedWithDuration.reduce((sum, task) => {
+        const start = new Date(task.created_at);
+        const end = new Date(task.completed_at!);
+        const duration = (end.getTime() - start.getTime()) / (1000 * 60); // minutes
+        return sum + duration;
+      }, 0);
+      
+      return Math.round(totalMinutes / completedWithDuration.length);
+    })(),
     completionRate: maintenanceTasks?.length > 0 ? 
       Math.round((maintenanceTasks.filter(t => t.status === 'completed').length / maintenanceTasks.length) * 100) : 0
   };
@@ -270,14 +286,18 @@ export const MaintenanceTaskManagement: React.FC = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Avg Duration</p>
-                  <p className="text-2xl font-bold">{stats.avgDuration}min</p>
+                  <p className="text-2xl font-bold">
+                    {stats.avgDuration > 0 ? `${stats.avgDuration}min` : 'N/A'}
+                  </p>
                 </div>
                 <Clock className="h-8 w-8 text-purple-600" />
               </div>
               <div className="mt-4">
                 <div className="flex items-center gap-1">
                   <TrendingUp className="h-3 w-3 text-green-600" />
-                  <p className="text-xs text-green-600">8% faster this week</p>
+                  <p className="text-xs text-green-600">
+                    {stats.avgDuration > 0 ? 'Based on completed tasks' : 'No completed tasks yet'}
+                  </p>
                 </div>
               </div>
             </CardContent>
