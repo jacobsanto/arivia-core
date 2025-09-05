@@ -61,15 +61,34 @@ const TeamChat: React.FC = () => {
   // Handle URL parameters for deep linking to conversations
   useEffect(() => {
     const conversationParam = searchParams.get('conversation');
-    if (conversationParam && chatListItems && setActiveItem) {
-      // Find conversation by name parameter and select it
-      const conversations = chatListItems.filter(item => item.type === 'direct');
-      const targetConversation = conversations.find(conv => 
-        conv.name.toLowerCase().replace(/\s+/g, '-') === conversationParam
-      );
+    const userIdParam = searchParams.get('userId');
+    
+    if ((conversationParam || userIdParam) && chatListItems && setActiveItem) {
+      // Find conversation by name parameter
+      if (conversationParam) {
+        const conversations = chatListItems.filter(item => item.type === 'direct');
+        const targetConversation = conversations.find(conv => 
+          conv.name.toLowerCase().replace(/\s+/g, '-') === conversationParam
+        );
+        
+        if (targetConversation) {
+          setActiveItem(targetConversation);
+        }
+      }
       
-      if (targetConversation) {
-        setActiveItem(targetConversation);
+      // Find conversation by user ID (for real message navigation)
+      if (userIdParam) {
+        const conversations = chatListItems.filter(item => item.type === 'direct');
+        const targetConversation = conversations.find(conv => 
+          conv.participants?.some(p => p.id === userIdParam)
+        );
+        
+        if (targetConversation) {
+          setActiveItem(targetConversation);
+        } else {
+          // If no conversation exists, try to find the user and start a direct message
+          console.log('No existing conversation found for user:', userIdParam);
+        }
       }
     }
   }, [searchParams, chatListItems, setActiveItem]);

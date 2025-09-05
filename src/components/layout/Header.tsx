@@ -13,6 +13,7 @@ import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
+import { recentMessagesService, RecentMessage } from "@/services/chat/recent-messages.service";
 
 
 interface HeaderProps {
@@ -31,6 +32,7 @@ const Header: React.FC<HeaderProps> = ({
   const isMobile = useIsMobile();
   const { unreadCount } = useNotifications();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([]);
   
 
   useEffect(() => {
@@ -48,6 +50,18 @@ const Header: React.FC<HeaderProps> = ({
     refreshProfile();
     return () => clearInterval(intervalId);
   }, [user, refreshProfile]);
+
+  // Load recent messages
+  useEffect(() => {
+    const loadRecentMessages = async () => {
+      if (user?.id) {
+        const messages = await recentMessagesService.getRecentMessages(user.id, 5);
+        setRecentMessages(messages);
+      }
+    };
+
+    loadRecentMessages();
+  }, [user]);
 
   const handleLogout = () => {
     logout();
@@ -92,27 +106,22 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuLabel>Messages</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-80 overflow-y-auto">
-                <MessageItem 
-                  name="Maria Kowalska" 
-                  message="When will the new supplies arrive?" 
-                  time="5 min ago" 
-                  avatar="/placeholder.svg"
-                  onClick={() => navigate('/team-chat?conversation=maria-kowalska')}
-                />
-                <MessageItem 
-                  name="Alex Chen" 
-                  message="I've completed the Villa Oceana inspection." 
-                  time="30 min ago" 
-                  avatar="/placeholder.svg"
-                  onClick={() => navigate('/team-chat?conversation=alex-chen')}
-                />
-                <MessageItem 
-                  name="Stefan Müller" 
-                  message="Guest requesting early check-in at Villa Sunset." 
-                  time="1 hour ago" 
-                  avatar="/placeholder.svg"
-                  onClick={() => navigate('/team-chat?conversation=stefan-muller')}
-                />
+                {recentMessages.length > 0 ? (
+                  recentMessages.map((message) => (
+                    <MessageItem 
+                      key={message.id}
+                      name={message.senderName} 
+                      message={message.content} 
+                      time={recentMessagesService.formatTimeAgo(message.createdAt)} 
+                      avatar={message.avatar}
+                      onClick={() => navigate(`/team-chat?userId=${message.senderId}`)}
+                    />
+                  ))
+                ) : (
+                  <div className="px-2 py-3 text-muted-foreground text-sm text-center">
+                    No recent messages
+                  </div>
+                )}
               </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem 
