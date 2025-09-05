@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, FileText } from 'lucide-react';
 import { ReportType } from '@/types/reports.types';
-import { useReportsGenerator } from '@/hooks/useReportsGenerator';
+
+interface ReportGeneratorProps {
+  reportsState: ReturnType<typeof import('@/hooks/useReportsGenerator').useReportsGenerator>;
+}
 
 const REPORT_TYPES: { value: ReportType; label: string; description: string; category: string }[] = [
   // Operational Reports
@@ -126,7 +129,7 @@ const REVIEW_SOURCES = ['Airbnb', 'Booking.com', 'Google', 'Direct Feedback'];
 const VENDOR_CATEGORIES = ['Cleaning Supplies', 'Maintenance', 'Utilities', 'Food & Beverage', 'Amenities'];
 const COMPLIANCE_AREAS = ['Safety', 'Health', 'Environmental', 'Tax', 'Insurance'];
 
-export const ReportGenerator: React.FC = () => {
+export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }) => {
   const {
     reportType,
     startDate,
@@ -137,7 +140,7 @@ export const ReportGenerator: React.FC = () => {
     updateDateRange,
     updateFilters,
     generateReport
-  } = useReportsGenerator();
+  } = reportsState;
 
   const handleStartDateChange = (value: string) => {
     updateDateRange(value, endDate);

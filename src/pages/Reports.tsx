@@ -5,7 +5,7 @@ import { ReportDisplay } from "@/components/reports/ReportDisplay";
 import { useReportsGenerator } from "@/hooks/useReportsGenerator";
 
 const Reports: React.FC = () => {
-  const { generatedReport, clearReport } = useReportsGenerator();
+  const reportsState = useReportsGenerator();
 
   return (
     <ReportsErrorBoundary>
@@ -19,13 +19,13 @@ const Reports: React.FC = () => {
         </div>
 
         {/* Report Generator */}
-        <ReportGenerator />
+        <ReportGenerator reportsState={reportsState} />
 
         {/* Report Display */}
-        {generatedReport && (
+        {reportsState.generatedReport && (
           <ReportDisplay 
-            report={generatedReport} 
-            onClear={clearReport} 
+            report={reportsState.generatedReport} 
+            onClear={reportsState.clearReport} 
           />
         )}
       </div>
