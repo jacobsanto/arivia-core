@@ -2,7 +2,19 @@ export type ReportType =
   | 'task-completion-log'
   | 'maintenance-cost-breakdown'
   | 'damage-history'
-  | 'inventory-levels';
+  | 'inventory-levels'
+  | 'financial-summary'
+  | 'property-performance'
+  | 'staff-productivity'
+  | 'guest-satisfaction'
+  | 'booking-analytics'
+  | 'revenue-analysis'
+  | 'expense-tracking'
+  | 'operational-efficiency'
+  | 'compliance-audit'
+  | 'vendor-performance'
+  | 'energy-consumption'
+  | 'turnover-metrics';
 
 export interface ReportColumn {
   key: string;
