@@ -179,48 +179,60 @@ export function SystemHealthDashboard() {
 
   const fetchEdgeFunctionHealth = useCallback(async () => {
     try {
-      // Mock edge function health data since we don't have logs
-      const functions: EdgeFunctionHealth[] = [
-        {
-          name: 'guesty-auth',
-          status: 'healthy',
-          success_rate: 98.5,
-          avg_response_time: 245,
-          error_count_24h: 2
-        },
-        {
-          name: 'guesty-listing-sync',
-          status: 'healthy',
-          success_rate: 95.2,
-          avg_response_time: 1200,
-          error_count_24h: 5
-        },
-        {
-          name: 'delete-user',
-          status: 'warning',
-          success_rate: 89.3,
-          avg_response_time: 890,
-          error_count_24h: 12
-        },
-        {
-          name: 'housekeeping-notifications',
-          status: 'unknown',
-          success_rate: 0,
-          avg_response_time: 0,
-          error_count_24h: 0
-        },
-        {
-          name: 'task-automation',
-          status: 'unknown',
-          success_rate: 0,
-          avg_response_time: 0,
-          error_count_24h: 0
-        }
-      ];
+      // Try to get real edge function data from analytics
+      const { data: analyticsData } = await supabase
+        .from('function_edge_logs')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(100);
 
-      setEdgeFunctions(functions);
+      if (analyticsData && analyticsData.length > 0) {
+        // Process real edge function data
+        const functionStats = new Map();
+        
+        analyticsData.forEach(log => {
+          const functionName = log.metadata?.function_id || 'unknown';
+          if (!functionStats.has(functionName)) {
+            functionStats.set(functionName, {
+              name: functionName,
+              success_count: 0,
+              error_count: 0,
+              total_response_time: 0,
+              request_count: 0
+            });
+          }
+          
+          const stats = functionStats.get(functionName);
+          stats.request_count++;
+          
+          if (log.response?.status_code && log.response.status_code < 400) {
+            stats.success_count++;
+          } else {
+            stats.error_count++;
+          }
+          
+          if (log.metadata?.execution_time_ms) {
+            stats.total_response_time += log.metadata.execution_time_ms;
+          }
+        });
+
+        // Convert to EdgeFunctionHealth format
+        const functions: EdgeFunctionHealth[] = Array.from(functionStats.values()).map(stats => ({
+          name: stats.name,
+          status: stats.error_count === 0 ? 'healthy' : stats.error_count < 5 ? 'warning' : 'error',
+          success_rate: stats.request_count > 0 ? (stats.success_count / stats.request_count) * 100 : 0,
+          avg_response_time: stats.request_count > 0 ? stats.total_response_time / stats.request_count : 0,
+          error_count_24h: stats.error_count
+        }));
+
+        setEdgeFunctionHealth(functions);
+      } else {
+        // No edge function data available
+        setEdgeFunctionHealth([]);
+      }
     } catch (error) {
       console.error('Error fetching edge function health:', error);
+      setEdgeFunctionHealth([]);
     }
   }, []);
 
