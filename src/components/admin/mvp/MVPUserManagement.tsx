@@ -7,32 +7,60 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search, UserPlus, Mail, Phone, Settings, Users } from "lucide-react";
-import { useUsersList } from "@/hooks/data/useUsersList";
+import { useUserManagement } from "@/hooks/useUserManagement";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { ROLE_LABELS, ROLE_COLORS } from "@/types/userManagement.types";
+import { AppRole } from "@/types/permissions.types";
 
 export const MVPUserManagement: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterRole, setFilterRole] = useState("all");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    role: "" as AppRole
+  });
 
-  const { data: users, isLoading, refetch } = useUsersList(searchTerm, filterRole);
+  const {
+    users,
+    loading: isLoading,
+    saving,
+    updateFilters,
+    createUser,
+    filters
+  } = useUserManagement();
 
   const roles = [
-    { value: 'superadmin', label: 'Super Admin', color: 'bg-red-100 text-red-800' },
-    { value: 'administrator', label: 'Administrator', color: 'bg-purple-100 text-purple-800' },
-    { value: 'property_manager', label: 'Property Manager', color: 'bg-blue-100 text-blue-800' },
-    { value: 'housekeeping_staff', label: 'Housekeeping', color: 'bg-green-100 text-green-800' },
-    { value: 'maintenance_staff', label: 'Maintenance', color: 'bg-orange-100 text-orange-800' },
-    { value: 'inventory_manager', label: 'Inventory Manager', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'superadmin' as AppRole, label: 'Super Admin' },
+    { value: 'administrator' as AppRole, label: 'Administrator' },
+    { value: 'property_manager' as AppRole, label: 'Property Manager' },
+    { value: 'housekeeping_staff' as AppRole, label: 'Housekeeping Staff' },
+    { value: 'maintenance_staff' as AppRole, label: 'Maintenance Staff' },
+    { value: 'guest' as AppRole, label: 'Guest' },
   ];
 
-  const getRoleLabel = (role: string) => {
-    return roles.find(r => r.value === role)?.label || role;
+  const handleCreateUser = async () => {
+    if (!formData.name || !formData.email || !formData.role) {
+      return;
+    }
+
+    try {
+      await createUser(formData);
+      setIsModalOpen(false);
+      setFormData({ name: "", email: "", phone: "", role: "" as AppRole });
+    } catch (error) {
+      console.error('Error creating user:', error);
+    }
   };
 
-  const getRoleColor = (role: string) => {
-    return roles.find(r => r.value === role)?.color || 'bg-gray-100 text-gray-800';
+  const getRoleLabel = (role: AppRole) => {
+    return ROLE_LABELS[role] || role;
+  };
+
+  const getRoleColor = (role: AppRole) => {
+    return ROLE_COLORS[role] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   return (
@@ -48,7 +76,7 @@ export const MVPUserManagement: React.FC = () => {
             <p className="text-muted-foreground">Manage team members and their roles</p>
           </div>
           
-          <Dialog>
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
             <DialogTrigger asChild>
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -62,15 +90,35 @@ export const MVPUserManagement: React.FC = () => {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="Enter user's full name" />
+                  <Input 
+                    id="name" 
+                    placeholder="Enter user's full name"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="Enter user's email" />
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="Enter user's email"
+                    value={formData.email}
+                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Input 
+                    id="phone" 
+                    placeholder="Enter user's phone number"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Select>
+                  <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value as AppRole }))}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a role" />
                     </SelectTrigger>
@@ -83,7 +131,13 @@ export const MVPUserManagement: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button className="w-full">Send Invitation</Button>
+                <Button 
+                  className="w-full" 
+                  onClick={handleCreateUser}
+                  disabled={saving || !formData.name || !formData.email || !formData.role}
+                >
+                  {saving ? "Creating User..." : "Create User"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -96,21 +150,21 @@ export const MVPUserManagement: React.FC = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filters.searchQuery}
+                  onChange={(e) => updateFilters({ searchQuery: e.target.value })}
                   className="pl-10"
                 />
               </div>
               
               <div className="flex items-center gap-2">
                 <Button
-                  variant={filterRole === 'all' ? 'default' : 'outline'}
+                  variant={filters.roleFilter === 'all' ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setFilterRole('all')}
+                  onClick={() => updateFilters({ roleFilter: 'all' })}
                 >
                   All Roles
                 </Button>
-                <Select value={filterRole} onValueChange={setFilterRole}>
+                <Select value={filters.roleFilter} onValueChange={(value) => updateFilters({ roleFilter: value as AppRole | 'all' })}>
                   <SelectTrigger className="w-40">
                     <SelectValue />
                   </SelectTrigger>
@@ -145,7 +199,7 @@ export const MVPUserManagement: React.FC = () => {
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No users found</h3>
                 <p className="text-muted-foreground">
-                  {searchTerm ? 'Try adjusting your search terms' : 'Start by adding team members'}
+                  {filters.searchQuery ? 'Try adjusting your search terms' : 'Start by adding team members'}
                 </p>
               </div>
             ) : (
@@ -180,9 +234,12 @@ export const MVPUserManagement: React.FC = () => {
                         </div>
                         
                         <div className="flex items-center space-x-2">
-                          <Badge className={getRoleColor(user.role)}>
+                          <Badge variant="outline" className={getRoleColor(user.role)}>
                             {getRoleLabel(user.role)}
                           </Badge>
+                          <div className="flex items-center text-xs text-muted-foreground">
+                            {user.openTasksCount} open tasks
+                          </div>
                           <Button variant="ghost" size="sm">
                             <Settings className="h-4 w-4" />
                           </Button>
