@@ -32,15 +32,36 @@ export const HousekeepingDashboard: React.FC = () => {
     refetchInterval: 30000,
   });
 
-  // Calculate statistics
+  // Calculate statistics including performance metrics
   const stats = React.useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     const todayTasks = tasks.filter(task => task.due_date?.startsWith(today));
-    const completedTasks = todayTasks.filter(task => task.status === 'done');
+    const completedTasks = todayTasks.filter(task => task.status === 'completed');
+    const allCompletedTasks = tasks.filter(task => task.status === 'completed' && task.completed_at);
     const activeStaff = new Set(tasks
       .filter(task => task.assigned_to && task.status === 'in_progress')
       .map(task => task.assigned_to)
     ).size;
+
+    // Calculate average duration for completed tasks
+    let avgDuration = 0;
+    if (allCompletedTasks.length > 0) {
+      const totalMinutes = allCompletedTasks.reduce((sum, task) => {
+        if (task.created_at && task.completed_at) {
+          const start = new Date(task.created_at);
+          const end = new Date(task.completed_at);
+          const duration = (end.getTime() - start.getTime()) / (1000 * 60); // minutes
+          return sum + duration;
+        }
+        return sum;
+      }, 0);
+      avgDuration = Math.round(totalMinutes / allCompletedTasks.length);
+    }
+
+    // Calculate quality score based on QC pass rate
+    const qcTasks = tasks.filter(task => task.qc_status && task.qc_status !== 'pending');
+    const passedQC = qcTasks.filter(task => task.qc_status === 'passed').length;
+    const qualityScore = qcTasks.length > 0 ? Math.round((passedQC / qcTasks.length) * 100) : 0;
 
     return {
       totalTasks: tasks.length,
@@ -49,7 +70,9 @@ export const HousekeepingDashboard: React.FC = () => {
       pendingTasks: tasks.filter(task => task.status === 'pending').length,
       inProgressTasks: tasks.filter(task => task.status === 'in_progress').length,
       activeStaff,
-      completionRate: todayTasks.length > 0 ? Math.round((completedTasks.length / todayTasks.length) * 100) : 0
+      completionRate: todayTasks.length > 0 ? Math.round((completedTasks.length / todayTasks.length) * 100) : 0,
+      avgDuration,
+      qualityScore
     };
   }, [tasks]);
 
@@ -277,7 +300,9 @@ export const HousekeepingDashboard: React.FC = () => {
                 <Clock className="h-4 w-4" />
                 <span className="text-sm font-medium">Avg Duration</span>
               </div>
-              <p className="text-2xl font-bold">45m</p>
+              <p className="text-2xl font-bold">
+                {stats.avgDuration > 0 ? `${stats.avgDuration}m` : 'N/A'}
+              </p>
               <p className="text-sm text-muted-foreground">Per cleaning task</p>
             </div>
             
@@ -286,8 +311,10 @@ export const HousekeepingDashboard: React.FC = () => {
                 <CheckCircle className="h-4 w-4" />
                 <span className="text-sm font-medium">Quality Score</span>
               </div>
-              <p className="text-2xl font-bold">98%</p>
-              <p className="text-sm text-muted-foreground">Guest satisfaction</p>
+              <p className="text-2xl font-bold">
+                {stats.qualityScore > 0 ? `${stats.qualityScore}%` : 'N/A'}
+              </p>
+              <p className="text-sm text-muted-foreground">QC pass rate</p>
             </div>
           </div>
         </CardContent>
