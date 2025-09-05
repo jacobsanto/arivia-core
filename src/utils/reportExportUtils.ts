@@ -29,11 +29,49 @@ export const exportToCSV = (data: any[], filename: string) => {
 };
 
 /**
+ * Export data to Excel/XLS file
+ */
+export const exportToXLS = (data: any[], filename: string) => {
+  if (!data || !data.length) {
+    console.warn('No data to export');
+    return;
+  }
+  
+  try {
+    // Convert data to worksheet
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    
+    // Auto-size columns based on content
+    const colWidths = Object.keys(data[0]).map(key => ({
+      wch: Math.max(key.length, ...data.map(row => String(row[key] || '').length)) + 2
+    }));
+    worksheet['!cols'] = colWidths;
+    
+    // Create workbook and add worksheet
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Report Data');
+    
+    // Generate Excel file and trigger download
+    XLSX.writeFile(workbook, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`);
+  } catch (error) {
+    console.error('Error exporting to Excel:', error);
+  }
+};
+
+/**
  * Export report to CSV format
  */
 export const exportReportToCSV = (report: GeneratedReport) => {
   const filename = report.title.toLowerCase().replace(/\s+/g, '-');
   exportToCSV(report.data, filename);
+};
+
+/**
+ * Export report to Excel/XLS format
+ */
+export const exportReportToXLS = (report: GeneratedReport) => {
+  const filename = report.title.toLowerCase().replace(/\s+/g, '-');
+  exportToXLS(report.data, filename);
 };
 
 /**

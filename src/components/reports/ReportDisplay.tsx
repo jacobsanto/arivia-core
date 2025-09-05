@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileDown, Printer, Calendar, Filter } from 'lucide-react';
 import { GeneratedReport } from '@/types/reports.types';
-import { exportReportToCSV, exportReportToPDF } from '@/utils/reportExportUtils';
+import { exportReportToCSV, exportReportToPDF, exportReportToXLS } from '@/utils/reportExportUtils';
 import { toast } from '@/hooks/use-toast';
 
 interface ReportDisplayProps {
@@ -24,6 +24,22 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ report, onClear })
       toast({
         title: "Export Failed",
         description: "Failed to export CSV. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleXLSExport = () => {
+    try {
+      exportReportToXLS(report);
+      toast({
+        title: "Excel Export",
+        description: "Report exported to Excel successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export Excel file. Please try again.",
         variant: "destructive"
       });
     }
@@ -94,6 +110,10 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ report, onClear })
             <Button variant="outline" size="sm" onClick={handleCSVExport}>
               <FileDown className="mr-2 h-4 w-4" />
               CSV
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleXLSExport}>
+              <FileDown className="mr-2 h-4 w-4" />
+              Excel
             </Button>
             <Button variant="outline" size="sm" onClick={handlePDFExport}>
               <Printer className="mr-2 h-4 w-4" />
