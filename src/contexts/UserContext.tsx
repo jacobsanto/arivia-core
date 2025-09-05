@@ -6,7 +6,7 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Mock user for open access - you as the developer
 const MOCK_ADMIN_USER: User = {
-  id: "dev-admin-user",
+  id: "00000000-0000-0000-0000-000000000000",
   email: "dev@ariviagroup.com",
   name: "Dev Admin",
   role: "administrator" as UserRole,
@@ -22,7 +22,7 @@ const MOCK_SESSION: Session = {
   expires_in: 3600,
   refresh_token: "mock-refresh-token",
   user: {
-    id: "dev-admin-user",
+    id: "00000000-0000-0000-0000-000000000000",
     email: "dev@ariviagroup.com",
     aud: "authenticated",
     role: "authenticated",
