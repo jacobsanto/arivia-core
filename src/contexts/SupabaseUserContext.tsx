@@ -265,10 +265,12 @@ export const SupabaseUserProvider: React.FC<{ children: React.ReactNode }> = ({ 
   );
 };
 
+export const UserProvider = SupabaseUserProvider;
+
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error("useUser must be used within a SupabaseUserProvider");
+    throw new Error("useUser must be used within a UserProvider");
   }
   return context;
 };
