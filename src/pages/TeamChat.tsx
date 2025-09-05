@@ -11,6 +11,7 @@ import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Users, Loader2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 
 const TeamChat: React.FC = () => {
   const { user } = useUser();
@@ -19,6 +20,7 @@ const TeamChat: React.FC = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showTeamMembers, setShowTeamMembers] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const {
     chatListItems,
@@ -55,6 +57,22 @@ const TeamChat: React.FC = () => {
       window.removeEventListener('blur', handleBlur);
     };
   }, []);
+
+  // Handle URL parameters for deep linking to conversations
+  useEffect(() => {
+    const conversationParam = searchParams.get('conversation');
+    if (conversationParam && chatListItems && setActiveItem) {
+      // Find conversation by name parameter and select it
+      const conversations = chatListItems.filter(item => item.type === 'direct');
+      const targetConversation = conversations.find(conv => 
+        conv.name.toLowerCase().replace(/\s+/g, '-') === conversationParam
+      );
+      
+      if (targetConversation) {
+        setActiveItem(targetConversation);
+      }
+    }
+  }, [searchParams, chatListItems, setActiveItem]);
 
   const handleSearchMessages = (query: string) => {
     setSearchQuery(query);

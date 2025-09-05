@@ -92,12 +92,33 @@ const Header: React.FC<HeaderProps> = ({
               <DropdownMenuLabel>Messages</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="max-h-80 overflow-y-auto">
-                <MessageItem name="Maria Kowalska" message="When will the new supplies arrive?" time="5 min ago" avatar="/placeholder.svg" />
-                <MessageItem name="Alex Chen" message="I've completed the Villa Oceana inspection." time="30 min ago" avatar="/placeholder.svg" />
-                <MessageItem name="Stefan Müller" message="Guest requesting early check-in at Villa Sunset." time="1 hour ago" avatar="/placeholder.svg" />
+                <MessageItem 
+                  name="Maria Kowalska" 
+                  message="When will the new supplies arrive?" 
+                  time="5 min ago" 
+                  avatar="/placeholder.svg"
+                  onClick={() => navigate('/team-chat?conversation=maria-kowalska')}
+                />
+                <MessageItem 
+                  name="Alex Chen" 
+                  message="I've completed the Villa Oceana inspection." 
+                  time="30 min ago" 
+                  avatar="/placeholder.svg"
+                  onClick={() => navigate('/team-chat?conversation=alex-chen')}
+                />
+                <MessageItem 
+                  name="Stefan Müller" 
+                  message="Guest requesting early check-in at Villa Sunset." 
+                  time="1 hour ago" 
+                  avatar="/placeholder.svg"
+                  onClick={() => navigate('/team-chat?conversation=stefan-muller')}
+                />
               </div>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="justify-center text-primary">
+              <DropdownMenuItem 
+                className="justify-center text-primary"
+                onClick={() => navigate('/team-chat')}
+              >
                 <span>Open Team Chat</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -115,16 +136,21 @@ interface MessageItemProps {
   message: string;
   time: string;
   avatar: string;
+  onClick?: () => void;
 }
 
 const MessageItem = ({
   name,
   message,
   time,
-  avatar
+  avatar,
+  onClick
 }: MessageItemProps) => {
   return (
-    <div className="flex items-start space-x-3 px-2 py-3 hover:bg-secondary cursor-pointer">
+    <div 
+      className="flex items-start space-x-3 px-2 py-3 hover:bg-secondary cursor-pointer"
+      onClick={onClick}
+    >
       <div className="h-8 w-8 rounded-full overflow-hidden">
         <img src={avatar} alt={name} className="h-full w-full object-cover" />
       </div>
