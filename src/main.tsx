@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
 import './setup/console-patch';
-import { UserProvider } from './contexts/UserContext'
+import { SupabaseUserProvider } from './contexts/SupabaseUserContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
@@ -27,9 +27,9 @@ if (!rootElement) throw new Error("Failed to find the root element");
 createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <UserProvider>
+      <SupabaseUserProvider>
         <App />
-      </UserProvider>
+      </SupabaseUserProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
