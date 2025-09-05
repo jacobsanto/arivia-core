@@ -19,6 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyPropertyState } from "./EmptyPropertyState";
 
 interface PropertyGridViewProps {
   properties: PropertyListItem[];
@@ -201,15 +202,8 @@ export const PropertyGridView: React.FC<PropertyGridViewProps> = ({
       ))}
 
       {properties.length === 0 && (
-        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
-          <div className="space-y-3">
-            <div className="text-lg font-medium text-muted-foreground">
-              No properties found
-            </div>
-            <div className="text-sm text-muted-foreground">
-              Try adjusting your filters to see more results.
-            </div>
-          </div>
+        <div className="col-span-full">
+          <EmptyPropertyState />
         </div>
       )}
     </div>

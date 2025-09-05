@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,9 +44,9 @@ export const RoomStatusManagerEnhanced: React.FC = () => {
       propertyId: property.id,
       propertyName: property.name,
       roomStatus: property.room_status,
-      lastUpdated: new Date().toISOString(), // Mock data
-      assignedTo: Math.random() > 0.5 ? 'Maria Garcia' : 'Elena Papadopoulos',
-      nextCheckIn: Math.random() > 0.3 ? new Date(Date.now() + Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+      lastUpdated: new Date().toISOString(),
+      assignedTo: undefined, // Will be implemented with user assignment system
+      nextCheckIn: undefined, // Will be calculated from actual bookings
       openIssues: property.open_issues_count,
       urgentIssues: property.urgent_issues_count
     }));
@@ -103,10 +104,24 @@ export const RoomStatusManagerEnhanced: React.FC = () => {
     }
   };
 
-  const updateRoomStatus = (propertyId: string, newStatus: string) => {
-    console.log(`Updating room ${propertyId} to status: ${newStatus}`);
-    // In a real app, this would update the database
-    refetch();
+  const updateRoomStatus = async (propertyId: string, newStatus: string) => {
+    try {
+      // TODO: Implement room status tracking in database
+      // For now, just show a message that this feature is coming soon
+      toast({
+        title: "Feature Coming Soon",
+        description: `Room status management will be available soon. Requested status: ${newStatus}`,
+        variant: "default",
+      });
+      console.log(`Room status update requested: Property ${propertyId} to ${newStatus}`);
+    } catch (error) {
+      console.error('Error updating room status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update room status. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -367,10 +382,13 @@ export const RoomStatusManagerEnhanced: React.FC = () => {
           {filteredData.length === 0 && (
             <div className="text-center py-8">
               <div className="text-lg font-medium text-muted-foreground mb-2">
-                No rooms found
+                {properties.length === 0 ? "No properties found" : "No rooms match your filters"}
               </div>
               <div className="text-sm text-muted-foreground">
-                Try adjusting your filters to see more results.
+                {properties.length === 0 
+                  ? "Add properties to the system to start managing room status." 
+                  : "Try adjusting your filters to see more results."
+                }
               </div>
             </div>
           )}

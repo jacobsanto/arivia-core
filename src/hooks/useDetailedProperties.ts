@@ -10,82 +10,33 @@ import {
   PropertyAmenity 
 } from '@/types/property-detailed.types';
 
-// Mock data generator for development
-const generateMockProperty = (id: string): DetailedProperty => ({
-  id,
-  name: `Villa ${id.slice(0, 8)}`,
-  address: `${Math.floor(Math.random() * 999) + 1} Seaside Avenue, Mykonos`,
-  property_type: ['villa', 'apartment', 'house'][Math.floor(Math.random() * 3)],
-  status: ['occupied', 'vacant', 'maintenance'][Math.floor(Math.random() * 3)] as any,
-  room_status: ['dirty', 'cleaning', 'cleaned', 'inspected', 'ready'][Math.floor(Math.random() * 5)] as any,
-  num_bedrooms: Math.floor(Math.random() * 4) + 1,
-  num_bathrooms: Math.floor(Math.random() * 3) + 1,
-  max_guests: Math.floor(Math.random() * 8) + 2,
-  square_feet: Math.floor(Math.random() * 2000) + 800,
-  description: `Beautiful ${['modern', 'traditional', 'luxury', 'cozy'][Math.floor(Math.random() * 4)]} property with stunning views and premium amenities. Perfect for families and groups looking for an unforgettable experience.`,
-  notes: Math.random() > 0.5 ? 'Gate code: 1234. Wifi password: villa2024. Pool heating available.' : '',
-  images: [
-    {
-      id: `${id}-img-1`,
-      url: '/placeholder.svg',
-      title: 'Main View',
-      is_hero: true,
-      order_index: 1
-    },
-    {
-      id: `${id}-img-2`,
-      url: '/placeholder.svg',
-      title: 'Pool Area',
-      is_hero: false,
-      order_index: 2
-    }
-  ],
-  amenities: [],
-  open_tasks: {
-    housekeeping: Math.floor(Math.random() * 5),
-    maintenance: Math.floor(Math.random() * 3),
-    damage_reports: Math.floor(Math.random() * 2)
-  },
-  financial_summary: {
-    total_costs: Math.floor(Math.random() * 5000) + 1000,
-    maintenance_costs: Math.floor(Math.random() * 3000) + 500,
-    damage_costs: Math.floor(Math.random() * 2000) + 200,
-    expense_distribution: {
-      maintenance: Math.floor(Math.random() * 70) + 20,
-      damages: Math.floor(Math.random() * 30) + 10
-    }
-  },
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  last_occupied: Math.random() > 0.3 ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
-  next_checkin: Math.random() > 0.4 ? new Date(Date.now() + Math.random() * 14 * 24 * 60 * 60 * 1000).toISOString() : undefined
-});
-
 export const useDetailedProperties = () => {
   const { data: properties, isLoading, error, refetch } = useQuery<PropertyListItem[], Error>({
     queryKey: ['detailed-properties'],
     queryFn: async () => {
-      // For now, generate mock data
-      // In production, this would be a real Supabase query
-      const mockProperties: PropertyListItem[] = Array.from({ length: 12 }, (_, i) => {
-        const fullProperty = generateMockProperty(`prop-${i + 1}`);
-        return {
-          id: fullProperty.id,
-          name: fullProperty.name,
-          address: fullProperty.address,
-          property_type: fullProperty.property_type,
-          status: fullProperty.status,
-          room_status: fullProperty.room_status,
-          num_bedrooms: fullProperty.num_bedrooms,
-          num_bathrooms: fullProperty.num_bathrooms,
-          hero_image: fullProperty.images.find(img => img.is_hero)?.url,
-          open_issues_count: fullProperty.open_tasks.housekeeping + fullProperty.open_tasks.maintenance + fullProperty.open_tasks.damage_reports,
-          urgent_issues_count: Math.floor(Math.random() * 3)
-        };
-      });
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .order('name', { ascending: true });
+
+      if (error) throw error;
       
-      await new Promise(resolve => setTimeout(resolve, 800));
-      return mockProperties;
+      // Transform database properties to PropertyListItem format
+      const transformedProperties: PropertyListItem[] = (data || []).map(property => ({
+        id: property.id,
+        name: property.name,
+        address: property.address || '',
+        property_type: property.property_type || 'villa',
+        status: property.status || 'active',
+        room_status: 'ready', // Default room status since we don't have room status tracking yet
+        num_bedrooms: property.num_bedrooms || 0,
+        num_bathrooms: property.num_bathrooms || 0,
+        hero_image: '/placeholder.svg', // Default placeholder until we implement image management
+        open_issues_count: 0, // Will be calculated from actual tasks when implemented
+        urgent_issues_count: 0, // Will be calculated from actual tasks when implemented
+      }));
+      
+      return transformedProperties;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -105,10 +56,60 @@ export const useDetailedProperty = (propertyId: string | null) => {
     queryFn: async () => {
       if (!propertyId) return null;
       
-      // For now, generate mock data
-      // In production, this would be a real Supabase query
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return generateMockProperty(propertyId);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', propertyId)
+        .maybeSingle();
+
+      if (error) throw error;
+      if (!data) return null;
+
+      // Transform database property to DetailedProperty format
+      const detailedProperty: DetailedProperty = {
+        id: data.id,
+        name: data.name,
+        address: data.address || '',
+        property_type: data.property_type || 'villa',
+        status: (data.status || 'active') as any,
+        room_status: 'ready' as any, // Default until we implement room status tracking
+        num_bedrooms: data.num_bedrooms || 0,
+        num_bathrooms: data.num_bathrooms || 0,
+        max_guests: 4, // Default until we add this field to database
+        square_feet: undefined, // Not in current database schema
+        description: data.description || '',
+        notes: data.notes || '',
+        images: [
+          {
+            id: `${data.id}-img-1`,
+            url: '/placeholder.svg',
+            title: 'Main View',
+            is_hero: true,
+            order_index: 1
+          }
+        ],
+        amenities: [], // Will be implemented when we add amenities table
+        open_tasks: {
+          housekeeping: 0,
+          maintenance: 0,
+          damage_reports: 0
+        }, // Will be calculated from actual tasks
+        financial_summary: {
+          total_costs: 0,
+          maintenance_costs: 0,
+          damage_costs: 0,
+          expense_distribution: {
+            maintenance: 0,
+            damages: 0
+          }
+        }, // Will be calculated from actual expenses
+        created_at: data.created_at || new Date().toISOString(),
+        updated_at: data.updated_at || new Date().toISOString(),
+        last_occupied: undefined, // Will be calculated from bookings
+        next_checkin: undefined // Will be calculated from bookings
+      };
+
+      return detailedProperty;
     },
     enabled: !!propertyId,
     staleTime: 5 * 60 * 1000,
@@ -181,17 +182,18 @@ export const usePropertyAmenities = (propertyId: string) => {
 
   const updateAmenities = useMutation({
     mutationFn: async (amenityIds: string[]) => {
-      // For now, just simulate the update
-      // In production, this would update the database
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // TODO: Implement amenities table and update logic
+      // For now, this is a placeholder until amenities table is created
+      console.log('Property amenities update requested:', { propertyId, amenityIds });
+      toast({
+        title: "Feature Coming Soon",
+        description: "Property amenities management will be available soon.",
+        variant: "default",
+      });
       return amenityIds;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['detailed-property', propertyId] });
-      toast({
-        title: "Amenities updated",
-        description: "Property amenities have been successfully updated.",
-      });
     },
     onError: () => {
       toast({

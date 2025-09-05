@@ -24,6 +24,7 @@ import {
   Eye,
   Edit
 } from "lucide-react";
+import { EmptyPropertyState } from "./EmptyPropertyState";
 
 interface PropertyListViewProps {
   properties: PropertyListItem[];
@@ -249,11 +250,8 @@ export const PropertyListView: React.FC<PropertyListViewProps> = ({
       </Table>
       
       {sortedProperties.length === 0 && (
-        <div className="p-8 text-center text-muted-foreground">
-          <div className="space-y-2">
-            <div className="text-lg font-medium">No properties found</div>
-            <div className="text-sm">Try adjusting your filters to see more results.</div>
-          </div>
+        <div className="p-8">
+          <EmptyPropertyState />
         </div>
       )}
     </div>
