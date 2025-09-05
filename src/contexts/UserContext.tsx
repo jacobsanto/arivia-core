@@ -4,14 +4,14 @@ import { UserContextType } from "./types/userContext.types";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-// Mock user for open access - you as the developer
+// Mock user for open access - Iakovos as superadmin
 const MOCK_ADMIN_USER: User = {
-  id: "00000000-0000-0000-0000-000000000000",
-  email: "dev@ariviagroup.com",
-  name: "Dev Admin",
-  role: "administrator" as UserRole,
+  id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
+  email: "iakovos@ariviagroup.com",
+  name: "Iakovos Arampatzis",
+  role: "superadmin" as UserRole,
   avatar: null,
-  phone: null,
+  phone: "+30 694 123 4567",
   secondaryRoles: [],
   customPermissions: {}
 };
@@ -22,15 +22,15 @@ const MOCK_SESSION: Session = {
   expires_in: 3600,
   refresh_token: "mock-refresh-token",
   user: {
-    id: "00000000-0000-0000-0000-000000000000",
-    email: "dev@ariviagroup.com",
+    id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
+    email: "iakovos@ariviagroup.com",
     aud: "authenticated",
     role: "authenticated",
     app_metadata: {},
-    user_metadata: { name: "Dev Admin" },
+    user_metadata: { name: "Iakovos Arampatzis" },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    phone: null,
+    phone: "+30 694 123 4567",
     identities: []
   } as any // Use any to avoid complex Supabase User type
 };
