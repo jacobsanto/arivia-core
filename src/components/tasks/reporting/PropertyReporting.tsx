@@ -4,7 +4,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { barColors } from "./reportingData";
+// Chart colors for consistent styling
+const barColors = {
+  completed: "#10b981",
+  pending: "#f59e0b",
+  overdue: "#ef4444",
+  rejected: "#f43f5e",
+  approved: "#22c55e"
+};
 import { Badge } from "@/components/ui/badge";
 import { PropertyReportData } from "@/services/reports/reportDataService";
 import { Skeleton } from "@/components/ui/skeleton";

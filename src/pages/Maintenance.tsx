@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { MaintenanceOverview } from "@/components/maintenance/MaintenanceOverview";
 import { MaintenanceTaskManagement } from "@/components/maintenance/MaintenanceTaskManagement";
-import MaintenanceViewModes from "@/components/maintenance/MaintenanceViewModes";
+// MaintenanceViewModes component removed - no mock data views
 import { MaintenanceErrorBoundary } from "@/components/error-boundaries/MaintenanceErrorBoundary";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -48,10 +48,9 @@ const Maintenance: React.FC = () => {
         </div>
 
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Operations Overview</TabsTrigger>
             <TabsTrigger value="tasks">Task Management</TabsTrigger>
-            <TabsTrigger value="views">Enhanced Views</TabsTrigger>
           </TabsList>
           
           <TabsContent value="overview">
@@ -60,10 +59,6 @@ const Maintenance: React.FC = () => {
           
           <TabsContent value="tasks">
             <MaintenanceTaskManagement />
-          </TabsContent>
-          
-          <TabsContent value="views">
-            <MaintenanceViewModes />
           </TabsContent>
         </Tabs>
 

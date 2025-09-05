@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Task } from "../types/taskTypes";
-import { initialTasks } from "../data/taskData";
+// No initial tasks - will be loaded from database
 import { filterTasks } from "../utils/taskFilters";
 import { useTaskActions } from "./useTaskActions";
 import { ChecklistTemplate } from "@/types/checklistTypes";
@@ -9,7 +9,7 @@ import { ChecklistTemplate } from "@/types/checklistTypes";
 export type { Task, ChecklistItem } from "../types/taskTypes";
 
 export const useTasks = () => {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks as Task[]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);

@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { initialTasks } from "../data/maintenanceTasks";
+// No initial tasks - will be loaded from database
 import { DateRangeFilter, MaintenanceReport, MaintenanceTask } from "../types/maintenanceTypes";
 import { 
   completeTask, 
@@ -15,7 +15,7 @@ import { filterMaintenanceTasks } from "../utils/maintenanceFilters";
 export type { MaintenanceInstruction, MaintenanceReport, MaintenanceTask } from "../types/maintenanceTypes";
 
 export const useMaintenanceTasks = () => {
-  const [tasks] = useState<MaintenanceTask[]>(initialTasks);
+  const [tasks] = useState<MaintenanceTask[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedTask, setSelectedTask] = useState<MaintenanceTask | null>(null);
