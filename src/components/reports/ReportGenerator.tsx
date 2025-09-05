@@ -164,14 +164,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
           <div className="space-y-2">
             <Label htmlFor="property-filter">Property</Label>
             <Select
-              value={filters.property || ''}
-              onValueChange={(value) => updateFilters({ property: value || undefined })}
+              value={filters.property || 'all'}
+              onValueChange={(value) => updateFilters({ property: value === 'all' ? undefined : value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Properties</SelectItem>
+                <SelectItem value="all">All Properties</SelectItem>
                 {PROPERTIES.map(property => (
                   <SelectItem key={property} value={property}>{property}</SelectItem>
                 ))}
@@ -185,14 +185,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
               <div className="space-y-2">
                 <Label htmlFor="assignee-filter">Assignee</Label>
                 <Select
-                  value={filters.assignee || ''}
-                  onValueChange={(value) => updateFilters({ assignee: value || undefined })}
+                  value={filters.assignee || 'all'}
+                  onValueChange={(value) => updateFilters({ assignee: value === 'all' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Assignees" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Assignees</SelectItem>
+                    <SelectItem value="all">All Assignees</SelectItem>
                     {ASSIGNEES.map(assignee => (
                       <SelectItem key={assignee} value={assignee}>{assignee}</SelectItem>
                     ))}
@@ -203,14 +203,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
               <div className="space-y-2">
                 <Label htmlFor="status-filter">Status</Label>
                 <Select
-                  value={filters.status || ''}
-                  onValueChange={(value) => updateFilters({ status: value || undefined })}
+                  value={filters.status || 'all'}
+                  onValueChange={(value) => updateFilters({ status: value === 'all' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     {STATUSES.map(status => (
                       <SelectItem key={status} value={status}>{status}</SelectItem>
                     ))}
@@ -225,14 +225,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="category-filter">Category</Label>
               <Select
-                value={filters.category || ''}
-                onValueChange={(value) => updateFilters({ category: value || undefined })}
+                value={filters.category || 'all'}
+                onValueChange={(value) => updateFilters({ category: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {CATEGORIES.slice(2).map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -246,14 +246,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="booking-source-filter">Booking Source</Label>
               <Select
-                value={filters.source || ''}
-                onValueChange={(value) => updateFilters({ source: value || undefined })}
+                value={filters.source || 'all'}
+                onValueChange={(value) => updateFilters({ source: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Sources" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Sources</SelectItem>
+                  <SelectItem value="all">All Sources</SelectItem>
                   {BOOKING_SOURCES.map(source => (
                     <SelectItem key={source} value={source}>{source}</SelectItem>
                   ))}
@@ -267,14 +267,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="review-source-filter">Review Source</Label>
               <Select
-                value={filters.source || ''}
-                onValueChange={(value) => updateFilters({ source: value || undefined })}
+                value={filters.source || 'all'}
+                onValueChange={(value) => updateFilters({ source: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Sources" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Sources</SelectItem>
+                  <SelectItem value="all">All Sources</SelectItem>
                   {REVIEW_SOURCES.map(source => (
                     <SelectItem key={source} value={source}>{source}</SelectItem>
                   ))}
@@ -288,14 +288,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="vendor-category-filter">Vendor Category</Label>
               <Select
-                value={filters.category || ''}
-                onValueChange={(value) => updateFilters({ category: value || undefined })}
+                value={filters.category || 'all'}
+                onValueChange={(value) => updateFilters({ category: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {VENDOR_CATEGORIES.map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
@@ -309,14 +309,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="compliance-area-filter">Compliance Area</Label>
               <Select
-                value={filters.category || ''}
-                onValueChange={(value) => updateFilters({ category: value || undefined })}
+                value={filters.category || 'all'}
+                onValueChange={(value) => updateFilters({ category: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Areas" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Areas</SelectItem>
+                  <SelectItem value="all">All Areas</SelectItem>
                   {COMPLIANCE_AREAS.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
@@ -331,14 +331,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
               <div className="space-y-2">
                 <Label htmlFor="source-filter">Source</Label>
                 <Select
-                  value={filters.source || ''}
-                  onValueChange={(value) => updateFilters({ source: value || undefined })}
+                  value={filters.source || 'all'}
+                  onValueChange={(value) => updateFilters({ source: value === 'all' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Sources" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Sources</SelectItem>
+                    <SelectItem value="all">All Sources</SelectItem>
                     {SOURCES.map(source => (
                       <SelectItem key={source} value={source}>{source}</SelectItem>
                     ))}
@@ -349,14 +349,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
               <div className="space-y-2">
                 <Label htmlFor="damage-status-filter">Status</Label>
                 <Select
-                  value={filters.status || ''}
-                  onValueChange={(value) => updateFilters({ status: value || undefined })}
+                  value={filters.status || 'all'}
+                  onValueChange={(value) => updateFilters({ status: value === 'all' ? undefined : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="Resolved">Resolved</SelectItem>
                     <SelectItem value="In Progress">In Progress</SelectItem>
                     <SelectItem value="Pending">Pending</SelectItem>
@@ -371,14 +371,14 @@ export const ReportGenerator: React.FC<ReportGeneratorProps> = ({ reportsState }
             <div className="space-y-2">
               <Label htmlFor="inventory-category-filter">Category</Label>
               <Select
-                value={filters.category || ''}
-                onValueChange={(value) => updateFilters({ category: value || undefined })}
+                value={filters.category || 'all'}
+                onValueChange={(value) => updateFilters({ category: value === 'all' ? undefined : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {CATEGORIES.slice(0, 3).map(category => (
                     <SelectItem key={category} value={category}>{category}</SelectItem>
                   ))}
