@@ -179,13 +179,14 @@ export const RuleEditorModal: React.FC<RuleEditorModalProps> = ({
             <div className="space-y-2">
               <Label htmlFor="dayOfWeek">Day of Week</Label>
               <Select
-                value={watch('dayOfWeek') || ''}
-                onValueChange={(value) => setValue('dayOfWeek', value)}
+                value={watch('dayOfWeek') || 'none'}
+                onValueChange={(value) => setValue('dayOfWeek', value === 'none' ? undefined : value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select day" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="none">Select day</SelectItem>
                   {DAYS_OF_WEEK.map((day) => (
                     <SelectItem key={day} value={day}>
                       {day}

@@ -29,15 +29,15 @@ export const ServiceLevelConfiguration: React.FC<ServiceLevelConfigurationProps>
           <div key={serviceType} className="space-y-2">
             <Label>{label}</Label>
             <Select
-              value={serviceLevelConfig[serviceType as ServiceType] || ""}
-              onValueChange={(value) => onUpdate(serviceType as ServiceType, value || null)}
+              value={serviceLevelConfig[serviceType as ServiceType] || "none"}
+              onValueChange={(value) => onUpdate(serviceType as ServiceType, value === "none" ? null : value)}
               disabled={loading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select checklist template" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No template</SelectItem>
+                <SelectItem value="none">No template</SelectItem>
                 {housekeepingTemplates.map((template) => (
                   <SelectItem key={template.id} value={template.id}>
                     {template.name}
