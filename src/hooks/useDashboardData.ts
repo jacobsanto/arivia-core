@@ -86,43 +86,141 @@ export const useDashboardData = () => {
 
   const fetchKPIData = async () => {
     try {
-      // Mock data for now - replace with real Supabase queries
+      // Get today's date for filtering
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Count rooms to clean (pending housekeeping tasks for today)
+      const { count: roomsToClean } = await supabase
+        .from('housekeeping_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+        .gte('due_date', today);
+
+      // Count rooms to inspect (completed housekeeping tasks awaiting QC)
+      const { count: roomsToInspect } = await supabase
+        .from('housekeeping_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'completed')
+        .eq('qc_status', 'pending');
+
+      // Count urgent maintenance tasks
+      const { count: urgentMaintenance } = await supabase
+        .from('maintenance_tasks')
+        .select('*', { count: 'exact', head: true })
+        .eq('priority', 'high')
+        .eq('status', 'pending');
+
+      // Count low stock items (where quantity <= min_quantity)
+      const { data: lowStockData } = await supabase
+        .from('inventory_items')
+        .select('quantity, min_quantity');
+
+      const lowStockCount = lowStockData?.filter(item => 
+        (item.quantity || 0) <= (item.min_quantity || 0)
+      ).length || 0;
+
       setKpiData({
-        roomsToClean: 8,
-        roomsToInspect: 3,
-        urgentMaintenance: 2,
-        lowStockItems: 5
+        roomsToClean: roomsToClean || 0,
+        roomsToInspect: roomsToInspect || 0,
+        urgentMaintenance: urgentMaintenance || 0,
+        lowStockItems: lowStockCount
       });
     } catch (error) {
       console.error('Error fetching KPI data:', error);
+      setKpiData({
+        roomsToClean: 0,
+        roomsToInspect: 0,
+        urgentMaintenance: 0,
+        lowStockItems: 0
+      });
     }
   };
 
   const fetchPortfolioData = async () => {
     try {
-      // Mock data for now - replace with real Supabase queries
-      setPortfolioData({
-        dirty: 8,
-        cleaning: 4,
-        cleaned: 6,
-        inspected: 3,
-        ready: 12
-      });
+      // Get latest room status for each room from room_status_log
+      const { data: roomStatuses } = await supabase
+        .from('room_status_log')
+        .select('property_id, room_number, new_status')
+        .order('created_at', { ascending: false });
+
+      // Count rooms by status
+      const statusCounts = {
+        dirty: 0,
+        cleaning: 0,
+        cleaned: 0,
+        inspected: 0,
+        ready: 0
+      };
+
+      if (roomStatuses) {
+        // Get the latest status for each unique room
+        const latestStatuses = new Map();
+        roomStatuses.forEach(log => {
+          const roomKey = `${log.property_id}-${log.room_number}`;
+          if (!latestStatuses.has(roomKey)) {
+            latestStatuses.set(roomKey, log.new_status);
+          }
+        });
+
+        // Count each status
+        latestStatuses.forEach(status => {
+          if (status in statusCounts) {
+            statusCounts[status as keyof typeof statusCounts]++;
+          }
+        });
+      }
+
+      setPortfolioData(statusCounts);
     } catch (error) {
       console.error('Error fetching portfolio data:', error);
+      setPortfolioData({
+        dirty: 0,
+        cleaning: 0,
+        cleaned: 0,
+        inspected: 0,
+        ready: 0
+      });
     }
   };
 
   const fetchOccupancyData = async () => {
     try {
-      // Mock data for now - replace with real Supabase queries
-      setOccupancyData({
-        occupied: 18,
-        vacant: 8,
-        maintenance: 3
-      });
+      // Get properties and their current status
+      const { data: properties } = await supabase
+        .from('properties')
+        .select('id, status');
+
+      const occupancyCounts = {
+        occupied: 0,
+        vacant: 0,
+        maintenance: 0
+      };
+
+      if (properties) {
+        properties.forEach(property => {
+          switch (property.status) {
+            case 'occupied':
+              occupancyCounts.occupied++;
+              break;
+            case 'maintenance':
+              occupancyCounts.maintenance++;
+              break;
+            default:
+              occupancyCounts.vacant++;
+              break;
+          }
+        });
+      }
+
+      setOccupancyData(occupancyCounts);
     } catch (error) {
       console.error('Error fetching occupancy data:', error);
+      setOccupancyData({
+        occupied: 0,
+        vacant: 0,
+        maintenance: 0
+      });
     }
   };
 
@@ -130,90 +228,201 @@ export const useDashboardData = () => {
     try {
       if (!user) return;
 
-      // Use fallback data immediately to prevent 502 errors
-      // TODO: Implement proper database queries when tables are ready
-      setMyTasks([
-        {
-          id: '1',
-          title: 'Clean Ocean Suite',
-          type: 'housekeeping',
-          status: 'pending',
-          priority: 'high',
-          property: 'Villa Paradise',
-          dueDate: new Date().toISOString()
-        },
-        {
-          id: '2',
-          title: 'Fix AC Unit',
-          type: 'maintenance',
-          status: 'in_progress',
-          priority: 'high',
-          property: 'Beach House',
-          dueDate: new Date(Date.now() + 86400000).toISOString()
-        },
-        {
-          id: '3',
-          title: 'Inspect Pool Equipment',
-          type: 'maintenance',
-          status: 'pending',
-          priority: 'medium',
-          property: 'Garden Villa',
-          dueDate: new Date(Date.now() + 172800000).toISOString()
-        }
-      ]);
+      const today = new Date();
+      const urgent = new Date(today.getTime() + 24 * 60 * 60 * 1000); // Next 24 hours
+
+      // Fetch housekeeping tasks assigned to current user
+      const { data: housekeepingTasks } = await supabase
+        .from('housekeeping_tasks')
+        .select('id, title, status, priority, due_date, property_id')
+        .eq('assigned_to', user.id)
+        .in('status', ['pending', 'in_progress'])
+        .lte('due_date', urgent.toISOString())
+        .order('due_date', { ascending: true })
+        .limit(5);
+
+      // Fetch maintenance tasks assigned to current user
+      const { data: maintenanceTasks } = await supabase
+        .from('maintenance_tasks')
+        .select('id, title, status, priority, due_date, property_id')
+        .eq('assigned_to', user.id)
+        .in('status', ['pending', 'in_progress'])
+        .lte('due_date', urgent.toISOString())
+        .order('due_date', { ascending: true })
+        .limit(5);
+
+      // Get property names for the tasks
+      const propertyIds = [
+        ...(housekeepingTasks?.map(t => t.property_id).filter(Boolean) || []),
+        ...(maintenanceTasks?.map(t => t.property_id).filter(Boolean) || [])
+      ];
+
+      const { data: properties } = propertyIds.length > 0 ? await supabase
+        .from('properties')
+        .select('id, name')
+        .in('id', propertyIds) : { data: [] };
+
+      const propertyMap = new Map<string, string>();
+      properties?.forEach(p => propertyMap.set(p.id, p.name));
+
+      // Combine and format tasks
+      const allTasks: TaskData[] = [];
+
+      if (housekeepingTasks) {
+        allTasks.push(...housekeepingTasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          type: 'housekeeping' as const,
+          status: task.status,
+          priority: task.priority || 'medium',
+          property: propertyMap.get(task.property_id || '') || 'Unknown Property',
+          dueDate: task.due_date
+        })));
+      }
+
+      if (maintenanceTasks) {
+        allTasks.push(...maintenanceTasks.map(task => ({
+          id: task.id,
+          title: task.title,
+          type: 'maintenance' as const,
+          status: task.status,
+          priority: task.priority,
+          property: propertyMap.get(task.property_id || '') || 'Unknown Property',
+          dueDate: task.due_date
+        })));
+      }
+
+      // Sort by priority and due date
+      allTasks.sort((a, b) => {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        const aPriority = priorityOrder[a.priority as keyof typeof priorityOrder] || 1;
+        const bPriority = priorityOrder[b.priority as keyof typeof priorityOrder] || 1;
+        
+        if (aPriority !== bPriority) return bPriority - aPriority;
+        
+        const aDate = new Date(a.dueDate || '').getTime();
+        const bDate = new Date(b.dueDate || '').getTime();
+        return aDate - bDate;
+      });
+
+      setMyTasks(allTasks.slice(0, 5));
     } catch (error) {
       console.error('Error fetching my tasks:', error);
-      // Ensure we always have fallback data
       setMyTasks([]);
     }
   };
 
   const fetchRecentActivity = async () => {
     try {
-      // Mock data for now - replace with real activity log queries
-      setRecentActivity([
-        {
-          id: '1',
-          action: 'completed cleaning task',
-          user: 'Maria Garcia',
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          type: 'task'
-        },
-        {
-          id: '2',
-          action: 'created maintenance request',
-          user: 'John Smith',
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          type: 'maintenance'
-        }
-      ]);
+      // Fetch recent task updates from housekeeping and maintenance
+      const { data: recentTasks } = await supabase
+        .from('housekeeping_tasks')
+        .select('id, title, status, updated_at, assigned_to')
+        .not('assigned_to', 'is', null)
+        .order('updated_at', { ascending: false })
+        .limit(10);
+
+      // Get user names for the assigned tasks
+      const userIds = recentTasks?.map(t => t.assigned_to).filter(Boolean) || [];
+      const { data: users } = userIds.length > 0 ? await supabase
+        .from('profiles')
+        .select('user_id, name')
+        .in('user_id', userIds) : { data: [] };
+
+      const userMap = new Map<string, string>();
+      users?.forEach(u => userMap.set(u.user_id, u.name));
+
+      const activities: ActivityItem[] = [];
+
+      if (recentTasks) {
+        recentTasks.forEach(task => {
+          let action = '';
+          switch (task.status) {
+            case 'completed':
+              action = 'completed cleaning task';
+              break;
+            case 'in_progress':
+              action = 'started cleaning task';
+              break;
+            case 'pending':
+              action = 'was assigned cleaning task';
+              break;
+            default:
+              action = 'updated cleaning task';
+          }
+
+          activities.push({
+            id: task.id,
+            action: `${action}: ${task.title}`,
+            user: userMap.get(task.assigned_to || '') || 'Unknown User',
+            timestamp: task.updated_at,
+            type: 'task'
+          });
+        });
+      }
+
+      // Sort by timestamp and take latest 5
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      setRecentActivity(activities.slice(0, 5));
     } catch (error) {
       console.error('Error fetching recent activity:', error);
+      setRecentActivity([]);
     }
   };
 
   const fetchActionItems = async () => {
     try {
-      // Mock data for now - replace with real queries for pending approvals
-      setActionItems([
-        {
-          id: '1',
-          type: 'purchase_order',
-          title: 'Cleaning Supplies Order',
-          description: 'Pending approval for $250 cleaning supplies order',
-          priority: 'medium',
-          dueDate: new Date(Date.now() + 172800000).toISOString()
-        },
-        {
-          id: '2',
-          type: 'transfer_request',
-          title: 'Inventory Transfer',
-          description: 'Transfer of linens from storage to Villa Paradise',
-          priority: 'low'
-        }
-      ]);
+      // Check for low stock items that need restocking
+      const { data: allInventoryItems } = await supabase
+        .from('inventory_items')
+        .select('id, name, quantity, min_quantity');
+
+      const lowStockItems = allInventoryItems?.filter(item =>
+        (item.quantity || 0) <= (item.min_quantity || 0)
+      ).slice(0, 5) || [];
+
+      // Check for pending maintenance tasks that need approval
+      const { data: pendingMaintenance } = await supabase
+        .from('maintenance_tasks')
+        .select('id, title, priority, created_at')
+        .eq('status', 'pending')
+        .eq('priority', 'high')
+        .limit(3);
+
+      const actionItems: ActionItem[] = [];
+
+      // Add low stock items as purchase orders
+      if (lowStockItems) {
+        lowStockItems.forEach(item => {
+          actionItems.push({
+            id: `stock-${item.id}`,
+            type: 'purchase_order',
+            title: `Restock ${item.name}`,
+            description: `Current stock: ${item.quantity}, Minimum: ${item.min_quantity}`,
+            priority: item.quantity === 0 ? 'high' : 'medium'
+          });
+        });
+      }
+
+      // Add urgent maintenance as approval needed
+      if (pendingMaintenance) {
+        pendingMaintenance.forEach(task => {
+          actionItems.push({
+            id: `maintenance-${task.id}`,
+            type: 'approval_needed',
+            title: `Urgent: ${task.title}`,
+            description: 'High priority maintenance task needs immediate attention',
+            priority: 'high',
+            dueDate: task.created_at
+          });
+        });
+      }
+
+      setActionItems(actionItems);
     } catch (error) {
       console.error('Error fetching action items:', error);
+      setActionItems([]);
     }
   };
 
