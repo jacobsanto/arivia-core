@@ -1,14 +1,46 @@
 
 import { User, UserRole } from "@/types/auth";
 import { toastService } from "@/services/toast/toast.service";
-import { 
-  hashPassword, 
-  verifyPassword, 
-  generateAuthToken, 
-  verifyAuthToken, 
-  saveAuthData, 
-  clearAuthData 
-} from "@/services/auth/authService";
+import { supabase } from "@/integrations/supabase/client";
+
+// Test users for development (you can sign up with these credentials)
+export const TEST_USERS = [
+  {
+    email: "admin@ariviavillas.com",
+    password: "admin123",
+    name: "Admin User",
+    role: "administrator" as UserRole,
+    phone: "+30-210-555-0101"
+  },
+  {
+    email: "manager@ariviavillas.com", 
+    password: "manager123",
+    name: "Property Manager",
+    role: "property_manager" as UserRole,
+    phone: "+30-210-555-0102"
+  },
+  {
+    email: "housekeeping@ariviavillas.com",
+    password: "housekeeping123", 
+    name: "Housekeeping Staff",
+    role: "housekeeping_staff" as UserRole,
+    phone: "+30-210-555-0104"
+  },
+  {
+    email: "maintenance@ariviavillas.com",
+    password: "maintenance123",
+    name: "Maintenance Staff", 
+    role: "maintenance_staff" as UserRole,
+    phone: "+30-210-555-0105"
+  },
+  {
+    email: "superadmin@ariviavillas.com",
+    password: "superadmin123",
+    name: "Super Admin",
+    role: "superadmin" as UserRole,
+    phone: "+30-210-555-0107"
+  }
+];
 
 // Mock users for demo purposes with enhanced security
 export const MOCK_USERS = [
@@ -77,100 +109,103 @@ export const MOCK_USERS = [
   }
 ];
 
-// Authentication functions
+// Authentication functions using Supabase Auth
 export const loginUser = async (email: string, password: string): Promise<User> => {
-  // Simulate API call delay
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Find user by email
-  let foundUser = MOCK_USERS.find(u => u.email === email);
-  
-  if (!foundUser) {
-    // Check localStorage for custom registered users
-    const customUsers = localStorage.getItem("users");
-    if (customUsers) {
-      const parsedUsers = JSON.parse(customUsers);
-      const customUser = parsedUsers.find((u: any) => u.email === email);
-      
-      if (customUser && customUser.passwordHash) {
-        foundUser = customUser;
-      }
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
+
+    if (!data.user) {
+      throw new Error("No user data returned");
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', data.user.id)
+      .single();
+
+    if (profileError || !profile) {
+      throw new Error("Failed to fetch user profile");
+    }
+
+    const user: User = {
+      id: profile.user_id,
+      email: profile.email,
+      name: profile.name,
+      role: profile.role as UserRole,
+      avatar: profile.avatar,
+      phone: profile.phone,
+      customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
+    };
+
+    toastService.success(`Welcome, ${user.name}`, {
+      description: "You have successfully logged in."
+    });
+
+    return user;
+  } catch (error) {
+    console.error("Login error:", error);
+    throw error;
   }
-  
-  if (!foundUser) {
-    throw new Error("Invalid email or password");
-  }
-  
-  // Verify password
-  const isPasswordValid = verifyPassword(
-    password, 
-    foundUser.passwordHash, 
-    foundUser.passwordSalt
-  );
-  
-  if (!isPasswordValid) {
-    throw new Error("Invalid email or password");
-  }
-  
-  // Generate auth token (24 hour expiry)
-  const authToken = generateAuthToken(foundUser.id, foundUser.role, 24);
-  
-  // Remove sensitive data before storing user
-  const { passwordHash, passwordSalt, ...userToStore } = foundUser;
-  
-  // Save authentication data
-  saveAuthData(authToken, userToStore);
-  
-  // Success toast
-  toastService.success(`Welcome, ${userToStore.name}`, {
-    description: "You have successfully logged in."
-  });
-  
-  return userToStore;
 };
 
-export const logoutUser = (): void => {
-  // Clear ALL authentication data
-  localStorage.removeItem("user");
-  localStorage.removeItem("lastAuthTime");
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("session");
-  
-  // Don't clear other data like custom users or offline data
-  
-  toastService.info("Logged Out", {
-    description: "You have been successfully logged out."
-  });
-  
-  // Force redirect to login page with page reload
-  window.location.href = "/login";
-};
-
-export const getUserFromStorage = (): { user: User | null; lastAuthTime: number } => {
-  // Check for existing auth token in localStorage
-  const storedToken = localStorage.getItem("authToken");
-  const storedAuthTime = localStorage.getItem("lastAuthTime");
-  let user = null;
-  let lastAuthTime = 0;
-  
-  if (storedToken) {
-    const { valid } = verifyAuthToken(storedToken);
+export const logoutUser = async (): Promise<void> => {
+  try {
+    await supabase.auth.signOut();
     
-    if (valid) {
-      // Token is valid, restore user from localStorage
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        user = JSON.parse(storedUser);
-        if (storedAuthTime) {
-          lastAuthTime = parseInt(storedAuthTime, 10);
-        }
-      }
-    } else {
-      // Token expired or invalid, clear data
-      clearAuthData();
-    }
+    toastService.info("Logged Out", {
+      description: "You have been successfully logged out."
+    });
+    
+    // Force redirect to login page
+    window.location.href = "/login";
+  } catch (error) {
+    console.error("Logout error:", error);
+    throw error;
   }
-  
-  return { user, lastAuthTime };
+};
+
+export const getUserFromStorage = async (): Promise<{ user: User | null; lastAuthTime: number }> => {
+  try {
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    
+    if (!authUser) {
+      return { user: null, lastAuthTime: 0 };
+    }
+
+    // Get user profile
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', authUser.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error("Failed to fetch user profile:", profileError);
+      return { user: null, lastAuthTime: 0 };
+    }
+
+    const user: User = {
+      id: profile.user_id,
+      email: profile.email,
+      name: profile.name,
+      role: profile.role as UserRole,
+      avatar: profile.avatar,
+      phone: profile.phone,
+      customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
+    };
+
+    return { user, lastAuthTime: Date.now() };
+  } catch (error) {
+    console.error("Get user from storage error:", error);
+    return { user: null, lastAuthTime: 0 };
+  }
 };

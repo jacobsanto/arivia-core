@@ -33,10 +33,10 @@ export const useSessionSync = (
       } else {
         console.log("No central auth data available, using local storage");
         // If central auth is not available, use local storage as fallback
-        const { user: storedUser, lastAuthTime: storedAuthTime } = getUserFromStorage();
-        if (storedUser) {
-          setUser(storedUser);
-          setLastAuthTime(storedAuthTime);
+        const storageResult = await getUserFromStorage();
+        if (storageResult.user) {
+          setUser(storageResult.user);
+          setLastAuthTime(storageResult.lastAuthTime);
         }
       }
     } catch (error) {

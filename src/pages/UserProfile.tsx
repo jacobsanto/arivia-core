@@ -13,6 +13,7 @@ import { useProfileTabs } from "@/components/profile/ProfileTabDefinitions";
 import { useSwipeHint } from "@/hooks/useSwipeHint";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { UserProfileErrorBoundary } from "@/components/error-boundaries/UserProfileErrorBoundary";
+import MockDataRemovalStatus from "@/components/debug/MockDataRemovalStatus";
 
 const UserProfile = () => {
   const { user } = useUser();
@@ -42,7 +43,8 @@ const UserProfile = () => {
   return (
     <UserProfileErrorBoundary>
       <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">My Profile</h1>
+        <MockDataRemovalStatus />
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">My Profile</h1>
 
       <div className="relative">
         {/* Swipe indicators for mobile users */}
