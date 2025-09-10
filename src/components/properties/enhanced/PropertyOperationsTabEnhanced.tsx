@@ -61,70 +61,8 @@ export const PropertyOperationsTabEnhanced: React.FC<PropertyOperationsTabEnhanc
   const [typeFilter, setTypeFilter] = useState("all");
   const [showCreateTask, setShowCreateTask] = useState(false);
 
-  // Mock data - would be fetched based on propertyId
-  const mockTasks: OperationsTask[] = [
-    {
-      id: '1',
-      type: 'housekeeping',
-      title: 'Deep Clean Master Bedroom',
-      description: 'Complete deep cleaning including bathroom, changing linens, and sanitizing surfaces',
-      status: 'pending',
-      priority: 'high',
-      assignee: 'Maria Garcia',
-      dueDate: new Date().toISOString(),
-      estimatedDuration: 90,
-      room: 'Master Bedroom',
-      tags: ['deep-clean', 'bathroom'],
-      created: new Date(Date.now() - 86400000).toISOString(),
-      updated: new Date(Date.now() - 3600000).toISOString()
-    },
-    {
-      id: '2',
-      type: 'maintenance',
-      title: 'Fix Pool Pump Motor',
-      description: 'Pool pump making unusual noise. Suspected motor bearing issue. May need replacement.',
-      status: 'in_progress',
-      priority: 'medium',
-      assignee: 'John Smith',
-      dueDate: new Date(Date.now() + 86400000).toISOString(),
-      estimatedDuration: 120,
-      room: 'Pool Area',
-      tags: ['mechanical', 'urgent-booking'],
-      dependencies: ['obtain-pump-parts'],
-      created: new Date(Date.now() - 172800000).toISOString(),
-      updated: new Date(Date.now() - 1800000).toISOString()
-    },
-    {
-      id: '3',
-      type: 'housekeeping',
-      title: 'Replace Living Room Cushions',
-      description: 'Guest reported stain on main sofa cushions. Replace with backup set.',
-      status: 'completed',
-      priority: 'medium',
-      assignee: 'Elena Papadopoulos',
-      dueDate: new Date(Date.now() - 43200000).toISOString(),
-      estimatedDuration: 30,
-      room: 'Living Room',
-      tags: ['guest-issue', 'replacement'],
-      created: new Date(Date.now() - 259200000).toISOString(),
-      updated: new Date(Date.now() - 43200000).toISOString()
-    },
-    {
-      id: '4',
-      type: 'maintenance',
-      title: 'AC Unit Maintenance Check',
-      description: 'Routine maintenance and filter replacement for main AC unit',
-      status: 'pending',
-      priority: 'low',
-      assignee: 'Dimitris Kostas',
-      dueDate: new Date(Date.now() + 604800000).toISOString(),
-      estimatedDuration: 60,
-      room: 'Main Unit',
-      tags: ['routine', 'preventive'],
-      created: new Date(Date.now() - 86400000).toISOString(),
-      updated: new Date(Date.now() - 86400000).toISOString()
-    }
-  ];
+  // Real data would be fetched based on propertyId
+  const mockTasks: OperationsTask[] = [];
 
   const filteredTasks = useMemo(() => {
     return mockTasks.filter(task => {
