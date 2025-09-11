@@ -6,6 +6,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, Shield, Users, Database, AlertTriangle, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/logger';
 
 interface SecurityEvent {
   id: string;
@@ -83,7 +84,7 @@ const SecurityMonitoring = () => {
       
       setSecurityData(dashboardData);
     } catch (error: any) {
-      console.error('Error fetching security dashboard:', error);
+      logger.error('Error fetching security dashboard', error, { component: 'SecurityMonitoring' });
       setSecurityData({
         recent_security_events: [],
         unresolved_events_count: 0,
@@ -129,7 +130,7 @@ const SecurityMonitoring = () => {
       
       setSystemHealth(healthData);
     } catch (error) {
-      console.error('Error fetching system health:', error);
+      logger.error('Error fetching system health', error, { component: 'SecurityMonitoring' });
       setSystemHealth({
         database: { tables_count: 0, active_connections: 0, rls_enabled_tables: 0 },
         authentication: { total_users: 0, active_sessions: 0 },

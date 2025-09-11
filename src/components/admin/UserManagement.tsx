@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/logger';
 import { UserRole, ROLE_DETAILS } from '@/types/auth';
 import { 
   Users, 
@@ -82,7 +83,7 @@ const UserManagement = () => {
       // Since profiles table doesn't exist, set empty array for now
       setUsers([]);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      logger.error('Error fetching users', error, { component: 'UserManagement' });
       toast.error('Failed to load users');
     }
   };
@@ -92,7 +93,7 @@ const UserManagement = () => {
       // Since user_activity_log table doesn't exist, set empty array for now
       setActivities([]);
     } catch (error) {
-      console.error('Error fetching activity:', error);
+      logger.error('Error fetching activity', error, { component: 'UserManagement' });
     }
   };
 
@@ -113,7 +114,7 @@ const UserManagement = () => {
       setShowCreateDialog(false);
       setNewUser({ email: '', name: '', role: 'property_manager', password: '' });
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      logger.error('Error creating user', error, { component: 'UserManagement' });
       toast.error(error.message || 'Failed to create user');
     }
   };
@@ -123,7 +124,7 @@ const UserManagement = () => {
       // Since update_user_role function doesn't exist, show placeholder message
       toast.error('Role update not available - database functions not configured');
     } catch (error: any) {
-      console.error('Error updating role:', error);
+      logger.error('Error updating role', error, { component: 'UserManagement' });
       toast.error(error.message || 'Failed to update role');
     }
   };
