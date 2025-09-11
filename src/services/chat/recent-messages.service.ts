@@ -22,7 +22,7 @@ export const recentMessagesService = {
           content,
           created_at,
           author_id,
-          profiles!author_id(id, name, avatar)
+          profiles!inner(name, avatar)
         `)
         .not('author_id', 'eq', userId)
         .order('created_at', { ascending: false })
