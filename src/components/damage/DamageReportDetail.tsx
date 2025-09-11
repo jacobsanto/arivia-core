@@ -8,6 +8,7 @@ import { DamageReport } from "@/services/damage/damage.service";
 import { format } from "date-fns";
 import { useUser } from "@/contexts/UserContext";
 import { FileUpload } from "@/components/ui/file-upload";
+import { logger } from '@/services/logger';
 
 type DamageReportStatus = "pending" | "investigating" | "resolved" | "compensation_required" | "compensation_paid" | "closed";
 

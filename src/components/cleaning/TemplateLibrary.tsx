@@ -18,6 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import { CleaningTemplate } from '@/hooks/useAdvancedCleaningSystem';
+import { logger } from '@/services/logger';
 
 interface TemplateLibraryProps {
   templates: CleaningTemplate[];

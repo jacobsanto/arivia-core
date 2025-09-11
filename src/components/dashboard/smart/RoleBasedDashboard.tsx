@@ -21,6 +21,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
+import { logger } from '@/services/logger';
 
 // Import all widget components
 import { KpiSummaryWidget } from "../widgets/KpiSummaryWidget";

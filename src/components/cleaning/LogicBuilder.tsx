@@ -18,6 +18,7 @@ import {
   Save,
   AlertCircle
 } from 'lucide-react';
+import { logger } from '@/services/logger';
 
 interface LogicBuilderProps {
   onClose: () => void;
