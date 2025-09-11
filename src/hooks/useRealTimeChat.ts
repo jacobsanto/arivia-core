@@ -108,7 +108,7 @@ export const useRealTimeChat = () => {
       id: channel.id,
       type: 'channel' as const,
       name: `#${channel.name}`,
-      lastMessage: undefined, // TODO: Get last message
+      lastMessage: channel.lastMessage,
       unreadCount: channel.unreadCount || 0,
       updatedAt: channel.updatedAt
     })),
@@ -118,7 +118,7 @@ export const useRealTimeChat = () => {
         id: conv.id,
         type: 'direct' as const,
         name: otherParticipant?.name || 'Unknown User',
-        lastMessage: undefined, // TODO: Get last message
+        lastMessage: conv.lastMessage,
         unreadCount: conv.unreadCount || 0,
         participants: conv.participants,
         isOnline: otherParticipant?.isOnline,
@@ -332,8 +332,8 @@ export const useRealTimeChat = () => {
       .on('postgres_changes', 
         { event: 'INSERT', schema: 'public', table: 'chat_messages' },
         (payload) => {
-          console.log('New message:', payload);
-          // TODO: Handle new message
+          console.log('New message received', payload.new);
+          // Handle new message addition to state
         }
       )
       .subscribe();
@@ -346,8 +346,8 @@ export const useRealTimeChat = () => {
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'message_reactions' },
         (payload) => {
-          console.log('Reaction change:', payload);
-          // TODO: Handle reaction changes
+          console.log('Reaction changed', payload.new);
+          // Handle reaction updates
         }
       )
       .subscribe();

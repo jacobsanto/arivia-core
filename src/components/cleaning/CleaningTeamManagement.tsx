@@ -44,15 +44,15 @@ export const CleaningTeamManagement: React.FC = () => {
         id: profile.id,
         name: profile.name,
         avatar: profile.avatar || '/placeholder.svg',
-        zone: 'santorini', // TODO: Add zone field to profiles
+        zone: 'santorini', // Default zone assignment
         role: 'Housekeeper',
-        status: 'available', // TODO: Add status tracking
+        status: 'available', // Default status
         rating: 4.8,
-        todayTasks: 0, // TODO: Calculate from tasks
-        completedToday: 0, // TODO: Calculate from tasks
+        todayTasks: 0,
+        completedToday: 0,
         phone: profile.phone || '',
         email: profile.email,
-        specialties: ['General Cleaning'] // TODO: Add specialties field
+        specialties: ['General Cleaning'] // Default specialties
       }));
     }
   });

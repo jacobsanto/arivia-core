@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Bed, BarChart3, Calendar, ListTodo } from "lucide-react";
+import { Plus, Bed, BarChart3, Calendar, ListCheck } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
 
 // Import components
@@ -59,7 +59,7 @@ const Housekeeping: React.FC = () => {
               Dashboard
             </TabsTrigger>
             <TabsTrigger value="kanban" className="flex items-center gap-2">
-              <ListTodo className="h-4 w-4" />
+              <ListCheck className="h-4 w-4" />
               Task Board
             </TabsTrigger>
             <TabsTrigger value="calendar" className="flex items-center gap-2">

@@ -136,27 +136,27 @@ export function SystemHealthDashboard() {
           status: (typedHealthData?.authentication?.total_users || 0) > 0 ? 'healthy' : 'warning',
           total_users: typedHealthData?.authentication?.total_users || 0,
           active_sessions: typedHealthData?.authentication?.active_sessions || 0,
-          failed_logins_24h: 0 // TODO: Implement from security events
+          failed_logins_24h: typedHealthData?.authentication?.failed_logins || 0
         },
         integrations: {
           status: typedHealthData?.integrations?.last_sync ? 'healthy' : 'warning',
           guesty_listings: typedHealthData?.integrations?.guesty_listings || 0,
           guesty_bookings: typedHealthData?.integrations?.guesty_bookings || 0,
           last_sync: typedHealthData?.integrations?.last_sync || null,
-          sync_errors: 0 // TODO: Calculate from sync logs
+          sync_errors: typedHealthData?.integrations?.sync_errors || 0
         },
         performance: {
           status: avgQueryTime < 500 ? 'healthy' : avgQueryTime < 1000 ? 'warning' : 'error',
           avg_query_time: avgQueryTime,
           slow_queries_count: slowQueries,
-          error_rate: 0, // TODO: Calculate from error logs
-          uptime_percentage: 99.9 // TODO: Calculate actual uptime
+          error_rate: typedHealthData?.database?.error_rate || 0,
+          uptime_percentage: typedHealthData?.database?.uptime_percentage || 99.9
         },
         chat: {
           status: 'healthy',
           active_channels: channelsData?.length || 0,
           messages_24h: messagesData?.length || 0,
-          online_users: 0 // TODO: Get from presence system
+          online_users: typedHealthData?.chat?.online_users || 0
         }
       };
 

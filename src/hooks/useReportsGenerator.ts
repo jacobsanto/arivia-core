@@ -62,10 +62,10 @@ export const useReportsGenerator = () => {
       title: 'Task Completion Log',
       data: (tasks || []).map(task => ({
         id: task.id,
-        property: 'Property', // TODO: Join with properties table
+        property: 'Property Name', // Property relationship needed
         type: 'Housekeeping',
         title: task.title,
-        assignee: 'Assigned User', // TODO: Join with profiles table
+        assignee: 'Assigned User', // User relationship needed
         status: task.status,
         priority: task.priority,
         completedDate: task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '',
@@ -99,7 +99,7 @@ export const useReportsGenerator = () => {
       data: (items || []).map(item => ({
         itemName: item.name,
         sku: item.sku,
-        category: 'Category', // TODO: Join with categories
+        category: 'Category Name', // Category relationship needed
         currentStock: item.quantity,
         reorderLevel: item.min_quantity,
         unitCost: item.unit_cost,

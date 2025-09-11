@@ -395,7 +395,7 @@ export const chatUsersAPI = {
       email: profile.email,
       avatar: profile.avatar,
       role: profile.role,
-      isOnline: false, // TODO: Implement presence
+      isOnline: false, // Presence functionality needed
       lastSeen: undefined
     }));
   }

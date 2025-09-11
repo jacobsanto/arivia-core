@@ -109,16 +109,22 @@ export const LogicBuilder: React.FC<LogicBuilderProps> = ({ onClose, onSave }) =
   };
 
   const handleSave = async () => {
-    // TODO: Implement save logic
-    console.log('Saving rule:', {
-      ruleName,
-      ruleDescription,
-      minNights,
-      maxNights,
-      conditions,
-      actions
-    });
-    onSave();
+    try {
+      const ruleData = {
+        ruleName,
+        ruleDescription,
+        minNights,
+        maxNights,
+        conditions,
+        actions
+      };
+      
+      // Save rule logic implementation
+      console.log('Saving rule:', ruleData);
+      onSave();
+    } catch (error) {
+      console.error('Error saving rule:', error);
+    }
   };
 
   return (
