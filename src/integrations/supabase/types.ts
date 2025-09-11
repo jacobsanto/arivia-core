@@ -1790,6 +1790,10 @@ export type Database = {
         Args: { _channel_id: string; _user_id: string }
         Returns: boolean
       }
+      is_channel_member_safe: {
+        Args: { _channel_id: string; _user_id: string }
+        Returns: boolean
+      }
       log_security_event: {
         Args: { details?: Json; event_type: string; severity: string }
         Returns: string
