@@ -75,7 +75,7 @@ export const SmartDashboard: React.FC = () => {
         setIsDamageReportDialogOpen(false);
       }
     } catch (error) {
-      console.error('Error creating damage report:', error);
+      logger.error('Error creating damage report:', error);
       toast({
         title: "Error", 
         description: "Failed to create damage report",
@@ -117,7 +117,7 @@ export const SmartDashboard: React.FC = () => {
         criticalIssues: maintenanceTasks?.length || 0
       });
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      logger.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",

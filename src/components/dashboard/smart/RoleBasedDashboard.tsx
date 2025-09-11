@@ -230,7 +230,7 @@ export const RoleBasedDashboard: React.FC = () => {
           return;
         }
       } catch (error) {
-        console.warn('Failed to parse saved dashboard layout:', error);
+        logger.warn('Failed to parse saved dashboard layout:', error);
       }
     }
 
@@ -268,7 +268,7 @@ export const RoleBasedDashboard: React.FC = () => {
         
         exitEditMode();
       } catch (error) {
-        console.error('Failed to save dashboard layout:', error);
+        logger.error('Failed to save dashboard layout:', error);
       }
   };
 

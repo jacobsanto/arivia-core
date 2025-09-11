@@ -4,6 +4,7 @@ import { User, UserRole } from "@/types/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
+import { logger } from '@/services/logger';
 import UserCardHeader from "./UserCardHeader";
 import UserCardContent from "./UserCardContent";
 import UserCardFooter from "./UserCardFooter";
@@ -69,7 +70,7 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
       toast.error("Failed to update role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
-      console.error("Error updating role:", error);
+      logger.error("Error updating role:", error);
     } finally {
       setIsSaving(false);
     }

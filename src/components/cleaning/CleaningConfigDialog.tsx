@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/services/logger';
 
 interface CleaningConfig {
   id: string;
@@ -113,7 +114,7 @@ export const CleaningConfigDialog: React.FC<CleaningConfigDialogProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      console.error('Error saving config:', error);
+      logger.error('Error saving config:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save cleaning configuration",

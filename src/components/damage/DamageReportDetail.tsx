@@ -64,7 +64,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       await onUpdate(report.id, updates);
       handleClose();
     } catch (error) {
-      console.error("Error updating report:", error);
+      logger.error("Error updating report:", error);
     } finally {
       setIsUpdating(false);
     }
@@ -77,7 +77,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       const file = files[0];
       await onMediaUpload(file, report.id);
     } catch (error) {
-      console.error("Error uploading media:", error);
+      logger.error("Error uploading media:", error);
     }
   };
 

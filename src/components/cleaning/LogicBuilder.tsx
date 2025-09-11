@@ -120,10 +120,10 @@ export const LogicBuilder: React.FC<LogicBuilderProps> = ({ onClose, onSave }) =
       };
       
       // Save rule logic implementation
-      console.log('Saving rule:', ruleData);
+      logger.debug('Saving rule:', ruleData);
       onSave();
     } catch (error) {
-      console.error('Error saving rule:', error);
+      logger.error('Error saving rule:', error);
     }
   };
 

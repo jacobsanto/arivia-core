@@ -9,6 +9,7 @@ import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
 import { useUser } from "@/contexts/UserContext";
+import { logger } from '@/services/logger';
 
 interface UserTableRowProps {
   user: User;
@@ -67,7 +68,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       toast.error("Failed to update role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
-      console.error("Error updating role:", error);
+      logger.error("Error updating role:", error);
     } finally {
       setIsSaving(false);
     }

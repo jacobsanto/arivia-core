@@ -21,6 +21,7 @@ import {
   Home
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/logger';
 import { CleaningTemplate } from '@/hooks/useAdvancedCleaningSystem';
 
 interface Property {
@@ -65,7 +66,7 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
       if (error) throw error;
       setProperties(data || []);
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      logger.error('Error fetching properties:', error);
     } finally {
       setLoading(false);
     }
@@ -112,7 +113,7 @@ export const BulkConfigurationManager: React.FC<BulkConfigurationManagerProps> =
 
       onSave();
     } catch (error) {
-      console.error('Error assigning template:', error);
+      logger.error('Error assigning template:', error);
     }
   };
 

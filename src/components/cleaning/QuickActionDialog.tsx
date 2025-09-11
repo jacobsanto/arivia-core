@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
 import { AlertTriangle, Users, Calendar } from "lucide-react";
+import { logger } from '@/services/logger';
 
 interface QuickActionDialogProps {
   isOpen: boolean;
@@ -124,7 +125,7 @@ export const QuickActionDialog: React.FC<QuickActionDialogProps> = ({
         dueDate: "",
       });
     } catch (error) {
-      console.error('Error creating task:', error);
+      logger.error('Error creating task:', error);
       toastService.error('Failed to create task');
     } finally {
       setIsSubmitting(false);

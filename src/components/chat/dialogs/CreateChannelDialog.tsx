@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { chatChannelsAPI } from '@/services/chat/realtime-chat.service';
+import { logger } from '@/services/logger';
 
 const createChannelSchema = z.object({
   name: z.string()
@@ -82,7 +83,7 @@ export const CreateChannelDialog: React.FC<CreateChannelDialogProps> = ({
       onChannelCreated?.();
       
     } catch (error) {
-      console.error('Error creating channel:', error);
+      logger.error('Error creating channel:', error);
       toast({
         title: "Error",
         description: "Failed to create channel. Please try again.",
