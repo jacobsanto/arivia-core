@@ -1805,6 +1805,14 @@ export type Database = {
         Args: { details?: Json; event_type: string; severity: string }
         Returns: string
       }
+      log_security_operation: {
+        Args: {
+          details?: Json
+          operation_type: string
+          target_resource: string
+        }
+        Returns: undefined
+      }
       update_room_status: {
         Args: {
           p_new_status: string
