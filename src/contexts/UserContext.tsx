@@ -186,8 +186,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const { data: updatedProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', userId)
-          .single();
+          .eq('user_id', userId)
+          .maybeSingle();
         
         if (updatedProfile) {
           setCurrentUser({
@@ -217,10 +217,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', currentUser.id)
-        .single();
-
-      if (error) throw error;
+        .eq('user_id', currentUser.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return false;
+      }
+      
+      if (!profile) {
+        console.log('No profile found for user:', currentUser.id);
+        return false;
+      }
 
       setCurrentUser({
         id: profile.id,
