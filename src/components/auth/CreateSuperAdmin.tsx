@@ -11,6 +11,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { logger } from '@/services/logger';
 
 const superAdminSchema = z.object({
   email: z.string().email("Valid email is required"),
@@ -39,14 +40,14 @@ const CreateSuperAdmin: React.FC = () => {
   useEffect(() => {
     const checkForSuperAdmin = async () => {
       try {
-        console.log("Checking for existing super admin...");
+        logger.auth("Checking for existing super admin...");
         setCheckingAdmin(true);
         // Since profiles table doesn't exist, assume no super admin exists
         const data = null;
         const error = null;
         
         if (error) {
-          console.error("Error checking for super admin:", error);
+          logger.error("Error checking for super admin:", error);
           if (error.message.includes("Failed to fetch")) {
             setError("Network error checking for Super Admin");
           }
@@ -54,13 +55,13 @@ const CreateSuperAdmin: React.FC = () => {
         }
         
         if (data) {
-          console.log("Super admin already exists");
+          logger.auth("Super admin already exists");
           setSuperAdminExists(true);
         } else {
-          console.log("No super admin found");
+          logger.auth("No super admin found");
         }
       } catch (error) {
-        console.error("Error checking for super admin:", error);
+        logger.error("Error checking for super admin:", error);
       } finally {
         setCheckingAdmin(false);
       }
@@ -73,10 +74,10 @@ const CreateSuperAdmin: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log("Creating super admin with:", data.email);
+      logger.auth("Creating super admin", data.email);
       const success = await registerSuperAdmin(data.email, data.password, data.name);
       if (success) {
-        console.log("Super admin created successfully");
+        logger.auth("Super admin created successfully", data.email);
         // Since profiles table doesn't exist, assume super admin was created
         const adminData = { id: 'temp-admin-id' };
         
@@ -86,7 +87,7 @@ const CreateSuperAdmin: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error("Error creating super admin:", err);
+      logger.error("Error creating super admin:", err);
       setError(err instanceof Error ? err.message : "Failed to create Super Admin");
       
       // Better error handling for network issues
