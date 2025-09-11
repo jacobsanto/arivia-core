@@ -184,7 +184,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "fk_chat_messages_author_id"
+            foreignKeyName: "fk_chat_messages_author_profiles"
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
