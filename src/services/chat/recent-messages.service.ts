@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/logger';
 
 export interface RecentMessage {
   id: string;
@@ -15,16 +16,15 @@ export const recentMessagesService = {
   async getRecentMessages(userId: string, limit: number = 10): Promise<RecentMessage[]> {
     try {
       const { data, error } = await supabase
-        .from('direct_messages')
+        .from('chat_messages')
         .select(`
           id,
           content,
           created_at,
-          is_read,
-          sender_id,
-          sender:profiles!sender_id(id, name, avatar)
+          author_id,
+          profiles!author_id(id, name, avatar)
         `)
-        .eq('recipient_id', userId)
+        .not('author_id', 'eq', userId)
         .order('created_at', { ascending: false })
         .limit(limit);
 
@@ -32,15 +32,15 @@ export const recentMessagesService = {
 
       return (data || []).map(msg => ({
         id: msg.id,
-        senderName: (msg.sender as any)?.name || 'Unknown User',
-        senderId: msg.sender_id,
+        senderName: (msg.profiles as any)?.name || 'Unknown User',
+        senderId: msg.author_id,
         content: msg.content,
         createdAt: msg.created_at,
-        avatar: (msg.sender as any)?.avatar || '/placeholder.svg',
-        isUnread: !msg.is_read
+        avatar: (msg.profiles as any)?.avatar || '/placeholder.svg',
+        isUnread: false // No read status in chat_messages table
       }));
     } catch (error: any) {
-      console.error('Error fetching recent messages:', error);
+      logger.error('Error fetching recent messages:', error);
       return [];
     }
   },

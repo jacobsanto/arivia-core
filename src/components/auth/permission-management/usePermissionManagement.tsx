@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { User, getDefaultPermissionsForRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/services/logger';
 
 interface UsePermissionManagementProps {
   selectedUser: User | null;
@@ -68,7 +69,7 @@ export const usePermissionManagement = ({
             .single();
             
           if (error) {
-            console.error("Error loading profile permissions:", error);
+            logger.error("Error loading profile permissions:", error);
             return;
           }
           
@@ -81,8 +82,8 @@ export const usePermissionManagement = ({
           // Use database custom permissions if available (preferred source of truth)
           const dbCustomPermissions = profile?.custom_permissions as Record<string, boolean> || {};
           
-          console.log("Loaded permissions from database:", dbCustomPermissions);
-          console.log("Default permissions:", defaultPermissions);
+          logger.debug("Loaded permissions from database:", dbCustomPermissions);
+          logger.debug("Default permissions:", defaultPermissions);
           
           // Combine default with custom permissions, prioritizing custom permissions
           const initialPermissions = {
@@ -93,9 +94,9 @@ export const usePermissionManagement = ({
           setPermissions(initialPermissions);
           setOriginalPermissions(initialPermissions);
           
-          console.log("Initial combined permissions:", initialPermissions);
+          logger.debug("Initial combined permissions:", initialPermissions);
         } catch (error) {
-          console.error("Error in loadProfilePermissions:", error);
+          logger.error("Error in loadProfilePermissions:", error);
         }
       };
       
@@ -115,7 +116,7 @@ export const usePermissionManagement = ({
         table: 'profiles',
         filter: `id=eq.${selectedUser.id}`
       }, (payload) => {
-        console.log("Profile permissions updated:", payload);
+        logger.debug("Profile permissions updated:", payload);
         if (payload.new && (payload.new as any).custom_permissions) {
           // Reload permissions when profile is updated
           const updatedCustomPermissions = (payload.new as any).custom_permissions as Record<string, boolean>;
@@ -191,7 +192,7 @@ export const usePermissionManagement = ({
         description: "User permissions have been updated"
       });
     } catch (error) {
-      console.error("Error saving permissions:", error);
+      logger.error("Error saving permissions:", error);
       toast.error("Failed to save permissions", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
