@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User, UserRole } from "@/types/auth";
+import { logger } from "@/services/logger";
 
 // Function to sync user with their profile from Supabase
 export const syncUserWithProfile = async (
@@ -13,7 +14,7 @@ export const syncUserWithProfile = async (
 ): Promise<boolean> => {
   try {
     if (!navigator.onLine) {
-      console.log("Offline mode - skipping profile sync");
+      logger.debug("Offline mode - skipping profile sync");
       return false;
     }
 
@@ -25,12 +26,12 @@ export const syncUserWithProfile = async (
       .single();
 
     if (error) {
-      console.error("Error fetching profile:", error);
+      logger.error("Error fetching profile", error);
       return false;
     }
 
     if (!profile) {
-      console.error("No profile found for user:", userId);
+      logger.error("No profile found for user", { userId });
       return false;
     }
 
@@ -48,7 +49,7 @@ export const syncUserWithProfile = async (
           {}) : 
         undefined;
         
-      console.log("Loaded custom permissions during sync:", customPermissions);
+      logger.debug("Loaded custom permissions during sync", customPermissions);
 
       const updatedUser: User = {
         ...currentUser,
@@ -72,7 +73,7 @@ export const syncUserWithProfile = async (
 
     return false;
   } catch (error) {
-    console.error("Error syncing user profile:", error);
+    logger.error("Error syncing user profile", error);
     return false;
   }
 };
@@ -99,8 +100,7 @@ export const updateUserProfile = async (
       return false;
     }
 
-    console.log("Updating profile for user:", userId);
-    console.log("Profile data:", profileData);
+    logger.debug("Updating profile for user", { userId, profileData });
 
     // Convert to snake_case for Supabase
     const dbProfileData: any = {
@@ -119,11 +119,11 @@ export const updateUserProfile = async (
       .select(); // Add this to get the updated data
 
     if (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile", error);
       throw error;
     }
 
-    console.log("Profile updated successfully in database:", data);
+    logger.debug("Profile updated successfully in database", data);
 
     // If this is the current user, also update local state
     if (currentUser && currentUser.id === userId) {
@@ -131,7 +131,7 @@ export const updateUserProfile = async (
       await syncUserWithProfile(userId, setUser, currentUser);
     } else {
       // For other users, we'll rely on real-time subscriptions to update the UI
-      console.log("Updated user is not current user, relying on real-time updates");
+      logger.debug("Updated user is not current user, relying on real-time updates");
     }
 
     toastService.success("Profile updated", {
@@ -140,7 +140,7 @@ export const updateUserProfile = async (
 
     return true;
   } catch (error) {
-    console.error("Error updating profile:", error);
+    logger.error("Error updating profile", error);
     toastService.error("Failed to update profile", {
       description: error instanceof Error ? error.message : "An unknown error occurred"
     });

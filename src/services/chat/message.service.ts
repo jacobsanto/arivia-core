@@ -5,6 +5,7 @@ import { ChatMessage } from './chat.types';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadAttachments } from './message/attachment.service';
 import { transformToMessage, DbMessage } from './message/transform.service';
+import { logger } from '@/services/logger';
 
 export const messageService = {
   async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
@@ -20,7 +21,7 @@ export const messageService = {
       // Transform the raw data to our ChatMessage type with explicit casting
       return (data || []).map((msg: DbMessage) => transformToMessage(msg, channelId));
     } catch (error: any) {
-      console.error(`Error fetching messages for channel ${channelId}:`, error);
+      logger.error('Error fetching messages for channel', error, { component: 'chat', channelId });
       return [];
     }
   },
@@ -69,7 +70,7 @@ export const messageService = {
       
       return null;
     } catch (error: any) {
-      console.error('Error sending message:', error);
+      logger.error('Error sending message', error);
       toast.error('Failed to send message', {
         description: error.message
       });
@@ -87,7 +88,7 @@ export const messageService = {
       if (error) throw error;
       return true;
     } catch (error: any) {
-      console.error(`Error marking message ${messageId} as read:`, error);
+      logger.error('Error marking message as read', error, { component: 'chat', messageId });
       return false;
     }
   },
@@ -135,7 +136,7 @@ export const messageService = {
       if (updateError) throw updateError;
       return true;
     } catch (error: any) {
-      console.error(`Error updating reaction for message ${messageId}:`, error);
+      logger.error('Error updating reaction for message', error, { component: 'chat', messageId });
       return false;
     }
   }

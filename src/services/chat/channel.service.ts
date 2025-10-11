@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatChannel, GENERAL_CHAT_CHANNEL_ID } from './chat.types';
+import { logger } from '@/services/logger';
 
 export const channelService = {
   async getChannels(): Promise<ChatChannel[]> {
@@ -14,7 +15,7 @@ export const channelService = {
       if (error) throw error;
       return data || [];
     } catch (error: any) {
-      console.error('Error fetching chat channels:', error);
+      logger.error('Error fetching chat channels', error);
       // Don't toast here, we'll handle it at the component level
       return [];
     }
@@ -52,7 +53,7 @@ export const channelService = {
       
       return newChannel;
     } catch (error: any) {
-      console.error('Error with general channel:', error);
+      logger.error('Error with general channel', error);
       // Don't toast here, we'll handle it at the component level
       return null;
     }
@@ -70,7 +71,7 @@ export const channelService = {
       toast.success('Channel created successfully');
       return data;
     } catch (error: any) {
-      console.error('Error creating channel:', error);
+      logger.error('Error creating channel', error);
       toast.error('Failed to create channel', {
         description: error.message
       });

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User } from "@/types/auth";
 import { checkOfflineLoginStatus } from "@/services/auth/offlineService";
+import { logger } from "@/services/logger";
 
 export const updateAvatar = async (
   userId: string,
@@ -13,8 +14,7 @@ export const updateAvatar = async (
   currentUser: User | null
 ) => {
   try {
-    console.log("Updating avatar for user:", userId);
-    console.log("Avatar URL:", avatarUrl);
+    logger.debug("Updating avatar for user", { userId, avatarUrl });
     
     if (navigator.onLine) {
       const { error } = await supabase
@@ -26,11 +26,11 @@ export const updateAvatar = async (
         .eq('id', userId);
         
       if (error) {
-        console.error("Error updating profile with avatar URL:", error);
+        logger.error("Error updating profile with avatar URL", error);
         throw error;
       }
       
-      console.log("Profile updated successfully in Supabase");
+      logger.debug("Profile updated successfully in Supabase");
       
       // Update local state immediately for better UX
       if (currentUser?.id === userId) {
@@ -64,7 +64,7 @@ export const updateAvatar = async (
       return true;
     }
   } catch (error) {
-    console.error("Error updating avatar:", error);
+    logger.error("Error updating avatar", error);
     toastService.error("Failed to update avatar", {
       description: error instanceof Error ? error.message : "An unknown error occurred"
     });
@@ -97,32 +97,32 @@ export const removeUser = async (
     
     // Try to delete user in Supabase if online
     if (navigator.onLine) {
-      console.log("Attempting to delete user:", userIdToDelete);
+      logger.debug("Attempting to delete user", { userIdToDelete });
       
       // Call the edge function to delete the user safely with admin privileges
       try {
-        console.log("Calling delete-user edge function with userId:", userIdToDelete);
+        logger.debug("Calling delete-user edge function", { userId: userIdToDelete });
         const { data, error } = await supabase.functions.invoke("delete-user", {
           body: { userId: userIdToDelete }
         });
         
         if (error) {
-          console.error("Error from delete-user function:", error);
+          logger.error("Error from delete-user function", error);
           throw new Error(error.message || "Failed to delete user through edge function");
         }
         
-        console.log("Delete user function response:", data);
+        logger.debug("Delete user function response", data);
         
         // Note: We no longer update the local state here as it will be handled by the 
         // realtime subscription in useUserData.ts
         
         return true;
       } catch (functionError) {
-        console.error("Error calling delete-user function:", functionError);
+        logger.error("Error calling delete-user function", functionError);
         throw functionError;
       }
     } else {
-      console.log("Device is offline, updating local state only");
+      logger.debug("Device is offline, updating local state only");
       toastService.warning("Offline delete", {
         description: "User will be removed locally but will sync when back online"
       });
@@ -134,7 +134,7 @@ export const removeUser = async (
       return true;
     }
   } catch (error) {
-    console.error("Error deleting user:", error);
+    logger.error("Error deleting user", error);
     toastService.error("Failed to delete user", {
       description: error instanceof Error ? error.message : "An unknown error occurred"
     });
