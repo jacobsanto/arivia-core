@@ -15,7 +15,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Critical pages loaded immediately
 import Dashboard from "@/pages/Dashboard";
-import { MVPLoginPage } from "@/components/auth/mvp/MVPLoginPage";
+import Login from "@/components/auth/LoginForm";
+import Register from "@/components/auth/SignUpForm";
 
 // Lazy-loaded pages for code splitting
 const UserProfile = lazy(() => import("@/pages/UserProfile"));
@@ -62,8 +63,8 @@ function App() {
                 
                 <Routes>
                   {/* Public Auth Routes */}
-                  <Route path="/login" element={<MVPLoginPage />} />
-                  <Route path="/register" element={<MVPLoginPage />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
