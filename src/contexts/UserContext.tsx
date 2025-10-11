@@ -12,80 +12,114 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [currentIsLoading, setCurrentIsLoading] = useState(true);
 
-  // For demo purposes, we'll use Iakovos as the main user
-  const MAIN_USER_EMAIL = "iakovos@ariviagroup.com";
+  // Fetch user profile from authenticated session
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error) {
+        logger.error('Error fetching user profile:', error);
+        return null;
+      }
+
+      if (!profile) {
+        logger.info('No profile found for user:', userId);
+        return null;
+      }
+
+      const user: User = {
+        id: profile.id,
+        email: profile.email,
+        name: profile.name,
+        role: profile.role as UserRole,
+        avatar: profile.avatar,
+        phone: profile.phone,
+        secondaryRoles: [],
+        customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
+      };
+
+      setCurrentUser(user);
+      return user;
+    } catch (error) {
+      logger.error('Error in fetchUserProfile:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    // Fetch the main user profile from Supabase
-    const fetchUserProfile = async () => {
-      try {
-        setCurrentIsLoading(true);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        logger.debug('UserContext', 'Auth state change', { event });
         
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', MAIN_USER_EMAIL)
-          .single();
-
-        if (error) {
-          logger.error('Error fetching user profile:', error);
-          // Fallback to mock user if profile doesn't exist
-          setCurrentUser({
-            id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
-            email: "iakovos@ariviagroup.com",
-            name: "Iakovos Arampatzis",
-            role: "superadmin" as UserRole,
-            avatar: null,
-            phone: "+30 694 123 4567",
-            secondaryRoles: [],
-            customPermissions: {}
-          });
+        setCurrentSession(session);
+        
+        if (session?.user) {
+          // User is authenticated - fetch their profile
+          await fetchUserProfile(session.user.id);
         } else {
-          // Convert Supabase profile to User format
-          setCurrentUser({
-            id: profiles.id,
-            email: profiles.email,
-            name: profiles.name,
-            role: profiles.role as UserRole,
-            avatar: profiles.avatar,
-            phone: profiles.phone,
-            secondaryRoles: [],
-            customPermissions: (profiles.custom_permissions as Record<string, boolean>) || {}
-          });
+          // User is not authenticated
+          setCurrentUser(null);
+        }
+        
+        setCurrentIsLoading(false);
+      }
+    );
+
+    // Check for existing session on mount
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          logger.error('Error getting session:', error);
+          setCurrentIsLoading(false);
+          return;
         }
 
-        // Create mock session
-        setCurrentSession({
-          access_token: "mock-access-token",
-          token_type: "bearer",
-          expires_in: 3600,
-          refresh_token: "mock-refresh-token",
-          user: {
-            id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
-            email: "iakovos@ariviagroup.com",
-            aud: "authenticated",
-            role: "authenticated",
-            app_metadata: {},
-            user_metadata: { name: "Iakovos Arampatzis" },
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            phone: "+30 694 123 4567",
-            identities: []
-          } as any
-        });
+        setCurrentSession(session);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        }
+        
+        setCurrentIsLoading(false);
       } catch (error) {
-        logger.error('Error in fetchUserProfile:', error);
-      } finally {
+        logger.error('Error initializing auth:', error);
         setCurrentIsLoading(false);
       }
     };
 
-    fetchUserProfile();
+    initializeAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  // Mock actions for now - will be replaced with real Supabase auth later
+  // Real authentication using Supabase
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    logger.auth("Mock login - connecting to Supabase profiles", email);
+    try {
+      setCurrentIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        logger.error('Login error:', error);
+        toastService.error('Login failed', { description: error.message });
+        throw error;
+      }
+      
+      toastService.success('Login successful');
+    } catch (error) {
+      logger.error('Login error:', error);
+      throw error;
+    } finally {
+      setCurrentIsLoading(false);
+    }
   };
 
   const handleSignup = async (
@@ -94,8 +128,38 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     role: UserRole = "property_manager"
   ) => {
-    logger.auth("Mock signup - connecting to Supabase profiles", email);
-    return true;
+    try {
+      setCurrentIsLoading(true);
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            name: fullName,
+            role: role
+          }
+        }
+      });
+
+      if (error) {
+        logger.error('Signup error:', error);
+        toastService.error('Signup failed', { description: error.message });
+        return false;
+      }
+
+      toastService.success('Account created', { 
+        description: 'Please check your email to verify your account.' 
+      });
+      return true;
+    } catch (error) {
+      logger.error('Signup error:', error);
+      return false;
+    } finally {
+      setCurrentIsLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -131,11 +195,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleHasPermission = (roles: UserRole[]) => true; // Always allow for now
-  const handleHasFeatureAccess = (featureKey: string) => true; // Always allow for now
+  const handleHasPermission = (roles: UserRole[]) => {
+    if (!currentUser) return false;
+    return roles.includes(currentUser.role);
+  };
+
+  const handleHasFeatureAccess = (featureKey: string) => {
+    if (!currentUser) return false;
+    return currentUser.customPermissions[featureKey] ?? true;
+  };
 
   const handleGetOfflineLoginStatus = () => {
-    return { isOfflineLoggedIn: true, timeRemaining: 999999 };
+    // Offline login not supported with real auth
+    return { isOfflineLoggedIn: false, timeRemaining: 0 };
   };
 
   const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
@@ -184,8 +256,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleSyncUserProfile = async () => {
-    logger.auth("Mock profile sync - connecting to Supabase profiles");
-    return true;
+    if (!currentSession?.user) {
+      logger.info('No authenticated user to sync');
+      return false;
+    }
+    
+    const profile = await fetchUserProfile(currentSession.user.id);
+    return !!profile;
   };
 
   const handleUpdateProfile = async (
@@ -242,41 +319,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleRefreshProfile = async () => {
-    if (!currentUser) return false;
-    
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .maybeSingle();
-      
-      if (error) {
-        logger.error('Error fetching profile:', error);
-        return false;
-      }
-      
-      if (!profile) {
-        logger.info('No profile found for user:', currentUser.id);
-        return false;
-      }
-
-      setCurrentUser({
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role as UserRole,
-        avatar: profile.avatar,
-        phone: profile.phone,
-        secondaryRoles: [],
-        customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
-      });
-
-      return true;
-    } catch (error) {
-      logger.error('Error refreshing profile:', error);
+    if (!currentSession?.user) {
+      logger.info('No authenticated user to refresh');
       return false;
     }
+    
+    const profile = await fetchUserProfile(currentSession.user.id);
+    return !!profile;
   };
 
   return (
