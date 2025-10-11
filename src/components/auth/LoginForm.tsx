@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -24,10 +24,18 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
+  // Navigate to dashboard when user is authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
+    }
+  }, [user, authLoading, navigate, location]);
   
   // Use react-hook-form with zod for validation
   const form = useForm({
@@ -49,12 +57,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
           title: "Login Failed",
           description: error.message || "Invalid credentials. Please try again.",
         });
+        setIsLoading(false);
         return;
       }
       
-      // Redirect to previous page or dashboard
-      const from = location.state?.from?.pathname || "/dashboard";
-      navigate(from, { replace: true });
+      // Don't navigate here - let the useEffect handle it when user state updates
     } catch (error: any) {
       logger.error("Login failed:", error);
       toast({
@@ -62,7 +69,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
         title: "Login Failed",
         description: error.message || "Invalid credentials. Please try again.",
       });
-    } finally {
       setIsLoading(false);
     }
   };

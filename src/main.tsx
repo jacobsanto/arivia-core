@@ -21,11 +21,9 @@ const queryClient = new QueryClient({
 })
 
 // Make sure we have a root element
-console.log('[main] Starting app initialization');
 const rootElement = document.getElementById("root");
 if (!rootElement) throw new Error("Failed to find the root element");
 
-console.log('[main] Rendering root');
 createRoot(rootElement).render(
   <QueryClientProvider client={queryClient}>
     <AuthProvider>

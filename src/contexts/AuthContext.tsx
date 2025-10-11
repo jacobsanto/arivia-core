@@ -26,7 +26,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  console.log('[AuthContext] Initializing AuthProvider');
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +34,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
 
   const refreshAuthState = async () => {
-    console.log('[AuthContext] Starting refreshAuthState');
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
       
@@ -79,45 +77,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "There was a problem refreshing your session"
       });
     } finally {
-      console.log('[AuthContext] refreshAuthState complete, isLoading = false');
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('[AuthContext] useEffect - Setting up auth listener');
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         logger.debug('AuthContext', 'Auth state change event', { event });
-        
         
         setSession(newSession);
         
         if (newSession?.user) {
-          // Use setTimeout to prevent auth deadlock
-          setTimeout(() => {
-            supabase
+          // Fetch profile data synchronously
+          try {
+            const { data: profile } = await supabase
               .from('profiles')
               .select('id, user_id, name, email, role, avatar, phone')
               .eq('id', newSession.user.id)
-              .single()
-              .then(({ data: profile }) => {
-                if (profile) {
-                  const newUser = {
-                    id: newSession.user.id,
-                    email: newSession.user.email || '',
-                    name: profile.name || newSession.user.email?.split('@')[0] || 'User',
-                    role: profile.role as UserRole || 'property_manager',
-                    avatar: profile.avatar || "/placeholder.svg",
-                    phone: profile.phone,
-                    secondaryRoles: undefined,
-                    customPermissions: {}
-                  };
-                  setUser(newUser);
-                }
-              });
-          }, 0);
+              .single();
+
+            if (profile) {
+              const newUser = {
+                id: newSession.user.id,
+                email: newSession.user.email || '',
+                name: profile.name || newSession.user.email?.split('@')[0] || 'User',
+                role: profile.role as UserRole || 'property_manager',
+                avatar: profile.avatar || "/placeholder.svg",
+                phone: profile.phone,
+                secondaryRoles: undefined,
+                customPermissions: {}
+              };
+              setUser(newUser);
+            }
+          } catch (error) {
+            logger.error('AuthContext', 'Error fetching profile', { error });
+          }
         } else {
           setUser(null);
         }

@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { LoadingPage } from '@/components/common/LoadingStates';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 // Lazy load all main pages for code splitting
 const Dashboard = lazy(() => import('@/pages/Dashboard'));
@@ -18,34 +19,6 @@ const Checklists = lazy(() => import('@/pages/Checklists'));
 import Login from '@/components/auth/LoginForm';
 import Register from '@/components/auth/SignUpForm';
 import CreateSuperAdmin from '@/components/auth/CreateSuperAdmin';
-
-// Higher-order component for route protection with error boundaries
-const ProtectedRoute: React.FC<{ children: React.ReactNode; roles?: string[] }> = ({ 
-  children, 
-  roles = [] 
-}) => {
-  const { user, isLoading } = useAuth();
-
-  if (isLoading) {
-    return <LoadingPage text="Checking authentication..." />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (roles.length > 0 && !roles.includes(user.role)) {
-    return <Navigate to="/dashboard" replace />;
-  }
-
-  return (
-    <ErrorBoundary>
-      <Suspense fallback={<LoadingPage text="Loading page..." />}>
-        {children}
-      </Suspense>
-    </ErrorBoundary>
-  );
-};
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
