@@ -45,11 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       
       if (data.session) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('id, user_id, name, email, role, avatar, phone')
-          .eq('id', data.session.user.id)
+          .eq('user_id', data.session.user.id)
           .single();
+
+        if (profileError) {
+          logger.error('AuthContext', 'Error fetching profile', { error: profileError });
+        }
 
         if (profile) {
           const newUser = {
@@ -90,11 +94,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (newSession?.user) {
           // Fetch profile data synchronously
           try {
-            const { data: profile } = await supabase
+            const { data: profile, error: profileError } = await supabase
               .from('profiles')
               .select('id, user_id, name, email, role, avatar, phone')
-              .eq('id', newSession.user.id)
+              .eq('user_id', newSession.user.id)
               .single();
+
+            if (profileError) {
+              logger.error('AuthContext', 'Error fetching profile in auth state change', { error: profileError });
+            }
 
             if (profile) {
               const newUser = {
