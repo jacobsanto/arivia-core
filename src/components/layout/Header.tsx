@@ -14,6 +14,7 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
 import { recentMessagesService, RecentMessage } from "@/services/chat/recent-messages.service";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 
 interface HeaderProps {
@@ -141,6 +142,8 @@ const Header: React.FC<HeaderProps> = ({
           >
             <LogOut className="h-5 w-5" />
           </Button>
+
+          <ThemeToggle />
           
         </div>
       </div>

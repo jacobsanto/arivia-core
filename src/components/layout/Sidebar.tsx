@@ -95,11 +95,6 @@ const Sidebar = () => {
         {/* PROFILE */}
         <div className="space-y-1 pt-2">
           <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
-          
-          {/* Theme Toggle at bottom */}
-          <div className="flex items-center justify-center py-2 border-t border-sidebar-border mt-4 pt-4">
-            <ThemeToggle />
-          </div>
         </div>
       </nav>
     </div>;
