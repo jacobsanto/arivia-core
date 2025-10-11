@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface User {
   id: string;
@@ -13,7 +13,7 @@ export interface User {
 }
 
 export const useUsers = () => {
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useAuth();
 
   const { data: users, isLoading, error, refetch } = useQuery({
     queryKey: ['users', currentUser?.id, currentUser?.role],

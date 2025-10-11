@@ -5,7 +5,7 @@ import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
 
 export const useTeamChat = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [conversations, setConversations] = useState<DirectConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);

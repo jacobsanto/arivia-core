@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/contexts/OrderContext";
 import { 
   Order, 
@@ -29,7 +29,7 @@ const OrderList: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
   
   const { canAccess } = usePermissions();
-  const { user } = useUser();
+  const { user } = useAuth();
   
   const userRole = user?.role || "concierge";
   const canViewOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(userRole);

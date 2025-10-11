@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,16 @@ import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserInformation = () => {
-  const { user, updateProfile, refreshProfile } = useUser();
+  const { user, refreshAuthState } = useAuth();
+  
+  const updateProfile = async (userId: string, data: any) => {
+    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
+    return !error;
+  };
+  
+  const refreshProfile = async () => {
+    await refreshAuthState();
+  };
   const [isEditing, setIsEditing] = useState(false);
   const isMobile = useIsMobile();
   const isSuperAdmin = user?.role === "superadmin";

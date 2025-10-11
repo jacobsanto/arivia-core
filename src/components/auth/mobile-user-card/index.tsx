@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { User, UserRole } from "@/types/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
 import UserCardHeader from "./UserCardHeader";
 import UserCardContent from "./UserCardContent";
@@ -27,7 +27,10 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
   isExpanded,
   toggleExpand
 }) => {
-  const { updateProfile } = useUser();
+  const updateProfile = async (userId: string, data: any) => {
+    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
+    return !error;
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(

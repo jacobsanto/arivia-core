@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DamageReport } from "@/services/damage/damage.service";
 import { format } from "date-fns";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { FileUpload } from "@/components/ui/file-upload";
 import { logger } from '@/services/logger';
 
@@ -37,7 +37,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
   );
   const [compensationNotes, setCompensationNotes] = useState(report.compensation_notes || "");
   const [isUpdating, setIsUpdating] = useState(false);
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const handleClose = () => {
     setIsOpen(false);

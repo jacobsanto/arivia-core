@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -26,9 +26,15 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const {
     user,
-    logout,
-    refreshProfile
-  } = useUser();
+    signOut,
+    refreshAuthState
+  } = useAuth();
+  
+  const logout = signOut;
+  const refreshProfile = async () => {
+    await refreshAuthState();
+    return true;
+  };
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { unreadCount } = useNotifications();

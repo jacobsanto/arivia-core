@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell } from 'lucide-react';
 import { notificationDemo } from '@/utils/notificationDemo';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToastService } from '@/contexts/ToastContext';
 
 /**
@@ -10,7 +10,7 @@ import { useToastService } from '@/contexts/ToastContext';
  * This component can be added to any page for testing notifications
  */
 export const NotificationTestButton: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const toast = useToastService();
 
   const handleCreateDemoNotifications = async () => {

@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
-import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
 
 interface UserTableRowProps {
@@ -24,7 +24,10 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
-  const { updateProfile } = useUser();
+  const updateProfile = async (userId: string, data: any) => {
+    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
+    return !error;
+  };
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(

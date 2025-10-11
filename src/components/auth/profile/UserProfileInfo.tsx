@@ -5,14 +5,15 @@ import { Badge } from "@/components/ui/badge";
 import { Mail, Phone } from "lucide-react";
 import { ROLE_DETAILS } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface UserProfileInfoProps {
   user: User;
 }
 
 const UserProfileInfo: React.FC<UserProfileInfoProps> = ({ user }) => {
-  const { refreshProfile } = useUser();
+  const { refreshAuthState } = useAuth();
+  const refreshProfile = async () => { await refreshAuthState(); };
 
   const getRoleBadges = () => {
     const badges = [];

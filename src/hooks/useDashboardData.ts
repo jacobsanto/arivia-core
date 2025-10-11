@@ -51,7 +51,7 @@ export interface ActionItem {
 }
 
 export const useDashboardData = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [kpiData, setKpiData] = useState<DashboardKPIData | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);

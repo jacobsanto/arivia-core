@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Task } from "@/types/taskTypes";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 // Import smaller components
@@ -40,7 +40,7 @@ const TaskDetail = ({
   onToggleChecklistItem,
   onPhotoUpload,
 }: TaskDetailProps) => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
   

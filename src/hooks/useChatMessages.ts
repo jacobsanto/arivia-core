@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useMessageStorage } from "./useMessageStorage";
 import { useTypingIndicator } from "@/hooks/chat/useTypingIndicator"; // Updated import path
@@ -12,7 +12,7 @@ export type { Message, MessageReaction };
 
 export const useChatMessages = (activeChat: string) => {
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user } = useAuth();
   const [message, setMessage] = useState("");
   
   // Use our custom hooks

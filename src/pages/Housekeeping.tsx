@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Bed, BarChart3, Calendar, ListCheck } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Import components
 import { HousekeepingDashboard } from "@/components/housekeeping/HousekeepingDashboard";
@@ -16,7 +16,7 @@ import { HousekeepingErrorBoundary } from "@/components/error-boundaries/Houseke
 const Housekeeping: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
-  const { user } = useUser();
+  const { user } = useAuth();
   
   const isManager = user?.role === "superadmin" || user?.role === "administrator" || user?.role === "property_manager";
 

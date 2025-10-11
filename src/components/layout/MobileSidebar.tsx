@@ -1,7 +1,7 @@
 
 
 import React from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NavLink } from "react-router-dom";
@@ -16,7 +16,8 @@ interface MobileSidebarProps {
 }
 
 const MobileSidebar: React.FC<MobileSidebarProps> = ({ isOpen, onClose }) => {
-  const { user, logout } = useUser();
+  const { user, signOut } = useAuth();
+  const logout = signOut;
   const { canAccess } = usePermissions();
 
   if (!user) return null;

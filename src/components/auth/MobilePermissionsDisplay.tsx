@@ -1,14 +1,14 @@
 
 import React, { useState } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Check, X, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { FEATURE_PERMISSIONS, ROLE_DETAILS } from '@/types/auth';
 
 const MobilePermissionsDisplay = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { canAccess, getOfflineCapabilities } = usePermissions();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
   

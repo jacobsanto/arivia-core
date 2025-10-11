@@ -3,7 +3,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Message } from "../useChatTypes";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -20,7 +20,7 @@ export function useRealtimeMessages({
   messages, 
   setMessages 
 }: UseRealtimeMessagesProps) {
-  const { user } = useUser();
+  const { user } = useAuth();
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isMountedRef = useRef(true);
   const subscriptionKeyRef = useRef<string>('');

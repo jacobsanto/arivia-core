@@ -1,5 +1,5 @@
 
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { User } from "@/types/auth";
 import { useExpandedUsers } from "./hooks/useExpandedUsers";
 import { useRoleActions } from "./hooks/useRoleActions";
@@ -9,7 +9,7 @@ import { useUserData } from "./hooks/useUserData";
 export const useRoleManagement = () => {
   // Get user data and loading state
   const { users, isLoading } = useUserData();
-  const { user: currentUser } = useUser();
+  const { user: currentUser } = useAuth();
   
   // Get role actions functionality
   const roleActions = useRoleActions();

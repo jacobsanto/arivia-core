@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
 
 interface OrderFormVendorProps {
@@ -20,7 +20,7 @@ const OrderFormVendor: React.FC<OrderFormVendorProps> = ({
   selectedVendorId, 
   setSelectedVendorId 
 }) => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const [vendors, setVendors] = useState<VendorWithCategoryNames[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
@@ -12,7 +12,16 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { updateUserAvatar, refreshProfile } = useUser();
+  const { refreshAuthState } = useAuth();
+  
+  const updateUserAvatar = async (userId: string, avatarUrl: string) => {
+    const { error } = await supabase.from('profiles').update({ avatar: avatarUrl }).eq('id', userId);
+    return !error;
+  };
+  
+  const refreshProfile = async () => {
+    await refreshAuthState();
+  };
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");

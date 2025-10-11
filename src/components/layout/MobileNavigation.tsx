@@ -2,7 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, BarChart, FileText, User } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 
 interface MobileNavigationProps {
@@ -11,7 +11,7 @@ interface MobileNavigationProps {
 }
 
 const MobileNavigation: React.FC<MobileNavigationProps> = ({ isOpen, onClose }) => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { canAccess } = usePermissions();
 
   if (!user) return null;

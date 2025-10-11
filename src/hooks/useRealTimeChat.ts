@@ -21,7 +21,7 @@ import { NotificationPatterns } from '@/services/notifications/notification.patt
 
 
 export const useRealTimeChat = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { toast } = useToast();
   
   // State

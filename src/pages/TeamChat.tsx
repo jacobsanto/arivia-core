@@ -14,7 +14,7 @@ import { Users, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 const TeamChat: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [isWindowFocused, setIsWindowFocused] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);

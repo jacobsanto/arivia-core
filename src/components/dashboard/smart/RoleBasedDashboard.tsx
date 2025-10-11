@@ -13,7 +13,7 @@ import {
   Maximize2,
   Minimize2
 } from "lucide-react";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { 
   DropdownMenu, 
@@ -181,7 +181,7 @@ const DEFAULT_LAYOUTS: Record<string, string[]> = {
 const STORAGE_KEY = 'arivia_dashboard_layout';
 
 export const RoleBasedDashboard: React.FC = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const navigate = useNavigate();
   
   const [isEditMode, setIsEditMode] = useState(false);

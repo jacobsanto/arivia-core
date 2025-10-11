@@ -14,7 +14,7 @@ export const useDamageReports = () => {
   const [isCreateReportOpen, setIsCreateReportOpen] = useState(false);
   const [propertyFilter, setPropertyFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const { user } = useUser();
+  const { user } = useAuth();
 
   const loadReports = useCallback(async () => {
     const loadedReports = await damageService.getDamageReports();

@@ -3,7 +3,7 @@
  */
 import React from "react";
 import { Helmet } from "react-helmet-async";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { LoadingState } from "@/components/common/loading/LoadingSpinner";
@@ -14,7 +14,7 @@ import { useAdminAccess } from "./admin-settings/hooks/useAdminAccess";
 import { useSwipeNavigation } from "./admin-settings/hooks/useSwipeNavigation";
 
 const AdminSettingsPage = () => {
-  const { user } = useUser();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { isElevated, isLoading } = useAdminAccess(user);
   const swipeHandlers = useSwipeNavigation(navigate);

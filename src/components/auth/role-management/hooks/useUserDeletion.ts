@@ -2,11 +2,14 @@
 import { useState } from "react";
 import { User } from "@/types/auth";
 import { logger } from '@/services/logger';
-import { useUser } from "@/contexts/UserContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const useUserDeletion = () => {
-  const { deleteUser } = useUser();
+  const deleteUser = async (userId: string) => {
+    const { error } = await supabase.from('profiles').delete().eq('id', userId);
+    return !error;
+  };
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);

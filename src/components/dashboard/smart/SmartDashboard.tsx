@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DamageReportForm from "@/components/damage/DamageReportForm";
 import { damageService } from "@/services/damage/damage.service";
@@ -43,7 +43,7 @@ export const SmartDashboard: React.FC = () => {
     toast
   } = useToast();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user } = useAuth();
   const handleCreateDamageReport = async (data: DamageReportFormValues) => {
     try {
       const newReport = await damageService.createDamageReport({

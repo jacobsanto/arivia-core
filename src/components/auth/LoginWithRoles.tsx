@@ -16,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROLE_DETAILS, UserRole } from "@/types/auth";
 
 const formSchema = z.object({
@@ -27,7 +27,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const LoginWithRoles: React.FC = () => {
-  const { login } = useUser();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +48,7 @@ const LoginWithRoles: React.FC = () => {
       setIsLoading(true);
       setError(null);
       
-      await login(values.email, values.password);
+      await signIn(values.email, values.password);
       
       const from = location.state?.from?.pathname || "/";
       navigate(from);

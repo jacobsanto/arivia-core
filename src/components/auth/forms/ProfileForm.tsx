@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { User, UserRole } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { logger } from '@/services/logger';
 
 const profileFormSchema = z.object({
@@ -30,7 +30,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onCancel, 
   onSubmit 
 }) => {
-  const { refreshProfile } = useUser();
+  const { refreshAuthState } = useAuth();
+  const refreshProfile = async () => { await refreshAuthState(); };
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {

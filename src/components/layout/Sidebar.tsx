@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText, ChevronDown, ChevronRight, Clock, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -14,8 +14,9 @@ import { useState } from "react";
 const Sidebar = () => {
   const {
     user,
-    logout
-  } = useUser();
+    signOut
+  } = useAuth();
+  const logout = signOut;
   const {
     canAccess
   } = usePermissions();
