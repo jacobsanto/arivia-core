@@ -132,6 +132,15 @@ const Header: React.FC<HeaderProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <Button 
+            variant="outline" 
+            size="icon" 
+            onClick={handleLogout}
+            className="hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground"
+          >
+            <LogOut className="h-5 w-5" />
+          </Button>
           
         </div>
       </div>

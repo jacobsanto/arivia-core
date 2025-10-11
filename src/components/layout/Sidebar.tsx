@@ -92,14 +92,9 @@ const Sidebar = () => {
             </CollapsibleContent>
           </Collapsible>}
         
-        {/* PROFILE & LOGOUT */}
+        {/* PROFILE */}
         <div className="space-y-1 pt-2">
           <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
-          
-          <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-            <LogOut className="mr-3 h-5 w-5" />
-            <span>Logout</span>
-          </Button>
           
           {/* Theme Toggle at bottom */}
           <div className="flex items-center justify-center py-2 border-t border-sidebar-border mt-4 pt-4">
