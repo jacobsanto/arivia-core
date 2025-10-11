@@ -9,6 +9,7 @@ import {
   Phone 
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/logger";
 
 interface TeamMember {
   id: string;
@@ -85,7 +86,7 @@ export const TeamDirectoryWidget: React.FC = () => {
 
       setTeamMembers(members);
     } catch (error) {
-      console.error('Error fetching team members:', error);
+      logger.error('Error fetching team members', error);
       setTeamMembers([]);
     } finally {
       setLoading(false);

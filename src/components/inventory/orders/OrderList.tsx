@@ -16,6 +16,7 @@ import OrderTable from "./list/OrderTable";
 import OrderDetailsDialog from "./details/OrderDetailsDialog";
 import { toastService } from "@/services/toast/toast.service";
 import { orderService } from "@/services/orders/order.service";
+import { logger } from "@/services/logger";
 
 const OrderList: React.FC = () => {
   const { orders, updateOrder } = useOrders();
@@ -76,7 +77,7 @@ const OrderList: React.FC = () => {
             });
           }
         } catch (error) {
-          console.error("Error checking overdue orders:", error);
+          logger.error("Error checking overdue orders", error);
         }
       };
       
@@ -122,7 +123,7 @@ const OrderList: React.FC = () => {
       
       setIsDetailsOpen(false);
     } catch (error) {
-      console.error("Error approving order:", error);
+      logger.error("Error approving order", error);
     }
   };
 
@@ -164,7 +165,7 @@ const OrderList: React.FC = () => {
       setIsDetailsOpen(false);
       setRejectionReason("");
     } catch (error) {
-      console.error("Error rejecting order:", error);
+      logger.error("Error rejecting order", error);
     }
   };
 
@@ -194,7 +195,7 @@ const OrderList: React.FC = () => {
       
       setIsDetailsOpen(false);
     } catch (error) {
-      console.error("Error sending order:", error);
+      logger.error("Error sending order", error);
     }
   };
 

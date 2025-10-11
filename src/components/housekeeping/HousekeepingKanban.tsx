@@ -16,6 +16,7 @@ import {
   CheckSquare
 } from "lucide-react";
 import { toastService } from "@/services/toast";
+import { logger } from "@/services/logger";
 
 interface Task {
   id: string;
@@ -70,7 +71,7 @@ const HousekeepingKanban: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['housekeeping-kanban'] });
       toastService.success('Task status updated successfully');
     } catch (error) {
-      console.error('Error updating task status:', error);
+      logger.error('Error updating task status', error);
       toastService.error('Failed to update task status');
     }
   };

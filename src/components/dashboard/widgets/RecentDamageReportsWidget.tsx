@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileWarning, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/logger";
 
 interface DamageReport {
   id: string;
@@ -81,7 +82,7 @@ export const RecentDamageReportsWidget: React.FC = () => {
 
       setDamageReports(formattedReports);
     } catch (error) {
-      console.error('Error fetching damage reports:', error);
+      logger.error('Error fetching damage reports', error);
       setDamageReports([]);
     } finally {
       setLoading(false);
