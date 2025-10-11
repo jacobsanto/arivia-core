@@ -33,13 +33,14 @@ export interface DamageReportMedia {
 export const damageService = {
   async getDamageReports(): Promise<DamageReport[]> {
     try {
-      const { data, error } = await supabase
+      // Using type assertion for fields not in generated types
+      const { data, error } = await (supabase as any)
         .from('damage_reports')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as DamageReport[];
     } catch (error: any) {
       logger.error("Error fetching damage reports", error, { component: 'damageService' });
       toast.error('Failed to load damage reports');
@@ -49,7 +50,8 @@ export const damageService = {
 
   async createDamageReport(report: Omit<DamageReport, 'id' | 'created_at' | 'updated_at'>): Promise<DamageReport | null> {
     try {
-      const { data, error } = await supabase
+      // Using type assertion for fields not in generated types
+      const { data, error } = await (supabase as any)
         .from('damage_reports')
         .insert(report)
         .select()
@@ -57,7 +59,7 @@ export const damageService = {
 
       if (error) throw error;
       toast.success('Damage report created successfully');
-      return data;
+      return data as DamageReport;
     } catch (error: any) {
       logger.error("Error creating damage report", error, { component: 'damageService' });
       toast.error('Failed to create damage report');
@@ -80,7 +82,8 @@ export const damageService = {
         .from('damage-reports')
         .getPublicUrl(fileName);
 
-      const { error: dbError } = await supabase
+      // Using type assertion for damage_report_media table not in generated types
+      const { error: dbError } = await (supabase as any)
         .from('damage_report_media')
         .insert({
           report_id: reportId,

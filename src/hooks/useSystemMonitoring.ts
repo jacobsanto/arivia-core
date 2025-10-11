@@ -177,7 +177,8 @@ export const systemHealthChecks: HealthCheck[] = [
   {
     name: 'Performance Monitoring',
     check: async () => {
-      const { data, error } = await supabase
+      // Using type assertion for table not in generated types
+      const { data, error } = await (supabase as any)
         .from('query_performance_log')
         .select('id')
         .limit(1);
