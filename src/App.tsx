@@ -46,6 +46,7 @@ const SystemSettings = lazy(() => import("@/pages/SystemSettings"));
 
 
 function App() {
+  console.log('[App] Rendering App component');
   return (
     <MVPErrorBoundary>
       <HelmetProvider>

@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, isLoading, error } = useAuth();
+  console.log('[ProtectedRoute] State:', { hasUser: !!user, isLoading, error });
 
   // Show loading state while checking authentication
   if (isLoading) {

@@ -26,6 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('[AuthContext] Initializing AuthProvider');
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
 
   const refreshAuthState = async () => {
+    console.log('[AuthContext] Starting refreshAuthState');
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
       
@@ -77,11 +79,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "There was a problem refreshing your session"
       });
     } finally {
+      console.log('[AuthContext] refreshAuthState complete, isLoading = false');
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('[AuthContext] useEffect - Setting up auth listener');
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {

@@ -8,8 +8,10 @@ import { useAuth } from "@/contexts/AuthContext";
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  console.log('[UserContext] Initializing UserProvider');
   // Get auth state from AuthContext (single source of truth)
   const { user: currentUser, session: currentSession, isLoading: currentIsLoading, signIn, signUp, signOut } = useAuth();
+  console.log('[UserContext] Auth state from AuthContext:', { hasUser: !!currentUser, isLoading: currentIsLoading });
 
   // Delegate auth operations to AuthContext
   const handleLogin = async (email: string, password: string): Promise<void> => {
