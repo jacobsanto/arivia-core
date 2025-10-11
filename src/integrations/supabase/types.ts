@@ -183,6 +183,13 @@ export type Database = {
             referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_chat_messages_author_profiles"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       checklist_templates: {
@@ -1797,6 +1804,14 @@ export type Database = {
       log_security_event: {
         Args: { details?: Json; event_type: string; severity: string }
         Returns: string
+      }
+      log_security_operation: {
+        Args: {
+          details?: Json
+          operation_type: string
+          target_resource: string
+        }
+        Returns: undefined
       }
       update_room_status: {
         Args: {

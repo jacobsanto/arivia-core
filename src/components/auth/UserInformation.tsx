@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
 import { useUser } from "@/contexts/UserContext";
+import { logger } from '@/services/logger';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
@@ -42,7 +43,7 @@ const UserInformation = () => {
         await refreshProfile();
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      logger.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
         description: "Please try again later"
       });

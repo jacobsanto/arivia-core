@@ -1,6 +1,7 @@
 
 import { useState } from "react";
 import { User } from "@/types/auth";
+import { logger } from '@/services/logger';
 import { useUser } from "@/contexts/UserContext";
 import { toast } from "sonner";
 
@@ -12,19 +13,19 @@ export const useUserDeletion = () => {
   
   const handleDeleteConfirm = async () => {
     if (!userToDelete) {
-      console.log("No user selected for deletion");
+      logger.debug("No user selected for deletion");
       return false;
     }
     
     try {
       setIsDeleting(true);
-      console.log("Starting delete operation for user:", userToDelete.id);
+      logger.debug("Starting delete operation for user:", userToDelete.id);
       
       // Call the deleteUser function from the context
       const result = await deleteUser(userToDelete.id);
       
       if (result) {
-        console.log("User deleted successfully");
+        logger.debug("User deleted successfully");
         toast.success("User deleted successfully");
         
         // No need to update the users array here - will happen via realtime subscription
@@ -34,7 +35,7 @@ export const useUserDeletion = () => {
         throw new Error("Delete operation failed");
       }
     } catch (error) {
-      console.error("Error in handleDeleteConfirm:", error);
+      logger.error("Error in handleDeleteConfirm:", error);
       toast.error("Failed to delete user", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
@@ -47,7 +48,7 @@ export const useUserDeletion = () => {
   const handleDeleteAllUsers = async (users: User[], currentUserId: string) => {
     try {
       setIsDeletingAll(true);
-      console.log("Starting deletion of all users except current user");
+      logger.debug("Starting deletion of all users except current user");
       
       const usersToDelete = users.filter(user => user.id !== currentUserId);
       let successCount = 0;
@@ -55,7 +56,7 @@ export const useUserDeletion = () => {
       
       for (const user of usersToDelete) {
         try {
-          console.log(`Attempting to delete user: ${user.id} (${user.name})`);
+          logger.debug(`Attempting to delete user: ${user.id} (${user.name})`);
           const result = await deleteUser(user.id);
           if (result) {
             successCount++;
@@ -65,7 +66,7 @@ export const useUserDeletion = () => {
           // Small delay to prevent overwhelming the server
           await new Promise(resolve => setTimeout(resolve, 300));
         } catch (error) {
-          console.error(`Error deleting user ${user.id}:`, error);
+          logger.error(`Error deleting user ${user.id}:`, error);
           failCount++;
         }
       }
@@ -78,7 +79,7 @@ export const useUserDeletion = () => {
         return successCount > 0;
       }
     } catch (error) {
-      console.error("Error in handleDeleteAllUsers:", error);
+      logger.error("Error in handleDeleteAllUsers:", error);
       toast.error("Failed to delete all users", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

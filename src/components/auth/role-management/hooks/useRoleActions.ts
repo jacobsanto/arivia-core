@@ -48,7 +48,7 @@ export const useRoleActions = () => {
           throw error;
         }
         
-        console.log("Updated profile from Supabase:", data);
+        logger.debug("Updated profile from Supabase:", data);
         
         // If we have data back, use it to update the local state
         if (data) {
@@ -105,7 +105,7 @@ export const useRoleActions = () => {
       setEditingUserId(null);
       toast.success("User role updated successfully");
     } catch (error) {
-      console.error("Error updating role:", error);
+      logger.error("Error updating role:", error);
       toast.error("Failed to update user role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

@@ -18,6 +18,7 @@ import {
   Eye
 } from 'lucide-react';
 import { CleaningTemplate } from '@/hooks/useAdvancedCleaningSystem';
+import { logger } from '@/services/logger';
 
 interface TemplateLibraryProps {
   templates: CleaningTemplate[];
@@ -47,7 +48,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
       setShowCreateDialog(false);
       setFormData({ name: '', description: '', is_global: false, template_data: {} });
     } catch (error) {
-      console.error('Failed to create template:', error);
+      logger.error('Failed to create template:', error);
     }
   };
 
@@ -59,7 +60,7 @@ export const TemplateLibrary: React.FC<TemplateLibraryProps> = ({
       setEditingTemplate(null);
       setFormData({ name: '', description: '', is_global: false, template_data: {} });
     } catch (error) {
-      console.error('Failed to update template:', error);
+      logger.error('Failed to update template:', error);
     }
   };
 

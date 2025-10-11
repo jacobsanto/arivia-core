@@ -14,6 +14,7 @@ import { useUser } from "@/contexts/UserContext";
 import { Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { PasswordStrengthIndicator } from "./PasswordStrengthIndicator";
 import { SecurityEnhancements } from "./SecurityEnhancements";
+import { logger } from '@/services/logger';
 
 interface SignUpFormProps {
   isMobile?: boolean;
@@ -43,7 +44,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ isMobile = false }) => {
       // Show success message for email confirmation
       setShowSecurityInfo(true);
     } catch (error: any) {
-      console.error("Registration failed:", error);
+      logger.error("Registration failed:", error);
     } finally {
       setIsLoading(false);
     }

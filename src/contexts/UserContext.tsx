@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, UserRole, Session } from "@/types/auth";
 import { UserContextType } from "./types/userContext.types";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/services/logger';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -26,7 +27,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .single();
 
         if (error) {
-          console.error('Error fetching user profile:', error);
+          logger.error('Error fetching user profile:', error);
           // Fallback to mock user if profile doesn't exist
           setCurrentUser({
             id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
@@ -72,7 +73,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           } as any
         });
       } catch (error) {
-        console.error('Error in fetchUserProfile:', error);
+        logger.error('Error in fetchUserProfile:', error);
       } finally {
         setCurrentIsLoading(false);
       }
@@ -83,7 +84,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Mock actions for now - will be replaced with real Supabase auth later
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    console.log("Mock login - connecting to Supabase profiles");
+    logger.auth("Mock login - connecting to Supabase profiles", email);
   };
 
   const handleSignup = async (
@@ -92,12 +93,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     role: UserRole = "property_manager"
   ) => {
-    console.log("Mock signup - connecting to Supabase profiles");
+    logger.auth("Mock signup - connecting to Supabase profiles", email);
     return true;
   };
 
   const handleLogout = async () => {
-    console.log("Mock logout - connecting to Supabase profiles");
+    logger.auth("Mock logout - disconnecting from Supabase profiles");
   };
 
   const handleHasPermission = (roles: UserRole[]) => true; // Always allow for now
@@ -117,7 +118,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating permissions:', error);
+      logger.error('Error updating permissions:', error);
       return false;
     }
   };
@@ -132,7 +133,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error updating avatar:', error);
+      logger.error('Error updating avatar:', error);
       return false;
     }
   };
@@ -147,13 +148,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
       return true;
     } catch (error) {
-      console.error('Error deleting user:', error);
+      logger.error('Error deleting user:', error);
       return false;
     }
   };
 
   const handleSyncUserProfile = async () => {
-    console.log("Mock profile sync - connecting to Supabase profiles");
+    logger.auth("Mock profile sync - connecting to Supabase profiles");
     return true;
   };
 
@@ -205,7 +206,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       return true;
     } catch (error) {
-      console.error('Error updating profile:', error);
+      logger.error('Error updating profile:', error);
       return false;
     }
   };
@@ -221,12 +222,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .maybeSingle();
       
       if (error) {
-        console.error('Error fetching profile:', error);
+        logger.error('Error fetching profile:', error);
         return false;
       }
       
       if (!profile) {
-        console.log('No profile found for user:', currentUser.id);
+        logger.info('No profile found for user:', currentUser.id);
         return false;
       }
 
@@ -243,7 +244,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return true;
     } catch (error) {
-      console.error('Error refreshing profile:', error);
+      logger.error('Error refreshing profile:', error);
       return false;
     }
   };

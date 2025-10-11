@@ -8,6 +8,7 @@ import { DamageReport } from "@/services/damage/damage.service";
 import { format } from "date-fns";
 import { useUser } from "@/contexts/UserContext";
 import { FileUpload } from "@/components/ui/file-upload";
+import { logger } from '@/services/logger';
 
 type DamageReportStatus = "pending" | "investigating" | "resolved" | "compensation_required" | "compensation_paid" | "closed";
 
@@ -64,7 +65,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       await onUpdate(report.id, updates);
       handleClose();
     } catch (error) {
-      console.error("Error updating report:", error);
+      logger.error("Error updating report:", error);
     } finally {
       setIsUpdating(false);
     }
@@ -77,7 +78,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       const file = files[0];
       await onMediaUpload(file, report.id);
     } catch (error) {
-      console.error("Error uploading media:", error);
+      logger.error("Error uploading media:", error);
     }
   };
 

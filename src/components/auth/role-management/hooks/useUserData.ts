@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/services/logger';
 
 export const useUserData = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -17,7 +18,7 @@ export const useUserData = () => {
         setIsLoading(true);
         
         if (navigator.onLine) {
-          console.log("Fetching users from Supabase...");
+          logger.debug("Fetching users from Supabase...");
           // Fetch profiles from Supabase
           const { data, error } = await supabase
             .from('profiles')
@@ -29,7 +30,7 @@ export const useUserData = () => {
           }
           
           if (data) {
-            console.log(`Fetched ${data.length} users successfully`);
+            logger.debug(`Fetched ${data.length} users successfully`);
             // Convert to User type
             const mappedUsers: User[] = data.map((profile: any) => ({
               id: profile.id,
@@ -45,19 +46,19 @@ export const useUserData = () => {
             
             // Update localStorage for offline use
             localStorage.setItem("users", JSON.stringify(mappedUsers));
-            console.log("Updated localStorage with fetched users");
+            logger.debug("Updated localStorage with fetched users");
           }
         } else {
-          console.log("Device is offline, using localStorage data");
+          logger.debug("Device is offline, using localStorage data");
           // Offline mode - use localStorage
           const storedUsers = localStorage.getItem("users");
           if (storedUsers) {
             setUsers(JSON.parse(storedUsers));
-            console.log("Loaded users from localStorage");
+            logger.debug("Loaded users from localStorage");
           }
         }
       } catch (error) {
-        console.error("Error fetching users:", error);
+        logger.error("Error fetching users:", error);
         toast.error("Failed to load users", {
           description: "Using cached data instead"
         });
@@ -66,7 +67,7 @@ export const useUserData = () => {
         const storedUsers = localStorage.getItem("users");
         if (storedUsers) {
           setUsers(JSON.parse(storedUsers));
-          console.log("Loaded users from localStorage after error");
+          logger.debug("Loaded users from localStorage after error");
         }
       } finally {
         setIsLoading(false);
@@ -84,7 +85,7 @@ export const useUserData = () => {
         schema: 'public', 
         table: 'profiles' 
       }, (payload) => {
-        console.log('Profile change detected:', payload);
+        logger.debug('Profile change detected:', payload);
         
         // Handle different types of changes
         if (payload.eventType === 'INSERT') {
@@ -151,14 +152,14 @@ export const useUserData = () => {
         }
       })
       .subscribe((status) => {
-        console.log(`Profile subscription status: ${status}`);
+        logger.debug(`Profile subscription status: ${status}`);
       });
     
     // Store subscription for cleanup
     subscriptionRef.current = channel;
     
     return () => {
-      console.log("Cleaning up profile subscription");
+      logger.debug("Cleaning up profile subscription");
       if (subscriptionRef.current) {
         supabase.removeChannel(subscriptionRef.current);
         subscriptionRef.current = null;

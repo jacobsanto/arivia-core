@@ -3,7 +3,9 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EnhancedSecuritySettingsFormValues } from "@/types/systemSettings.types";
+import SecurityDashboard from "../security/SecurityDashboard";
 
 interface EnhancedSecuritySettingsProps {
   form: any;
@@ -13,14 +15,25 @@ const EnhancedSecuritySettings: React.FC<EnhancedSecuritySettingsProps> = ({ for
   const ipRestrictionEnabled = form.watch("ipRestriction");
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Security</CardTitle>
-        <CardDescription>
-          Manage the application's security posture and enforce access policies
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
+    <Tabs defaultValue="dashboard" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="dashboard">Security Dashboard</TabsTrigger>
+        <TabsTrigger value="settings">Security Settings</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="dashboard">
+        <SecurityDashboard />
+      </TabsContent>
+
+      <TabsContent value="settings">
+        <Card>
+          <CardHeader>
+            <CardTitle>Security Settings</CardTitle>
+            <CardDescription>
+              Manage the application's security posture and enforce access policies
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
         <FormField
           control={form.control}
           name="minimumPasswordLength"
@@ -208,8 +221,10 @@ const EnhancedSecuritySettings: React.FC<EnhancedSecuritySettingsProps> = ({ for
             )}
           />
         )}
-      </CardContent>
-    </Card>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 };
 

@@ -17,6 +17,7 @@ import { loginSchema } from "@/lib/validation/auth-schema";
 import { loginUser } from "@/services/auth/userAuthService";
 import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
+import { logger } from '@/services/logger';
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -53,7 +54,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
         description: "You have successfully logged in.",
       });
     } catch (error: any) {
-      console.error("Login failed:", error.message);
+      logger.error("Login failed:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
