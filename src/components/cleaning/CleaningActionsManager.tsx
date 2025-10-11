@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Edit, Trash2, Clock, Zap } from 'lucide-react';
 import { CleaningAction } from '@/hooks/useRuleBasedCleaningSystem';
 import { supabase } from '@/integrations/supabase/client';
-import { logger } from '@/services/logger';
 import { toast } from '@/hooks/use-toast';
 
 interface CleaningActionsManagerProps {
@@ -123,7 +122,7 @@ export const CleaningActionsManager: React.FC<CleaningActionsManagerProps> = ({
 
       setIsDialogOpen(false);
     } catch (err) {
-      logger.error('Error saving action:', err);
+      console.error('Error saving action:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : 'Failed to save action',
@@ -151,7 +150,7 @@ export const CleaningActionsManager: React.FC<CleaningActionsManagerProps> = ({
         description: `"${action.display_name}" has been deleted successfully`,
       });
     } catch (err) {
-      logger.error('Error deleting action:', err);
+      console.error('Error deleting action:', err);
       toast({
         title: "Error",
         description: err instanceof Error ? err.message : 'Failed to delete action',

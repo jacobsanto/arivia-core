@@ -1,8 +1,7 @@
 
 import React from 'react';
 import { User } from "@/types/auth";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { useUser } from "@/contexts/UserContext";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -19,12 +18,7 @@ interface PermissionManagementProps {
 }
 
 const PermissionManagement: React.FC<PermissionManagementProps> = ({ selectedUser }) => {
-  const { user: currentUser } = useAuth();
-  
-  const updateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
-    const { error } = await supabase.from('profiles').update({ custom_permissions: permissions }).eq('id', userId);
-    return !error;
-  };
+  const { user: currentUser, updateUserPermissions } = useUser();
 
   const {
     permissions,

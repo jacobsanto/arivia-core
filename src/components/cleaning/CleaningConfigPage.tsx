@@ -69,7 +69,7 @@ export const CleaningConfigPage: React.FC = () => {
       
       setConfigs(processedConfigs);
     } catch (error: any) {
-      logger.error('Error fetching data:', error);
+      console.error('Error fetching data:', error);
       toast({
         title: "Error",
         description: "Failed to load cleaning configurations",
@@ -121,7 +121,7 @@ export const CleaningConfigPage: React.FC = () => {
       setConfigToDelete(null);
       fetchData();
     } catch (error: any) {
-      logger.error('Error deleting config:', error);
+      console.error('Error deleting config:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete configuration",

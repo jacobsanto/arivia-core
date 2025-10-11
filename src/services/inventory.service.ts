@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/services/logger";
 
 export interface InventoryCategory {
   id: string;
@@ -32,7 +31,7 @@ export const inventoryService = {
       .order('name');
     
     if (error) {
-      logger.error('Error fetching inventory categories', error);
+      console.error('Error fetching inventory categories:', error);
       throw error;
     }
     
@@ -46,7 +45,7 @@ export const inventoryService = {
       .order('name');
     
     if (error) {
-      logger.error("Error fetching inventory items", error, { component: 'inventoryService' });
+      console.error('Error fetching inventory items:', error);
       throw error;
     }
     
@@ -61,7 +60,7 @@ export const inventoryService = {
       .single();
     
     if (error) {
-      logger.error("Error creating inventory category", error, { component: 'inventoryService' });
+      console.error('Error creating inventory category:', error);
       throw error;
     }
     
@@ -76,7 +75,7 @@ export const inventoryService = {
       .single();
     
     if (error) {
-      logger.error("Error creating inventory item", error, { component: 'inventoryService' });
+      console.error('Error creating inventory item:', error);
       throw error;
     }
     
@@ -107,13 +106,13 @@ export const inventoryService = {
         });
       
       if (error) {
-        logger.error("Error recording inventory usage", error, { component: 'inventoryService' });
+        console.error('Error recording inventory usage:', error);
         return false;
       }
       
       return true;
     } catch (error) {
-      logger.error("Error recording inventory usage", error, { component: 'inventoryService' });
+      console.error('Error recording inventory usage:', error);
       return false;
     }
   },
@@ -139,7 +138,7 @@ export const inventoryService = {
         .order('usage_date', { ascending: false });
       
       if (error) {
-        logger.error("Error fetching inventory usage", error, { component: 'inventoryService' });
+        console.error('Error fetching inventory usage:', error);
         return [];
       }
       
@@ -153,7 +152,7 @@ export const inventoryService = {
         reported_by: item.profiles?.name || 'Unknown User'
       }));
     } catch (error) {
-      logger.error("Error fetching inventory usage", error, { component: 'inventoryService' });
+      console.error('Error fetching inventory usage:', error);
       return [];
     }
   },

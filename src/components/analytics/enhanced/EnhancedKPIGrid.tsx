@@ -13,7 +13,7 @@ import {
   Activity,
   Target
 } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/mvp/LoadingSpinner';
 
 interface EnhancedKPIGridProps {
   data?: KPIMetrics;
@@ -22,11 +22,7 @@ interface EnhancedKPIGridProps {
 
 export const EnhancedKPIGrid: React.FC<EnhancedKPIGridProps> = ({ data, loading }) => {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading KPI metrics..." />;
   }
 
   const kpis = [

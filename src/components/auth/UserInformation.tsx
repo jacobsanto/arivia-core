@@ -1,8 +1,6 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/logger';
+import { useUser } from "@/contexts/UserContext";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Edit2, User as UserIcon } from "lucide-react";
@@ -14,16 +12,7 @@ import SuperAdminInfo from "./profile/SuperAdminInfo";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const UserInformation = () => {
-  const { user, refreshAuthState } = useAuth();
-  
-  const updateProfile = async (userId: string, data: any) => {
-    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
-    return !error;
-  };
-  
-  const refreshProfile = async () => {
-    await refreshAuthState();
-  };
+  const { user, updateProfile, refreshProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const isMobile = useIsMobile();
   const isSuperAdmin = user?.role === "superadmin";
@@ -53,7 +42,7 @@ const UserInformation = () => {
         await refreshProfile();
       }
     } catch (error) {
-      logger.error("Error updating profile:", error);
+      console.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
         description: "Please try again later"
       });

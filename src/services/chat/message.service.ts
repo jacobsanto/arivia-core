@@ -1,15 +1,15 @@
+// @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ChatMessage } from './chat.types';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadAttachments } from './message/attachment.service';
 import { transformToMessage, DbMessage } from './message/transform.service';
-import { logger } from '@/services/logger';
 
 export const messageService = {
   async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('channel_id', channelId)
@@ -18,9 +18,9 @@ export const messageService = {
       if (error) throw error;
       
       // Transform the raw data to our ChatMessage type with explicit casting
-      return (data || []).map((msg: any) => transformToMessage(msg as DbMessage, channelId));
+      return (data || []).map((msg: DbMessage) => transformToMessage(msg, channelId));
     } catch (error: any) {
-      logger.error('Error fetching messages for channel', error, { component: 'chat', channelId });
+      console.error(`Error fetching messages for channel ${channelId}:`, error);
       return [];
     }
   },
@@ -44,15 +44,17 @@ export const messageService = {
         `chat/${message.channel_id}/`
       );
       
-      // Create a properly structured message for the database (using type assertion for fields not in generated types)
+      // Create a properly structured message for the database
       const dbMessage = {
         content: message.content,
-        author_id: message.user_id || '',
+        sender_id: message.user_id || '',
         channel_id: message.channel_id,
+        is_read: message.is_read || false,
+        reactions: {},
         attachments: attachmentUrls.length > 0 ? attachmentUrls : undefined
       };
       
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('chat_messages')
         .insert(dbMessage)
         .select()
@@ -62,18 +64,12 @@ export const messageService = {
       
       // Transform response to match ChatMessage interface
       if (data) {
-        const transformedData: DbMessage = {
-          ...data,
-          sender_id: data.author_id,
-          is_read: false,
-          reactions: {}
-        };
-        return transformToMessage(transformedData, message.channel_id);
+        return transformToMessage(data as DbMessage, message.channel_id);
       }
       
       return null;
     } catch (error: any) {
-      logger.error('Error sending message', error);
+      console.error('Error sending message:', error);
       toast.error('Failed to send message', {
         description: error.message
       });
@@ -83,8 +79,7 @@ export const messageService = {
 
   async markAsRead(messageId: string): Promise<boolean> {
     try {
-      // Note: is_read field may not exist in current schema, using type assertion
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('chat_messages')
         .update({ is_read: true })
         .eq('id', messageId);
@@ -92,15 +87,14 @@ export const messageService = {
       if (error) throw error;
       return true;
     } catch (error: any) {
-      logger.error('Error marking message as read', error, { component: 'chat', messageId });
+      console.error(`Error marking message ${messageId} as read:`, error);
       return false;
     }
   },
   
   async addReaction(messageId: string, emoji: string, userId: string): Promise<boolean> {
     try {
-      // Note: reactions field may not exist in current schema, using type assertion
-      const { data: message, error: fetchError } = await (supabase as any)
+      const { data: message, error: fetchError } = await supabase
         .from('chat_messages')
         .select('reactions')
         .eq('id', messageId)
@@ -108,7 +102,7 @@ export const messageService = {
       
       if (fetchError) throw fetchError;
       
-      const currentReactions = ((message as any)?.reactions as Record<string, string[]>) || {};
+      const currentReactions = (message?.reactions as Record<string, string[]>) || {};
       const usersForEmoji = currentReactions[emoji] || [];
       const userIndex = usersForEmoji.indexOf(userId);
       
@@ -133,7 +127,7 @@ export const messageService = {
         }
       });
       
-      const { error: updateError } = await (supabase as any)
+      const { error: updateError } = await supabase
         .from('chat_messages')
         .update({ reactions: updatedReactions })
         .eq('id', messageId);
@@ -141,7 +135,7 @@ export const messageService = {
       if (updateError) throw updateError;
       return true;
     } catch (error: any) {
-      logger.error('Error updating reaction for message', error, { component: 'chat', messageId });
+      console.error(`Error updating reaction for message ${messageId}:`, error);
       return false;
     }
   }

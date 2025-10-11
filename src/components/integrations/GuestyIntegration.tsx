@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { logger } from '@/services/logger';
 import { Home, RefreshCw, Settings, AlertCircle, CheckCircle, Database, Calendar } from 'lucide-react';
 
 export const GuestyIntegration = () => {
@@ -178,11 +177,11 @@ export const GuestyIntegration = () => {
   };
 
   const forceSyncData = (dataType: string) => {
-    logger.info('GuestyIntegration', 'Force syncing', { dataType });
+    console.log('Force syncing:', dataType);
   };
 
   const testWebhook = (event: string) => {
-    logger.debug('GuestyIntegration', 'Testing webhook', { event });
+    console.log('Testing webhook:', event);
   };
 
   return (

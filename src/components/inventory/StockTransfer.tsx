@@ -10,7 +10,6 @@ import StockFormHeader from "./forms/StockFormHeader";
 import StockItemList from "./forms/StockItemList";
 import StockFormNotes from "./forms/StockFormNotes";
 import StockFormSubmitButton from "./forms/StockFormSubmitButton";
-import { logger } from "@/services/logger";
 
 const formSchema = z.object({
   sourceLocation: z.string().min(1, { message: "Please select a source location." }),
@@ -43,7 +42,7 @@ const StockTransfer = () => {
   });
   
   const onSubmit = (values: FormValues) => {
-    logger.debug('StockTransfer', 'Form values', values);
+    console.log(values);
     toast({
       title: "Stock Transfer Processed",
       description: `Items have been transferred from ${values.sourceLocation} to ${values.destinationLocation}`,

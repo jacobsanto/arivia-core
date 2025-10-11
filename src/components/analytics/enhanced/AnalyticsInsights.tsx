@@ -13,7 +13,7 @@ import {
   CheckCircle,
   ArrowRight
 } from 'lucide-react';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/mvp/LoadingSpinner';
 
 interface AnalyticsInsightsProps {
   data?: AnalyticsData | null;
@@ -22,11 +22,7 @@ interface AnalyticsInsightsProps {
 
 export const AnalyticsInsights: React.FC<AnalyticsInsightsProps> = ({ data, loading }) => {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Generating AI insights..." />;
   }
 
   if (!data) {

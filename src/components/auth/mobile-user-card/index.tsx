@@ -3,8 +3,7 @@ import React, { useState } from "react";
 import { User, UserRole } from "@/types/auth";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/logger';
+import { useUser } from "@/contexts/UserContext";
 import UserCardHeader from "./UserCardHeader";
 import UserCardContent from "./UserCardContent";
 import UserCardFooter from "./UserCardFooter";
@@ -27,10 +26,7 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
   isExpanded,
   toggleExpand
 }) => {
-  const updateProfile = async (userId: string, data: any) => {
-    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
-    return !error;
-  };
+  const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
@@ -73,7 +69,7 @@ const MobileUserCard: React.FC<MobileUserCardProps> = ({
       toast.error("Failed to update role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
-      logger.error("Error updating role:", error);
+      console.error("Error updating role:", error);
     } finally {
       setIsSaving(false);
     }

@@ -1,6 +1,5 @@
 
 import { offlineManager } from "@/utils/offlineManager";
-import { logger } from "@/services/logger";
 
 /**
  * Base Service
@@ -28,7 +27,7 @@ export abstract class BaseService<T> {
   async getAll(): Promise<T[]> {
     try {
       if (!this.isOnline()) {
-        logger.debug(`${this.entityName} using offline data`);
+        console.log(`[${this.entityName}] Using offline data`);
         return this.getOfflineData();
       }
       
@@ -36,7 +35,7 @@ export abstract class BaseService<T> {
       // For now, we're just using the offline data
       return this.getOfflineData();
     } catch (error) {
-      logger.error(`${this.entityName} error getting all`, error);
+      console.error(`[${this.entityName}] Error getting all:`, error);
       throw error;
     }
   }
@@ -50,7 +49,7 @@ export abstract class BaseService<T> {
       // @ts-ignore - We assume all entities have an id property
       return items.find(item => item.id === id) || null;
     } catch (error) {
-      logger.error(`${this.entityName} error getting by ID ${id}`, error);
+      console.error(`[${this.entityName}] Error getting by ID ${id}:`, error);
       throw error;
     }
   }
@@ -73,7 +72,7 @@ export abstract class BaseService<T> {
       
       return newItem;
     } catch (error) {
-      logger.error(`${this.entityName} error creating`, error);
+      console.error(`[${this.entityName}] Error creating:`, error);
       throw error;
     }
   }
@@ -108,7 +107,7 @@ export abstract class BaseService<T> {
       
       return updatedItem;
     } catch (error) {
-      logger.error(`${this.entityName} error updating ${id}`, error);
+      console.error(`[${this.entityName}] Error updating ${id}:`, error);
       throw error;
     }
   }
@@ -129,7 +128,7 @@ export abstract class BaseService<T> {
       
       // If online, would make an API call here
     } catch (error) {
-      logger.error(`${this.entityName} error deleting ${id}`, error);
+      console.error(`[${this.entityName}] Error deleting ${id}:`, error);
       throw error;
     }
   }

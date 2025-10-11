@@ -13,9 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { ROLE_LABELS, ROLE_COLORS } from "@/types/userManagement.types";
 import { AppRole } from "@/types/permissions.types";
-import { logger } from '@/services/logger';
 
-export const AdminUserManagement: React.FC = () => {
+export const MVPUserManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -52,7 +51,7 @@ export const AdminUserManagement: React.FC = () => {
       setIsModalOpen(false);
       setFormData({ name: "", email: "", phone: "", role: "" as AppRole });
     } catch (error) {
-      logger.error('Error creating user:', error);
+      console.error('Error creating user:', error);
     }
   };
 

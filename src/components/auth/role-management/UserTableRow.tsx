@@ -8,8 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, AlertTriangle } from "lucide-react";
 import AvatarUpload from "../avatar/AvatarUpload";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/logger';
+import { useUser } from "@/contexts/UserContext";
 
 interface UserTableRowProps {
   user: User;
@@ -24,10 +23,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
   onEditPermissions,
   onDeleteClick
 }) => {
-  const updateProfile = async (userId: string, data: any) => {
-    const { error } = await supabase.from('profiles').update(data).eq('id', userId);
-    return !error;
-  };
+  const { updateProfile } = useUser();
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole>(user.role);
   const [selectedSecondaryRoles, setSelectedSecondaryRoles] = useState<UserRole[]>(
@@ -71,7 +67,7 @@ const UserTableRow: React.FC<UserTableRowProps> = ({
       toast.error("Failed to update role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });
-      logger.error("Error updating role:", error);
+      console.error("Error updating role:", error);
     } finally {
       setIsSaving(false);
     }

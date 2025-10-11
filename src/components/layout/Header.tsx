@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { ROLE_DETAILS } from "@/types/auth";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -14,8 +14,6 @@ import NotificationCenter from "@/components/notifications/NotificationCenter";
 import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
 import { recentMessagesService, RecentMessage } from "@/services/chat/recent-messages.service";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { logger } from "@/services/logger";
 
 
 interface HeaderProps {
@@ -27,15 +25,9 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const {
     user,
-    signOut,
-    refreshAuthState
-  } = useAuth();
-  
-  const logout = signOut;
-  const refreshProfile = async () => {
-    await refreshAuthState();
-    return true;
-  };
+    logout,
+    refreshProfile
+  } = useUser();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const { unreadCount } = useNotifications();
@@ -49,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
       if (navigator.onLine) {
         refreshProfile().then(updated => {
           if (updated) {
-            logger.debug('Header', 'Profile automatically refreshed');
+            console.log("Profile automatically refreshed");
           }
         });
       }
@@ -140,17 +132,6 @@ const Header: React.FC<HeaderProps> = ({
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={handleLogout}
-            className="hidden md:flex border-sidebar-border bg-sidebar-accent text-sidebar-foreground hover:bg-sidebar-accent/80 hover:text-sidebar-foreground"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
-
-          <ThemeToggle />
           
         </div>
       </div>

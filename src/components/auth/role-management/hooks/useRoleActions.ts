@@ -1,9 +1,9 @@
+
 // @ts-nocheck
 import { useState } from "react";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/logger';
 
 export const useRoleActions = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -37,8 +37,8 @@ export const useRoleActions = () => {
         const { data, error } = await supabase
           .from('profiles')
           .update({ 
-          role: selectedRole,
-          secondary_roles: updatedSecondaryRoles as any
+            role: selectedRole,
+            secondary_roles: updatedSecondaryRoles
           })
           .eq('id', userId)
           .select() // Add this to get the updated record
@@ -48,7 +48,7 @@ export const useRoleActions = () => {
           throw error;
         }
         
-        logger.debug("Updated profile from Supabase:", data);
+        console.log("Updated profile from Supabase:", data);
         
         // If we have data back, use it to update the local state
         if (data) {
@@ -105,7 +105,7 @@ export const useRoleActions = () => {
       setEditingUserId(null);
       toast.success("User role updated successfully");
     } catch (error) {
-      logger.error("Error updating role:", error);
+      console.error("Error updating role:", error);
       toast.error("Failed to update user role", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

@@ -7,7 +7,7 @@ import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useOrders } from "@/contexts/OrderContext";
 import StockFormNotes from "../forms/StockFormNotes";
 import StockFormSubmitButton from "../forms/StockFormSubmitButton";
@@ -37,7 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 const OrderForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { canAccess } = usePermissions();
-  const { user } = useAuth();
+  const { user } = useUser();
   const { addOrder } = useOrders();
   const [selectedVendorId, setSelectedVendorId] = useState<string | null>(null);
   

@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { toast } from "@/hooks/use-toast";
 import { inventoryService, InventoryCategory } from '@/services/inventory.service';
-import { logger } from '@/services/logger';
 
 // Define the shape of our context data
 interface InventoryContextType {
@@ -46,7 +45,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
         setCategoryObjects(data);
         setCategories(data.map(cat => cat.name));
       } catch (error) {
-        logger.error('Error loading categories', error);
+        console.error('Error loading categories:', error);
         toast({
           title: "Error",
           description: "Failed to load inventory categories",
@@ -72,7 +71,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
           setCategoryObjects(newCategoryObjects);
         }
       } catch (error) {
-        logger.error('Error creating category', error);
+        console.error('Error creating category:', error);
         toast({
           title: "Error",
           description: "Failed to create category",
@@ -97,7 +96,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
         setUnits(JSON.parse(savedUnits));
       }
     } catch (error) {
-      logger.error('Failed to load units from localStorage', error);
+      console.error('Failed to load units from localStorage:', error);
     }
   }, []);
 
@@ -105,7 +104,7 @@ export const InventoryProvider: React.FC<{ children: ReactNode }> = ({ children 
     try {
       localStorage.setItem('inventoryUnits', JSON.stringify(units));
     } catch (error) {
-      logger.error('Failed to save units to localStorage', error);
+      console.error('Failed to save units to localStorage:', error);
     }
   }, [units]);
 

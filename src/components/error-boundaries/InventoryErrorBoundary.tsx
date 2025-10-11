@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Package } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -24,7 +23,7 @@ export class InventoryErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('Inventory error', error, { component: 'InventoryErrorBoundary', errorInfo: errorInfo.componentStack });
+    console.error('Inventory error:', error, errorInfo);
   }
 
   private handleRetry = () => {

@@ -5,7 +5,6 @@
 
 import { toast } from "sonner";
 import { UserRole } from "@/types/auth";
-import { logger } from "@/services/logger";
 
 // Generate a new order ID based on year and sequence number
 export const generateOrderId = (currentYear: number, currentSequence: number) => {
@@ -120,7 +119,7 @@ export const sendOrderNotification = (status: OrderStatus, orderId: string, orde
     duration: 5000
   });
   
-  logger.info('OrderUtils', 'Notification sent', { status, orderId, message, orderDetails });
+  console.log("Notification sent:", { status, orderId, message, orderDetails });
   return true;
 };
 

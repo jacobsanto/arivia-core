@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, Building } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -24,7 +23,7 @@ export class PropertiesErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('Properties error', error, { component: 'PropertiesErrorBoundary', errorInfo: errorInfo.componentStack });
+    console.error('Properties error:', error, errorInfo);
   }
 
   private handleRetry = () => {

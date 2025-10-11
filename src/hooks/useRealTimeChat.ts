@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { 
   chatChannelsAPI, 
@@ -21,7 +21,7 @@ import { NotificationPatterns } from '@/services/notifications/notification.patt
 
 
 export const useRealTimeChat = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   
   // State

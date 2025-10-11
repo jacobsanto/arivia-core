@@ -1,6 +1,6 @@
 
 import { useState, useCallback } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { 
   useMessageLoader, 
   useRealtimeMessages, 
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export function useChat(chatType: 'general' | 'direct', recipientId?: string) {
   const [error, setError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user } = useUser();
 
   // Use the extracted hook for message loading
   const { messages, setMessages, loading, isOffline, loadError } = useMessageLoader(chatType, recipientId);

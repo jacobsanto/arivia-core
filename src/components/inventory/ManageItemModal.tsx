@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Package } from "lucide-react";
 import { useInventory } from "@/hooks/useInventory";
 import { InventoryItem } from "@/types/inventory.types";
-import { logger } from "@/services/logger";
 
 interface ManageItemModalProps {
   isOpen: boolean;
@@ -142,7 +141,7 @@ export const ManageItemModal: React.FC<ManageItemModalProps> = ({
       onOpenChange(false);
       onClose?.();
     } catch (error) {
-      logger.error('Error saving item', error);
+      console.error('Error saving item:', error);
     }
   };
 

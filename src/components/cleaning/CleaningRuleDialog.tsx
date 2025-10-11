@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { logger } from '@/services/logger';
 
 interface CleaningRule {
   id: string;
@@ -131,7 +130,7 @@ export const CleaningRuleDialog: React.FC<CleaningRuleDialogProps> = ({
       onSuccess();
       onClose();
     } catch (error: any) {
-      logger.error('Error saving rule:', error);
+      console.error('Error saving rule:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to save cleaning rule",

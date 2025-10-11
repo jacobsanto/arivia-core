@@ -1,17 +1,16 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
 import { Channel } from "@/components/chat/sidebar/ChatSidebar";
 import { toast } from "sonner";
 import { FALLBACK_GENERAL_CHANNEL } from "@/services/chat/chat.types";
-import { logger } from "@/services/logger";
 
 export function useChannelsLoader(isConnected: boolean) {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const { user } = useAuth();
+  const { user } = useUser();
 
   useEffect(() => {
     async function loadChannels() {
@@ -26,7 +25,7 @@ export function useChannelsLoader(isConnected: boolean) {
           // Attempt to get or create the general channel
           generalChannel = await chatService.getOrCreateGeneralChannel();
         } catch (error) {
-          logger.error("Error getting general channel", { error });
+          console.error("Error getting general channel:", error);
           // Fall back to local general channel definition
           generalChannel = FALLBACK_GENERAL_CHANNEL;
         }
@@ -52,7 +51,7 @@ export function useChannelsLoader(isConnected: boolean) {
           setLoadError(null);
         }
       } catch (error) {
-        logger.error("Failed to load channels", { error });
+        console.error("Failed to load channels:", error);
         toast.error("Failed to load channels", {
           description: "Using offline mode for channels"
         });

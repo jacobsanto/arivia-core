@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 
 import { User } from "@/types/auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +16,7 @@ import { useRoleManagement } from "./role-management/useRoleManagement";
 
 // Main component for Role Management
 const RoleManagement: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   
   const [activeTab, setActiveTab] = useState<string>("roles");
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

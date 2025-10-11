@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -14,9 +14,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
-import { useAuth } from "@/contexts/AuthContext";
+import { loginUser } from "@/services/auth/userAuthService";
+import { useUser } from "@/contexts/UserContext";
 import { Loader2 } from "lucide-react";
-import { logger } from '@/services/logger';
 
 interface LoginFormProps {
   isMobile?: boolean;
@@ -24,20 +24,10 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { login } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-
-  // Navigate to dashboard when user is authenticated
-  useEffect(() => {
-    logger.debug('LoginForm', 'User state changed', { hasUser: !!user });
-    if (user) {
-      const from = location.state?.from?.pathname || "/dashboard";
-      logger.debug('LoginForm', 'Navigating to', { from });
-      navigate(from, { replace: true });
-    }
-  }, [user, navigate, location]);
   
   // Use react-hook-form with zod for validation
   const form = useForm({
@@ -51,26 +41,25 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      const { error } = await signIn(values.email, values.password);
+      // Call login function from UserContext
+      await login(values.email, values.password);
       
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Login Failed",
-          description: error.message || "Invalid credentials. Please try again.",
-        });
-        setIsLoading(false);
-        return;
-      }
+      // Redirect to previous page or dashboard
+      const from = location.state?.from?.pathname || "/dashboard";
+      navigate(from, { replace: true });
       
-      // Don't navigate here - let the useEffect handle it when user state updates
+      toast({
+        title: "Login Successful",
+        description: "You have successfully logged in.",
+      });
     } catch (error: any) {
-      logger.error("Login failed:", error);
+      console.error("Login failed:", error.message);
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: error.message || "Invalid credentials. Please try again.",
       });
+    } finally {
       setIsLoading(false);
     }
   };

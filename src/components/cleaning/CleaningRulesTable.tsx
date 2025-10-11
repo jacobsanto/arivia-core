@@ -8,7 +8,6 @@ import { Plus, Edit, Calendar, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CleaningRuleDialog } from "./CleaningRuleDialog";
-import { logger } from '@/services/logger';
 
 interface CleaningConfig {
   id: string;
@@ -74,7 +73,7 @@ export const CleaningRulesTable: React.FC<CleaningRulesTableProps> = ({
 
       setRules(processedRules);
     } catch (error: any) {
-      logger.error('Error fetching rules:', error);
+      console.error('Error fetching rules:', error);
       toast({
         title: "Error",
         description: "Failed to load cleaning rules",

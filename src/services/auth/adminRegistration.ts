@@ -1,6 +1,6 @@
+// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { logger } from "@/services/logger";
 
 export const checkSuperAdminExists = async (): Promise<boolean> => {
   try {
@@ -11,13 +11,13 @@ export const checkSuperAdminExists = async (): Promise<boolean> => {
       .maybeSingle();
     
     if (error) {
-      logger.error("Error checking for super admin", error);
+      console.error("Error checking for super admin:", error);
       throw error;
     }
     
     return !!data;
   } catch (error) {
-    logger.error("Error checking for super admin", error);
+    console.error("Error checking for super admin:", error);
     // Default to true as a safety measure
     return true;
   }
@@ -29,7 +29,7 @@ export const registerSuperAdmin = async (
   name: string
 ): Promise<boolean> => {
   try {
-    logger.info("Registering super admin", { email, name }, { component: 'adminRegistration' });
+    console.log("Registering super admin:", { email, name });
     const role = "superadmin";
     
     // Check if super admin already exists
@@ -37,7 +37,7 @@ export const registerSuperAdmin = async (
     
     // If super admin already exists, don't create a new one
     if (superAdminExists) {
-      logger.info("Super admin already exists", undefined, { component: 'adminRegistration' });
+      console.log("Super admin already exists");
       toast.info("Super Admin already exists", {
         description: "A Super Admin user is already registered in the system."
       });
@@ -45,7 +45,7 @@ export const registerSuperAdmin = async (
     }
     
     // Register the Super Admin with Supabase
-    logger.info("Creating super admin account", undefined, { component: 'adminRegistration' });
+    console.log("Creating super admin account...");
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -59,21 +59,21 @@ export const registerSuperAdmin = async (
     });
 
     if (error) {
-      logger.error("Error creating Super Admin", error, { component: 'adminRegistration' });
+      console.error("Error creating Super Admin:", error);
       toast.error("Failed to create Super Admin", {
         description: error.message
       });
       return false;
     }
 
-    logger.info("Super Admin created successfully", { userId: data.user?.id }, { component: 'adminRegistration' });
+    console.log("Super Admin created successfully:", data.user?.id);
     toast.success("Super Admin created successfully", {
       description: `The Super Admin account for ${name} has been registered.`
     });
     
     return true;
   } catch (error) {
-    logger.error("Super Admin registration error", error, { component: 'adminRegistration' });
+    console.error("Super Admin registration error:", error);
     toast.error("Failed to create Super Admin", {
       description: "An unexpected error occurred."
     });

@@ -8,9 +8,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
-import { logger } from "@/services/logger";
 
 interface OrderFormVendorProps {
   selectedVendorId: string | null;
@@ -21,7 +20,7 @@ const OrderFormVendor: React.FC<OrderFormVendorProps> = ({
   selectedVendorId, 
   setSelectedVendorId 
 }) => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [vendors, setVendors] = useState<VendorWithCategoryNames[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +32,7 @@ const OrderFormVendor: React.FC<OrderFormVendorProps> = ({
         const vendorData = await vendorService.getVendors();
         setVendors(vendorData);
       } catch (error) {
-        logger.error('OrderFormVendor', 'Error loading vendors', { error });
+        console.error('Error loading vendors:', error);
       } finally {
         setLoading(false);
       }

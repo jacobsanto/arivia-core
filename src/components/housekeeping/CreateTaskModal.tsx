@@ -13,7 +13,6 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toastService } from "@/services/toast";
-import { logger } from "@/services/logger";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -114,7 +113,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       toastService.success('Task created successfully!');
       onOpenChange(false);
     } catch (error) {
-      logger.error('Error creating task', error);
+      console.error('Error creating task:', error);
       toastService.error('Failed to create task');
     } finally {
       setIsSubmitting(false);

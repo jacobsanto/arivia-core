@@ -7,14 +7,14 @@ import { MessageInput } from '@/components/chat/MessageInput';
 import { ChatDetailSidebar } from '@/components/chat/ChatDetailSidebar';
 import { ChatNotifications } from '@/components/chat/ChatNotifications';
 import { TeamMemberList } from '@/components/chat/TeamMemberList';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Users, Loader2 } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 
 const TeamChat: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isWindowFocused, setIsWindowFocused] = useState(true);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);

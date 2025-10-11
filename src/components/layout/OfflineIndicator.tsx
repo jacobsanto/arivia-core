@@ -4,7 +4,6 @@ import { Wifi, WifiOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { offlineManager } from '@/utils/offlineManager';
 import { toast } from 'sonner';
-import { logger } from '@/services/logger';
 
 const OfflineIndicator = () => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -24,7 +23,7 @@ const OfflineIndicator = () => {
         const summary = offlineManager.getOfflineDataSummary();
         setSyncCount(summary.total);
       } catch (error) {
-        logger.error('OfflineIndicator', 'Error checking offline data', { error });
+        console.error('Error checking offline data:', error);
         setHasPendingSync(false);
         setSyncCount(0);
       }

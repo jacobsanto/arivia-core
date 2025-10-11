@@ -1,9 +1,9 @@
 
 import React from "react";
-import { AdminUserManagement } from "@/components/admin/AdminUserManagement";
+import { MVPUserManagement } from "@/components/admin/mvp/MVPUserManagement";
 
 const AdminUsers: React.FC = () => {
-  return <AdminUserManagement />;
+  return <MVPUserManagement />;
 };
 
 export default AdminUsers;

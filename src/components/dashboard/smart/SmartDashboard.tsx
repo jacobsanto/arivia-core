@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import DamageReportForm from "@/components/damage/DamageReportForm";
 import { damageService } from "@/services/damage/damage.service";
@@ -43,7 +43,7 @@ export const SmartDashboard: React.FC = () => {
     toast
   } = useToast();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useUser();
   const handleCreateDamageReport = async (data: DamageReportFormValues) => {
     try {
       const newReport = await damageService.createDamageReport({
@@ -75,7 +75,7 @@ export const SmartDashboard: React.FC = () => {
         setIsDamageReportDialogOpen(false);
       }
     } catch (error) {
-      logger.error('Error creating damage report:', error);
+      console.error('Error creating damage report:', error);
       toast({
         title: "Error", 
         description: "Failed to create damage report",
@@ -117,7 +117,7 @@ export const SmartDashboard: React.FC = () => {
         criticalIssues: maintenanceTasks?.length || 0
       });
     } catch (error) {
-      logger.error('Error fetching dashboard data:', error);
+      console.error('Error fetching dashboard data:', error);
       toast({
         title: "Error",
         description: "Failed to load dashboard data",

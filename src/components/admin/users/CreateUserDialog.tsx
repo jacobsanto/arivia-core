@@ -29,7 +29,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
-import { logger } from '@/services/logger';
 
 const createUserSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -83,7 +82,7 @@ export const CreateUserDialog = ({
       onOpenChange(false);
       onUserCreated?.();
     } catch (error) {
-      logger.error('Error creating user:', error);
+      console.error('Error creating user:', error);
       toastService.error(`Failed to create user: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

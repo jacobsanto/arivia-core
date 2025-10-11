@@ -18,7 +18,6 @@ import {
   Save,
   AlertCircle
 } from 'lucide-react';
-import { logger } from '@/services/logger';
 
 interface LogicBuilderProps {
   onClose: () => void;
@@ -121,10 +120,10 @@ export const LogicBuilder: React.FC<LogicBuilderProps> = ({ onClose, onSave }) =
       };
       
       // Save rule logic implementation
-      logger.debug('Saving rule:', ruleData);
+      console.log('Saving rule:', ruleData);
       onSave();
     } catch (error) {
-      logger.error('Error saving rule:', error);
+      console.error('Error saving rule:', error);
     }
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 
 export interface DashboardKPIData {
   roomsToClean: number;
@@ -51,7 +51,7 @@ export interface ActionItem {
 }
 
 export const useDashboardData = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [kpiData, setKpiData] = useState<DashboardKPIData | null>(null);
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);

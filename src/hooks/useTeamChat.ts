@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChatChannel, DirectConversation, ChatMessage, ChatListItem, ChatUser, TypingIndicator } from '@/types/chat.types';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUser } from '@/contexts/UserContext';
 import { toast } from '@/hooks/use-toast';
 
 export const useTeamChat = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [channels, setChannels] = useState<ChatChannel[]>([]);
   const [conversations, setConversations] = useState<DirectConversation[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);

@@ -1,54 +1,57 @@
-import React, { Suspense, lazy } from "react";
+
+import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "next-themes";
 
-import { AppErrorBoundary } from "@/components/error-boundaries/ErrorBoundary";
+
+import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { SkipLink } from "@/components/accessibility/SkipLink";
-import { FullPageLoading } from "@/components/common/loading/LoadingStates";
 
 // Unified Layout
 import UnifiedLayout from "@/components/layout/UnifiedLayout";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
-// Critical pages loaded immediately
+// Pages
 import Dashboard from "@/pages/Dashboard";
-import Login from "@/components/auth/LoginForm";
-import Register from "@/components/auth/SignUpForm";
+// Login page removed - app is now open access
+import UserProfile from "@/pages/UserProfile";
+import Maintenance from "@/pages/Maintenance";
+import Housekeeping from "@/pages/Housekeeping";
+import Properties from "@/pages/Properties";
+import { PropertyDetailView as PropertyDetailPage } from "./components/properties/enhanced/PropertyDetailView";
+import Inventory from "@/pages/Inventory";
+import TeamChat from "@/pages/TeamChat";
+import CleaningSettings from "@/pages/CleaningSettings";
+import Analytics from "@/pages/Analytics";
+import Reports from "@/pages/Reports";
+import RecurringTasks from "@/pages/RecurringTasks";
+import SystemHealth from "@/pages/SystemHealth";
 
-// Lazy-loaded pages for code splitting
-const UserProfile = lazy(() => import("@/pages/UserProfile"));
-const Maintenance = lazy(() => import("@/pages/Maintenance"));
-const Housekeeping = lazy(() => import("@/pages/Housekeeping"));
-const Properties = lazy(() => import("@/pages/Properties"));
-const PropertyDetailPage = lazy(() => import("./components/properties/enhanced/PropertyDetailView").then(m => ({ default: m.PropertyDetailView })));
-const Inventory = lazy(() => import("@/pages/Inventory"));
-const TeamChat = lazy(() => import("@/pages/TeamChat"));
-const CleaningSettings = lazy(() => import("@/pages/CleaningSettings"));
-const Analytics = lazy(() => import("@/pages/Analytics"));
-const Reports = lazy(() => import("@/pages/Reports"));
-const RecurringTasks = lazy(() => import("@/pages/RecurringTasks"));
-const SystemHealth = lazy(() => import("@/pages/SystemHealth"));
-const DamageReports = lazy(() => import("@/pages/DamageReports"));
-const ListingDetails = lazy(() => import("@/pages/ListingDetails"));
-const SystemAdminPage = lazy(() => import("@/pages/SystemAdminPage"));
-const OptimizationPage = lazy(() => import("@/pages/OptimizationPage"));
-const AdminUsers = lazy(() => import("@/pages/AdminUsers"));
-const AdminPermissions = lazy(() => import("@/pages/AdminPermissions"));
-const AdminSettings = lazy(() => import("@/pages/AdminSettings"));
-const EnhancedTasks = lazy(() => import("@/pages/EnhancedTasks"));
-const Checklists = lazy(() => import("@/pages/Checklists"));
-const Notifications = lazy(() => import("@/pages/Notifications"));
-const Permissions = lazy(() => import("@/pages/Permissions"));
-const UserManagement = lazy(() => import("@/pages/UserManagement"));
-const SystemSettings = lazy(() => import("@/pages/SystemSettings"));
+import DamageReports from "@/pages/DamageReports";
+import ListingDetails from "@/pages/ListingDetails";
+
+import SystemAdminPage from "@/pages/SystemAdminPage";
+import OptimizationPage from "@/pages/OptimizationPage";
+
+// Admin Pages
+import AdminUsers from "@/pages/AdminUsers";
+import AdminPermissions from "@/pages/AdminPermissions";
+import AdminSettings from "@/pages/AdminSettings";
+// AdminChecklists removed - using new Checklists page instead
+import EnhancedTasks from "@/pages/EnhancedTasks";
+import Checklists from "@/pages/Checklists";
+import Notifications from "@/pages/Notifications";
+import Permissions from "@/pages/Permissions";
+import UserManagement from "@/pages/UserManagement";
+import SystemSettings from "@/pages/SystemSettings";
 
 
 function App() {
   return (
-    <AppErrorBoundary>
+    <MVPErrorBoundary>
       <HelmetProvider>
         <ThemeProvider
           attribute="class"
@@ -62,9 +65,7 @@ function App() {
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 
                 <Routes>
-                  {/* Public Auth Routes */}
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+                   {/* Login route removed - app is now open access */}
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
@@ -74,31 +75,37 @@ function App() {
                   }>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/profile" element={<Suspense fallback={<FullPageLoading />}><UserProfile /></Suspense>} />
-                    <Route path="/housekeeping" element={<Suspense fallback={<FullPageLoading />}><Housekeeping /></Suspense>} />
-                    <Route path="/maintenance" element={<Suspense fallback={<FullPageLoading />}><Maintenance /></Suspense>} />
-                    <Route path="/tasks/enhanced" element={<Suspense fallback={<FullPageLoading />}><EnhancedTasks /></Suspense>} />
-                    <Route path="/properties" element={<Suspense fallback={<FullPageLoading />}><Properties /></Suspense>} />
-                    <Route path="/properties/:propertyId" element={<Suspense fallback={<FullPageLoading />}><PropertyDetailPage /></Suspense>} />
-                    <Route path="/inventory" element={<Suspense fallback={<FullPageLoading />}><Inventory /></Suspense>} />
-                    <Route path="/team-chat" element={<Suspense fallback={<FullPageLoading />}><TeamChat /></Suspense>} />
-                    <Route path="/cleaning-settings" element={<Suspense fallback={<FullPageLoading />}><CleaningSettings /></Suspense>} />
-                    <Route path="/recurring-tasks" element={<Suspense fallback={<FullPageLoading />}><RecurringTasks /></Suspense>} />
-                    <Route path="/analytics" element={<Suspense fallback={<FullPageLoading />}><Analytics /></Suspense>} />
-                    <Route path="/reports" element={<Suspense fallback={<FullPageLoading />}><Reports /></Suspense>} />
-                    <Route path="/notifications" element={<Suspense fallback={<FullPageLoading />}><Notifications /></Suspense>} />
-                    <Route path="/permissions" element={<Suspense fallback={<FullPageLoading />}><Permissions /></Suspense>} />
-                    <Route path="/damage-reports" element={<Suspense fallback={<FullPageLoading />}><DamageReports /></Suspense>} />
-                    <Route path="/system-admin" element={<Suspense fallback={<FullPageLoading />}><SystemAdminPage /></Suspense>} />
-                    <Route path="/optimization" element={<Suspense fallback={<FullPageLoading />}><OptimizationPage /></Suspense>} />
-                    <Route path="/system-health" element={<Suspense fallback={<FullPageLoading />}><SystemHealth /></Suspense>} />
-                    <Route path="/properties/listings/:listingId" element={<Suspense fallback={<FullPageLoading />}><ListingDetails /></Suspense>} />
-                    <Route path="/admin/users" element={<Suspense fallback={<FullPageLoading />}><AdminUsers /></Suspense>} />
-                    <Route path="/admin/permissions" element={<Suspense fallback={<FullPageLoading />}><AdminPermissions /></Suspense>} />
-                    <Route path="/admin/settings" element={<Suspense fallback={<FullPageLoading />}><AdminSettings /></Suspense>} />
-                    <Route path="/checklists" element={<Suspense fallback={<FullPageLoading />}><Checklists /></Suspense>} />
-                    <Route path="/user-management" element={<Suspense fallback={<FullPageLoading />}><UserManagement /></Suspense>} />
-                    <Route path="/system-settings" element={<Suspense fallback={<FullPageLoading />}><SystemSettings /></Suspense>} />
+                    <Route path="/profile" element={<UserProfile />} />
+                    <Route path="/housekeeping" element={<Housekeeping />} />
+                    <Route path="/maintenance" element={<Maintenance />} />
+                    <Route path="/tasks/enhanced" element={<EnhancedTasks />} />
+          <Route path="/properties" element={<Properties />} />
+          <Route path="/properties/:propertyId" element={<PropertyDetailPage />} />
+                    <Route path="/inventory" element={<Inventory />} />
+                    <Route path="/team-chat" element={<TeamChat />} />
+                    <Route path="/cleaning-settings" element={<CleaningSettings />} />
+                     <Route path="/recurring-tasks" element={<RecurringTasks />} />
+                     <Route path="/analytics" element={<Analytics />} />
+                     <Route path="/reports" element={<Reports />} />
+                     <Route path="/notifications" element={<Notifications />} />
+          <Route path="/permissions" element={<Permissions />} />
+                      
+                     <Route path="/damage-reports" element={<DamageReports />} />
+                    
+                    <Route path="/system-admin" element={<SystemAdminPage />} />
+                     <Route path="/optimization" element={<OptimizationPage />} />
+                     <Route path="/system-health" element={<SystemHealth />} />
+                    
+                    {/* Property details route */}
+                    <Route path="/properties/listings/:listingId" element={<ListingDetails />} />
+                    
+                    {/* Admin routes */}
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/permissions" element={<AdminPermissions />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
+                    <Route path="/checklists" element={<Checklists />} />
+          <Route path="/user-management" element={<UserManagement />} />
+          <Route path="/system-settings" element={<SystemSettings />} />
                   </Route>
                   
                   {/* Catch all route */}
@@ -110,7 +117,7 @@ function App() {
           </AccessibilityProvider>
         </ThemeProvider>
       </HelmetProvider>
-    </AppErrorBoundary>
+    </MVPErrorBoundary>
   );
 }
 

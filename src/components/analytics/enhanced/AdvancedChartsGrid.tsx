@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnalyticsData } from '@/types/analytics.types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/mvp/LoadingSpinner';
 import { TrendingUp, BarChart3, PieChart as PieChartIcon, Activity } from 'lucide-react';
 
 interface AdvancedChartsGridProps {
@@ -12,11 +12,7 @@ interface AdvancedChartsGridProps {
 
 export const AdvancedChartsGrid: React.FC<AdvancedChartsGridProps> = ({ data, loading }) => {
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading advanced analytics..." />;
   }
 
   if (!data) {

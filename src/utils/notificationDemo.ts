@@ -137,7 +137,7 @@ export const notificationDemo = {
   }
 };
 
-// Demo functions only available in development mode
-if (import.meta.env.DEV && typeof window !== 'undefined') {
+// Make it available globally for console testing
+if (typeof window !== 'undefined') {
   (window as any).notificationDemo = notificationDemo;
 }

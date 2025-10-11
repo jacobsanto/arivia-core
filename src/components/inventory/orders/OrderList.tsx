@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useOrders } from "@/contexts/OrderContext";
 import { 
   Order, 
@@ -16,7 +16,6 @@ import OrderTable from "./list/OrderTable";
 import OrderDetailsDialog from "./details/OrderDetailsDialog";
 import { toastService } from "@/services/toast/toast.service";
 import { orderService } from "@/services/orders/order.service";
-import { logger } from "@/services/logger";
 
 const OrderList: React.FC = () => {
   const { orders, updateOrder } = useOrders();
@@ -29,7 +28,7 @@ const OrderList: React.FC = () => {
   const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
   
   const { canAccess } = usePermissions();
-  const { user } = useAuth();
+  const { user } = useUser();
   
   const userRole = user?.role || "concierge";
   const canViewOrders = ["superadmin", "administrator", "property_manager", "housekeeping_staff", "maintenance_staff"].includes(userRole);
@@ -77,7 +76,7 @@ const OrderList: React.FC = () => {
             });
           }
         } catch (error) {
-          logger.error("Error checking overdue orders", error);
+          console.error("Error checking overdue orders:", error);
         }
       };
       
@@ -123,7 +122,7 @@ const OrderList: React.FC = () => {
       
       setIsDetailsOpen(false);
     } catch (error) {
-      logger.error("Error approving order", error);
+      console.error("Error approving order:", error);
     }
   };
 
@@ -165,7 +164,7 @@ const OrderList: React.FC = () => {
       setIsDetailsOpen(false);
       setRejectionReason("");
     } catch (error) {
-      logger.error("Error rejecting order", error);
+      console.error("Error rejecting order:", error);
     }
   };
 
@@ -195,7 +194,7 @@ const OrderList: React.FC = () => {
       
       setIsDetailsOpen(false);
     } catch (error) {
-      logger.error("Error sending order", error);
+      console.error("Error sending order:", error);
     }
   };
 

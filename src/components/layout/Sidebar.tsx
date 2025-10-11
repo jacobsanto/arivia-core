@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { LayoutDashboard, Home, BedDouble, Wrench, Package, MessageSquare, FileWarning, LogOut, User, Users, Shield, Settings, CheckSquare, Monitor, Zap, BarChart3, FileText, ChevronDown, ChevronRight, Clock, Repeat } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import AvatarDisplay from "@/components/auth/avatar/AvatarDisplay";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -14,9 +14,8 @@ import { useState } from "react";
 const Sidebar = () => {
   const {
     user,
-    signOut
-  } = useAuth();
-  const logout = signOut;
+    logout
+  } = useUser();
   const {
     canAccess
   } = usePermissions();
@@ -38,7 +37,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
           <div className="text-2xl font-bold text-primary">
-            CORE
+            ARIVIA VILLAS
           </div>
         </Link>
       </div>
@@ -93,9 +92,19 @@ const Sidebar = () => {
             </CollapsibleContent>
           </Collapsible>}
         
-        {/* PROFILE */}
+        {/* PROFILE & LOGOUT */}
         <div className="space-y-1 pt-2">
           <SidebarLink to="/profile" icon={<User size={20} />} label="Profile" />
+          
+          <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <LogOut className="mr-3 h-5 w-5" />
+            <span>Logout</span>
+          </Button>
+          
+          {/* Theme Toggle at bottom */}
+          <div className="flex items-center justify-center py-2 border-t border-sidebar-border mt-4 pt-4">
+            <ThemeToggle />
+          </div>
         </div>
       </nav>
     </div>;

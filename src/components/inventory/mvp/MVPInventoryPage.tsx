@@ -10,7 +10,7 @@ import { Search, Plus, Package, AlertTriangle, CheckCircle, TrendingDown } from 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const InventoryManagement: React.FC = () => {
+export const MVPInventoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
 

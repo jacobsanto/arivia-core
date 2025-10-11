@@ -1,12 +1,12 @@
 
 import React from "react";
-import { DashboardContent } from "@/components/dashboard/Dashboard";
+import { MVPDashboard } from "@/components/dashboard/mvp/MVPDashboard";
 import { DashboardErrorBoundary } from "@/components/error-boundaries/DashboardErrorBoundary";
 
 const Dashboard: React.FC = () => {
   return (
     <DashboardErrorBoundary>
-      <DashboardContent />
+      <MVPDashboard />
     </DashboardErrorBoundary>
   );
 };

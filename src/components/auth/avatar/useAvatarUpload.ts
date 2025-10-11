@@ -1,9 +1,8 @@
 
 import { useState, useEffect, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { User } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from '@/services/logger';
 import { toast } from "sonner";
 
 interface UseAvatarUploadProps {
@@ -12,16 +11,7 @@ interface UseAvatarUploadProps {
 }
 
 export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) => {
-  const { refreshAuthState } = useAuth();
-  
-  const updateUserAvatar = async (userId: string, avatarUrl: string) => {
-    const { error } = await supabase.from('profiles').update({ avatar: avatarUrl }).eq('id', userId);
-    return !error;
-  };
-  
-  const refreshProfile = async () => {
-    await refreshAuthState();
-  };
+  const { updateUserAvatar, refreshProfile } = useUser();
   const [isUploading, setIsUploading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -62,7 +52,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         });
       
       if (error) {
-        logger.error("Storage error:", error);
+        console.error("Storage error:", error);
         throw new Error(`Upload failed: ${error.message}`);
       }
 
@@ -90,7 +80,7 @@ export const useAvatarUpload = ({ user, onAvatarChange }: UseAvatarUploadProps) 
         setIsDialogOpen(false);
       }
     } catch (error) {
-      logger.error("Error uploading avatar:", error);
+      console.error("Error uploading avatar:", error);
       toast.error("Failed to upload avatar", {
         description: error instanceof Error ? error.message : "An unknown error occurred"
       });

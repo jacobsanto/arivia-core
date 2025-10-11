@@ -7,8 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { User, UserRole } from "@/types/auth";
 import AvatarUpload from "../avatar/AvatarUpload";
-import { useAuth } from "@/contexts/AuthContext";
-import { logger } from '@/services/logger';
+import { useUser } from "@/contexts/UserContext";
 
 const profileFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -30,8 +29,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onCancel, 
   onSubmit 
 }) => {
-  const { refreshAuthState } = useAuth();
-  const refreshProfile = async () => { await refreshAuthState(); };
+  const { refreshProfile } = useUser();
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
@@ -46,7 +44,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     try {
       await onSubmit(data);
     } catch (error) {
-      logger.error("Error in form submission:", error);
+      console.error("Error in form submission:", error);
     }
   };
 

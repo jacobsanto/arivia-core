@@ -13,7 +13,7 @@ import {
   Maximize2,
   Minimize2
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { useNavigate } from "react-router-dom";
 import { 
   DropdownMenu, 
@@ -21,7 +21,6 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { logger } from '@/services/logger';
 
 // Import all widget components
 import { KpiSummaryWidget } from "../widgets/KpiSummaryWidget";
@@ -181,7 +180,7 @@ const DEFAULT_LAYOUTS: Record<string, string[]> = {
 const STORAGE_KEY = 'arivia_dashboard_layout';
 
 export const RoleBasedDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
   
   const [isEditMode, setIsEditMode] = useState(false);
@@ -231,7 +230,7 @@ export const RoleBasedDashboard: React.FC = () => {
           return;
         }
       } catch (error) {
-        logger.warn('Failed to parse saved dashboard layout:', error);
+        console.warn('Failed to parse saved dashboard layout:', error);
       }
     }
 
@@ -269,7 +268,7 @@ export const RoleBasedDashboard: React.FC = () => {
         
         exitEditMode();
       } catch (error) {
-        logger.error('Failed to save dashboard layout:', error);
+        console.error('Failed to save dashboard layout:', error);
       }
   };
 

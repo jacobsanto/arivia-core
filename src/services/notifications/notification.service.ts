@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Notification, CreateNotificationData } from '@/types/notifications.types';
-import { logger } from '@/services/logger';
 
 class NotificationService {
   async getNotifications(): Promise<Notification[]> {
@@ -10,7 +9,7 @@ class NotificationService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      logger.error("Error fetching notifications", error, { component: 'notificationService' });
+      console.error('Error fetching notifications:', error);
       throw error;
     }
 
@@ -24,7 +23,7 @@ class NotificationService {
       .eq('is_read', false);
 
     if (error) {
-      logger.error("Error fetching unread count", error, { component: 'notificationService' });
+      console.error('Error fetching unread count:', error);
       throw error;
     }
 
@@ -38,7 +37,7 @@ class NotificationService {
       .eq('id', notificationId);
 
     if (error) {
-      logger.error("Error marking notification as read", error, { component: 'notificationService', notificationId });
+      console.error('Error marking notification as read:', error);
       throw error;
     }
   }
@@ -50,7 +49,7 @@ class NotificationService {
       .eq('is_read', false);
 
     if (error) {
-      logger.error("Error marking all notifications as read", error, { component: 'notificationService' });
+      console.error('Error marking all notifications as read:', error);
       throw error;
     }
   }
@@ -63,7 +62,7 @@ class NotificationService {
       .single();
 
     if (error) {
-      logger.error("Error creating notification", error, { component: 'notificationService' });
+      console.error('Error creating notification:', error);
       throw error;
     }
 
@@ -77,7 +76,7 @@ class NotificationService {
       .eq('id', notificationId);
 
     if (error) {
-      logger.error("Error deleting notification", error, { component: 'notificationService', notificationId });
+      console.error('Error deleting notification:', error);
       throw error;
     }
   }

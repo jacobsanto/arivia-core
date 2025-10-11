@@ -4,7 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { logger } from "@/services/logger";
 
 interface WorkloadData {
   name: string;
@@ -83,7 +82,7 @@ export const TeamWorkloadWidget: React.FC = () => {
 
       setWorkloadData(activeWorkload);
     } catch (error) {
-      logger.error('Error fetching team workload', error);
+      console.error('Error fetching team workload:', error);
       setWorkloadData([]);
     } finally {
       setLoading(false);

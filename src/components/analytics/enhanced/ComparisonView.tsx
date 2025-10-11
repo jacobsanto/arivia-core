@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AnalyticsData } from '@/types/analytics.types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { LoadingSpinner } from '@/components/mvp/LoadingSpinner';
 import { GitCompare, TrendingUp, TrendingDown, ArrowUpDown } from 'lucide-react';
 
 interface ComparisonViewProps {
@@ -18,11 +18,7 @@ export const ComparisonView: React.FC<ComparisonViewProps> = ({ data, loading })
   const [selectedMetric, setSelectedMetric] = useState<'costs' | 'tasks' | 'efficiency'>('costs');
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    return <LoadingSpinner size="lg" text="Loading comparison data..." />;
   }
 
   // Mock previous period data for comparison

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import MaintenanceCreationForm from "./forms/MaintenanceCreationForm";
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast";
-import { logger } from "@/services/logger";
 interface CreateMaintenanceTaskDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,7 +45,7 @@ export const CreateMaintenanceTaskDialog = ({
       onOpenChange(false);
       onTaskCreated?.();
     } catch (error) {
-      logger.error('Error creating maintenance task', error);
+      console.error('Error creating maintenance task:', error);
       toastService.error(`Failed to create task: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

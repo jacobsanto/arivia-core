@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DamageReport } from "@/services/damage/damage.service";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
+import { useUser } from "@/contexts/UserContext";
 import { FileUpload } from "@/components/ui/file-upload";
-import { logger } from '@/services/logger';
 
 type DamageReportStatus = "pending" | "investigating" | "resolved" | "compensation_required" | "compensation_paid" | "closed";
 
@@ -37,7 +36,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
   );
   const [compensationNotes, setCompensationNotes] = useState(report.compensation_notes || "");
   const [isUpdating, setIsUpdating] = useState(false);
-  const { user } = useAuth();
+  const { user } = useUser();
 
   const handleClose = () => {
     setIsOpen(false);
@@ -65,7 +64,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       await onUpdate(report.id, updates);
       handleClose();
     } catch (error) {
-      logger.error("Error updating report:", error);
+      console.error("Error updating report:", error);
     } finally {
       setIsUpdating(false);
     }
@@ -78,7 +77,7 @@ const DamageReportDetail: React.FC<DamageReportDetailProps> = ({
       const file = files[0];
       await onMediaUpload(file, report.id);
     } catch (error) {
-      logger.error("Error uploading media:", error);
+      console.error("Error uploading media:", error);
     }
   };
 

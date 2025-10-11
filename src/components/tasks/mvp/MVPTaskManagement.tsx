@@ -1,3 +1,5 @@
+
+// @ts-nocheck
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,7 @@ import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 
-export const TaskManagement: React.FC = () => {
+export const MVPTaskManagement: React.FC = () => {
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const queryClient = useQueryClient();

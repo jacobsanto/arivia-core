@@ -12,7 +12,6 @@ import StockFormSubmitButton from "./forms/StockFormSubmitButton";
 import { useInventory } from "@/contexts/InventoryContext";
 import ItemFormVendors from "./forms/ItemFormVendors";
 import { inventoryService } from "@/services/inventory.service";
-import { logger } from "@/services/logger";
 
 const formSchema = z.object({
   name: z.string().min(2, { message: "Item name must be at least 2 characters." }),
@@ -82,7 +81,7 @@ const AddItem = () => {
       methods.reset();
       setSelectedCategory("");
     } catch (error) {
-      logger.error('Error adding item', error);
+      console.error('Error adding item:', error);
       toast({
         title: "Error",
         description: "Failed to add item to inventory",
