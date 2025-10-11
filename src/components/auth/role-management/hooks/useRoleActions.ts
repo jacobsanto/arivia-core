@@ -1,9 +1,8 @@
-
-// @ts-nocheck
 import { useState } from "react";
 import { User, UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from '@/services/logger';
 
 export const useRoleActions = () => {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -37,8 +36,8 @@ export const useRoleActions = () => {
         const { data, error } = await supabase
           .from('profiles')
           .update({ 
-            role: selectedRole,
-            secondary_roles: updatedSecondaryRoles
+          role: selectedRole,
+          secondary_roles: updatedSecondaryRoles as any
           })
           .eq('id', userId)
           .select() // Add this to get the updated record

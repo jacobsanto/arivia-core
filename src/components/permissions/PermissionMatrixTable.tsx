@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Legacy permission matrix table - disabled for now to allow new permission system to work
 import React from 'react';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useState, useEffect } from "react";
 import { useSystemSettingsForm } from "@/hooks/useSystemSettingsForm";
 import { Form } from "@/components/ui/form";
