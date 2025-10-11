@@ -9,8 +9,8 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, isLoading, error } = useAuth();
 
-  // Show loading state while checking authentication
-  if (isLoading) {
+  // Show loading state only during initial auth check when no user is set
+  if (isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">

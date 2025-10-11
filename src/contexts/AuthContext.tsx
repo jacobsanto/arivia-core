@@ -15,6 +15,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   error: string | null;
+  isAuthenticating: boolean;
   refreshAuthState: () => Promise<void>;
   // Auth actions
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -29,6 +30,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   
@@ -133,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth actions unified for app
   const signIn = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
         toastService.error('Sign In Failed', { description: error.message });
@@ -145,13 +147,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.error('AuthContext', 'Sign in error', { error: err });
       return { error: err };
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signUp({
         email,
@@ -171,13 +173,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.error('AuthContext', 'Sign up error', { error: err });
       return { error: err };
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
   const signOut = async () => {
     try {
-      setIsLoading(true);
+      setIsAuthenticating(true);
       const { error } = await supabase.auth.signOut();
       if (error) {
         toastService.error('Sign Out Failed', { description: error.message });
@@ -189,7 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logger.error('AuthContext', 'Sign out error', { error: err });
       return { error: err };
     } finally {
-      setIsLoading(false);
+      setIsAuthenticating(false);
     }
   };
 
@@ -216,6 +218,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading: isLoading,
     isAuthenticated: !!user && !!session,
     error,
+    isAuthenticating,
     refreshAuthState,
     signIn,
     signUp,

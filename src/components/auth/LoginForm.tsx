@@ -31,11 +31,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
 
   // Navigate to dashboard when user is authenticated
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
     }
-  }, [user, authLoading, navigate, location]);
+  }, [user, navigate, location]);
   
   // Use react-hook-form with zod for validation
   const form = useForm({
