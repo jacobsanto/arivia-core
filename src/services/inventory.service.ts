@@ -46,7 +46,7 @@ export const inventoryService = {
       .order('name');
     
     if (error) {
-      console.error('Error fetching inventory items:', error);
+      logger.error("Error fetching inventory items", error, { component: 'inventoryService' });
       throw error;
     }
     
@@ -61,7 +61,7 @@ export const inventoryService = {
       .single();
     
     if (error) {
-      console.error('Error creating inventory category:', error);
+      logger.error("Error creating inventory category", error, { component: 'inventoryService' });
       throw error;
     }
     
@@ -76,7 +76,7 @@ export const inventoryService = {
       .single();
     
     if (error) {
-      console.error('Error creating inventory item:', error);
+      logger.error("Error creating inventory item", error, { component: 'inventoryService' });
       throw error;
     }
     
@@ -107,13 +107,13 @@ export const inventoryService = {
         });
       
       if (error) {
-        console.error('Error recording inventory usage:', error);
+        logger.error("Error recording inventory usage", error, { component: 'inventoryService' });
         return false;
       }
       
       return true;
     } catch (error) {
-      console.error('Error recording inventory usage:', error);
+      logger.error("Error recording inventory usage", error, { component: 'inventoryService' });
       return false;
     }
   },
@@ -139,7 +139,7 @@ export const inventoryService = {
         .order('usage_date', { ascending: false });
       
       if (error) {
-        console.error('Error fetching inventory usage:', error);
+        logger.error("Error fetching inventory usage", error, { component: 'inventoryService' });
         return [];
       }
       
@@ -153,7 +153,7 @@ export const inventoryService = {
         reported_by: item.profiles?.name || 'Unknown User'
       }));
     } catch (error) {
-      console.error('Error fetching inventory usage:', error);
+      logger.error("Error fetching inventory usage", error, { component: 'inventoryService' });
       return [];
     }
   },

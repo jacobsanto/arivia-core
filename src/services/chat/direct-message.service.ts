@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DirectMessage } from './chat.types';
 import { uploadAttachments } from './message/attachment.service';
 import { transformToDirectMessage, DbDirectMessage } from './direct-message/transform.service';
+import { logger } from '@/services/logger';
 
 export const directMessageService = {
   async getDirectMessages(userId: string, otherUserId: string): Promise<DirectMessage[]> {
@@ -17,7 +18,7 @@ export const directMessageService = {
       
       return (data || []).map(msg => transformToDirectMessage(msg as DbDirectMessage));
     } catch (error: any) {
-      console.error(`Error fetching direct messages between ${userId} and ${otherUserId}:`, error);
+      logger.error("Error fetching direct messages", error, { component: 'directMessageService', userId, otherUserId });
       return [];
     }
   },
@@ -60,7 +61,7 @@ export const directMessageService = {
       
       return data ? transformToDirectMessage(data as DbDirectMessage) : null;
     } catch (error: any) {
-      console.error(`Error sending direct message:`, error);
+      logger.error("Error sending direct message", error, { component: 'directMessageService' });
       return null;
     }
   },
@@ -75,7 +76,7 @@ export const directMessageService = {
       if (error) throw error;
       return true;
     } catch (error: any) {
-      console.error(`Error marking direct message ${messageId} as read:`, error);
+      logger.error("Error marking direct message as read", error, { component: 'directMessageService', messageId });
       return false;
     }
   },
@@ -103,7 +104,7 @@ export const directMessageService = {
       
       return counts;
     } catch (error: any) {
-      console.error(`Error getting unread message counts for user ${userId}:`, error);
+      logger.error("Error getting unread message counts", error, { component: 'directMessageService', userId });
       return {};
     }
   }

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Notification, CreateNotificationData } from '@/types/notifications.types';
+import { logger } from '@/services/logger';
 
 class NotificationService {
   async getNotifications(): Promise<Notification[]> {
@@ -9,7 +10,7 @@ class NotificationService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching notifications:', error);
+      logger.error("Error fetching notifications", error, { component: 'notificationService' });
       throw error;
     }
 
@@ -23,7 +24,7 @@ class NotificationService {
       .eq('is_read', false);
 
     if (error) {
-      console.error('Error fetching unread count:', error);
+      logger.error("Error fetching unread count", error, { component: 'notificationService' });
       throw error;
     }
 
@@ -37,7 +38,7 @@ class NotificationService {
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Error marking notification as read:', error);
+      logger.error("Error marking notification as read", error, { component: 'notificationService', notificationId });
       throw error;
     }
   }
@@ -49,7 +50,7 @@ class NotificationService {
       .eq('is_read', false);
 
     if (error) {
-      console.error('Error marking all notifications as read:', error);
+      logger.error("Error marking all notifications as read", error, { component: 'notificationService' });
       throw error;
     }
   }
@@ -62,7 +63,7 @@ class NotificationService {
       .single();
 
     if (error) {
-      console.error('Error creating notification:', error);
+      logger.error("Error creating notification", error, { component: 'notificationService' });
       throw error;
     }
 
@@ -76,7 +77,7 @@ class NotificationService {
       .eq('id', notificationId);
 
     if (error) {
-      console.error('Error deleting notification:', error);
+      logger.error("Error deleting notification", error, { component: 'notificationService', notificationId });
       throw error;
     }
   }

@@ -1,6 +1,7 @@
 import { ChatMessage, ChatListItem, ChatUser } from '@/types/chat.types';
 import { NotificationPatterns } from '@/services/notifications/notification.patterns';
 import { chatUsersAPI } from './realtime-chat.service';
+import { logger } from '@/services/logger';
 
 /**
  * Generate notifications for chat events
@@ -40,7 +41,7 @@ export const generateChatNotifications = async (
       }
     }
   } catch (error) {
-    console.error('Error generating chat notifications:', error);
+    logger.error("Error generating chat notifications", error, { component: 'chatNotificationService' });
   }
 };
 
@@ -54,8 +55,8 @@ export const generateDirectMessageNotification = async (
   try {
     // This could be used for when users receive DMs while not in the chat
     // For now, we'll rely on the real-time chat notifications
-    console.log('Direct message notification:', { message, recipientId });
+    logger.debug("Direct message notification", { message, recipientId }, { component: 'chatNotificationService' });
   } catch (error) {
-    console.error('Error generating direct message notification:', error);
+    logger.error("Error generating direct message notification", error, { component: 'chatNotificationService' });
   }
 };

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/services/logger';
 
 export interface DamageReport {
   id: string;
@@ -41,7 +42,7 @@ export const damageService = {
       if (error) throw error;
       return data || [];
     } catch (error: any) {
-      console.error('Error fetching damage reports:', error);
+      logger.error("Error fetching damage reports", error, { component: 'damageService' });
       toast.error('Failed to load damage reports');
       return [];
     }
@@ -59,7 +60,7 @@ export const damageService = {
       toast.success('Damage report created successfully');
       return data;
     } catch (error: any) {
-      console.error('Error creating damage report:', error);
+      logger.error("Error creating damage report", error, { component: 'damageService' });
       toast.error('Failed to create damage report');
       return null;
     }
@@ -92,7 +93,7 @@ export const damageService = {
       if (dbError) throw dbError;
       return publicUrl;
     } catch (error: any) {
-      console.error('Error uploading media:', error);
+      logger.error("Error uploading media", error, { component: 'damageService' });
       toast.error('Failed to upload media');
       return null;
     }

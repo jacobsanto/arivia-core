@@ -30,7 +30,7 @@ export const registerSuperAdmin = async (
   name: string
 ): Promise<boolean> => {
   try {
-    console.log("Registering super admin:", { email, name });
+    logger.info("Registering super admin", { email, name }, { component: 'adminRegistration' });
     const role = "superadmin";
     
     // Check if super admin already exists
@@ -38,7 +38,7 @@ export const registerSuperAdmin = async (
     
     // If super admin already exists, don't create a new one
     if (superAdminExists) {
-      console.log("Super admin already exists");
+      logger.info("Super admin already exists", undefined, { component: 'adminRegistration' });
       toast.info("Super Admin already exists", {
         description: "A Super Admin user is already registered in the system."
       });
@@ -46,7 +46,7 @@ export const registerSuperAdmin = async (
     }
     
     // Register the Super Admin with Supabase
-    console.log("Creating super admin account...");
+    logger.info("Creating super admin account", undefined, { component: 'adminRegistration' });
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -60,21 +60,21 @@ export const registerSuperAdmin = async (
     });
 
     if (error) {
-      console.error("Error creating Super Admin:", error);
+      logger.error("Error creating Super Admin", error, { component: 'adminRegistration' });
       toast.error("Failed to create Super Admin", {
         description: error.message
       });
       return false;
     }
 
-    console.log("Super Admin created successfully:", data.user?.id);
+    logger.info("Super Admin created successfully", { userId: data.user?.id }, { component: 'adminRegistration' });
     toast.success("Super Admin created successfully", {
       description: `The Super Admin account for ${name} has been registered.`
     });
     
     return true;
   } catch (error) {
-    console.error("Super Admin registration error:", error);
+    logger.error("Super Admin registration error", error, { component: 'adminRegistration' });
     toast.error("Failed to create Super Admin", {
       description: "An unexpected error occurred."
     });
