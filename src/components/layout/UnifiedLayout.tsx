@@ -24,7 +24,7 @@ const UnifiedLayout = () => {
   return (
     <div className="flex min-h-screen bg-background overflow-hidden">
       {/* Desktop sidebar - hidden on mobile */}
-      {!isMobile && <Sidebar />}
+      <Sidebar />
       
       <div className="flex flex-col flex-1 w-full overflow-hidden">
         <Header onMobileMenuToggle={toggleMobileMenu} />
