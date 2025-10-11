@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
 import { Plug, RefreshCw, CheckCircle, AlertTriangle, Settings, Globe } from 'lucide-react';
+import { logger } from '@/services/logger';
 import { GuestyIntegration } from './GuestyIntegration';
 import { PaymentIntegrations } from './PaymentIntegrations';
 import { CommunicationIntegrations } from './CommunicationIntegrations';
@@ -187,11 +188,11 @@ export const ThirdPartyIntegrationsDashboard = () => {
   };
 
   const toggleIntegration = (integrationName: string) => {
-    console.log('Toggling integration:', integrationName);
+    logger.debug('ThirdPartyIntegrationsDashboard', 'Toggling integration', { integrationName });
   };
 
   const setupIntegration = (integrationName: string) => {
-    console.log('Setting up integration:', integrationName);
+    logger.debug('ThirdPartyIntegrationsDashboard', 'Setting up integration', { integrationName });
   };
 
   return (

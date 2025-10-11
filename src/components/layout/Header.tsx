@@ -15,6 +15,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { NotificationTestButton } from "@/components/notifications/NotificationTestButton";
 import { recentMessagesService, RecentMessage } from "@/services/chat/recent-messages.service";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { logger } from "@/services/logger";
 
 
 interface HeaderProps {
@@ -48,7 +49,7 @@ const Header: React.FC<HeaderProps> = ({
       if (navigator.onLine) {
         refreshProfile().then(updated => {
           if (updated) {
-            console.log("Profile automatically refreshed");
+            logger.debug('Header', 'Profile automatically refreshed');
           }
         });
       }

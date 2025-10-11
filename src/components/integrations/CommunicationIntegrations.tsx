@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { MessageSquare, Mail, Phone, Send, Users, Bot, Bell } from 'lucide-react';
+import { logger } from '@/services/logger';
 
 export const CommunicationIntegrations = () => {
   const [whatsappEnabled, setWhatsappEnabled] = useState(true);
@@ -192,15 +193,15 @@ export const CommunicationIntegrations = () => {
   };
 
   const connectChannel = (channel: string) => {
-    console.log('Connecting communication channel:', channel);
+    logger.debug('CommunicationIntegrations', 'Connecting communication channel', { channel });
   };
 
   const editTemplate = (template: string) => {
-    console.log('Editing template:', template);
+    logger.debug('CommunicationIntegrations', 'Editing template', { template });
   };
 
   const sendTestMessage = () => {
-    console.log('Sending test message...');
+    logger.info('CommunicationIntegrations', 'Sending test message');
   };
 
   return (

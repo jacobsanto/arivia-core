@@ -10,6 +10,7 @@ import StockFormHeader from "./forms/StockFormHeader";
 import StockItemList from "./forms/StockItemList";
 import StockFormNotes from "./forms/StockFormNotes";
 import StockFormSubmitButton from "./forms/StockFormSubmitButton";
+import { logger } from "@/services/logger";
 
 const formSchema = z.object({
   location: z.string().min(1, { message: "Please select a location." }),
@@ -39,7 +40,7 @@ const StockReceipt = () => {
   });
 
   const onSubmit = (values: FormValues) => {
-    console.log(values);
+    logger.debug('StockReceipt', 'Form values', values);
     toast({
       title: "Stock Receipt Processed",
       description: `Items have been added to ${

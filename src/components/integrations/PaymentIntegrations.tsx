@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { CreditCard, DollarSign, AlertCircle, CheckCircle, TrendingUp, Receipt } from 'lucide-react';
+import { logger } from '@/services/logger';
 
 export const PaymentIntegrations = () => {
   const [stripeEnabled, setStripeEnabled] = useState(true);
@@ -184,11 +185,11 @@ export const PaymentIntegrations = () => {
   };
 
   const connectProvider = (provider: string) => {
-    console.log('Connecting payment provider:', provider);
+    logger.debug('PaymentIntegrations', 'Connecting payment provider', { provider });
   };
 
   const viewTransaction = (transactionId: string) => {
-    console.log('Viewing transaction:', transactionId);
+    logger.debug('PaymentIntegrations', 'Viewing transaction', { transactionId });
   };
 
   return (

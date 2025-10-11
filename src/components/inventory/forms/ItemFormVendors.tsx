@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
 import { useInventory } from "@/contexts/InventoryContext";
+import { logger } from "@/services/logger";
 
 interface ItemFormVendorsProps {
   selectedCategory: string;
@@ -33,7 +34,7 @@ const ItemFormVendors: React.FC<ItemFormVendorsProps> = ({ selectedCategory }) =
         const vendorData = await vendorService.getVendors();
         setVendors(vendorData);
       } catch (error) {
-        console.error('Error loading vendors:', error);
+        logger.error('ItemFormVendors', 'Error loading vendors', { error });
       } finally {
         setLoading(false);
       }

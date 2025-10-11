@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Store, Globe, TrendingUp, Calendar, Star, DollarSign, Users } from 'lucide-react';
+import { logger } from '@/services/logger';
 
 export const MarketplaceIntegrations = () => {
   const [airbnbEnabled, setAirbnbEnabled] = useState(false);
@@ -187,11 +188,11 @@ export const MarketplaceIntegrations = () => {
   };
 
   const connectMarketplace = (marketplace: string) => {
-    console.log('Connecting to marketplace:', marketplace);
+    logger.debug('MarketplaceIntegrations', 'Connecting to marketplace', { marketplace });
   };
 
   const optimizeListing = (property: string) => {
-    console.log('Optimizing listing for:', property);
+    logger.debug('MarketplaceIntegrations', 'Optimizing listing', { property });
   };
 
   return (

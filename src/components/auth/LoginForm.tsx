@@ -31,10 +31,10 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
 
   // Navigate to dashboard when user is authenticated
   useEffect(() => {
-    console.log('[LoginForm] User state changed:', !!user);
+    logger.debug('LoginForm', 'User state changed', { hasUser: !!user });
     if (user) {
       const from = location.state?.from?.pathname || "/dashboard";
-      console.log('[LoginForm] Navigating to:', from);
+      logger.debug('LoginForm', 'Navigating to', { from });
       navigate(from, { replace: true });
     }
   }, [user, navigate, location]);

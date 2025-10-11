@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { vendorService, VendorWithCategoryNames } from "@/services/vendor.service";
+import { logger } from "@/services/logger";
 
 interface OrderFormVendorProps {
   selectedVendorId: string | null;
@@ -32,7 +33,7 @@ const OrderFormVendor: React.FC<OrderFormVendorProps> = ({
         const vendorData = await vendorService.getVendors();
         setVendors(vendorData);
       } catch (error) {
-        console.error('Error loading vendors:', error);
+        logger.error('OrderFormVendor', 'Error loading vendors', { error });
       } finally {
         setLoading(false);
       }
