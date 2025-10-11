@@ -3,6 +3,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../../useChatTypes";
+import { logger } from "@/services/logger";
 
 export async function loadDirectMessages(user: any, recipientId: string, setIsOffline: (offline: boolean) => void): Promise<Message[]> {
   try {
@@ -19,7 +20,7 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
       .limit(50);
 
     if (error) {
-      console.error('Error loading direct messages:', error);
+      logger.error('Error loading direct messages', { error });
       throw error;
     }
 
@@ -34,7 +35,7 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
       attachments: []
     }));
   } catch (error) {
-    console.error('Direct message loading failed:', error);
+    logger.error('Direct message loading failed', { error });
     setIsOffline(true);
     // Return empty array instead of throwing to prevent cascade failures
     return [];

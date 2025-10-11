@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/housekeepingTypes";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from "@/services/logger";
 
 export const useTaskFetching = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -43,7 +44,7 @@ export const useTaskFetching = () => {
       const uniqueStaff = [...new Set(formattedTasks.map(task => task.assigned_to).filter(Boolean))];
       setStaffOptions(uniqueStaff);
     } catch (error: any) {
-      console.error('Error fetching tasks:', error);
+      logger.error('Error fetching tasks', { error });
       toast({
         title: "Error fetching tasks",
         description: error.message,

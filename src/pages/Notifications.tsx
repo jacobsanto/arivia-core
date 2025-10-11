@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useNotifications } from '@/hooks/useNotifications';
 import { notificationService } from '@/services/notifications/notification.service';
 import { Notification } from '@/types/notifications.types';
+import { logger } from '@/services/logger';
 
 const NotificationsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const NotificationsPage: React.FC = () => {
       await notificationService.deleteNotification(notificationId);
       refetch();
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      logger.error('Error deleting notification', { error });
     }
   };
 

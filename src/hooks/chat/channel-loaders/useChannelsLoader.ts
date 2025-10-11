@@ -6,6 +6,7 @@ import { chatService } from "@/services/chat/chat.service";
 import { Channel } from "@/components/chat/sidebar/ChatSidebar";
 import { toast } from "sonner";
 import { FALLBACK_GENERAL_CHANNEL } from "@/services/chat/chat.types";
+import { logger } from "@/services/logger";
 
 export function useChannelsLoader(isConnected: boolean) {
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -25,7 +26,7 @@ export function useChannelsLoader(isConnected: boolean) {
           // Attempt to get or create the general channel
           generalChannel = await chatService.getOrCreateGeneralChannel();
         } catch (error) {
-          console.error("Error getting general channel:", error);
+          logger.error("Error getting general channel", { error });
           // Fall back to local general channel definition
           generalChannel = FALLBACK_GENERAL_CHANNEL;
         }
@@ -51,7 +52,7 @@ export function useChannelsLoader(isConnected: boolean) {
           setLoadError(null);
         }
       } catch (error) {
-        console.error("Failed to load channels:", error);
+        logger.error("Failed to load channels", { error });
         toast.error("Failed to load channels", {
           description: "Using offline mode for channels"
         });

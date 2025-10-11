@@ -7,6 +7,7 @@ import { useChecklistTemplates } from '@/hooks/useChecklistTemplates';
 import { ChecklistTemplate } from '@/types/checklistTypes';
 import { toast } from 'sonner';
 import ErrorBoundary from '@/components/ui/error-boundary';
+import { logger } from '@/services/logger';
 
 const Checklists: React.FC = () => {
   const { 
@@ -23,7 +24,7 @@ const Checklists: React.FC = () => {
 
   // Error handling
   if (error) {
-    console.error("Checklists error:", error);
+    logger.error("Checklists error", { error });
     return (
       <div className="p-6">
         <div className="text-center">
@@ -75,7 +76,7 @@ const Checklists: React.FC = () => {
       setEditingTemplate(undefined);
       toast.success("Template created successfully");
     } catch (error) {
-      console.error("Error creating template:", error);
+      logger.error("Error creating template", { error });
       toast.error("Failed to create template");
     }
   };
@@ -87,7 +88,7 @@ const Checklists: React.FC = () => {
       setEditingTemplate(undefined);
       toast.success("Template updated successfully");
     } catch (error) {
-      console.error("Error updating template:", error);
+      logger.error("Error updating template", { error });
       toast.error("Failed to update template");
     }
   };
@@ -97,7 +98,7 @@ const Checklists: React.FC = () => {
       await duplicateTemplate(templateId);
       toast.success("Template duplicated successfully");
     } catch (error) {
-      console.error("Error duplicating template:", error);
+      logger.error("Error duplicating template", { error });
       toast.error("Failed to duplicate template");
     }
   };
@@ -107,7 +108,7 @@ const Checklists: React.FC = () => {
       await deleteTemplate(templateId);
       toast.success("Template deleted successfully");
     } catch (error) {
-      console.error("Error deleting template:", error);
+      logger.error("Error deleting template", { error });
       toast.error("Failed to delete template");
     }
   };

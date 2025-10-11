@@ -4,6 +4,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CleaningDefinition } from "@/types/housekeepingTypes";
+import { logger } from "@/services/logger";
 
 export const useCleaningDefinitions = () => {
   const [cleaningDefinitions, setCleaningDefinitions] = useState<Record<string, string>>({});
@@ -26,7 +27,7 @@ export const useCleaningDefinitions = () => {
       
       setCleaningDefinitions(definitions);
     } catch (error) {
-      console.error('Error fetching cleaning definitions:', error);
+      logger.error('Error fetching cleaning definitions', { error });
     }
   };
 

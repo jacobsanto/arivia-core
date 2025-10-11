@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { chatService } from "@/services/chat/chat.service";
 import { DirectMessage } from "@/components/chat/sidebar/ChatSidebar";
 import { toast } from "sonner";
+import { logger } from "@/services/logger";
 
 export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (userId: string) => "online" | "offline" | "away") {
   const [directMessages, setDirectMessages] = useState<DirectMessage[]>([]);
@@ -33,7 +34,7 @@ export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (us
         
         // Gracefully handle no users scenario
         if (!profiles || profiles.length === 0) {
-          console.log("No other users found in the system");
+          logger.debug("No other users found in the system");
           setDirectMessages([]);
           return;
         }
@@ -43,7 +44,7 @@ export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (us
         try {
           unreadCounts = await chatService.getUnreadMessageCounts(user.id);
         } catch (error) {
-          console.warn("Failed to get unread counts:", error);
+          logger.warn("Failed to get unread counts", { error });
           // Continue without unread counts
         }
         
@@ -58,7 +59,7 @@ export function useDirectMessagesLoader(isConnected: boolean, getUserStatus: (us
         
         setDirectMessages(userProfiles);
       } catch (error) {
-        console.error("Failed to load user profiles:", error);
+        logger.error("Failed to load user profiles", { error });
         
         // Improved error handling - show toast but don't crash
         toast.error("Failed to load user profiles", {

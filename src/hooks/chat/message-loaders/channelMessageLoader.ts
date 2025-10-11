@@ -3,6 +3,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../../useChatTypes";
+import { logger } from "@/services/logger";
 
 export async function loadChannelMessages(user: any, setIsOffline: (offline: boolean) => void): Promise<Message[]> {
   try {
@@ -18,7 +19,7 @@ export async function loadChannelMessages(user: any, setIsOffline: (offline: boo
       .limit(50);
 
     if (error) {
-      console.error('Error loading channel messages:', error);
+      logger.error('Error loading channel messages', { error });
       throw error;
     }
 
@@ -33,7 +34,7 @@ export async function loadChannelMessages(user: any, setIsOffline: (offline: boo
       attachments: []
     }));
   } catch (error) {
-    console.error('Channel message loading failed:', error);
+    logger.error('Channel message loading failed', { error });
     setIsOffline(true);
     // Return empty array instead of throwing to prevent cascade failures
     return [];
