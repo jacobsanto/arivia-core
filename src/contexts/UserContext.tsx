@@ -17,7 +17,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, user_id, name, email, role, avatar, phone')
         .eq('user_id', userId)
         .maybeSingle();
 
@@ -39,7 +39,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         avatar: profile.avatar,
         phone: profile.phone,
         secondaryRoles: [],
-        customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
+        customPermissions: {}
       };
 
       setCurrentUser(user);
@@ -293,7 +293,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (userId === currentUser?.id) {
         const { data: updatedProfile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, user_id, name, email, role, avatar, phone')
           .eq('user_id', userId)
           .maybeSingle();
         
@@ -306,7 +306,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             avatar: updatedProfile.avatar,
             phone: updatedProfile.phone,
             secondaryRoles: [],
-            customPermissions: (updatedProfile.custom_permissions as Record<string, boolean>) || {}
+            customPermissions: {}
           });
         }
       }

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/services/logger';
 
 export interface SecurityEvent {
   id: string;
@@ -96,7 +97,7 @@ export const useSecurityMonitoring = () => {
     try {
       const { data, error } = await supabase
         .from('user_activity_log')
-        .select('*')
+        .select('id, user_id, action, resource_type, resource_id, details, ip_address, user_agent, created_at')
         .order('created_at', { ascending: false })
         .limit(limit);
       
@@ -107,7 +108,7 @@ export const useSecurityMonitoring = () => {
         ip_address: item.ip_address as string
       })));
     } catch (err: any) {
-      console.error('Error fetching user activity:', err);
+      logger.error('Error fetching user activity', err);
       // Don't show toast for activity logs as they're not critical
     }
   }, []);
@@ -131,7 +132,7 @@ export const useSecurityMonitoring = () => {
       
       return data;
     } catch (err: any) {
-      console.error('Error logging security event:', err);
+      logger.error('Error logging security event', err);
       toast.error('Failed to log security event');
       throw err;
     }
@@ -153,7 +154,7 @@ export const useSecurityMonitoring = () => {
       toast.success('Security event resolved');
       await fetchSecurityDashboard();
     } catch (err: any) {
-      console.error('Error resolving security event:', err);
+      logger.error('Error resolving security event', err);
       toast.error('Failed to resolve security event');
     }
   }, [fetchSecurityDashboard]);
@@ -182,7 +183,7 @@ export const useSecurityMonitoring = () => {
       
       return data;
     } catch (err: any) {
-      console.error('Error logging user activity:', err);
+      logger.error('Error logging user activity', err);
       // Don't throw error for activity logging failures
     }
   }, []);

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/services/logger';
 
 interface RetryOptions {
   maxRetries: number;
@@ -40,7 +41,7 @@ export function useSystemMonitoring() {
         attempt++;
         
         if (attempt > options.maxRetries) {
-          console.error(`Health check failed after ${options.maxRetries} retries:`, error);
+          logger.error(`Health check failed after ${options.maxRetries} retries`, error);
           return false;
         }
         

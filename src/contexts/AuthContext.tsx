@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (data.session) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, user_id, name, email, role, avatar, phone')
           .eq('id', data.session.user.id)
           .single();
 
@@ -59,8 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             role: profile.role as UserRole || 'property_manager',
             avatar: profile.avatar || "/placeholder.svg",
             phone: profile.phone,
-            secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
-            customPermissions: profile.custom_permissions as Record<string, boolean> || {}
+            secondaryRoles: undefined,
+            customPermissions: {}
           };
           logger.debug('AuthContext', 'Real user loaded', { name: newUser.name, role: newUser.role });
           setUser(newUser);
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setTimeout(() => {
             supabase
               .from('profiles')
-              .select('*')
+              .select('id, user_id, name, email, role, avatar, phone')
               .eq('id', newSession.user.id)
               .single()
               .then(({ data: profile }) => {
@@ -107,8 +107,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     role: profile.role as UserRole || 'property_manager',
                     avatar: profile.avatar || "/placeholder.svg",
                     phone: profile.phone,
-                    secondaryRoles: profile.secondary_roles ? profile.secondary_roles.map(role => role as UserRole) : undefined,
-                    customPermissions: profile.custom_permissions as Record<string, boolean> || {}
+                    secondaryRoles: undefined,
+                    customPermissions: {}
                   };
                   setUser(newUser);
                 }
