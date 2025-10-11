@@ -2,6 +2,7 @@
 import { User, UserRole } from "@/types/auth";
 import { toastService } from "@/services/toast/toast.service";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/logger";
 
 // All user authentication is now handled through Supabase Auth
 // Users must sign up through the proper registration flow
@@ -49,7 +50,7 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
     return user;
   } catch (error) {
-    console.error("Login error:", error);
+    logger.error("Login error", error, { component: 'auth' });
     throw error;
   }
 };
@@ -65,7 +66,7 @@ export const logoutUser = async (): Promise<void> => {
     // Force redirect to login page
     window.location.href = "/login";
   } catch (error) {
-    console.error("Logout error:", error);
+    logger.error("Logout error", error, { component: 'auth' });
     throw error;
   }
 };
@@ -86,7 +87,7 @@ export const getUserFromStorage = async (): Promise<{ user: User | null; lastAut
       .single();
 
     if (profileError || !profile) {
-      console.error("Failed to fetch user profile:", profileError);
+      logger.error("Failed to fetch user profile", profileError, { component: 'auth' });
       return { user: null, lastAuthTime: 0 };
     }
 
@@ -102,7 +103,7 @@ export const getUserFromStorage = async (): Promise<{ user: User | null; lastAut
 
     return { user, lastAuthTime: Date.now() };
   } catch (error) {
-    console.error("Get user from storage error:", error);
+    logger.error("Get user from storage error", error, { component: 'auth' });
     return { user: null, lastAuthTime: 0 };
   }
 };

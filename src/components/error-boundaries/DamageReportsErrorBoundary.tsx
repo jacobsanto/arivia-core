@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +24,7 @@ export class DamageReportsErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Damage Reports error:', error, errorInfo);
+    logger.error('Damage Reports error', error, { component: 'DamageReportsErrorBoundary', errorInfo: errorInfo.componentStack });
   }
 
   private handleRetry = () => {

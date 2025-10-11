@@ -2,6 +2,7 @@ import React, { Component, ReactNode, ErrorInfo } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Settings } from 'lucide-react';
+import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -23,7 +24,7 @@ export class UserProfileErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('User Profile Error Boundary:', error, errorInfo);
+    logger.error('User Profile Error Boundary', error, { component: 'UserProfileErrorBoundary', errorInfo: errorInfo.componentStack });
   }
 
   private handleRetry = () => {
