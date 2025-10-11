@@ -111,11 +111,11 @@ export const useAdvancedCleaningSystem = () => {
             ...rule,
             conditions: conditionsResult.data || [],
             actions: actionsResult.data || []
-          };
+          } as any; // Type assertion for rule type mismatch
         })
       );
 
-      setRules(enhancedRules);
+      setRules(enhancedRules as any);
     } catch (err) {
       console.error('Error fetching enhanced rules:', err);
       toast({
@@ -241,7 +241,8 @@ export const useAdvancedCleaningSystem = () => {
 
   const testRule = async (ruleId: string, testBookingData: any) => {
     try {
-      const { data, error } = await supabase
+      // Using type assertion for edge function not in generated types
+      const { data, error } = await (supabase as any)
         .rpc('evaluate_rule_conditions', {
           rule_uuid: ruleId,
           booking_data: testBookingData

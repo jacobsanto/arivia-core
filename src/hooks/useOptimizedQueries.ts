@@ -80,7 +80,8 @@ export const useInfiniteBookings = (listingId?: string, pageSize = 20) => {
   return useInfiniteQuery({
     queryKey: ['bookings', 'infinite', listingId],
     queryFn: async ({ pageParam = 0 }) => {
-      let query = supabase
+      // Using type assertion for guesty_bookings table not in generated types
+      let query = (supabase as any)
         .from('guesty_bookings')
         .select(`
           id,

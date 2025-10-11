@@ -21,7 +21,8 @@ export const useReportsData = () => {
       setLoading(true);
       setError(null);
       
-      const { data, error: fetchError } = await supabase
+      // Using type assertion for reports table not in generated types
+      const { data, error: fetchError } = await (supabase as any)
         .from('reports')
         .select('*')
         .order('created_at', { ascending: false });
@@ -30,7 +31,7 @@ export const useReportsData = () => {
         throw fetchError;
       }
 
-      setReports(data || []);
+      setReports(data || [] as any);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load reports';
       setError(errorMessage);

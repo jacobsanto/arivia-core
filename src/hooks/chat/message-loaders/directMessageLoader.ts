@@ -6,7 +6,8 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
   try {
     setIsOffline(false);
     
-    const { data, error } = await supabase
+    // Using type assertion for direct_messages table not in generated types
+    const { data, error } = await (supabase as any)
       .from('direct_messages')
       .select(`
         *,
@@ -21,10 +22,10 @@ export async function loadDirectMessages(user: any, recipientId: string, setIsOf
       throw error;
     }
 
-    return (data || []).map(msg => ({
+    return (data || []).map((msg: any) => ({
       id: msg.id,
-      sender: (msg.sender as any)?.name || 'Unknown User',
-      avatar: (msg.sender as any)?.avatar || '/placeholder.svg',
+      sender: msg.sender?.[0]?.name || 'Unknown User',
+      avatar: msg.sender?.[0]?.avatar || '/placeholder.svg',
       content: msg.content,
       timestamp: msg.created_at,
       isCurrentUser: msg.sender_id === user.id,

@@ -6,11 +6,11 @@ export async function loadChannelMessages(user: any, setIsOffline: (offline: boo
   try {
     setIsOffline(false);
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('chat_messages')
       .select(`
         *,
-        sender:profiles!sender_id(id, name, avatar)
+        sender:profiles!author_id(id, name, avatar)
       `)
       .order('created_at', { ascending: true })
       .limit(50);
@@ -20,14 +20,14 @@ export async function loadChannelMessages(user: any, setIsOffline: (offline: boo
       throw error;
     }
 
-    return (data || []).map(msg => ({
+    return (data || []).map((msg: any) => ({
       id: msg.id,
-      sender: msg.sender?.name || 'Unknown User',
-      avatar: msg.sender?.avatar || '/placeholder.svg',
+      sender: msg.sender?.[0]?.name || 'Unknown User',
+      avatar: msg.sender?.[0]?.avatar || '/placeholder.svg',
       content: msg.content,
       timestamp: msg.created_at,
-      isCurrentUser: msg.sender_id === user.id,
-      reactions: (msg.reactions as any) || {},
+      isCurrentUser: msg.author_id === user.id,
+      reactions: msg.reactions || {},
       attachments: []
     }));
   } catch (error) {
