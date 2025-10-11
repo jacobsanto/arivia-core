@@ -3,6 +3,7 @@ import { User, UserRole, Session } from "@/types/auth";
 import { UserContextType } from "./types/userContext.types";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
+import { toastService } from '@/services/toast';
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
@@ -98,7 +99,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogout = async () => {
-    logger.auth("Mock logout - disconnecting from Supabase profiles");
+    try {
+      logger.auth("Logging out user");
+      
+      // Sign out from Supabase
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // Clear local state
+      setCurrentUser(null);
+      setCurrentSession(null);
+      
+      // Clear localStorage
+      localStorage.removeItem("user");
+      localStorage.removeItem("session");
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("lastAuthTime");
+      
+      // Show success message
+      toastService.success("Logged out successfully");
+      
+      // Redirect to login with full page reload
+      window.location.href = "/login";
+    } catch (error) {
+      logger.error('Logout error:', error);
+      toastService.error("Logout failed", {
+        description: error instanceof Error ? error.message : "Unknown error"
+      });
+      
+      // Force redirect even on error
+      window.location.href = "/login";
+    }
   };
 
   const handleHasPermission = (roles: UserRole[]) => true; // Always allow for now
