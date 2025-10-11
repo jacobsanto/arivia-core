@@ -37,7 +37,7 @@ const Sidebar = () => {
       <div className="flex items-center justify-center mb-6">
         <Link to="/dashboard" className="flex items-center">
           <div className="text-2xl font-bold text-primary">
-            ARIVIA VILLAS
+            CORE
           </div>
         </Link>
       </div>
