@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Legacy compatibility file - provides stub implementations for old permission system
 // This file maintains backward compatibility while the new system is being implemented
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from 'react';
 import { User, getDefaultPermissionsForRole } from "@/types/auth";
 import { toast } from "sonner";

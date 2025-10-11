@@ -1,5 +1,3 @@
-
-// @ts-nocheck
 import { useState } from "react";
 import { Task } from "@/types/taskTypes";
 import { ChecklistTemplate } from "@/types/checklistTypes";
@@ -34,8 +32,8 @@ export const useTaskCreation = (
       
       const listingId = listings?.[0]?.id || 'manual-task';
       
-      // Create the housekeeping task in database
-      const { data: newTask, error } = await supabase
+      // Create the housekeeping task in database (using type assertion for fields not in generated types)
+      const { data: newTask, error } = await (supabase as any)
         .from('housekeeping_tasks')
         .insert({
           listing_id: listingId,
@@ -86,7 +84,7 @@ export const useTaskCreation = (
           const cleaningType = i % 2 === 1 ? "Linen & Towel Change" : "Full";
           
           const additionalChecklist = getCleaningChecklist(cleaningType);
-          const { data: additionalTask } = await supabase
+          const { data: additionalTask } = await (supabase as any)
             .from('housekeeping_tasks')
             .insert({
               listing_id: listingId,
@@ -127,7 +125,6 @@ export const useTaskCreation = (
         toastService.success(`${cleaningDetails.scheduledCleanings.length - 1} additional cleaning tasks were created for the stay duration.`);
       }
     } catch (error) {
-      console.error('Error creating housekeeping task:', error);
       toastService.error(`Failed to create task: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };

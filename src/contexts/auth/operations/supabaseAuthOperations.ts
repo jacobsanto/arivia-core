@@ -1,8 +1,6 @@
-// @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/types/auth";
 import { toastService } from "@/services/toast";
-import { loginUser as loginMockUser, MOCK_USERS } from "@/services/auth/userAuthService";
 import { logger } from "@/services/logger";
 
 export const login = async (
@@ -15,30 +13,7 @@ export const login = async (
   try {
     setIsLoading(true);
 
-    // First, try to authenticate with mock users for development
-    const mockUser = MOCK_USERS.find(u => u.email === email);
-    if (mockUser) {
-      logger.debug("Auth", "Attempting mock user authentication", { email });
-      try {
-        const authenticatedUser = await loginMockUser(email, password);
-        
-        // If mock authentication succeeds, update state immediately
-        setUser(authenticatedUser);
-        
-        const authTime = Date.now();
-        localStorage.setItem("lastAuthTime", authTime.toString());
-        setLastAuthTime(authTime);
-        localStorage.setItem("user", JSON.stringify(authenticatedUser));
-        
-        logger.info("Auth", "Mock user authentication successful", { name: authenticatedUser.name });
-        return; // Exit early on successful mock authentication
-      } catch (mockError) {
-        logger.debug("Auth", "Mock user authentication failed", { error: mockError instanceof Error ? mockError.message : mockError });
-        // Continue to Supabase authentication if mock fails
-      }
-    }
-
-    // Fall back to Supabase authentication
+    // Authenticate with Supabase
     logger.debug("Auth", "Attempting Supabase authentication", { email });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,

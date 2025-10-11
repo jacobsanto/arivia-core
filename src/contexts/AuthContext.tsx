@@ -1,5 +1,3 @@
-
-// @ts-nocheck
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Session, UserRole } from "@/types/auth";
 import { supabase } from "@/integrations/supabase/client";

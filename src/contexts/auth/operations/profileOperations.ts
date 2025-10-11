@@ -1,6 +1,3 @@
-
-// @ts-nocheck
-
 import { supabase } from "@/integrations/supabase/client";
 import { toastService } from "@/services/toast/toast.service";
 import { User, UserRole } from "@/types/auth";
@@ -37,9 +34,9 @@ export const syncUserWithProfile = async (
 
     // If we have a current user, update it with the latest profile data
     if (currentUser) {
-      // Convert the string[] to UserRole[] safely
-      const secondaryRoles = profile.secondary_roles ? 
-        profile.secondary_roles.map(role => role as UserRole) : 
+      // Convert the string[] to UserRole[] safely (using type assertion for fields not yet in generated types)
+      const secondaryRoles = (profile as any).secondary_roles ? 
+        ((profile as any).secondary_roles as string[]).map((role: string) => role as UserRole) : 
         undefined;
       
       // Convert the JSON to Record<string, boolean> safely

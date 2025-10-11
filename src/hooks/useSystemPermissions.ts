@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserRole } from "@/types/auth";
@@ -23,22 +22,28 @@ export const useSystemPermissions = () => {
 
   const fetchPermissions = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('system_permissions')
         .select('*')
         .order('permission_key');
 
       if (error) throw error;
       
-      // Transform the data to ensure proper typing
-      const transformedData: SystemPermission[] = (data || []).map(item => ({
-        ...item,
-        allowed_roles: item.allowed_roles as UserRole[]
+      // Transform the data to ensure proper typing (using type assertion for fields not in generated types)
+      const transformedData: SystemPermission[] = (data || []).map((item: any) => ({
+        id: item.id,
+        permission_key: item.permission_key,
+        title: item.permission_name || item.title || '',
+        description: item.description,
+        allowed_roles: (item.allowed_roles || []) as UserRole[],
+        is_active: item.is_active,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        modified_by: item.modified_by || null
       }));
       
       setPermissions(transformedData);
     } catch (error) {
-      console.error('Error fetching system permissions:', error);
       toast.error('Failed to load permissions');
     } finally {
       setLoading(false);
@@ -48,7 +53,7 @@ export const useSystemPermissions = () => {
   const updatePermission = async (id: string, updates: Partial<SystemPermission>) => {
     setSaving(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('system_permissions')
         .update({
           ...updates,
@@ -65,7 +70,6 @@ export const useSystemPermissions = () => {
 
       toast.success('Permission updated successfully');
     } catch (error) {
-      console.error('Error updating permission:', error);
       toast.error('Failed to update permission');
     } finally {
       setSaving(false);

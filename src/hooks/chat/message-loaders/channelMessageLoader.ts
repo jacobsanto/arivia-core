@@ -1,6 +1,3 @@
-
-// @ts-nocheck
-
 import { supabase } from "@/integrations/supabase/client";
 import { Message } from "../../useChatTypes";
 import { logger } from "@/services/logger";

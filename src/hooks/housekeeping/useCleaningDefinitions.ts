@@ -1,6 +1,3 @@
-
-// @ts-nocheck
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { CleaningDefinition } from "@/types/housekeepingTypes";
@@ -11,7 +8,8 @@ export const useCleaningDefinitions = () => {
 
   const fetchCleaningDefinitions = async () => {
     try {
-      const { data, error } = await supabase
+      // Using type assertion for table that may not be in generated types yet
+      const { data, error } = await (supabase as any)
         .from('cleaning_service_definitions')
         .select('task_type, description');
         
@@ -20,7 +18,7 @@ export const useCleaningDefinitions = () => {
       const definitions: Record<string, string> = {};
       
       if (data && Array.isArray(data)) {
-        data.forEach((item: CleaningDefinition) => {
+        (data as CleaningDefinition[]).forEach((item) => {
           definitions[item.task_type] = item.description;
         });
       }
