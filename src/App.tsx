@@ -16,7 +16,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
-// Login page removed - app is now open access
+import { MVPLoginPage } from "@/components/auth/mvp/MVPLoginPage";
 import UserProfile from "@/pages/UserProfile";
 import Maintenance from "@/pages/Maintenance";
 import Housekeeping from "@/pages/Housekeeping";
@@ -65,7 +65,9 @@ function App() {
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 
                 <Routes>
-                   {/* Login route removed - app is now open access */}
+                  {/* Public Auth Routes */}
+                  <Route path="/login" element={<MVPLoginPage />} />
+                  <Route path="/register" element={<MVPLoginPage />} />
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
