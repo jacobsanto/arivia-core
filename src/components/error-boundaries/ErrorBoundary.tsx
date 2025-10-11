@@ -18,7 +18,7 @@ interface State {
   errorInfo?: ErrorInfo;
 }
 
-export class MVPErrorBoundary extends Component<Props, State> {
+export class AppErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -29,11 +29,11 @@ export class MVPErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    logger.error('ErrorBoundary', error, { component: 'MVPErrorBoundary' });
+    logger.error('ErrorBoundary', error, { component: 'AppErrorBoundary' });
     recordAudit('error', error.message, {
       error_name: error.name,
       error_stack: error.stack,
-      component: 'MVPErrorBoundary',
+      component: 'AppErrorBoundary',
       metadata: { componentStack: errorInfo.componentStack },
     });
     this.setState({ error, errorInfo });

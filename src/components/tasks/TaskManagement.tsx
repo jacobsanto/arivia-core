@@ -15,7 +15,7 @@ import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 
-export const MVPTaskManagement: React.FC = () => {
+export const TaskManagement: React.FC = () => {
   const [isCreateMaintenanceOpen, setIsCreateMaintenanceOpen] = useState(false);
   const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
   const queryClient = useQueryClient();

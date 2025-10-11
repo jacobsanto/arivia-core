@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PermissionCard } from '@/components/permissions/PermissionCard';
 import { PermissionEditorModal } from '@/components/permissions/PermissionEditorModal';
-import { LoadingSpinner } from '@/components/mvp/LoadingSpinner';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { SystemPermission, PERMISSION_CATEGORIES, PERMISSION_CATEGORY_LABELS } from '@/types/permissions.types';
 import { Plus, Shield, Search, Filter } from 'lucide-react';
@@ -192,7 +192,9 @@ const Permissions: React.FC = () => {
 
         {/* Content */}
         {loading ? (
-          <LoadingSpinner size="lg" text="Loading permissions..." />
+          <div className="flex items-center justify-center p-12">
+            <LoadingSpinner size="large" />
+          </div>
         ) : (
           <Tabs defaultValue="grid" className="space-y-4">
             <TabsList>

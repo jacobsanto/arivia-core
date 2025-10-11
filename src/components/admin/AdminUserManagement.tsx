@@ -15,7 +15,7 @@ import { ROLE_LABELS, ROLE_COLORS } from "@/types/userManagement.types";
 import { AppRole } from "@/types/permissions.types";
 import { logger } from '@/services/logger';
 
-export const MVPUserManagement: React.FC = () => {
+export const AdminUserManagement: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",

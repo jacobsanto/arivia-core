@@ -4,7 +4,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "next-themes";
 
-import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
+import { AppErrorBoundary } from "@/components/error-boundaries/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
 import { SkipLink } from "@/components/accessibility/SkipLink";
 import { FullPageLoading } from "@/components/common/loading/LoadingStates";
@@ -48,7 +48,7 @@ const SystemSettings = lazy(() => import("@/pages/SystemSettings"));
 
 function App() {
   return (
-    <MVPErrorBoundary>
+    <AppErrorBoundary>
       <HelmetProvider>
         <ThemeProvider
           attribute="class"
@@ -110,7 +110,7 @@ function App() {
           </AccessibilityProvider>
         </ThemeProvider>
       </HelmetProvider>
-    </MVPErrorBoundary>
+    </AppErrorBoundary>
   );
 }
 
