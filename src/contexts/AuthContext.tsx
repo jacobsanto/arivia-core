@@ -37,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshAuthState = async () => {
     try {
+      console.log('[AuthContext] refreshAuthState: Starting');
       logger.debug('AuthContext', 'Refreshing auth state');
       
 
@@ -44,14 +45,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { data, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) throw sessionError;
       
+      console.log('[AuthContext] refreshAuthState: Session fetched', !!data.session);
       setSession(data.session);
       
       if (data.session) {
+        console.log('[AuthContext] refreshAuthState: Fetching profile');
         const { data: profile } = await supabase
           .from('profiles')
           .select('id, user_id, name, email, role, avatar, phone')
           .eq('id', data.session.user.id)
           .single();
+
+        console.log('[AuthContext] refreshAuthState: Profile fetched', profile);
 
         if (profile) {
           const newUser = {
@@ -65,33 +70,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             customPermissions: {}
           };
           logger.debug('AuthContext', 'Real user loaded', { name: newUser.name, role: newUser.role });
+          console.log('[AuthContext] refreshAuthState: Setting user', newUser.name);
           setUser(newUser);
         }
       } else {
         logger.debug('AuthContext', 'No session found');
+        console.log('[AuthContext] refreshAuthState: No session found');
         setUser(null);
       }
     } catch (err) {
       logger.error('AuthContext', 'Error refreshing auth state', { error: err });
+      console.error('[AuthContext] refreshAuthState: Error', err);
       const errorMessage = err instanceof Error ? err.message : 'Authentication error';
       setError(errorMessage);
       toastService.error("Authentication error", {
         description: "There was a problem refreshing your session"
       });
     } finally {
+      console.log('[AuthContext] refreshAuthState: Setting isLoading = false');
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('[AuthContext] Setting up auth listener');
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        logger.debug('AuthContext', 'Auth state change event', { event });
+        console.log('[AuthContext] Auth state changed:', event, 'Has session:', !!newSession);
         
         setSession(newSession);
         
         if (newSession?.user) {
+          console.log('[AuthContext] Fetching profile for user:', newSession.user.id);
           // Fetch profile data synchronously
           try {
             const { data: profile } = await supabase
@@ -99,6 +110,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               .select('id, user_id, name, email, role, avatar, phone')
               .eq('id', newSession.user.id)
               .single();
+
+            console.log('[AuthContext] Profile fetched:', profile);
 
             if (profile) {
               const newUser = {
@@ -111,18 +124,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 secondaryRoles: undefined,
                 customPermissions: {}
               };
+              console.log('[AuthContext] Setting user:', newUser.name);
               setUser(newUser);
             }
           } catch (error) {
             logger.error('AuthContext', 'Error fetching profile', { error });
+            console.error('[AuthContext] Error fetching profile:', error);
           }
         } else {
+          console.log('[AuthContext] No session, clearing user');
           setUser(null);
         }
       }
     );
 
     // Initialize auth state
+    console.log('[AuthContext] Calling refreshAuthState');
     refreshAuthState();
 
     return () => {

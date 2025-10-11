@@ -9,8 +9,11 @@ interface ProtectedRouteProps {
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, isLoading, error } = useAuth();
 
+  console.log('[ProtectedRoute] State:', { hasUser: !!user, isLoading, hasError: !!error });
+
   // Show loading state only during initial auth check when no user is set
   if (isLoading && !user) {
+    console.log('[ProtectedRoute] Showing loading screen');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4">
@@ -23,6 +26,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Show error state if there's an auth error
   if (error) {
+    console.log('[ProtectedRoute] Showing error state');
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center space-y-4 max-w-md mx-auto p-6">
@@ -36,9 +40,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
   // Redirect to login if not authenticated
   if (!user) {
+    console.log('[ProtectedRoute] No user, redirecting to login');
     return <Navigate to="/login" replace />;
   }
 
+  console.log('[ProtectedRoute] Rendering protected content');
   return <>{children}</>;
 };
 
