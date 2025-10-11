@@ -4,6 +4,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/services/logger';
 
 interface Props {
   children: ReactNode;
@@ -48,8 +49,8 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     // Call custom error handler
     this.props.onError?.(error, errorInfo);
     
-    // Log error to console for development
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log error using logger service
+    logger.error('ErrorBoundary caught an error', error, { componentStack: errorInfo.componentStack });
     
     // Log error to database if enabled
     if (this.props.enableReporting !== false) {
@@ -71,7 +72,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         }
       });
     } catch (dbError) {
-      console.error('Failed to log error to database:', dbError);
+      logger.error('Failed to log error to database', dbError);
     }
   }
 
@@ -128,7 +129,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
       alert('Error report sent successfully. Thank you for helping us improve!');
     } catch (reportError) {
-      console.error('Failed to send error report:', reportError);
+      logger.error('Failed to send error report', reportError);
       alert('Failed to send error report. Please try again later.');
     } finally {
       this.setState({ isReporting: false });

@@ -12,6 +12,7 @@ import { CreateMaintenanceTaskDialog } from "@/components/maintenance/CreateMain
 import { TaskCreationDialog } from "@/components/tasks/TaskCreationDialog";
 import { toastService } from "@/services/toast";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { logger } from "@/services/logger";
 export const HousekeepingTaskManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("tasks");
   const queryClient = useQueryClient();
@@ -23,9 +24,12 @@ export const HousekeepingTaskManagement: React.FC = () => {
     queryFn: async () => {
       const {
         data
-      } = await supabase.from('housekeeping_tasks').select('*').order('due_date', {
-        ascending: true
-      });
+      } = await supabase
+        .from('housekeeping_tasks')
+        .select('id, task_type, description, status, due_date, assigned_to, property_id, listing_id, guest_name, room_number, priority, qc_status, created_at, updated_at')
+        .order('due_date', {
+          ascending: true
+        });
       return data || [];
     }
   });
@@ -66,7 +70,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
       });
       toastService.success('Task started successfully!');
     } catch (error) {
-      console.error('Error starting task:', error);
+      logger.error('Error starting task', error);
       toastService.error('Failed to start task');
     }
   };
@@ -83,7 +87,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
       });
       toastService.success('Task completed successfully!');
     } catch (error) {
-      console.error('Error completing task:', error);
+      logger.error('Error completing task', error);
       toastService.error('Failed to complete task');
     }
   };

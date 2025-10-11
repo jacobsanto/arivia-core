@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Wrench } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/logger";
 
 interface MaintenanceHotspot {
   id: string;
@@ -101,7 +102,7 @@ export const MaintenanceHotspotsWidget: React.FC = () => {
 
       setHotspots(hotspotsArray);
     } catch (error) {
-      console.error('Error fetching maintenance hotspots:', error);
+      logger.error('Error fetching maintenance hotspots', error);
       setHotspots([]);
     } finally {
       setLoading(false);
