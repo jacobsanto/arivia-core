@@ -14,8 +14,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { loginSchema } from "@/lib/validation/auth-schema";
-import { loginUser } from "@/services/auth/userAuthService";
-import { useUser } from "@/contexts/UserContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { logger } from '@/services/logger';
 
@@ -25,7 +24,7 @@ interface LoginFormProps {
 
 const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useUser();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -42,17 +41,20 @@ const LoginForm: React.FC<LoginFormProps> = ({ isMobile = false }) => {
   const onSubmit = async (values: any) => {
     setIsLoading(true);
     try {
-      // Call login function from UserContext
-      await login(values.email, values.password);
+      const { error } = await signIn(values.email, values.password);
+      
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: error.message || "Invalid credentials. Please try again.",
+        });
+        return;
+      }
       
       // Redirect to previous page or dashboard
       const from = location.state?.from?.pathname || "/dashboard";
       navigate(from, { replace: true });
-      
-      toast({
-        title: "Login Successful",
-        description: "You have successfully logged in.",
-      });
     } catch (error: any) {
       logger.error("Login failed:", error);
       toast({

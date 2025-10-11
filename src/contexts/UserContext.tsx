@@ -1,125 +1,20 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole, Session } from "@/types/auth";
+import React, { createContext, useContext, useEffect } from "react";
+import { User, UserRole } from "@/types/auth";
 import { UserContextType } from "./types/userContext.types";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from '@/services/logger';
-import { toastService } from '@/services/toast';
+import { useAuth } from "@/contexts/AuthContext";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentSession, setCurrentSession] = useState<Session | null>(null);
-  const [currentIsLoading, setCurrentIsLoading] = useState(true);
+  // Get auth state from AuthContext (single source of truth)
+  const { user: currentUser, session: currentSession, isLoading: currentIsLoading, signIn, signUp, signOut } = useAuth();
 
-  // Fetch user profile from authenticated session
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('id, user_id, name, email, role, avatar, phone')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        logger.error('Error fetching user profile:', error);
-        return null;
-      }
-
-      if (!profile) {
-        logger.info('No profile found for user:', userId);
-        return null;
-      }
-
-      const user: User = {
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role as UserRole,
-        avatar: profile.avatar,
-        phone: profile.phone,
-        secondaryRoles: [],
-        customPermissions: {}
-      };
-
-      setCurrentUser(user);
-      return user;
-    } catch (error) {
-      logger.error('Error in fetchUserProfile:', error);
-      return null;
-    }
-  };
-
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        logger.debug('UserContext', 'Auth state change', { event });
-        
-        setCurrentSession(session);
-        
-        if (session?.user) {
-          // User is authenticated - fetch their profile
-          await fetchUserProfile(session.user.id);
-        } else {
-          // User is not authenticated
-          setCurrentUser(null);
-        }
-        
-        setCurrentIsLoading(false);
-      }
-    );
-
-    // Check for existing session on mount
-    const initializeAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          logger.error('Error getting session:', error);
-          setCurrentIsLoading(false);
-          return;
-        }
-
-        setCurrentSession(session);
-        
-        if (session?.user) {
-          await fetchUserProfile(session.user.id);
-        }
-        
-        setCurrentIsLoading(false);
-      } catch (error) {
-        logger.error('Error initializing auth:', error);
-        setCurrentIsLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  // Real authentication using Supabase
+  // Delegate auth operations to AuthContext
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    try {
-      setCurrentIsLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
-      if (error) {
-        logger.error('Login error:', error);
-        toastService.error('Login failed', { description: error.message });
-        throw error;
-      }
-      
-      toastService.success('Login successful');
-    } catch (error) {
-      logger.error('Login error:', error);
-      throw error;
-    } finally {
-      setCurrentIsLoading(false);
-    }
+    const { error } = await signIn(email, password);
+    if (error) throw error;
   };
 
   const handleSignup = async (
@@ -128,71 +23,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     role: UserRole = "property_manager"
   ) => {
-    try {
-      setCurrentIsLoading(true);
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            name: fullName,
-            role: role
-          }
-        }
-      });
-
-      if (error) {
-        logger.error('Signup error:', error);
-        toastService.error('Signup failed', { description: error.message });
-        return false;
-      }
-
-      toastService.success('Account created', { 
-        description: 'Please check your email to verify your account.' 
-      });
-      return true;
-    } catch (error) {
-      logger.error('Signup error:', error);
-      return false;
-    } finally {
-      setCurrentIsLoading(false);
-    }
+    const { error } = await signUp(email, password, { name: fullName, role });
+    return !error;
   };
 
   const handleLogout = async () => {
-    try {
-      logger.auth("Logging out user");
-      
-      // Sign out from Supabase
-      await supabase.auth.signOut({ scope: 'local' });
-      
-      // Clear local state
-      setCurrentUser(null);
-      setCurrentSession(null);
-      
-      // Clear localStorage
-      localStorage.removeItem("user");
-      localStorage.removeItem("session");
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("lastAuthTime");
-      
-      // Show success message
-      toastService.success("Logged out successfully");
-      
-      // Redirect to login with full page reload
-      window.location.href = "/login";
-    } catch (error) {
-      logger.error('Logout error:', error);
-      toastService.error("Logout failed", {
-        description: error instanceof Error ? error.message : "Unknown error"
-      });
-      
-      // Force redirect even on error
-      window.location.href = "/login";
-    }
+    await signOut();
+    localStorage.removeItem("user");
+    localStorage.removeItem("session");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("lastAuthTime");
+    window.location.href = "/login";
   };
 
   const handleHasPermission = (roles: UserRole[]) => {
@@ -256,13 +97,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleSyncUserProfile = async () => {
-    if (!currentSession?.user) {
+    if (!currentUser) {
       logger.info('No authenticated user to sync');
       return false;
     }
-    
-    const profile = await fetchUserProfile(currentSession.user.id);
-    return !!profile;
+    return true;
   };
 
   const handleUpdateProfile = async (
@@ -288,29 +127,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId);
 
       if (error) throw error;
-      
-      // Refresh user if updating current user
-      if (userId === currentUser?.id) {
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .select('id, user_id, name, email, role, avatar, phone')
-          .eq('user_id', userId)
-          .maybeSingle();
-        
-        if (updatedProfile) {
-          setCurrentUser({
-            id: updatedProfile.id,
-            email: updatedProfile.email,
-            name: updatedProfile.name,
-            role: updatedProfile.role as UserRole,
-            avatar: updatedProfile.avatar,
-            phone: updatedProfile.phone,
-            secondaryRoles: [],
-            customPermissions: {}
-          });
-        }
-      }
-      
       return true;
     } catch (error) {
       logger.error('Error updating profile:', error);
@@ -319,13 +135,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleRefreshProfile = async () => {
-    if (!currentSession?.user) {
+    if (!currentUser) {
       logger.info('No authenticated user to refresh');
       return false;
     }
-    
-    const profile = await fetchUserProfile(currentSession.user.id);
-    return !!profile;
+    return true;
   };
 
   return (
