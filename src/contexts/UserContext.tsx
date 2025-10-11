@@ -1,90 +1,27 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, UserRole, Session } from "@/types/auth";
+import React, { createContext, useContext } from "react";
+import { UserRole } from "@/types/auth";
 import { UserContextType } from "./types/userContext.types";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
 import { logger } from '@/services/logger';
+import { supabase } from "@/integrations/supabase/client";
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+/**
+ * UserContext - Legacy compatibility wrapper around AuthContext
+ * This context is maintained for backwards compatibility with existing code.
+ * All authentication now flows through AuthContext (Supabase Auth).
+ * 
+ * @deprecated Use AuthContext directly for new code
+ */
 export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [currentSession, setCurrentSession] = useState<Session | null>(null);
-  const [currentIsLoading, setCurrentIsLoading] = useState(true);
+  // Delegate all auth state to AuthContext
+  const auth = useAuth();
 
-  // For demo purposes, we'll use Iakovos as the main user
-  const MAIN_USER_EMAIL = "iakovos@ariviagroup.com";
-
-  useEffect(() => {
-    // Fetch the main user profile from Supabase
-    const fetchUserProfile = async () => {
-      try {
-        setCurrentIsLoading(true);
-        
-        const { data: profiles, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('email', MAIN_USER_EMAIL)
-          .single();
-
-        if (error) {
-          logger.error('Error fetching user profile:', error);
-          // Fallback to mock user if profile doesn't exist
-          setCurrentUser({
-            id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
-            email: "iakovos@ariviagroup.com",
-            name: "Iakovos Arampatzis",
-            role: "superadmin" as UserRole,
-            avatar: null,
-            phone: "+30 694 123 4567",
-            secondaryRoles: [],
-            customPermissions: {}
-          });
-        } else {
-          // Convert Supabase profile to User format
-          setCurrentUser({
-            id: profiles.id,
-            email: profiles.email,
-            name: profiles.name,
-            role: profiles.role as UserRole,
-            avatar: profiles.avatar,
-            phone: profiles.phone,
-            secondaryRoles: [],
-            customPermissions: (profiles.custom_permissions as Record<string, boolean>) || {}
-          });
-        }
-
-        // Create mock session
-        setCurrentSession({
-          access_token: "mock-access-token",
-          token_type: "bearer",
-          expires_in: 3600,
-          refresh_token: "mock-refresh-token",
-          user: {
-            id: "e2779fd1-ff15-4a46-992d-85b8b4f72c4c",
-            email: "iakovos@ariviagroup.com",
-            aud: "authenticated",
-            role: "authenticated",
-            app_metadata: {},
-            user_metadata: { name: "Iakovos Arampatzis" },
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            phone: "+30 694 123 4567",
-            identities: []
-          } as any
-        });
-      } catch (error) {
-        logger.error('Error in fetchUserProfile:', error);
-      } finally {
-        setCurrentIsLoading(false);
-      }
-    };
-
-    fetchUserProfile();
-  }, []);
-
-  // Mock actions for now - will be replaced with real Supabase auth later
+  // Delegate auth actions to AuthContext
   const handleLogin = async (email: string, password: string): Promise<void> => {
-    logger.auth("Mock login - connecting to Supabase profiles", email);
+    logger.auth("UserContext: Delegating login to AuthContext", email);
+    await auth.signIn(email, password);
   };
 
   const handleSignup = async (
@@ -93,19 +30,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fullName: string,
     role: UserRole = "property_manager"
   ) => {
-    logger.auth("Mock signup - connecting to Supabase profiles", email);
-    return true;
+    logger.auth("UserContext: Delegating signup to AuthContext", email);
+    const result = await auth.signUp(email, password, { name: fullName, role });
+    return !result.error;
   };
 
   const handleLogout = async () => {
-    logger.auth("Mock logout - disconnecting from Supabase profiles");
+    logger.auth("UserContext: Delegating logout to AuthContext");
+    await auth.signOut();
   };
 
-  const handleHasPermission = (roles: UserRole[]) => true; // Always allow for now
-  const handleHasFeatureAccess = (featureKey: string) => true; // Always allow for now
+  const handleHasPermission = (roles: UserRole[]) => {
+    // Check if user has any of the required roles
+    if (!auth.user?.role) return false;
+    return roles.includes(auth.user.role);
+  };
+
+  const handleHasFeatureAccess = (featureKey: string) => {
+    // Check custom permissions
+    return auth.user?.customPermissions?.[featureKey] ?? true;
+  };
 
   const handleGetOfflineLoginStatus = () => {
-    return { isOfflineLoggedIn: true, timeRemaining: 999999 };
+    return { isOfflineLoggedIn: auth.isAuthenticated, timeRemaining: 999999 };
   };
 
   const handleUpdateUserPermissions = async (userId: string, permissions: Record<string, boolean>) => {
@@ -113,9 +60,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase
         .from('profiles')
         .update({ custom_permissions: permissions })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
+      await auth.refreshAuthState();
       return true;
     } catch (error) {
       logger.error('Error updating permissions:', error);
@@ -128,9 +76,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase
         .from('profiles')
         .update({ avatar: avatarUrl })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
+      await auth.refreshAuthState();
       return true;
     } catch (error) {
       logger.error('Error updating avatar:', error);
@@ -143,7 +92,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase
         .from('profiles')
         .delete()
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
       return true;
@@ -154,7 +103,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleSyncUserProfile = async () => {
-    logger.auth("Mock profile sync - connecting to Supabase profiles");
+    logger.auth("UserContext: Delegating profile sync to AuthContext");
+    await auth.refreshAuthState();
     return true;
   };
 
@@ -178,32 +128,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           phone: profileData.phone,
           custom_permissions: profileData.customPermissions,
         })
-        .eq('id', userId);
+        .eq('user_id', userId);
 
       if (error) throw error;
-      
-      // Refresh user if updating current user
-      if (userId === currentUser?.id) {
-        const { data: updatedProfile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .maybeSingle();
-        
-        if (updatedProfile) {
-          setCurrentUser({
-            id: updatedProfile.id,
-            email: updatedProfile.email,
-            name: updatedProfile.name,
-            role: updatedProfile.role as UserRole,
-            avatar: updatedProfile.avatar,
-            phone: updatedProfile.phone,
-            secondaryRoles: [],
-            customPermissions: (updatedProfile.custom_permissions as Record<string, boolean>) || {}
-          });
-        }
-      }
-      
+      await auth.refreshAuthState();
       return true;
     } catch (error) {
       logger.error('Error updating profile:', error);
@@ -212,49 +140,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleRefreshProfile = async () => {
-    if (!currentUser) return false;
-    
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', currentUser.id)
-        .maybeSingle();
-      
-      if (error) {
-        logger.error('Error fetching profile:', error);
-        return false;
-      }
-      
-      if (!profile) {
-        logger.info('No profile found for user:', currentUser.id);
-        return false;
-      }
-
-      setCurrentUser({
-        id: profile.id,
-        email: profile.email,
-        name: profile.name,
-        role: profile.role as UserRole,
-        avatar: profile.avatar,
-        phone: profile.phone,
-        secondaryRoles: [],
-        customPermissions: (profile.custom_permissions as Record<string, boolean>) || {}
-      });
-
-      return true;
-    } catch (error) {
-      logger.error('Error refreshing profile:', error);
-      return false;
-    }
+    logger.auth("UserContext: Delegating profile refresh to AuthContext");
+    await auth.refreshAuthState();
+    return true;
   };
 
   return (
     <UserContext.Provider
       value={{
-        user: currentUser,
-        session: currentSession,
-        isLoading: currentIsLoading,
+        user: auth.user,
+        session: auth.session,
+        isLoading: auth.isLoading,
         login: handleLogin,
         signup: handleSignup,
         logout: handleLogout,

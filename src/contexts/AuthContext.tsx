@@ -33,6 +33,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   
 
+  // Helper function to create profile for user without one
+  const createProfileForUser = async (user: any): Promise<boolean> => {
+    try {
+      logger.debug('AuthContext', 'Creating profile for user', { userId: user.id });
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          user_id: user.id,
+          email: user.email,
+          name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+          role: (user.user_metadata?.role as UserRole) || 'housekeeping_staff'
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        logger.error('AuthContext', 'Failed to create profile', { error });
+        return false;
+      }
+      
+      logger.debug('AuthContext', 'Profile created successfully', { profile: data });
+      return true;
+    } catch (err) {
+      logger.error('AuthContext', 'Error in createProfileForUser', { error: err });
+      return false;
+    }
+  };
+
   const refreshAuthState = async () => {
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
@@ -53,6 +82,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (profileError) {
           logger.error('AuthContext', 'Profile fetch error', { error: profileError });
+          // If profile doesn't exist, try to create one
+          if (profileError.code === 'PGRST116') {
+            logger.debug('AuthContext', 'Profile not found, creating new profile');
+            const created = await createProfileForUser(data.session.user);
+            if (created) {
+              // Retry fetching the profile
+              const { data: newProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('user_id', data.session.user.id)
+                .single();
+              
+              if (newProfile) {
+                const newUser = {
+                  id: data.session.user.id,
+                  email: data.session.user.email || '',
+                  name: newProfile.name || data.session.user.email?.split('@')[0] || 'User',
+                  role: newProfile.role as UserRole || 'property_manager',
+                  avatar: newProfile.avatar || "/placeholder.svg",
+                  phone: newProfile.phone,
+                  secondaryRoles: newProfile.secondary_roles ? newProfile.secondary_roles.map(role => role as UserRole) : undefined,
+                  customPermissions: newProfile.custom_permissions as Record<string, boolean> || {}
+                };
+                setUser(newUser);
+                return;
+              }
+            }
+          }
         }
 
         if (profile) {

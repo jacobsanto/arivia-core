@@ -16,7 +16,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 
 // Pages
 import Dashboard from "@/pages/Dashboard";
-// Login page removed - app is now open access
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
 import UserProfile from "@/pages/UserProfile";
 import Maintenance from "@/pages/Maintenance";
 import Housekeeping from "@/pages/Housekeeping";
@@ -65,7 +66,9 @@ function App() {
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
                 
                 <Routes>
-                   {/* Login route removed - app is now open access */}
+                  {/* Public authentication routes */}
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
