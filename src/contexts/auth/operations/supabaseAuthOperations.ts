@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, UserRole } from "@/types/auth";
 import { toastService } from "@/services/toast";
 import { loginUser as loginMockUser, MOCK_USERS } from "@/services/auth/userAuthService";
+import { logger } from "@/services/logger";
 
 export const login = async (
   email: string,
@@ -17,7 +18,7 @@ export const login = async (
     // First, try to authenticate with mock users for development
     const mockUser = MOCK_USERS.find(u => u.email === email);
     if (mockUser) {
-      console.log("Attempting mock user authentication for:", email);
+      logger.debug("Auth", "Attempting mock user authentication", { email });
       try {
         const authenticatedUser = await loginMockUser(email, password);
         
@@ -29,16 +30,16 @@ export const login = async (
         setLastAuthTime(authTime);
         localStorage.setItem("user", JSON.stringify(authenticatedUser));
         
-        console.log("Mock user authentication successful:", authenticatedUser.name);
+        logger.info("Auth", "Mock user authentication successful", { name: authenticatedUser.name });
         return; // Exit early on successful mock authentication
       } catch (mockError) {
-        console.log("Mock user authentication failed:", mockError instanceof Error ? mockError.message : mockError);
+        logger.debug("Auth", "Mock user authentication failed", { error: mockError instanceof Error ? mockError.message : mockError });
         // Continue to Supabase authentication if mock fails
       }
     }
 
     // Fall back to Supabase authentication
-    console.log("Attempting Supabase authentication for:", email);
+    logger.debug("Auth", "Attempting Supabase authentication", { email });
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -67,7 +68,7 @@ export const login = async (
       setLastAuthTime(authTime);
       localStorage.setItem("user", JSON.stringify(userData)); // Store user in localStorage for offline support
       
-      console.log("Supabase authentication successful:", userData.name);
+      logger.info("Auth", "Supabase authentication successful", { name: userData.name });
     } else {
       // Handle the case where authentication was successful but no user data returned
       throw new Error("Authentication successful but failed to retrieve user data.");
