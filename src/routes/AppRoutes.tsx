@@ -18,7 +18,6 @@ const Checklists = lazy(() => import('@/pages/Checklists'));
 // Auth pages (keep these non-lazy for faster initial load)
 import Login from '@/components/auth/LoginForm';
 import Register from '@/components/auth/SignUpForm';
-import CreateSuperAdmin from '@/components/auth/CreateSuperAdmin';
 
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading } = useAuth();
@@ -50,11 +49,6 @@ export const AppRoutes: React.FC = () => {
       <Route path="/register" element={
         <PublicRoute>
           <Register />
-        </PublicRoute>
-      } />
-      <Route path="/create-super-admin" element={
-        <PublicRoute>
-          <CreateSuperAdmin />
         </PublicRoute>
       } />
 
