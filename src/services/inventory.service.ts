@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/services/logger";
 
 export interface InventoryCategory {
   id: string;
@@ -31,7 +32,7 @@ export const inventoryService = {
       .order('name');
     
     if (error) {
-      console.error('Error fetching inventory categories:', error);
+      logger.error('Error fetching inventory categories', error);
       throw error;
     }
     

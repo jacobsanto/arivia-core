@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logger } from "@/services/logger";
 
 export const checkSuperAdminExists = async (): Promise<boolean> => {
   try {
@@ -11,13 +12,13 @@ export const checkSuperAdminExists = async (): Promise<boolean> => {
       .maybeSingle();
     
     if (error) {
-      console.error("Error checking for super admin:", error);
+      logger.error("Error checking for super admin", error);
       throw error;
     }
     
     return !!data;
   } catch (error) {
-    console.error("Error checking for super admin:", error);
+    logger.error("Error checking for super admin", error);
     // Default to true as a safety measure
     return true;
   }
