@@ -59,21 +59,26 @@ export const MVPLoginPage: React.FC = () => {
               </p>
             </div>
 
-            {/* Dev Notice Card */}
+            {/* Login/Signup Tabs */}
             <Card className="shadow-lg">
-              <CardContent className="p-6">
-                <div className="space-y-4 text-center">
-                  <h2 className="text-xl font-semibold">Development Mode</h2>
-                  <p className="text-muted-foreground">
-                    Authentication is disabled in development. Using admin: iakovos@ariviagroup.com
-                  </p>
-                  <button
-                    onClick={() => navigate("/dashboard")}
-                    className="w-full bg-primary text-primary-foreground py-2 px-4 rounded transition-colors"
-                  >
-                    Enter app
-                  </button>
-                </div>
+              <CardHeader>
+                <CardTitle className="text-center">
+                  {activeTab === "signin" ? "Sign In" : "Create Account"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="signin">Sign In</TabsTrigger>
+                    <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="signin" className="mt-6">
+                    <MVPLoginForm onSwitchToSignUp={() => setActiveTab("signup")} />
+                  </TabsContent>
+                  <TabsContent value="signup" className="mt-6">
+                    <MVPSignUpForm onSwitchToSignIn={() => setActiveTab("signin")} />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
 
