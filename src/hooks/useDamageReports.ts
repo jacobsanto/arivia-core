@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { DamageReport, damageService } from '@/services/damage/damage.service';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { toast as useToast } from '@/hooks/use-toast';

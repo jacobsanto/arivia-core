@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChatChannel, DirectConversation, ChatMessage, ChatListItem, ChatUser, TypingIndicator } from '@/types/chat.types';
 import { supabase } from '@/integrations/supabase/client';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 export const useTeamChat = () => {

@@ -7,7 +7,7 @@ import { MessageInput } from '@/components/chat/MessageInput';
 import { ChatDetailSidebar } from '@/components/chat/ChatDetailSidebar';
 import { ChatNotifications } from '@/components/chat/ChatNotifications';
 import { TeamMemberList } from '@/components/chat/TeamMemberList';
-import { useUser } from '@/contexts/UserContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Users, Loader2 } from 'lucide-react';
