@@ -45,11 +45,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(data.session);
       
       if (data.session) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.session.user.id)
+          .eq('user_id', data.session.user.id)
           .single();
+        
+        if (profileError) {
+          logger.error('AuthContext', 'Profile fetch error', { error: profileError });
+        }
 
         if (profile) {
           const newUser = {
@@ -96,9 +100,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             supabase
               .from('profiles')
               .select('*')
-              .eq('id', newSession.user.id)
+              .eq('user_id', newSession.user.id)
               .single()
-              .then(({ data: profile }) => {
+              .then(({ data: profile, error: profileError }) => {
+                if (profileError) {
+                  logger.error('AuthContext', 'Profile load error in auth listener', { error: profileError });
+                  return;
+                }
                 if (profile) {
                   const newUser = {
                     id: newSession.user.id,
