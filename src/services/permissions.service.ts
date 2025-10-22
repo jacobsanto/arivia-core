@@ -14,7 +14,7 @@ export const permissionsService = {
       return []; // Return empty array instead of throwing
     }
 
-    return data || [];
+    return (data || []) as unknown as SystemPermission[];
   },
 
   async getAllPermissions(): Promise<SystemPermission[]> {
@@ -50,7 +50,7 @@ export const permissionsService = {
   async createPermission(permissionData: CreatePermissionData): Promise<SystemPermission> {
     const { data, error } = await supabase
       .from('system_permissions')
-      .insert(permissionData)
+      .insert(permissionData as any)
       .select()
       .single();
 
@@ -59,7 +59,7 @@ export const permissionsService = {
       throw error;
     }
 
-    return data;
+    return data as unknown as SystemPermission;
   },
 
   async updatePermission(id: string, updates: UpdatePermissionData): Promise<SystemPermission> {
@@ -75,7 +75,7 @@ export const permissionsService = {
       throw error;
     }
 
-    return data;
+    return data as unknown as SystemPermission;
   },
 
   async deletePermission(id: string): Promise<void> {

@@ -108,13 +108,14 @@ export function useSystemSettingsForm<T>({
         .from("system_settings")
         .upsert(
           {
+            key: category, // Use key field
             category,
             value: values as any,
             updated_by: userData.user?.id ?? null,
-          },
+          } as any,
           { onConflict: "category" }
         )
-        .select("updated_at, updated_by")
+        .select("updated_at")
         .single();
 
       if (error) throw error;
@@ -123,12 +124,13 @@ export function useSystemSettingsForm<T>({
       try {
         const changes = computeDiff(prevValuesRef.current, values);
         await supabase.from("audit_logs").insert({
+          action: "update_settings",
           user_id: userData.user?.id ?? null,
           level: "info",
           message: `Updated system settings: ${category}`,
           route: "/admin/settings",
           metadata: { category, changes },
-        });
+        } as any);
       } catch (e) {
         console.warn("Failed to write audit log", e);
       }

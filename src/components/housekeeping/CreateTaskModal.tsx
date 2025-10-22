@@ -91,7 +91,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           due_date: formData.due_date.toISOString().split('T')[0],
           status: 'pending',
           title: formData.task_type, // Use task_type as title
-        });
+        } as any); // Type assertion until types regenerate
 
       if (error) throw error;
 

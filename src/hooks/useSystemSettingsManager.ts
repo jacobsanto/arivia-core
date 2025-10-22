@@ -114,23 +114,25 @@ export const useSystemSettingsManager = () => {
       
       const promises = categories.map(({ key, data }) =>
         supabase.from('system_settings').upsert({
+          key: key,
           category: key,
           value: data,
           updated_by: user?.id,
-        })
+        } as any)
       );
 
       await Promise.all(promises);
       
       // Log the configuration change
       await supabase.from('audit_logs').insert({
+        action: "update_settings",
         level: 'info',
         message: 'System settings updated',
         metadata: {
           action: 'settings_update',
           categories: categories.map(c => c.key),
         },
-      });
+      } as any);
 
       setUpdatedAt(new Date().toISOString());
       form.reset(values); // Reset form to mark as clean

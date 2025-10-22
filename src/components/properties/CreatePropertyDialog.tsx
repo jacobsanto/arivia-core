@@ -64,7 +64,7 @@ export const CreatePropertyDialog: React.FC<CreatePropertyDialogProps> = ({
           bedrooms: parseInt(formData.bedrooms) || 0,
           bathrooms: parseInt(formData.bathrooms) || 0,
           status: formData.status,
-        });
+        } as any); // Type assertion until types regenerate
 
       if (error) throw error;
 
