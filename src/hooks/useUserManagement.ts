@@ -81,44 +81,14 @@ export const useUserManagement = () => {
   const createUser = useCallback(async (userData: UserFormValues) => {
     setSaving(true);
     try {
-      // For demo purposes, we'll create a profile directly
-      // In a real app, this would typically be done through Supabase Auth
-      const { data: newProfile, error } = await supabase
-        .from('profiles')
-        .insert({
-          user_id: `user_${Date.now()}`, // Mock user_id
-          name: userData.name,
-          email: userData.email,
-          phone: userData.phone,
-          role: userData.role
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newStaffMember: StaffMember = {
-        id: newProfile.id,
-        user_id: newProfile.user_id,
-        name: newProfile.name,
-        email: newProfile.email,
-        phone: newProfile.phone,
-        role: newProfile.role as AppRole,
-        avatar: newProfile.avatar,
-        isOnline: false,
-        openTasksCount: 0,
-        created_at: newProfile.created_at,
-        updated_at: newProfile.updated_at
-      };
-
-      setUsers(prev => [newStaffMember, ...prev]);
-
+      // Note: Creating users should be done through Supabase Auth
+      // This is a temporary workaround - profiles are auto-created via trigger
       toast({
-        title: "Success",
-        description: `User "${userData.name}" has been created successfully.`,
+        title: "Not Implemented",
+        description: "User creation should be done through the authentication system.",
+        variant: "destructive",
       });
-
-      return newStaffMember;
+      throw new Error("User creation not implemented - use Supabase Auth signup");
     } catch (err) {
       console.error('Error creating user:', err);
       toast({
@@ -142,7 +112,6 @@ export const useUserManagement = () => {
           name: userData.name,
           email: userData.email,
           phone: userData.phone,
-          role: userData.role,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId)
@@ -158,7 +127,6 @@ export const useUserManagement = () => {
               name: updatedProfile.name,
               email: updatedProfile.email,
               phone: updatedProfile.phone,
-              role: updatedProfile.role as AppRole,
               updated_at: updatedProfile.updated_at
             }
           : user

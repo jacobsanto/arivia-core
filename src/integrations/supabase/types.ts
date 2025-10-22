@@ -121,8 +121,10 @@ export type Database = {
           author_id: string | null
           channel_id: string | null
           content: string
+          conversation_id: string | null
           created_at: string | null
           id: string
+          reply_to_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -130,8 +132,10 @@ export type Database = {
           author_id?: string | null
           channel_id?: string | null
           content: string
+          conversation_id?: string | null
           created_at?: string | null
           id?: string
+          reply_to_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -139,8 +143,10 @@ export type Database = {
           author_id?: string | null
           channel_id?: string | null
           content?: string
+          conversation_id?: string | null
           created_at?: string | null
           id?: string
+          reply_to_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -149,6 +155,13 @@ export type Database = {
             columns: ["channel_id"]
             isOneToOne: false
             referencedRelation: "chat_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -367,6 +380,7 @@ export type Database = {
           created_at: string | null
           description: string | null
           due_date: string | null
+          estimated_duration: number | null
           guest_checkin: string | null
           guest_checkout: string | null
           id: string
@@ -388,6 +402,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
           guest_checkin?: string | null
           guest_checkout?: string | null
           id?: string
@@ -409,6 +424,7 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           due_date?: string | null
+          estimated_duration?: number | null
           guest_checkin?: string | null
           guest_checkout?: string | null
           id?: string
@@ -571,6 +587,38 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string | null
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           },
         ]
@@ -914,24 +962,30 @@ export type Database = {
       }
       system_settings: {
         Row: {
+          category: string | null
           description: string | null
           id: string
           key: string
           updated_at: string | null
+          updated_by: string | null
           value: Json | null
         }
         Insert: {
+          category?: string | null
           description?: string | null
           id?: string
           key: string
           updated_at?: string | null
+          updated_by?: string | null
           value?: Json | null
         }
         Update: {
+          category?: string | null
           description?: string | null
           id?: string
           key?: string
           updated_at?: string | null
+          updated_by?: string | null
           value?: Json | null
         }
         Relationships: []

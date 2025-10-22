@@ -49,7 +49,6 @@ export const useReportsGenerator = () => {
         assigned_to,
         due_date,
         completed_at,
-        estimated_duration,
         property_id,
         room_number
       `)
@@ -69,7 +68,7 @@ export const useReportsGenerator = () => {
         status: task.status,
         priority: task.priority,
         completedDate: task.completed_at ? new Date(task.completed_at).toLocaleDateString() : '',
-        timeSpent: task.estimated_duration ? `${task.estimated_duration} min` : '',
+        timeSpent: '', // Will be populated once estimated_duration is available
         notes: task.description || ''
       })),
       columns: [
@@ -104,8 +103,8 @@ export const useReportsGenerator = () => {
         reorderLevel: item.min_quantity,
         unitCost: item.unit_cost,
         totalValue: (item.quantity * item.unit_cost).toFixed(2),
-        location: item.location,
-        vendor: item.vendor,
+        location: item.storage_location, // Fixed: correct column name
+        vendor: item.supplier, // Fixed: correct column name
         lastOrdered: item.updated_at ? new Date(item.updated_at).toLocaleDateString() : ''
       })),
       columns: [

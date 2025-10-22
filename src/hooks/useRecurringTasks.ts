@@ -76,12 +76,12 @@ export const useRecurringTasks = () => {
         // Transform checklist templates to recurring task templates format
         const templates: RecurringTaskTemplate[] = data?.map(template => ({
           id: template.id,
-          title: template.title,
+          title: template.name, // Use name as title
           description: template.description || '',
           taskModule: template.task_type as TaskModule,
           baseTaskType: template.task_type as any,
           appliesTo: 'all-properties',
-          assignedTo: template.created_by || '',
+          assignedTo: '', // No created_by field available
           priority: 'medium',
           recurrenceRule: {
             frequency: 'weekly',
