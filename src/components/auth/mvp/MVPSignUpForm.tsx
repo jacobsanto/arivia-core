@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUser } from "@/contexts/UserContext";
-import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Phone } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, AlertCircle, Phone, Shield } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MVPSignUpFormProps {
   onSwitchToSignIn: () => void;
@@ -24,14 +25,45 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [superadminExists, setSuperadminExists] = useState<boolean | null>(null);
   const { signup } = useUser();
 
-  const roles = [
-    { value: 'property_manager', label: 'Property Manager' },
-    { value: 'housekeeping_staff', label: 'Housekeeping Staff' },
-    { value: 'maintenance_staff', label: 'Maintenance Staff' },
-    { value: 'inventory_manager', label: 'Inventory Manager' },
-  ];
+  useEffect(() => {
+    checkSuperadminExists();
+  }, []);
+
+  const checkSuperadminExists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('role', 'superadmin')
+        .maybeSingle();
+      
+      if (error) throw error;
+      const exists = !!data;
+      setSuperadminExists(exists);
+      
+      // Auto-select superadmin role for first user
+      if (!exists) {
+        setFormData(prev => ({ ...prev, role: 'superadmin' }));
+      }
+    } catch (err) {
+      console.error('Error checking superadmin:', err);
+      setSuperadminExists(true); // Default to true for safety
+    }
+  };
+
+  const roles = superadminExists === false
+    ? [
+        { value: 'superadmin', label: 'Administrator (First User)', icon: Shield },
+      ]
+    : [
+        { value: 'property_manager', label: 'Property Manager' },
+        { value: 'housekeeping_staff', label: 'Housekeeping Staff' },
+        { value: 'maintenance_staff', label: 'Maintenance Staff' },
+        { value: 'inventory_manager', label: 'Inventory Manager' },
+      ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,8 +99,21 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-2xl font-bold text-foreground mb-2">Create account</h2>
-        <p className="text-muted-foreground">Join the Arivia Villas team</p>
+        <p className="text-muted-foreground">
+          {superadminExists === false 
+            ? "Setup your administrator account" 
+            : "Join the Arivia Villas team"}
+        </p>
       </div>
+
+      {superadminExists === false && (
+        <Alert className="bg-primary/10 border-primary/20">
+          <Shield className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-primary">
+            You're creating the first administrator account for this system.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -209,9 +254,13 @@ export const MVPSignUpForm: React.FC<MVPSignUpFormProps> = ({ onSwitchToSignIn }
         <Button
           type="submit"
           className="w-full"
-          disabled={isLoading || !formData.email || !formData.password || !formData.name || !formData.role}
+          disabled={isLoading || !formData.email || !formData.password || !formData.name || !formData.role || superadminExists === null}
         >
-          {isLoading ? "Creating account..." : "Create account"}
+          {isLoading 
+            ? "Creating account..." 
+            : superadminExists === false 
+              ? "Create Administrator Account" 
+              : "Create account"}
         </Button>
       </form>
 
