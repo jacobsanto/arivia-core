@@ -35,7 +35,7 @@ export const MVPLoginHero: React.FC = () => {
             Professional Platform
           </Badge>
           <h2 className="text-4xl font-bold text-foreground mb-4">Streamline Your Operations</h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Everything you need to manage your villa rentals efficiently. 
             From bookings to maintenance, all in one powerful platform.
           </p>
