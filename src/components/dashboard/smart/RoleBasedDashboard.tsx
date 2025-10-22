@@ -347,27 +347,6 @@ export const RoleBasedDashboard: React.FC = () => {
             </>
           ) : (
             <>
-              {addableWidgets.length > 0 && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className={isEditMode ? '' : 'hidden'}>
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      Add Widget
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    {addableWidgets.map((widget) => (
-                      <DropdownMenuItem 
-                        key={widget.id}
-                        onClick={() => addWidget(widget.id)}
-                      >
-                        <Plus className="h-4 w-4 mr-2" />
-                        {widget.name}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
               
               <Button variant="outline" onClick={enterEditMode}>
                 <Settings className="h-4 w-4 mr-2" />

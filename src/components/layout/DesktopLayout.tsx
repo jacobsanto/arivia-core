@@ -25,9 +25,9 @@ export const DesktopLayout: React.FC = () => {
         <ScrollArea className="flex-1" orientation="vertical">
           <main 
             id="main-content" 
-            className={`p-6 transition-all duration-200 ${
-              collapsed ? 'ml-0' : 'ml-0'
-            }`}
+    className={`p-6 transition-all duration-200 ${
+      collapsed ? 'ml-0' : 'ml-0'
+    }`}
             role="main"
           >
             <div className="max-w-full mx-auto">

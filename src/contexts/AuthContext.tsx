@@ -30,6 +30,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const lastRefreshRef = React.useRef<number>(0);
+  const REFRESH_COOLDOWN = 60000; // 1 minute cooldown between refreshes
 
   
 
@@ -63,6 +65,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshAuthState = async () => {
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastRefreshRef.current < REFRESH_COOLDOWN) {
+      logger.debug('AuthContext', 'Auth refresh skipped due to cooldown', { 
+        timeSinceLastRefresh: now - lastRefreshRef.current 
+      });
+      return;
+    }
+    lastRefreshRef.current = now;
+    
     try {
       logger.debug('AuthContext', 'Refreshing auth state');
       

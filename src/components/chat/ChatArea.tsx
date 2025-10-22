@@ -67,7 +67,7 @@ const ChatArea: React.FC<ChatAreaProps> = ({
   handleEmojiSelect,
 }) => {
   return (
-    <div className="flex-1 border rounded-lg flex flex-col overflow-hidden">
+    <div className="flex-1 border rounded-lg flex flex-col h-full">
       <ChatHeader 
         activeChat={activeChat} 
         activeTab={activeTab} 
@@ -84,7 +84,8 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         </div>
       )}
       
-      <MessageList 
+      <div className="flex-1 overflow-auto">
+        <MessageList
         messages={messages}
         emojis={emojis}
         onAddReaction={onAddReaction}
@@ -97,8 +98,9 @@ const ChatArea: React.FC<ChatAreaProps> = ({
         isLoading={isLoading}
         isOffline={isOffline}
       />
+      </div>
       
-      {fileInputRef && imageInputRef && handleFileSelect && handleImageSelect && 
+      {fileInputRef && imageInputRef && handleFileSelect && handleImageSelect &&
        handleFileClick && handleImageClick && removeAttachment && toggleMessageEmojiPicker && 
        handleEmojiSelect && (
         <MessageInput 

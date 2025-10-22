@@ -20,14 +20,15 @@ export const useTeamChat = () => {
     if (!user) return;
 
     try {
-      const { data: channelData, error } = await supabase
+      // @ts-ignore - Avoid deep instantiation error
+      const result = await supabase
         .from('chat_channels')
         .select('*')
         .eq('is_active', true);
 
-      if (error) throw error;
+      if (result.error) throw result.error;
 
-      const channelsWithMembers = (channelData || []).map(channel => ({
+      const channelsWithMembers = (result.data || []).map(channel => ({
         ...channel,
         members: [], // Channel members functionality
         unreadCount: 0, // Unread count functionality
