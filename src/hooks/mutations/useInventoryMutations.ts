@@ -60,14 +60,24 @@ export function useCreateStockMovement() {
       const userId = auth?.user?.id;
       if (!userId) throw new Error("Not authenticated");
 
+      // TODO: Create inventory_usage table or stock_movements table
+      // For now, just update the inventory_items quantity directly
+      const { data: item } = await supabase
+        .from("inventory_items")
+        .select('quantity')
+        .eq('id', values.item_id)
+        .single();
+
+      if (!item) throw new Error("Item not found");
+
+      const newQuantity = values.type === 'in' 
+        ? item.quantity + values.quantity 
+        : item.quantity - values.quantity;
+
       const { data, error } = await supabase
-        .from("inventory_usage")
-        .insert({
-          item_id: values.item_id,
-          quantity_used: values.quantity,
-          notes: values.note ?? null,
-          reported_by: userId,
-        })
+        .from("inventory_items")
+        .update({ quantity: newQuantity })
+        .eq('id', values.item_id)
         .select("*")
         .maybeSingle();
 
@@ -77,10 +87,7 @@ export function useCreateStockMovement() {
     {
       successTitle: "Stock movement recorded",
       onSuccess: async () => {
-        await Promise.all([
-          qc.invalidateQueries({ queryKey: ["inventory-items"] }),
-          qc.invalidateQueries({ queryKey: ["inventory-usage"] }),
-        ]);
+        await qc.invalidateQueries({ queryKey: ["inventory-items"] });
       },
     }
   );

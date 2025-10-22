@@ -107,10 +107,9 @@ export const MaintenanceQuickActionDialog: React.FC<MaintenanceQuickActionDialog
       const taskData = {
         title: formData.title,
         description: formData.description,
-        priority: formData.priority,
+        priority: formData.priority as 'low' | 'medium' | 'high' | 'urgent',
         task_type: formData.taskType,
-        status: 'pending',
-        created_by: user.id,
+        status: 'pending' as const,
         due_date: formData.dueDate || null,
       };
 

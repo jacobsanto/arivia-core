@@ -13,7 +13,7 @@ interface SecurityEvent {
   event_type: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
   user_id?: string;
-  details: any;
+  description?: string;
   resolved: boolean;
   created_at: string;
 }
@@ -73,8 +73,13 @@ const SecurityMonitoring = () => {
 
       const dashboardData: SecurityDashboard = {
         recent_security_events: (securityEvents || []).map(event => ({
-          ...event,
-          severity: (event.severity as any) || 'low'
+          id: event.id,
+          event_type: event.event_type,
+          severity: (event.severity as any) || 'low',
+          user_id: event.user_id,
+          description: event.description,
+          resolved: event.resolved,
+          created_at: event.created_at,
         })) as SecurityEvent[],
         unresolved_events_count: securityEvents?.filter(e => !e.resolved).length || 0,
         critical_events_count: securityEvents?.filter(e => e.severity === 'critical' && !e.resolved).length || 0,
@@ -105,7 +110,7 @@ const SecurityMonitoring = () => {
       const { data: guestyListings } = await supabase
         .from('guesty_listings')
         .select('id')
-        .eq('is_active', true);
+        .eq('active', true);
 
       const healthData: SystemHealth = {
         database: {

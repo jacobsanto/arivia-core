@@ -56,7 +56,8 @@ export const useInventory = () => {
         category: item.category?.name || 'Uncategorized',
         current_stock: Number(item.quantity) || 0,
         reorder_level: Number(item.min_quantity) || 0,
-        unit_cost: Number(item.unit_cost) || 0
+        unit_cost: Number(item.unit_cost) || 0,
+        location: item.storage_location
       })) as InventoryItem[];
     },
     refetchInterval: 30000,
@@ -291,10 +292,8 @@ export const useInventory = () => {
           min_quantity: item.reorder_level,
           target_quantity: item.target_quantity,
           unit_cost: item.unit_cost,
-          unit: item.unit,
-          vendor: item.vendor,
-          location: item.location,
-          notes: item.notes
+          supplier: item.vendor,
+          storage_location: item.location || item.storage_location
         });
       
       if (error) throw error;

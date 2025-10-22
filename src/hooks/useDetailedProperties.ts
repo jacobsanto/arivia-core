@@ -29,8 +29,8 @@ export const useDetailedProperties = () => {
         property_type: property.property_type || 'villa',
         status: property.status || 'active',
         room_status: 'ready', // Default room status since we don't have room status tracking yet
-        num_bedrooms: property.num_bedrooms || 0,
-        num_bathrooms: property.num_bathrooms || 0,
+        num_bedrooms: property.bedrooms || 0,
+        num_bathrooms: property.bathrooms || 0,
         hero_image: '/placeholder.svg', // Default placeholder until we implement image management
         open_issues_count: 0, // Will be calculated from actual tasks when implemented
         urgent_issues_count: 0, // Will be calculated from actual tasks when implemented
@@ -73,12 +73,12 @@ export const useDetailedProperty = (propertyId: string | null) => {
         property_type: data.property_type || 'villa',
         status: (data.status || 'active') as any,
         room_status: 'ready' as any, // Default until we implement room status tracking
-        num_bedrooms: data.num_bedrooms || 0,
-        num_bathrooms: data.num_bathrooms || 0,
+        num_bedrooms: data.bedrooms || 0,
+        num_bathrooms: data.bathrooms || 0,
         max_guests: 4, // Default until we add this field to database
         square_feet: undefined, // Not in current database schema
-        description: data.description || '',
-        notes: data.notes || '',
+        description: '',
+        notes: '',
         images: [
           {
             id: `${data.id}-img-1`,

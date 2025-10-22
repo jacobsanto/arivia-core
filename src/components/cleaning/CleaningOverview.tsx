@@ -54,7 +54,7 @@ export const CleaningOverview: React.FC = () => {
     const todayTasks = housekeepingTasks.filter(task => 
       task.due_date && task.due_date.startsWith(today)
     );
-    const completedTasks = todayTasks.filter(task => task.status === 'done');
+    const completedTasks = todayTasks.filter(task => task.status === 'completed');
     const uniqueStaff = new Set(housekeepingTasks
       .filter(task => task.assigned_to && task.status === 'in_progress')
       .map(task => task.assigned_to)
@@ -112,7 +112,7 @@ export const CleaningOverview: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'done': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -121,7 +121,7 @@ export const CleaningOverview: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done': return <CheckCircle className="h-4 w-4" />;
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
       case 'in_progress': return <Clock className="h-4 w-4" />;
       case 'pending': return <AlertTriangle className="h-4 w-4" />;
       default: return <Activity className="h-4 w-4" />;

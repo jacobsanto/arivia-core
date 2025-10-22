@@ -90,22 +90,20 @@ export const QuickActionDialog: React.FC<QuickActionDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      const taskData = {
-        task_type: actionType === 'emergency' ? 'Emergency Cleaning' : 
-                   actionType === 'assignment' ? 'Staff Assignment' :
-                   actionType === 'schedule' ? 'Schedule Review' : 'Quick Task',
-        description: formData.description,
-        status: 'pending',
-        due_date: formData.dueDate || null,
-        assigned_to: formData.assignedTo || null,
-        listing_id: formData.property || null,
-      };
+      const taskType = actionType === 'emergency' ? 'Emergency Cleaning' : 
+                       actionType === 'assignment' ? 'Staff Assignment' :
+                       actionType === 'schedule' ? 'Schedule Review' : 'Quick Task';
 
       const { error } = await supabase
         .from('housekeeping_tasks')
         .insert({
-          ...taskData,
-          title: taskData.task_type,
+          title: taskType,
+          task_type: taskType,
+          description: formData.description,
+          status: 'pending',
+          due_date: formData.dueDate || null,
+          assigned_to: formData.assignedTo || null,
+          property_id: formData.property || null,
         });
 
       if (error) throw error;

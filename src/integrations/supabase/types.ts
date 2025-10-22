@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_name: string | null
+          error_stack: string | null
+          id: string
+          level: string | null
+          message: string
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          route: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_name?: string | null
+          error_stack?: string | null
+          id?: string
+          level?: string | null
+          message: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_name?: string | null
+          error_stack?: string | null
+          id?: string
+          level?: string | null
+          message?: string
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          route?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       channel_members: {
         Row: {
           channel_id: string | null
@@ -282,6 +327,7 @@ export type Database = {
           nickname: string | null
           picture_url: string | null
           synced_at: string | null
+          title: string | null
         }
         Insert: {
           accommodates?: number | null
@@ -295,6 +341,7 @@ export type Database = {
           nickname?: string | null
           picture_url?: string | null
           synced_at?: string | null
+          title?: string | null
         }
         Update: {
           accommodates?: number | null
@@ -308,6 +355,7 @@ export type Database = {
           nickname?: string | null
           picture_url?: string | null
           synced_at?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -322,8 +370,10 @@ export type Database = {
           guest_checkin: string | null
           guest_checkout: string | null
           id: string
+          listing_id: string | null
           priority: Database["public"]["Enums"]["task_priority"] | null
           property_id: string | null
+          qc_status: string | null
           room_number: string | null
           special_instructions: string | null
           status: Database["public"]["Enums"]["task_status"] | null
@@ -341,8 +391,10 @@ export type Database = {
           guest_checkin?: string | null
           guest_checkout?: string | null
           id?: string
+          listing_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           property_id?: string | null
+          qc_status?: string | null
           room_number?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null
@@ -360,8 +412,10 @@ export type Database = {
           guest_checkin?: string | null
           guest_checkout?: string | null
           id?: string
+          listing_id?: string | null
           priority?: Database["public"]["Enums"]["task_priority"] | null
           property_id?: string | null
+          qc_status?: string | null
           room_number?: string | null
           special_instructions?: string | null
           status?: Database["public"]["Enums"]["task_status"] | null

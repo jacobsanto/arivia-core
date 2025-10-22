@@ -31,7 +31,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
   });
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done':
+      case 'completed':
         return CheckCircle;
       case 'in_progress':
         return Clock;
@@ -43,7 +43,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
   };
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'done':
+      case 'completed':
         return 'bg-green-100 text-green-800';
       case 'in_progress':
         return 'bg-blue-100 text-blue-800';
@@ -75,7 +75,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
       const {
         error
       } = await supabase.from('housekeeping_tasks').update({
-        status: 'done'
+        status: 'completed'
       }).eq('id', taskId);
       if (error) throw error;
       queryClient.invalidateQueries({
@@ -126,7 +126,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
                   {task.assigned_to ? 'Assigned' : 'Unassigned'}
                 </span>
               </div>
-              {task.listing_id && <div className="flex items-center">
+              {task.property_id && <div className="flex items-center">
                   <MapPin className="h-3 w-3 mr-1" />
                   Property
                 </div>}
@@ -150,7 +150,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
     total: housekeepingTasks?.length || 0,
     pending: housekeepingTasks?.filter(t => t.status === 'pending').length || 0,
     inProgress: housekeepingTasks?.filter(t => t.status === 'in_progress').length || 0,
-    completed: housekeepingTasks?.filter(t => t.status === 'done').length || 0,
+    completed: housekeepingTasks?.filter(t => t.status === 'completed').length || 0,
     duesToon: housekeepingTasks?.filter(t => {
       const dueDate = new Date(t.due_date);
       const today = new Date();
@@ -234,7 +234,7 @@ export const HousekeepingTaskManagement: React.FC = () => {
             <TabsTrigger value="tasks">All Tasks</TabsTrigger>
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="in_progress">In Progress</TabsTrigger>
-            <TabsTrigger value="done">Completed</TabsTrigger>
+            <TabsTrigger value="completed">Completed</TabsTrigger>
           </TabsList>
           
           <TabsContent value="tasks" className="space-y-4">
@@ -255,17 +255,17 @@ export const HousekeepingTaskManagement: React.FC = () => {
             </Card>
           </TabsContent>
           
-          {['pending', 'in_progress', 'done'].map(status => <TabsContent key={status} value={status} className="space-y-4">
+          {['pending', 'in_progress', 'completed'].map(status => <TabsContent key={status} value={status} className="space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>
-                    {status === 'in_progress' ? 'In Progress' : status === 'done' ? 'Completed' : status.charAt(0).toUpperCase() + status.slice(1)} Tasks
+                    {status === 'in_progress' ? 'In Progress' : status === 'completed' ? 'Completed' : status.charAt(0).toUpperCase() + status.slice(1)} Tasks
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {housekeepingTasks?.filter(task => task.status === status)?.length === 0 ? <div className="text-center py-8 text-muted-foreground">
-                        <p>No {status === 'done' ? 'completed' : status.replace('_', ' ')} housekeeping tasks found</p>
+                        <p>No {status === 'completed' ? 'completed' : status.replace('_', ' ')} housekeeping tasks found</p>
                       </div> : housekeepingTasks?.filter(task => task.status === status)?.map(task => <TaskCard key={task.id} task={task} />)}
                   </div>
                 </CardContent>

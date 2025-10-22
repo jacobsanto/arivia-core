@@ -138,10 +138,10 @@ export const useDashboardData = () => {
 
   const fetchPortfolioData = async () => {
     try {
-      // Get latest room status for each room from room_status_log
+      // Get latest room status for each property from room_status_log
       const { data: roomStatuses } = await supabase
         .from('room_status_log')
-        .select('property_id, room_number, new_status')
+        .select('property_id, new_status')
         .order('created_at', { ascending: false });
 
       // Count rooms by status
@@ -154,12 +154,12 @@ export const useDashboardData = () => {
       };
 
       if (roomStatuses) {
-        // Get the latest status for each unique room
+        // Get the latest status for each unique property
         const latestStatuses = new Map();
         roomStatuses.forEach(log => {
-          const roomKey = `${log.property_id}-${log.room_number}`;
-          if (!latestStatuses.has(roomKey)) {
-            latestStatuses.set(roomKey, log.new_status);
+          const propertyKey = `${log.property_id}`;
+          if (!latestStatuses.has(propertyKey)) {
+            latestStatuses.set(propertyKey, log.new_status);
           }
         });
 
@@ -200,8 +200,8 @@ export const useDashboardData = () => {
       if (properties) {
         properties.forEach(property => {
           switch (property.status) {
-            case 'occupied':
-              occupancyCounts.occupied++;
+            case 'active':
+              occupancyCounts.vacant++;
               break;
             case 'maintenance':
               occupancyCounts.maintenance++;

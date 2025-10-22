@@ -53,7 +53,7 @@ export const HousekeepingReports: React.FC = () => {
         .lte('created_at', end.toISOString());
 
       if (selectedProperty !== 'all') {
-        query = query.eq('listing_id', selectedProperty);
+        query = query.eq('property_id', selectedProperty);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -66,7 +66,7 @@ export const HousekeepingReports: React.FC = () => {
   // Calculate statistics
   const stats = React.useMemo(() => {
     const total = tasks.length;
-    const completed = tasks.filter(t => t.status === 'done').length;
+    const completed = tasks.filter(t => t.status === 'completed').length;
     const pending = tasks.filter(t => t.status === 'pending').length;
     const inProgress = tasks.filter(t => t.status === 'in_progress').length;
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -84,7 +84,7 @@ export const HousekeepingReports: React.FC = () => {
           acc[task.assigned_to] = { total: 0, completed: 0 };
         }
         acc[task.assigned_to].total += 1;
-        if (task.status === 'done') {
+        if (task.status === 'completed') {
           acc[task.assigned_to].completed += 1;
         }
       }
@@ -112,7 +112,7 @@ export const HousekeepingReports: React.FC = () => {
 
   // Get unique properties for filter
   const properties = React.useMemo(() => {
-    const unique = [...new Set(tasks.map(t => t.listing_id).filter(Boolean))];
+    const unique = [...new Set(tasks.map(t => t.property_id).filter(Boolean))];
     return unique;
   }, [tasks]);
 
@@ -120,7 +120,7 @@ export const HousekeepingReports: React.FC = () => {
     const csvContent = [
       'Date,Task Type,Status,Property,Assigned To,Priority',
       ...tasks.map(task => 
-        `${task.created_at},${task.task_type},${task.status},${task.listing_id || ''},${task.assigned_to || ''},${task.priority || ''}`
+        `${task.created_at},${task.task_type},${task.status},${task.property_id || ''},${task.assigned_to || ''},${task.priority || ''}`
       )
     ].join('\n');
 
@@ -379,10 +379,10 @@ export const HousekeepingReports: React.FC = () => {
                         <div>
                           <p className="font-medium text-sm">{task.task_type}</p>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {task.listing_id && (
+                            {task.property_id && (
                               <div className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
-                                <span>Property {task.listing_id}</span>
+                                <span>Property {task.property_id}</span>
                               </div>
                             )}
                             <span>{format(new Date(task.created_at), 'MMM dd, HH:mm')}</span>
@@ -392,7 +392,7 @@ export const HousekeepingReports: React.FC = () => {
                       <div className="flex items-center gap-2">
                         <Badge 
                           className={
-                            task.status === 'done' ? 'bg-green-100 text-green-800' :
+                            task.status === 'completed' ? 'bg-green-100 text-green-800' :
                             task.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
                             'bg-yellow-100 text-yellow-800'
                           }

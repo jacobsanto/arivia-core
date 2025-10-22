@@ -9,6 +9,7 @@ export type CreateTaskInput = {
   dueDate: string; // ISO
   assignee?: string | null;
   description?: string | null;
+  task_type?: string;
 };
 
 export function useCreateTask() {
@@ -28,12 +29,11 @@ export function useCreateTask() {
         status: "pending",
         assigned_to: values.assignee ?? null,
         property_id: null, // map name->id in future iteration
-        task_type: "housekeeping",
-        created_by: userId,
+        task_type: values.task_type || "general",
       };
 
       const { data, error } = await supabase
-        .from("tasks")
+        .from("housekeeping_tasks")
         .insert(payload)
         .select("*")
         .maybeSingle();

@@ -8,8 +8,8 @@ export interface PropertyOption {
   address: string;
   property_type: string;
   status: string;
-  num_bedrooms: number;
-  num_bathrooms: number;
+  bedrooms: number;
+  bathrooms: number;
   description?: string;
   notes?: string;
   created_at?: string;

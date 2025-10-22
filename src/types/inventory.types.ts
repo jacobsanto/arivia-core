@@ -8,9 +8,10 @@ export interface InventoryItem {
   reorder_level: number;
   target_quantity?: number;
   unit_cost: number;
-  unit: string;
+  unit?: string;
   vendor?: string;
-  location: string;
+  location?: string;
+  storage_location?: string;
   notes?: string;
   created_at: string;
   updated_at: string;

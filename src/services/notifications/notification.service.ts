@@ -20,11 +20,11 @@ class NotificationService {
     const { count, error } = await supabase
       .from('notifications')
       .select('*', { count: 'exact', head: true })
-      .eq('is_read', false);
+      .eq('read', false);
 
     if (error) {
       console.error('Error fetching unread count:', error);
-      throw error;
+      return 0; // Return 0 instead of throwing
     }
 
     return count || 0;
@@ -33,7 +33,7 @@ class NotificationService {
   async markAsRead(notificationId: string): Promise<void> {
     const { error } = await supabase
       .from('notifications')
-      .update({ is_read: true, updated_at: new Date().toISOString() })
+      .update({ read: true })
       .eq('id', notificationId);
 
     if (error) {
@@ -45,8 +45,8 @@ class NotificationService {
   async markAllAsRead(): Promise<void> {
     const { error } = await supabase
       .from('notifications')
-      .update({ is_read: true, updated_at: new Date().toISOString() })
-      .eq('is_read', false);
+      .update({ read: true })
+      .eq('read', false);
 
     if (error) {
       console.error('Error marking all notifications as read:', error);

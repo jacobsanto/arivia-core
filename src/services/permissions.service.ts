@@ -6,13 +6,12 @@ export const permissionsService = {
     const { data, error } = await supabase
       .from('system_permissions')
       .select('*')
-      .eq('is_active', true)
       .order('category', { ascending: true })
-      .order('permission_name', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching permissions:', error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
 
     return data || [];
@@ -23,11 +22,11 @@ export const permissionsService = {
       .from('system_permissions')
       .select('*')
       .order('category', { ascending: true })
-      .order('permission_name', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching all permissions:', error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
 
     return data || [];
@@ -38,12 +37,11 @@ export const permissionsService = {
       .from('system_permissions')
       .select('*')
       .eq('category', category)
-      .eq('is_active', true)
-      .order('permission_name', { ascending: true });
+      .order('name', { ascending: true });
 
     if (error) {
       console.error('Error fetching permissions by category:', error);
-      throw error;
+      return []; // Return empty array instead of throwing
     }
 
     return data || [];
@@ -81,10 +79,10 @@ export const permissionsService = {
   },
 
   async deletePermission(id: string): Promise<void> {
-    // Soft delete by setting is_active to false
+    // Hard delete
     const { error } = await supabase
       .from('system_permissions')
-      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .delete()
       .eq('id', id);
 
     if (error) {

@@ -26,7 +26,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   const [formData, setFormData] = useState({
     task_type: '',
     description: '',
-    listing_id: '',
+    property_id: '',
     assigned_to: '',
     priority: 'medium',
     due_date: undefined as Date | undefined,
@@ -40,9 +40,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase
         .from('guesty_listings')
-        .select('id, title')
-        .eq('is_active', true)
-        .order('title');
+        .select('id, nickname')
+        .eq('active', true)
+        .order('nickname');
       
       if (error) throw error;
       return data || [];
@@ -85,7 +85,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         .insert({
           task_type: formData.task_type,
           description: formData.description || null,
-          listing_id: formData.listing_id || null,
+          property_id: formData.property_id || null,
           assigned_to: formData.assigned_to || null,
           priority: formData.priority,
           due_date: formData.due_date.toISOString().split('T')[0],
@@ -99,7 +99,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       setFormData({
         task_type: '',
         description: '',
-        listing_id: '',
+        property_id: '',
         assigned_to: '',
         priority: 'medium',
         due_date: undefined,
@@ -157,10 +157,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
           {/* Property */}
           <div>
-            <Label htmlFor="listing_id">Property</Label>
+            <Label htmlFor="property_id">Property</Label>
             <Select 
-              value={formData.listing_id} 
-              onValueChange={(value) => handleInputChange('listing_id', value)}
+              value={formData.property_id} 
+              onValueChange={(value) => handleInputChange('property_id', value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select property (optional)" />
@@ -168,7 +168,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               <SelectContent>
                 {properties.map((property) => (
                   <SelectItem key={property.id} value={property.id}>
-                    {property.title || `Property ${property.id}`}
+                    {property.nickname || `Property ${property.id}`}
                   </SelectItem>
                 ))}
               </SelectContent>

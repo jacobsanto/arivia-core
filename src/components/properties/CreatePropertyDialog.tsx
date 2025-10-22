@@ -34,8 +34,8 @@ export const CreatePropertyDialog: React.FC<CreatePropertyDialogProps> = ({
     name: "",
     address: "",
     property_type: "",
-    num_bedrooms: "",
-    num_bathrooms: "",
+    bedrooms: "",
+    bathrooms: "",
     description: "",
     notes: "",
     status: "active",
@@ -61,10 +61,8 @@ export const CreatePropertyDialog: React.FC<CreatePropertyDialogProps> = ({
           name: formData.name,
           address: formData.address,
           property_type: formData.property_type,
-          num_bedrooms: parseInt(formData.num_bedrooms) || 0,
-          num_bathrooms: parseInt(formData.num_bathrooms) || 0,
-          description: formData.description || null,
-          notes: formData.notes || null,
+          bedrooms: parseInt(formData.bedrooms) || 0,
+          bathrooms: parseInt(formData.bathrooms) || 0,
           status: formData.status,
         });
 
@@ -79,8 +77,8 @@ export const CreatePropertyDialog: React.FC<CreatePropertyDialogProps> = ({
         name: "",
         address: "",
         property_type: "",
-        num_bedrooms: "",
-        num_bathrooms: "",
+        bedrooms: "",
+        bathrooms: "",
         description: "",
         notes: "",
         status: "active",
@@ -167,31 +165,31 @@ export const CreatePropertyDialog: React.FC<CreatePropertyDialogProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="num_bedrooms" className="flex items-center gap-1">
+              <Label htmlFor="bedrooms" className="flex items-center gap-1">
                 <Bed className="h-3 w-3" />
                 Bedrooms
               </Label>
               <Input
-                id="num_bedrooms"
+                id="bedrooms"
                 type="number"
                 min="0"
-                value={formData.num_bedrooms}
-                onChange={(e) => handleInputChange('num_bedrooms', e.target.value)}
+                value={formData.bedrooms}
+                onChange={(e) => handleInputChange('bedrooms', e.target.value)}
                 placeholder="0"
               />
             </div>
 
             <div>
-              <Label htmlFor="num_bathrooms" className="flex items-center gap-1">
+              <Label htmlFor="bathrooms" className="flex items-center gap-1">
                 <Bath className="h-3 w-3" />
                 Bathrooms
               </Label>
               <Input
-                id="num_bathrooms"
+                id="bathrooms"
                 type="number"
                 min="0"
-                value={formData.num_bathrooms}
-                onChange={(e) => handleInputChange('num_bathrooms', e.target.value)}
+                value={formData.bathrooms}
+                onChange={(e) => handleInputChange('bathrooms', e.target.value)}
                 placeholder="0"
               />
             </div>

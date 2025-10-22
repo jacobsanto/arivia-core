@@ -20,9 +20,9 @@ import { toastService } from "@/services/toast";
 interface Task {
   id: string;
   task_type: string;
-  status: 'pending' | 'in_progress' | 'done';
+  status: 'pending' | 'in_progress' | 'completed';
   due_date: string;
-  listing_id?: string;
+  property_id?: string;
   assigned_to?: string;
   description?: string;
   priority?: string;
@@ -53,7 +53,7 @@ const HousekeepingKanban: React.FC = () => {
     return {
       pending: tasks.filter(task => task.status === 'pending'),
       in_progress: tasks.filter(task => task.status === 'in_progress'),
-      done: tasks.filter(task => task.status === 'done')
+      completed: tasks.filter(task => task.status === 'completed')
     };
   }, [tasks]);
 
@@ -62,7 +62,10 @@ const HousekeepingKanban: React.FC = () => {
     try {
       const { error } = await supabase
         .from('housekeeping_tasks')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .update({ 
+          status: newStatus as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold', 
+          updated_at: new Date().toISOString() 
+        })
         .eq('id', taskId);
       
       if (error) throw error;
@@ -77,7 +80,7 @@ const HousekeepingKanban: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done': return <CheckCircle className="h-4 w-4" />;
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
       case 'in_progress': return <Clock className="h-4 w-4" />;
       case 'pending': return <AlertTriangle className="h-4 w-4" />;
       default: return <AlertTriangle className="h-4 w-4" />;
@@ -94,7 +97,7 @@ const HousekeepingKanban: React.FC = () => {
   };
 
   const TaskCard: React.FC<{ task: Task }> = ({ task }) => {
-    const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'done';
+    const isOverdue = new Date(task.due_date) < new Date() && task.status !== 'completed';
     
     return (
       <Card className={`mb-3 hover:shadow-md transition-shadow cursor-pointer border-l-4 ${getPriorityColor(task.priority)}`}>
@@ -119,10 +122,10 @@ const HousekeepingKanban: React.FC = () => {
 
             {/* Property and Due Date */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {task.listing_id && (
+              {task.property_id && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
-                  <span>Property {task.listing_id}</span>
+                  <span>Property {task.property_id}</span>
                 </div>
               )}
               <div className={`flex items-center gap-1 ${isOverdue ? 'text-red-600' : ''}`}>
@@ -159,14 +162,14 @@ const HousekeepingKanban: React.FC = () => {
                 <Button
                   size="sm"
                   className="flex-1 text-xs"
-                  onClick={() => updateTaskStatus(task.id, 'done')}
+                  onClick={() => updateTaskStatus(task.id, 'completed')}
                 >
                   <CheckSquare className="h-3 w-3 mr-1" />
                   Complete
                 </Button>
               )}
               
-              {task.status === 'done' && (
+              {task.status === 'completed' && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -259,7 +262,7 @@ const HousekeepingKanban: React.FC = () => {
             <div className="flex items-center gap-2">
               <CheckCircle className="h-5 w-5 text-green-600" />
               <span className="font-medium">Completed</span>
-              <Badge className="ml-auto">{tasksByStatus.done.length}</Badge>
+              <Badge className="ml-auto">{tasksByStatus.completed.length}</Badge>
             </div>
           </CardContent>
         </Card>
@@ -281,7 +284,7 @@ const HousekeepingKanban: React.FC = () => {
         />
         <KanbanColumn 
           title="Completed" 
-          status="done" 
+          status="completed" 
           icon={<CheckCircle className="h-4 w-4" />}
           bgColor="bg-green-50 border-green-200"
         />

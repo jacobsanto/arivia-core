@@ -59,7 +59,7 @@ export const HousekeepingDashboard: React.FC = () => {
     }
 
     // Calculate quality score based on QC pass rate
-    const qcTasks = tasks.filter(task => task.qc_status && task.qc_status !== 'pending');
+    const qcTasks = tasks.filter(task => task.qc_status && task.qc_status !== 'not_required' && task.qc_status !== 'pending');
     const passedQC = qcTasks.filter(task => task.qc_status === 'passed').length;
     const qualityScore = qcTasks.length > 0 ? Math.round((passedQC / qcTasks.length) * 100) : 0;
 
@@ -85,7 +85,7 @@ export const HousekeepingDashboard: React.FC = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'done': return 'bg-green-100 text-green-800 border-green-200';
+      case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -94,7 +94,7 @@ export const HousekeepingDashboard: React.FC = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'done': return <CheckCircle className="h-4 w-4" />;
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
       case 'in_progress': return <Clock className="h-4 w-4" />;
       case 'pending': return <AlertTriangle className="h-4 w-4" />;
       default: return <Activity className="h-4 w-4" />;
@@ -205,7 +205,7 @@ export const HousekeepingDashboard: React.FC = () => {
                       <div>
                         <p className="font-medium text-sm">{task.task_type}</p>
                         <p className="text-sm text-muted-foreground">
-                          {task.listing_id ? `Property ${task.listing_id}` : 'No property assigned'}
+                          {task.property_id ? `Property ${task.property_id}` : 'No property assigned'}
                         </p>
                       </div>
                     </div>
