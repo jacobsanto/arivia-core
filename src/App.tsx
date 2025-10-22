@@ -5,6 +5,11 @@ import { HelmetProvider } from "react-helmet-async";
 import { ToastProvider } from "@/contexts/ToastContext";
 import { ThemeProvider } from "next-themes";
 
+// PWA Components
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
+import { UpdatePrompt } from "@/components/pwa/UpdatePrompt";
+
 
 import { MVPErrorBoundary } from "@/components/mvp/ErrorBoundary";
 import { AccessibilityProvider } from "@/components/accessibility/AccessibilityProvider";
@@ -48,6 +53,7 @@ import Notifications from "@/pages/Notifications";
 import Permissions from "@/pages/Permissions";
 import UserManagement from "@/pages/UserManagement";
 import SystemSettings from "@/pages/SystemSettings";
+import InstallApp from "@/pages/InstallApp";
 
 
 function App() {
@@ -64,11 +70,17 @@ function App() {
             <ToastProvider>
                 <Router>
                   <SkipLink href="#main-content">Skip to main content</SkipLink>
+                  
+                  {/* PWA Components */}
+                  <InstallPrompt />
+                  <OfflineIndicator />
+                  <UpdatePrompt />
                 
                 <Routes>
                   {/* Public authentication routes */}
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/install" element={<InstallApp />} />
                   
                   {/* Protected routes with UnifiedLayout */}
                   <Route element={
