@@ -31,9 +31,7 @@ export const MVPLoginHero: React.FC = () => {
   return <div className="flex-1 bg-gradient-to-br from-primary/5 to-primary/10 p-10 flex flex-col justify-center">
       <div className="max-w-lg">
         <div className="mb-8">
-          <Badge variant="secondary" className="mb-4">
-            Professional Platform
-          </Badge>
+          <Badge variant="secondary" className="mb-4">All in One Platform</Badge>
           <h2 className="text-4xl font-bold text-foreground mb-4">Streamline Your Operations</h2>
           <p className="text-muted-foreground text-sm">
             Everything you need to manage your villa rentals efficiently. 
