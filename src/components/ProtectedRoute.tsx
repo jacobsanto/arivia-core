@@ -1,12 +1,23 @@
 import React from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { LoadingPage } from "@/components/common/LoadingStates";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-// Open access - no authentication required
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  // Always allow access - app is in open mode for development
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <LoadingPage text="Loading..." />;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
   return <>{children}</>;
 };
 

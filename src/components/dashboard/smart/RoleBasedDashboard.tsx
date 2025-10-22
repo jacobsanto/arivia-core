@@ -310,8 +310,10 @@ export const RoleBasedDashboard: React.FC = () => {
     }
   };
 
+  // User should always be present due to ProtectedRoute
+  // This is just a safety check
   if (!user) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   return (
