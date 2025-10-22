@@ -1,24 +1,21 @@
-
 import React from "react";
 import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { damageReportSchema } from '@/lib/validation/schemas';
+import { z } from 'zod';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { useProperties } from "@/hooks/useProperties";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUsers } from "@/hooks/useUsers";
 
-interface DamageReportFormValues {
-  title: string;
-  description: string;
-  property_id: string;
-  damage_date: Date;
-  estimated_cost?: number;
-  media: File[];
-  assigned_to: string;
-}
+type DamageReportFormValues = z.infer<typeof damageReportSchema> & {
+  media?: File[];
+  assigned_to?: string;
+};
 
 interface DamageReportFormProps {
   onSubmit: (data: DamageReportFormValues) => void;
@@ -26,7 +23,17 @@ interface DamageReportFormProps {
 }
 
 const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel }) => {
-  const form = useForm<DamageReportFormValues>();
+  const form = useForm<DamageReportFormValues>({
+    resolver: zodResolver(damageReportSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      property_id: '',
+      damage_date: '',
+      status: 'pending',
+      estimated_cost: undefined,
+    }
+  });
   const { properties } = useProperties();
   const { registeredUsers } = useUsers();
 
@@ -38,10 +45,11 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           name="title"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>Title *</FormLabel>
               <FormControl>
-                <Input {...field} placeholder="Brief description of the damage" />
+                <Input {...field} placeholder="Brief description of the damage" maxLength={200} />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -51,14 +59,16 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Detailed Description</FormLabel>
+              <FormLabel>Detailed Description *</FormLabel>
               <FormControl>
                 <Textarea 
                   {...field} 
                   placeholder="Provide detailed information about the damage"
                   className="min-h-[100px]"
+                  maxLength={2000}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -69,7 +79,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
             name="property_id"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Property</FormLabel>
+                <FormLabel>Property *</FormLabel>
                 <FormControl>
                   <Select onValueChange={field.onChange} value={field.value || "select-property"}>
                     <SelectTrigger>
@@ -85,6 +95,7 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
                     </SelectContent>
                   </Select>
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -120,14 +131,14 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           name="damage_date"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Date of Damage</FormLabel>
+              <FormLabel>Date of Damage *</FormLabel>
               <FormControl>
                 <Input 
                   type="datetime-local" 
                   {...field} 
-                  value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
                 />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -137,10 +148,19 @@ const DamageReportForm: React.FC<DamageReportFormProps> = ({ onSubmit, onCancel 
           name="estimated_cost"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Estimated Cost (if known)</FormLabel>
+              <FormLabel>Estimated Cost (€)</FormLabel>
               <FormControl>
-                <Input {...field} type="number" step="0.01" placeholder="Enter estimated cost" />
+                <Input 
+                  {...field} 
+                  type="number" 
+                  step="0.01" 
+                  min="0"
+                  max="1000000"
+                  placeholder="Enter estimated cost"
+                  onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
