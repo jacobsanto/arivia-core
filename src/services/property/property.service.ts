@@ -50,7 +50,7 @@ export const propertyService = {
           name: propertyData.name,
           address: propertyData.address,
           status: propertyData.status
-        })
+        } as any)
         .select();
 
       if (error) {

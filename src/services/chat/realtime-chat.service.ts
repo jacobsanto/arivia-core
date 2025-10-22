@@ -10,7 +10,7 @@ export const chatChannelsAPI = {
   async createChannel(name: string, description?: string, topic?: string, type: 'public' | 'private' = 'public'): Promise<ChatChannel> {
     throw new Error('Not implemented');
   },
-  async joinChannel(): Promise<void> {
+  async joinChannel(channelId: string): Promise<void> {
     console.warn('joinChannel not implemented');
   },
 };
@@ -22,22 +22,22 @@ export const chatMessagesAPI = {
   async sendMessage(): Promise<ChatMessage> {
     throw new Error('Not implemented');
   },
-  async getChannelMessages(): Promise<ChatMessage[]> {
+  async getChannelMessages(channelId: string): Promise<ChatMessage[]> {
     return [];
   },
-  async getConversationMessages(): Promise<ChatMessage[]> {
+  async getConversationMessages(conversationId: string): Promise<ChatMessage[]> {
     return [];
   },
-  async sendChannelMessage(): Promise<ChatMessage> {
+  async sendChannelMessage(channelId: string, content: string, replyToId?: string, attachments?: any[]): Promise<ChatMessage> {
     throw new Error('Not implemented');
   },
-  async sendDirectMessage(): Promise<ChatMessage> {
+  async sendDirectMessage(conversationId: string, content: string, replyToId?: string, attachments?: any[]): Promise<ChatMessage> {
     throw new Error('Not implemented');
   },
-  async addReaction(): Promise<void> {
+  async addReaction(messageId: string, emoji: string): Promise<void> {
     console.warn('addReaction not implemented');
   },
-  async removeReaction(): Promise<void> {
+  async removeReaction(messageId: string, emoji: string): Promise<void> {
     console.warn('removeReaction not implemented');
   },
 };
@@ -46,13 +46,16 @@ export const chatUsersAPI = {
   async getUsers(): Promise<ChatUser[]> {
     return [];
   },
+  async getTeamMembers(): Promise<ChatUser[]> {
+    return [];
+  },
 };
 
 export const directConversationsAPI = {
   async getConversations(): Promise<DirectConversation[]> {
     return [];
   },
-  async getOrCreateConversation(): Promise<DirectConversation> {
+  async getOrCreateConversation(participantId: string): Promise<DirectConversation> {
     throw new Error('Not implemented');
   },
 };

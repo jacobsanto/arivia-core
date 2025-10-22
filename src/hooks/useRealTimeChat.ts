@@ -262,7 +262,7 @@ export const useRealTimeChat = () => {
       setConversations(conversationsData);
       
       // Find and set the conversation as active
-      const conversation = conversationsData.find(c => c.id === conversationId);
+      const conversation = conversationsData.find(c => c.id === ((conversationId as any)?.id || conversationId));
       if (conversation) {
         const otherParticipant = conversation.participants?.find(p => p.id !== user.id);
         const chatListItem: ChatListItem = {

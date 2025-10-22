@@ -13,7 +13,7 @@ class NotificationService {
       throw error;
     }
 
-    return (data || []) as Notification[];
+    return (data || []) as unknown as Notification[];
   }
 
   async getUnreadCount(): Promise<number> {
@@ -66,7 +66,7 @@ class NotificationService {
       throw error;
     }
 
-    return notification as Notification;
+    return notification as unknown as Notification;
   }
 
   async deleteNotification(notificationId: string): Promise<void> {

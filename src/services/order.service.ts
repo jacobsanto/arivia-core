@@ -29,7 +29,7 @@ export const orderService = {
     const { data, error } = await supabase
       .from('inventory_items')
       .select('*')
-      .eq('vendor', vendorId);
+      .eq('supplier', vendorId) as any;
     
     if (error) {
       console.error('Error fetching vendor items:', error);
@@ -39,7 +39,7 @@ export const orderService = {
     return (data || []).map(item => ({
       id: item.id,
       name: item.name,
-      unit: item.unit || 'Each',
+      unit: (item as any).unit || 'Each',
       category: 'General'
     }));
   },

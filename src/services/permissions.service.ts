@@ -29,7 +29,7 @@ export const permissionsService = {
       return []; // Return empty array instead of throwing
     }
 
-    return data || [];
+    return (data || []) as unknown as SystemPermission[];
   },
 
   async getPermissionsByCategory(category: string): Promise<SystemPermission[]> {
@@ -44,7 +44,7 @@ export const permissionsService = {
       return []; // Return empty array instead of throwing
     }
 
-    return data || [];
+    return (data || []) as unknown as SystemPermission[];
   },
 
   async createPermission(permissionData: CreatePermissionData): Promise<SystemPermission> {
